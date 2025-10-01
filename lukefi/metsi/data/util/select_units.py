@@ -3,12 +3,11 @@ import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.data.vector_model import VectorData
 
 
-class SelectionSet:
-    sfunction: Callable[[ForestStand, ReferenceTrees], npt.NDArray[np.bool_]]
+class SelectionSet[T]:
+    sfunction: Callable[[T, VectorData], npt.NDArray[np.bool_]]
     order_var: str
     target_var: str
     target_type: str
@@ -25,13 +24,13 @@ class SelectionTarget:
     amount: float
 
 
-def select_trees(stand: ForestStand,
-                 trees: ReferenceTrees,
-                 target_decl: SelectionTarget,
-                 sets: list[SelectionSet],
-                 freq_var: str = "stems_per_ha",
-                 select_from: str = "all",
-                 mode: str = "odds_trees"):
+def select_units[T](context: T,
+                    data: VectorData,
+                    target_decl: SelectionTarget,
+                    sets: list[SelectionSet[T]],
+                    freq_var: str = "stems_per_ha",
+                    select_from: str = "all",
+                    mode: str = "odds_trees"):
 
     if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
@@ -48,19 +47,19 @@ def select_trees(stand: ForestStand,
             raise MetsiException("Invalid y value in profile. Should be between 0 and 1.")
 
     # kerättävä määrä
-    all_trees: npt.NDArray[np.bool_] = np.repeat(True, trees.size)
-    total_target = _get_target(trees, all_trees, target_var, target_type, target_amount)
+    all_units: npt.NDArray[np.bool_] = np.repeat(True, data.size)
+    total_target = _get_target(data, all_units, target_var, target_type, target_amount)
 
-    # sallittu toleranssi --> hyväksyttävä väli [target-eps, target+ eps]
+    # sallittu toleranssi --> hyväksyttävä väli [target - eps, target + eps]
     # epsilon
     tolerance = 0.001
     eps_total = max(0.005, min(total_target * tolerance, 100))
     eps_step = 0.0001  # lopetetaan binäärihaku, jos askel tätä pienempi
 
-    # valitut runkoluvut
-    selected_stems: npt.NDArray[np.float64] = np.repeat(0.0, trees.size)
-    tmp_stems: npt.NDArray[np.float64] = np.repeat(0.0, trees.size)
-    stems: npt.NDArray[np.float64] = np.repeat(0.0, trees.size)
+    # valitut muuttujat
+    selected_units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
+    tmp_units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
+    units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
     total_target_selected: float = 0.0
     tmp_total_target: float = 0.0
     cur_set_target_var = ""
@@ -69,52 +68,59 @@ def select_trees(stand: ForestStand,
     # valintajoukot, käydään läpi vain kokonaistavoitteeseen tarvittavat joukot
     i_set = 0
     while not ((total_target - eps_total) <= total_target_selected <= (total_target + eps_total)) and i_set < len(sets):
-        # joukkoon kuuluvat puut
-        cur_set_mask = sets[i_set].sfunction(stand, trees)
+        # joukkoon kuuluvat rivit
+        cur_set_mask = sets[i_set].sfunction(context, data)
         if np.any(cur_set_mask):
             cur_set_idx = np.nonzero(cur_set_mask)[0]
-            # cur_trees = trees[cur_set_idx]
+
             # järjestysmja ja 'kerättävä' muuttuja
             cur_set_order_var = sets[i_set].order_var
             cur_set_target_var = sets[i_set].target_var
-            # joukon puut järjestettynä
-            cur_set_idx_ord = np.argsort(trees[cur_set_order_var][cur_set_idx])
-            # cur_trees_ordered = cur_trees[cur_set_idx_ord]
+
+            # joukon rivit järjestettynä
+            cur_set_idx_ord = np.argsort(data[cur_set_order_var][cur_set_idx])
+
             # joukon tavoitemäärä
-            cur_set_target = _get_target(trees,
+            cur_set_target = _get_target(data,
                                          cur_set_mask,
                                          sets[i_set].target_var,
                                          sets[i_set].target_type,
                                          sets[i_set].target_amount)
             eps_set = max(0.005, cur_set_target * tolerance)
+
             # lasketaan alkuarvo vakiolle tai skaalaukselle profiilin ensimmäiselllä janalla
             # muiden janojen vakiot riippuvat tästä
             # Alkuarvosta eteenpäin binäärihaulla
             if sets[i_set].profile_xmode == "relative":
                 if hasattr(sets[i_set], "profile_xscale") and sets[i_set].profile_xscale == "all":
-                    ord_x_min = np.min(trees[cur_set_order_var])
-                    ord_x_max = np.max(trees[cur_set_order_var])
+                    ord_x_min = np.min(data[cur_set_order_var])
+                    ord_x_max = np.max(data[cur_set_order_var])
                 else:
-                    ord_x_min = trees[cur_set_order_var][cur_set_idx_ord][0]
-                    ord_x_max = trees[cur_set_order_var][cur_set_idx_ord][-1]
+                    ord_x_min = data[cur_set_order_var][cur_set_idx_ord][0]
+                    ord_x_max = data[cur_set_order_var][cur_set_idx_ord][-1]
+
                 d_ord = ord_x_max - ord_x_min
+
                 # käytetään sisäisesti aina absoluuttista x-asteikkoa
                 d_profile_x = sets[i_set].profile_x[-1] - sets[i_set].profile_x[0]
                 prof_x = ord_x_min + (sets[i_set].profile_x - sets[i_set].profile_x[0]) * d_ord / d_profile_x
             else:
                 # absolute#
                 prof_x = sets[i_set].profile_x
+
             prof_y = sets[i_set].profile_y
 
             tmp_total_target = total_target_selected
             tmp_cur_set_target = 0.0
-            tmp_stems = selected_stems.copy()
+            tmp_units = selected_units.copy()
 
-            # lasketaan kullekin joukon puulle alkuosuus y_i (skaalaus 0-1)
-            i_ordx = 0  # puun järjestysindeksi
-            y: npt.NDArray[np.float64] = np.repeat(0.0, trees.size)
+            # lasketaan kullekin joukon riville alkuosuus y_i (skaalaus 0-1)
+            i_ordx = 0  # rivin järjestysindeksi
+            y: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
+
             # lm: kulmakertoimet ja vakiotermit vektoreissa
             b: npt.NDArray[np.float64] = np.diff(prof_y) / np.diff(prof_x)
+
             # Jos vain yksi order_var-mjan arvo ja suhteellinen x, niin prof_x:n kaikki pisteet ovat samoja
             # skaalataan siinä tapauksesa vain vakio-osaa a (kulmakertoimet b nolliksi)
             if np.any(np.isnan(b)):
@@ -123,29 +129,33 @@ def select_trees(stand: ForestStand,
             a: npt.NDArray[np.float64] = prof_y[1:] - b * prof_x[1:]
             bounds_x: npt.NDArray[np.float64] = np.insert([-np.inf, np.inf], [1], prof_x[1:-1])
             interval_func = np.vectorize(lambda x: np.arange(b.size)[(x >= bounds_x[:-1]) & (x < bounds_x[1:])])
-            interval_id: npt.NDArray[np.integer] = interval_func(trees[cur_set_order_var][cur_set_idx_ord])
+            interval_id: npt.NDArray[np.integer] = interval_func(data[cur_set_order_var][cur_set_idx_ord])
 
-            # puukohtainen osuus lähtötilanteessa
+            # rivikohtainen osuus lähtötilanteessa
             for i_ordx in range(cur_set_mask.size):
-                idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # järjestysindeksiä vastaava puun alkuperäinen indeksi
+                idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # järjestysindeksiä vastaava rivin alkuperäinen indeksi
                 y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
-                             * trees[cur_set_order_var][cur_set_idx_ord][i_ordx]))
-            # tässä joukossa valittu runkoluku, ei voi ylittää jäljellä olevaa määrää
+                             * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
+
+            # tässä joukossa valittu muuttuja, ei voi ylittää jäljellä olevaa määrää
             if select_from == "all":
-                stems = np.minimum(y * trees[freq_var], trees[freq_var] - selected_stems)
+                units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
             else:
-                stems = np.maximum(0.0, y * (trees[freq_var] - selected_stems))
+                units = np.maximum(0.0, y * (data[freq_var] - selected_units))
+
             if target_var is None or target_var == freq_var:
-                target = np.sum(stems)
+                target = np.sum(units)
             else:
-                target = np.sum(stems * trees[target_var])
+                target = np.sum(units * data[target_var])
+
             if cur_set_target_var is None or cur_set_target_var == freq_var:
-                sub_target = np.sum(stems)
+                sub_target = np.sum(units)
             else:
-                sub_target = np.sum(stems * trees[cur_set_target_var])
+                sub_target = np.sum(units * data[cur_set_target_var])
+
             tmp_total_target = tmp_total_target + target
             tmp_cur_set_target = tmp_cur_set_target + sub_target
-            tmp_stems = selected_stems + stems
+            tmp_units = selected_units + units
 
             # jos valintajoukon tavoite annettu, etsitään lopullinen profiili
             # binäärihaulla, muuten käytetään suoraan annettua profiilia
@@ -159,12 +169,13 @@ def select_trees(stand: ForestStand,
                                                tmp_total_target,
                                                cur_set_target,
                                                tmp_cur_set_target)
+
                 # binäärihaku
                 # jatketaan kunnes riittävän lähellä tavoitetta (kokonais- tai
                 # valintajoukon) tai kaikki valintajoukon puut valittu
                 while ((tmp_cur_set_target < (cur_set_target - eps_set) and
                         tmp_total_target < (total_target - eps_total) and
-                        np.sum(trees[freq_var][cur_set_idx]) > np.sum(tmp_stems[cur_set_idx])) or
+                        np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])) or
                        ((cur_set_target + eps_set) < tmp_cur_set_target or
                         (total_target + eps_total) < tmp_total_target)) and step > eps_step:
 
@@ -178,7 +189,7 @@ def select_trees(stand: ForestStand,
                                  prof_x,
                                  prof_y,
                                  interval_id,
-                                 trees,
+                                 data,
                                  cur_set_idx_ord,
                                  cur_set_order_var)
 
@@ -186,23 +197,23 @@ def select_trees(stand: ForestStand,
                         raise MetsiException("Unable to continue binary search")
 
                     if select_from == "all":
-                        stems = np.minimum(y * trees[freq_var], trees[freq_var] - selected_stems)
+                        units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
                     else:
-                        stems = np.maximum(0.0, y * (trees[freq_var] - selected_stems))
+                        units = np.maximum(0.0, y * (data[freq_var] - selected_units))
 
                     if target_var is None or target_var == freq_var:
-                        target = np.sum(stems)
+                        target = np.sum(units)
                     else:
-                        target = np.sum(stems * trees[target_var])
+                        target = np.sum(units * data[target_var])
 
                     if cur_set_target_var is None or cur_set_target_var == freq_var:
-                        sub_target = np.sum(stems)
+                        sub_target = np.sum(units)
                     else:
-                        sub_target = np.sum(stems * trees[cur_set_target_var])
+                        sub_target = np.sum(units * data[cur_set_target_var])
 
                     tmp_total_target = tmp_total_target + target
                     tmp_cur_set_target = tmp_cur_set_target + sub_target
-                    tmp_stems = selected_stems + stems
+                    tmp_units = selected_units + units
 
                     # seuraavan kierroksen skaalaus/vakio
                     step = step / 2
@@ -210,19 +221,20 @@ def select_trees(stand: ForestStand,
                         scale = scale - step
                     else:
                         scale = scale + step
+
                 # while searching
             # if not set has target
         # if not empty set
 
-        selected_stems = tmp_stems.copy()
+        selected_units = tmp_units.copy()
         total_target_selected = tmp_total_target
 
-        print(f"{i_set}, {cur_set_target_var}, {tmp_cur_set_target}, {np.sum(stems)}")
+        print(f"{i_set}, {cur_set_target_var}, {tmp_cur_set_target}, {np.sum(units)}")
         i_set = i_set + 1
     # sets
 
     print(f"{target_var}, {total_target_selected}")
-    return selected_stems
+    return selected_units
 
 
 def _odds(p: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
@@ -235,7 +247,7 @@ def _i_odds(o: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     return val
 
 
-def _get_target(trees: ReferenceTrees,
+def _get_target(data: VectorData,
                 current_set: npt.NDArray[np.bool_],
                 target_var: Optional[str],
                 target_type: Optional[str],
@@ -250,21 +262,21 @@ def _get_target(trees: ReferenceTrees,
 
     elif target_type == "relative":
         if target_var == freq_var:
-            amount = target_amount * np.sum(trees[freq_var][current_set])
+            amount = target_amount * np.sum(data[freq_var][current_set])
         else:
-            amount = target_amount * np.sum(trees[freq_var][current_set] * trees[target_var][current_set])
+            amount = target_amount * np.sum(data[freq_var][current_set] * data[target_var][current_set])
 
     elif target_type == "absolute_remain":
         if target_var == freq_var:
-            amount = np.sum(trees[freq_var][current_set]) - target_amount
+            amount = np.sum(data[freq_var][current_set]) - target_amount
         else:
-            amount = np.sum(trees[freq_var][current_set] * trees[target_var][current_set]) - target_amount
+            amount = np.sum(data[freq_var][current_set] * data[target_var][current_set]) - target_amount
 
     elif target_type == "relative_remain":
         if target_var == freq_var:
-            amount = (1 - target_amount) * np.sum(trees[freq_var][current_set])
+            amount = (1 - target_amount) * np.sum(data[freq_var][current_set])
         else:
-            amount = (1 - target_amount) * np.sum(trees[freq_var][current_set] * trees[target_var][current_set])
+            amount = (1 - target_amount) * np.sum(data[freq_var][current_set] * data[target_var][current_set])
 
     else:
         raise MetsiException(f"Unknown target type {target_type}")
@@ -326,7 +338,7 @@ def _scale_y(mode: str,
              prof_x: npt.NDArray[np.float64],
              prof_y: npt.NDArray[np.float64],
              interval_id: npt.NDArray[np.integer],
-             trees: ReferenceTrees,
+             data: VectorData,
              cur_set_idx_ord: npt.NDArray[np.integer],
              cur_set_order_var: str):
 
@@ -336,18 +348,20 @@ def _scale_y(mode: str,
     if mode == "odds_profile":
         prof_y = _i_odds(scale * odds_y0)
 
-        # Uudet kulmakertoimet ja kuvauspuiden osuudet
+        # Uudet kulmakertoimet ja rivien osuudet
         b = np.diff(prof_y) / np.diff(prof_x)
+
         # Jos vain yksi ja sama order_var-mjan arvo ja suhteellinen x, niin prof_x:n kaikki pisteet ovat samoja
         # skaalataan siinä tapauksessa vain vakio-osaa a (kulmakertoimet b nolliksi)
         if np.any(np.isnan(b)):
             b = np.repeat(0, b.size)
 
         a = prof_y[1:] - b * prof_x[1:]
-        for i_ordx in range(trees.size):
+
+        for i_ordx in range(data.size):
             idx = cur_set_idx_ord[i_ordx]
             y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
-                                  * trees[cur_set_order_var][cur_set_idx_ord][i_ordx]))
+                                  * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
 
     elif mode == "odds_trees":
         y[cur_set_idx_ord] = _i_odds(scale * odds_y0[cur_set_idx_ord])
