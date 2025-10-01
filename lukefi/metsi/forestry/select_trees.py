@@ -19,6 +19,12 @@ class Set:
     profile_xscale: Optional[str]
 
 
+class Target:
+    type: str
+    var: str
+    amount: float
+
+
 def odds(p):
     return p / (1 - p)
 
@@ -29,7 +35,7 @@ def iOdds(o):
     return val
 
 
-def get_target(trees: ReferenceTrees, current_set, target_var, target_type, target_amount, freq_var="f"):
+def get_target(trees: ReferenceTrees, current_set, target_var, target_type, target_amount, freq_var="stems_per_ha"):
     if target_var is None or target_type is None or target_amount is None:
         return np.inf
 
@@ -105,8 +111,9 @@ def init_search(mode, y, prof_y, total_target, tmp_total_target, cur_set_target,
     return {"scale": scale, "step": step, "y0": y0}
 
 
-def scale_y(mode, y0, scale, prof_x, prof_y, interval_id, cur_trees_ordered, cur_set_idx_ord, cur_set_order_var):
-    y = odds_y0 = y0
+def scale_y(mode, y0, scale, prof_x, prof_y, interval_id, trees, cur_set_idx_ord, cur_set_order_var):
+    odds_y0 = y0.copy()
+    y = y0.copy()
     if mode == "odds_profile":
         prof_y = iOdds(scale * odds_y0)
 
@@ -117,11 +124,11 @@ def scale_y(mode, y0, scale, prof_x, prof_y, interval_id, cur_trees_ordered, cur
         if np.any(np.isnan(b)):
             b = np.repeat(0, b.size)
 
-        a = prof_y[-1] - b * prof_x[-1]  # TODO: -1:n semantiikka tarkistettava R vs numpy
-        for i_ordx in range(cur_trees_ordered.size):
+        a = prof_y[1:] - b * prof_x[1:]
+        for i_ordx in range(trees.size):
             idx = cur_set_idx_ord[i_ordx]
             y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
-                                  * getattr(cur_trees_ordered, cur_set_order_var)[i_ordx]))
+                                  * getattr(trees, cur_set_order_var)[cur_set_idx_ord][i_ordx]))
 
     elif mode == "odds_trees":
         y[cur_set_idx_ord] = iOdds(scale * odds_y0[cur_set_idx_ord])
@@ -135,18 +142,17 @@ def scale_y(mode, y0, scale, prof_x, prof_y, interval_id, cur_trees_ordered, cur
     return y
 
 
-def select_trees(
-        stand,
-        trees: ReferenceTrees,
-        target,
-        sets: list[Set],
-        freq_var="f",
-        select_from="all",
-        mode="odds_trees"):
-    if target.var is not None and target.type is not None and target.amount is not None:
-        target_var = target.var
-        target_type = target.type
-        target_amount = target.amount
+def select_trees(stand,
+                 trees: ReferenceTrees,
+                 target_decl: Target,
+                 sets: list[Set],
+                 freq_var="stems_per_ha",
+                 select_from="all",
+                 mode="odds_trees"):
+    if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
+        target_var = target_decl.var
+        target_type = target_decl.type
+        target_amount = target_decl.amount
     else:
         target_var = None
         target_type = None
@@ -182,7 +188,7 @@ def select_trees(
         # joukkoon kuuluvat puut
         cur_set_mask = sets[i_set].sfunction(stand, trees)
         if np.any(cur_set_mask):
-            cur_set_idx = np.nonzero(cur_set_mask)
+            cur_set_idx = np.nonzero(cur_set_mask)[0]
             # cur_trees = trees[cur_set_idx]
             # järjestysmja ja 'kerättävä' muuttuja
             cur_set_order_var = sets[i_set].order_var
@@ -202,7 +208,7 @@ def select_trees(
             # muiden janojen vakiot riippuvat tästä
             # Alkuarvosta eteenpäin binäärihaulla
             if sets[i_set].profile_xmode == "relative":
-                if sets[i_set].profile_xscale is not None and sets[i_set].profile_xscale == "all":
+                if hasattr(sets[i_set], "profile_xscale") and sets[i_set].profile_xscale == "all":
                     ord_x_min = np.min(getattr(trees, cur_set_order_var))
                     ord_x_max = np.max(getattr(trees, cur_set_order_var))
                 else:
@@ -219,7 +225,7 @@ def select_trees(
 
             tmp_total_target = total_target_selected
             tmp_cur_set_target = 0.0
-            tmp_stems = selected_stems
+            tmp_stems = selected_stems.copy()
 
             # lasketaan kullekin joukon puulle alkuosuus y_i (skaalaus 0-1)
             i_ordx = 0  # puun järjestysindeksi
@@ -231,10 +237,10 @@ def select_trees(
             if np.any(np.isnan(b)):
                 b = np.repeat(0, b.size)
 
-            a = prof_y[-1] - b * prof_x[-1]
+            a = prof_y[1:] - b * prof_x[1:] # TODO: !!!!
             bounds_x = np.insert([-np.inf, np.inf], [1], prof_x[1:-1])  # TODO: tämä vaikuttaa hähmäiseltä
             interval_func = np.vectorize(lambda x: np.arange(
-                b.size)[x >= bounds_x[0] & x < bounds_x[-1]], otypes=[np.ndarray])
+                b.size)[(x >= bounds_x[:-1]) & (x < bounds_x[1:])])
             interval_id = interval_func(getattr(trees, cur_set_order_var)[cur_set_idx_ord])
 
             # puukohtainen osuus lähtötilanteessa
@@ -246,7 +252,7 @@ def select_trees(
             if select_from == "all":
                 stems = np.minimum(y * getattr(trees, freq_var), getattr(trees, freq_var) - selected_stems)
             else:
-                stems = np.maximum(0.0, y * getattr(trees, freq_var) - selected_stems)
+                stems = np.maximum(0.0, y * (getattr(trees, freq_var) - selected_stems))
             if target_var is None or target_var == freq_var:
                 target = np.sum(stems)
             else:
@@ -281,7 +287,7 @@ def select_trees(
                 # valintajoukon) tai kaikki valintajoukon puut valittu
                 while ((tmp_cur_set_target < (cur_set_target - eps_set) and
                         tmp_total_target < (total_target - eps_total) and
-                        np.sum(getattr(trees, freq_var)[cur_set_idx]) > sum(tmp_stems[cur_set_idx])) or
+                        np.sum(getattr(trees, freq_var)[cur_set_idx]) > np.sum(tmp_stems[cur_set_idx])) or
                        ((cur_set_target + eps_set) < tmp_cur_set_target or
                         (total_target + eps_total) < tmp_total_target)) and step > eps_step:
 
@@ -289,8 +295,6 @@ def select_trees(
                     tmp_cur_set_target = 0
 
                     # uusi osuuskandidaatti
-                    # TODO: signature täytyy muuttaa niin, että ei mene valmiiksi
-                    # järjestettyjä puita, vaan koko puujoukko ja cur_set_idx_ord
                     y = scale_y(
                         mode,
                         y0,
@@ -298,7 +302,7 @@ def select_trees(
                         prof_x,
                         prof_y,
                         interval_id,
-                        cur_trees_ordered,
+                        trees,
                         cur_set_idx_ord,
                         cur_set_order_var)
                     if np.any(np.isnan(y)):
@@ -333,7 +337,7 @@ def select_trees(
             # if not set has target
         # if not empty set
 
-        selected_stems = tmp_stems
+        selected_stems = tmp_stems.copy()
         total_target_selected = tmp_total_target
 
         print(f"{i_set}, {cur_set_target_var}, {tmp_cur_set_target}, {np.sum(stems)}")
