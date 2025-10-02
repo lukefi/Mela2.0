@@ -6,8 +6,8 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.vector_model import VectorData
 
 
-class SelectionSet[T]:
-    sfunction: Callable[[T, VectorData], npt.NDArray[np.bool_]]
+class SelectionSet[T, V: VectorData]:
+    sfunction: Callable[[T, V], npt.NDArray[np.bool_]]
     order_var: str
     target_var: str
     target_type: str
@@ -24,10 +24,10 @@ class SelectionTarget:
     amount: float
 
 
-def select_units[T](context: T,
-                    data: VectorData,
+def select_units[T, V: VectorData](context: T,
+                    data: V,
                     target_decl: SelectionTarget,
-                    sets: list[SelectionSet[T]],
+                    sets: list[SelectionSet[T, V]],
                     freq_var: str = "stems_per_ha",
                     select_from: str = "all",
                     mode: str = "odds_trees"):
