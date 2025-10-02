@@ -25,12 +25,12 @@ class SelectionTarget:
 
 
 def select_units[T, V: VectorData](context: T,
-                    data: V,
-                    target_decl: SelectionTarget,
-                    sets: list[SelectionSet[T, V]],
-                    freq_var: str = "stems_per_ha",
-                    select_from: str = "all",
-                    mode: str = "odds_trees"):
+                                   data: V,
+                                   target_decl: SelectionTarget,
+                                   sets: list[SelectionSet[T, V]],
+                                   freq_var: str = "stems_per_ha",
+                                   select_from: str = "all",
+                                   mode: str = "odds_trees"):
 
     if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
@@ -229,11 +229,9 @@ def select_units[T, V: VectorData](context: T,
         selected_units = tmp_units.copy()
         total_target_selected = tmp_total_target
 
-        print(f"{i_set}, {cur_set_target_var}, {tmp_cur_set_target}, {np.sum(units)}")
         i_set = i_set + 1
     # sets
 
-    print(f"{target_var}, {total_target_selected}")
     return selected_units
 
 
