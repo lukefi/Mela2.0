@@ -345,6 +345,7 @@ def _scale_y(mode: str,
 
     if mode == "odds_profile":
         prof_y = _i_odds(scale * odds_y0)
+        y = np.empty((data.size), dtype=np.float64)
 
         # Uudet kulmakertoimet ja rivien osuudet
         b = np.diff(prof_y) / np.diff(prof_x)
