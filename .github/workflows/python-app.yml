@@ -7,12 +7,16 @@ name: CI - Unit and Robot Tests
 on:
   # trigger on push to main
   push:
-    branches: [ main ]
-  # trigger on new PR to main 
+    branches: [ main  , MELA2-81 ]
+  # trigger on new PR to main
   pull_request:
-    branches: [ main ]
+    branches: [ main]
   # enables manual triggering
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
   run-tests: 
@@ -71,7 +75,43 @@ jobs:
     - name: Test with pytest
       run: |
         python -m pytest --junit-xml=pytest.xml --cov=lukefi --cov-report xml --cov-branch
-      
+
+    - name: Log in to GHCR
+      env:
+        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+    - name: Pull growth-libs image
+      run: |
+        docker pull ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test
+
+    - name: Extract Motti binaries from image
+      env:
+        IMAGE: ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test
+        DEST: ${{ github.workspace }}/data/motti
+      run: |
+        set -euo pipefail
+        mkdir -p "$DEST"
+        # Stream only root-level files (not directories) from the image to DEST
+        docker run --rm "$IMAGE" sh -lc '
+          set -e
+          cd /
+          # list non-directories at root; empty is ok
+          files="$(ls -p | grep -v / || true)"
+          if [ -n "$files" ]; then
+            tar -cf - $files
+          else
+            # no regular files at root; create empty tar
+            tar -cf - --files-from /dev/null
+          fi
+        ' | tar -C "$DEST" -xf -
+        # Make likely executables runnable (ignore if none)
+        chmod +x "$DEST"/* 2>/dev/null || true
+        # Sanity check + short listing
+        echo "Copied to $DEST:"
+        ls -al "$DEST"
+
     - name: Run Robot Tests
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}
@@ -94,6 +134,7 @@ jobs:
     - name: Clean up
       run: |
         make -C lukefi/metsi/forestry/c clean
+        rm -rf ./data/motti || true
 
   
   publish-test-results:
