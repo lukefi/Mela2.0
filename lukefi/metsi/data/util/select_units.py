@@ -132,7 +132,7 @@ def select_units[T, V: VectorData](context: T,
             interval_id: npt.NDArray[np.integer] = interval_func(data[cur_set_order_var][cur_set_idx_ord])
 
             # rivikohtainen osuus lähtötilanteessa
-            for i_ordx in range(cur_set_mask.size):
+            for i_ordx in range(cur_set_idx_ord.size):
                 idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # järjestysindeksiä vastaava rivin alkuperäinen indeksi
                 y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
                              * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
