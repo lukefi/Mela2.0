@@ -96,8 +96,8 @@ def select_units[T, V: VectorData](context: T,
                     ord_x_min = np.min(data[cur_set_order_var])
                     ord_x_max = np.max(data[cur_set_order_var])
                 else:
-                    ord_x_min = data[cur_set_order_var][cur_set_idx_ord][0]
-                    ord_x_max = data[cur_set_order_var][cur_set_idx_ord][-1]
+                    ord_x_min = data[cur_set_order_var][cur_set_idx][cur_set_idx_ord][0]
+                    ord_x_max = data[cur_set_order_var][cur_set_idx][cur_set_idx_ord][-1]
 
                 d_ord = ord_x_max - ord_x_min
 
@@ -135,7 +135,7 @@ def select_units[T, V: VectorData](context: T,
             for i_ordx in range(cur_set_idx_ord.size):
                 idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # järjestysindeksiä vastaava rivin alkuperäinen indeksi
                 y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
-                             * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
+                             * data[cur_set_order_var][cur_set_idx][cur_set_idx_ord][i_ordx]))
 
             # tässä joukossa valittu muuttuja, ei voi ylittää jäljellä olevaa määrää
             if select_from == "all":
@@ -190,7 +190,7 @@ def select_units[T, V: VectorData](context: T,
                                  prof_y,
                                  interval_id,
                                  data,
-                                 cur_set_idx_ord,
+                                 cur_set_idx[cur_set_idx_ord],
                                  cur_set_order_var)
 
                     if np.any(np.isnan(y)):
