@@ -203,3 +203,39 @@ class TestSelectTrees(unittest.TestCase):
             4.98923296, 5.34436438,
         ])
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
+
+    def test_multiple_sets(self):
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: (trees.breast_height_diameter > 10) & (trees.management_category <= 1)
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.2
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
+
+        set2 = SelectionSet[ForestStand, ReferenceTrees]()
+        set2.sfunction = lambda _, trees: trees.management_category <= 1
+        set2.order_var = "breast_height_diameter"
+        set2.target_var = "stems_per_ha"
+        set2.target_type = "relative"
+        set2.target_amount = 0.3
+        set2.profile_x = np.array([0.0, 1.0])
+        set2.profile_y = np.array([1.0, 0.5])
+        set2.profile_xmode = "relative"
+
+        sets = [set1, set2]
+
+        target = SelectionTarget()
+        target.type = "absolute_remain"
+        target.var = "stems_per_ha"
+        target.amount = 50
+
+        selected = select_units(self.stand, self.trees, target, sets)
+        expected = np.array([
+            7.047820, 3.039971, 2.428410, 2.161354, 2.067414, 1.817145, 1.627423, 1.482481,
+            1.418895, 1.384098, 1.376576, 1.397957, 1.454208, 1.555003, 1.722350, 1.997521,
+            1.726186, 2.456163, 3.354480, 5.456720,
+        ])
+        self.assertTrue(np.all(np.abs(selected - expected) < 0.000001))
