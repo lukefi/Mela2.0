@@ -76,11 +76,16 @@ jobs:
       run: |
         python -m pytest --junit-xml=pytest.xml --cov=lukefi --cov-report xml --cov-branch
 
-    - name: Log in to GHCR
-      env:
-        GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Ensure no stale GHCR creds
       run: |
-        echo "$GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        docker logout ghcr.io || true
+
+    - name: Log in to GHCR
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
 
     - name: Pull growth-libs image
       run: |
