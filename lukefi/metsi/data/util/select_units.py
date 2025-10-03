@@ -88,7 +88,7 @@ def select_units[T, V: VectorData](context: T,
                                          sets[i_set].target_amount)
             eps_set = max(0.005, cur_set_target * tolerance)
 
-            # lasketaan alkuarvo vakiolle tai skaalaukselle profiilin ensimmäiselllä janalla
+            # lasketaan alkuarvo vakiolle tai skaalaukselle profiilin ensimmäisellä janalla
             # muiden janojen vakiot riippuvat tästä
             # Alkuarvosta eteenpäin binäärihaulla
             if sets[i_set].profile_xmode == "relative":
