@@ -18,7 +18,8 @@ def grow_acta(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTupl
     step = operation_parameters.get('step', 5)
     stand, collected_data = input_
     if stand.reference_trees.size == 0:
-        return input_
+        stand.year += step
+        return stand, collected_data
     diameters, heights = grow_diameter_and_height(stand.reference_trees, step)
     stems = stand.reference_trees.stems_per_ha
     update_stand_growth(stand, diameters, heights, stems, step)

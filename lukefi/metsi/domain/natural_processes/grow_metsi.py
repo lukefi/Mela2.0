@@ -256,7 +256,8 @@ def grow_metsi(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTup
     stand, collected_data = input_
 
     if stand.reference_trees.size == 0:
-        return input_
+        stand.year += step
+        return stand, collected_data
 
     # build predictor and run growth
     pred = MetsiGrowPredictor(stand)
