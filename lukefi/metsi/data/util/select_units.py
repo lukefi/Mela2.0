@@ -357,7 +357,7 @@ def _scale_y(mode: str,
 
         a = prof_y[1:] - b * prof_x[1:]
 
-        for i_ordx in range(data.size):
+        for i_ordx in range(cur_set_idx_ord.size):
             idx = cur_set_idx_ord[i_ordx]
             y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
                                   * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
