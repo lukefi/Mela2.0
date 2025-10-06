@@ -80,42 +80,68 @@ jobs:
       run: |
         docker logout ghcr.io || true
 
+    - name: Check if this run can access private GHCR
+      id: ghcr_access
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+          echo "can_pull=false" >> $GITHUB_OUTPUT
+          echo "This is a PR from a fork; skipping private GHCR pull."
+        else
+          echo "can_pull=true" >> $GITHUB_OUTPUT
+        fi
+
     - name: Log in to GHCR
+      if: steps.ghcr_access.outputs.can_pull == 'true'
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
-    - name: Pull growth-libs image
+    - name: Diagnose GHCR access
+      if: steps.ghcr_access.outputs.can_pull == 'true'
       run: |
-        docker pull ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test
+        set -euo pipefail
+        TOKEN=$(echo -n "${{ github.token }}")
+        # Probe the registry API; expect HTTP 200/401/403
+        code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
+          https://ghcr.io/v2/lukefi/mela2.0/growth-libs/tags/list)
+        echo "GHCR /tags/list status: $code"
+        if [ "$code" != "200" ]; then
+          echo "Likely missing repo access to the private package, or wrong package path/tag."
+          exit 1
+        fi
 
-    - name: Extract Motti binaries from image
+    - name: Pull growth-libs image
+      if: steps.ghcr_access.outputs.can_pull == 'true'
+      run: |
+        set -euxo pipefail
+        docker pull ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test || {
+          echo "Pull failed. Printing debug info..."
+          docker logout ghcr.io || true
+          exit 1
+        }
+
+    - name: Extract binaries from image
+      if: steps.ghcr_access.outputs.can_pull == 'true'
       env:
         IMAGE: ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test
         DEST: ${{ github.workspace }}/data/motti
       run: |
         set -euo pipefail
         mkdir -p "$DEST"
-        # Stream only root-level files (not directories) from the image to DEST
         docker run --rm "$IMAGE" sh -lc '
           set -e
           cd /
-          # list non-directories at root; empty is ok
           files="$(ls -p | grep -v / || true)"
           if [ -n "$files" ]; then
             tar -cf - $files
           else
-            # no regular files at root; create empty tar
             tar -cf - --files-from /dev/null
           fi
         ' | tar -C "$DEST" -xf -
-        # Make likely executables runnable (ignore if none)
         chmod +x "$DEST"/* 2>/dev/null || true
-        # Sanity check + short listing
-        echo "Copied to $DEST:"
-        ls -al "$DEST"
+        ls -al "$DEST" || true
 
     - name: Run Robot Tests
       run: |
