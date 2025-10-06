@@ -105,7 +105,7 @@ jobs:
         TOKEN=$(echo -n "${{ github.token }}")
         # Probe the registry API; expect HTTP 200/401/403
         code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
-          https://ghcr.io/v2/lukefi/mela2.0/growth-libs/tags/list)
+          https://ghcr.io/v2/lukefi/growth-libs/tags/list)
         echo "GHCR /tags/list status: $code"
         if [ "$code" != "200" ]; then
           echo "Likely missing repo access to the private package, or wrong package path/tag."
@@ -116,7 +116,7 @@ jobs:
       if: steps.ghcr_access.outputs.can_pull == 'true'
       run: |
         set -euxo pipefail
-        docker pull ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test || {
+        docker pull ghcr.io/lukefi/growth-libs:linux-x64-test || {
           echo "Pull failed. Printing debug info..."
           docker logout ghcr.io || true
           exit 1
@@ -125,7 +125,7 @@ jobs:
     - name: Extract binaries from image
       if: steps.ghcr_access.outputs.can_pull == 'true'
       env:
-        IMAGE: ghcr.io/lukefi/mela2.0/growth-libs:linux-x64-test
+        IMAGE: ghcr.io/lukefi/growth-libs:linux-x64-test
         DEST: ${{ github.workspace }}/data/motti
       run: |
         set -euo pipefail
