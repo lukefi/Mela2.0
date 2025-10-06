@@ -16,14 +16,13 @@ from lukefi.metsi.data.formats.io_utils import (
 from lukefi.metsi.app.app_io import MetsiConfiguration
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.domain.forestry_types import SimResults
-from lukefi.metsi.data.layered_model import PossiblyLayered
 from lukefi.metsi.domain.forestry_types import ForestOpPayload, StandList, ForestStand
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.collected_data import CollectedData
 
 StandReader = Callable[[str | Path], StandList]
-StandWriter = Callable[[Path, ExportableContainer[PossiblyLayered[ForestStand]]], None]
+StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]
 ObjectLike = StandList | SimResults | CollectedData
 ObjectWriter = Callable[[Path, ObjectLike], None]
 
@@ -67,7 +66,7 @@ def stand_writer(container_format: str) -> StandWriter:
 
 # entry of FileWriter
 def write_stands_to_file(
-        result: ExportableContainer[PossiblyLayered[ForestStand]], filepath: Path, state_output_container: str):
+        result: ExportableContainer[ForestStand], filepath: Path, state_output_container: str):
     """Resolve a writer function for ForestStands matching the given state_output_container. Invokes write."""
     writer = stand_writer(state_output_container)
     writer(filepath, result)
@@ -303,11 +302,11 @@ def row_writer(filepath: Path, rows: list[str]):
             file.write('\n')
 
 
-def csv_writer(filepath: Path, container: ExportableContainer[PossiblyLayered[ForestStand]]):
+def csv_writer(filepath: Path, container: ExportableContainer[ForestStand]):
     row_writer(filepath, stands_to_csv_content(container, ';'))
 
 
-def rst_writer(filepath: Path, container: ExportableContainer[PossiblyLayered[ForestStand]]):
+def rst_writer(filepath: Path, container: ExportableContainer[ForestStand]):
     rows = stands_to_rst_content(container)
     row_writer(filepath, rows)
     if container.additional_vars is not None:

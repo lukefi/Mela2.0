@@ -1,3 +1,4 @@
+from copy import copy
 import dataclasses
 from typing import Optional, override
 from dataclasses import dataclass
@@ -6,7 +7,6 @@ from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, Si
                                               TreeSpecies, DrainageCategory, Storey)
 from lukefi.metsi.data.enums.mela import MelaLandUseCategory
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
-from lukefi.metsi.data.layered_model import PossiblyLayered
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.sim.finalizable import Finalizable
 
@@ -510,7 +510,7 @@ class ForestStand(Finalizable):
         return retval
 
 
-def stand_as_internal_csv_row(stand: PossiblyLayered[ForestStand], decl_keys: Optional[list[str]] = None) -> list[str]:
+def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
     result = ["stand", stand.identifier]
     result.extend(stand_as_internal_row(stand))
     if decl_keys is not None:
@@ -518,7 +518,7 @@ def stand_as_internal_csv_row(stand: PossiblyLayered[ForestStand], decl_keys: Op
     return result
 
 
-def stand_as_rst_row(stand: PossiblyLayered[ForestStand]):
+def stand_as_rst_row(stand: ForestStand):
     return [
         stand.management_unit_id,
         stand.year,
@@ -557,7 +557,7 @@ def stand_as_rst_row(stand: PossiblyLayered[ForestStand]):
     ]
 
 
-def stand_as_internal_row(stand: PossiblyLayered[ForestStand]):
+def stand_as_internal_row(stand: ForestStand):
     return [
         stand.management_unit_id,
         stand.year,

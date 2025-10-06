@@ -15,7 +15,6 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.layered_model import PossiblyLayered
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -85,7 +84,7 @@ class MottiDLLPredictor:
 
     def __init__(
         self,
-        stand: PossiblyLayered[ForestStand],
+        stand: ForestStand,
         data_dir: Optional[str] = None,
         use_dll_site_convert: bool = True,
         dll: Optional["Motti4DLL"] = None,

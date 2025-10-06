@@ -20,7 +20,6 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.layered_model import PossiblyLayered
 
 # Lower-level MetsiGrow types
 from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
@@ -94,7 +93,7 @@ class MetsiGrowPredictor(Predict):
     Extend metsi_grow.Predict to interface ForestStand & ReferenceTree data.
     """
 
-    def __init__(self, stand: PossiblyLayered[ForestStand]) -> None:
+    def __init__(self, stand: ForestStand) -> None:
         super().__init__()
         self.stand = stand
         self.year = float(_require(stand.year, "stand.year"))
