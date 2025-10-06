@@ -504,8 +504,10 @@ class ForestStand(Finalizable):
 
     @override
     def finalize(self):
-        self.reference_trees = self.reference_trees.finalize()
-        self.tree_strata = self.tree_strata.finalize()
+        retval = copy(self)
+        retval.reference_trees = self.reference_trees.finalize()
+        retval.tree_strata = self.tree_strata.finalize()
+        return retval
 
 
 def stand_as_internal_csv_row(stand: PossiblyLayered[ForestStand], decl_keys: Optional[list[str]] = None) -> list[str]:
