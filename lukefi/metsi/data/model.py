@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
                                               TreeSpecies, DrainageCategory, Storey)
-from lukefi.metsi.data.enums.mela import MelaLandUseCategory
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.sim.finalizable import Finalizable
@@ -428,22 +427,6 @@ class ForestStand(Finalizable):
 
     def is_auxiliary(self):
         return self.auxiliary_stand
-
-    def is_forest_land(self):
-        return (self.land_use_category.value < 4) if self.land_use_category is not None else False
-
-    def is_other_excluded_forest(self):
-        return (
-            self.land_use_category == MelaLandUseCategory.OTHER
-            and self.fra_category == "3"
-            and self.land_use_category_detail in ("1", "2", "6", "7")
-        )
-
-    def has_trees(self) -> bool:
-        return len(self.reference_trees) > 0
-
-    def has_strata(self) -> bool:
-        return len(self.tree_strata) > 0
 
     def from_row(self, row):
         self.management_unit_id = conv(row[0], int)
