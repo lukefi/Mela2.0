@@ -1,5 +1,4 @@
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.layered_model import LayeredObject
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestOpPayload, StandList
 from lukefi.metsi.sim.collected_data import CollectedData
@@ -16,7 +15,6 @@ def run_stands(stands: StandList,
 
     retval: dict[str, list[ForestOpPayload]] = {}
     for stand in stands:
-        # overlaid_stand = LayeredObject[ForestStand](stand)
         overlaid_stand = stand
 
         payload = ForestOpPayload(
