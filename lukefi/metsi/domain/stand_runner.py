@@ -16,7 +16,8 @@ def run_stands(stands: StandList,
 
     retval: dict[str, list[ForestOpPayload]] = {}
     for stand in stands:
-        overlaid_stand = LayeredObject[ForestStand](stand)
+        # overlaid_stand = LayeredObject[ForestStand](stand)
+        overlaid_stand = stand
 
         payload = ForestOpPayload(
             computational_unit=overlaid_stand,
