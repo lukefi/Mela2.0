@@ -428,6 +428,15 @@ class ForestStand(Finalizable):
     def is_auxiliary(self):
         return self.auxiliary_stand
 
+    def is_forest_land(self):
+        return (self.land_use_category.value < 4) if self.land_use_category is not None else False
+
+    def has_trees(self):
+        return len(self.reference_trees) > 0
+
+    def has_strata(self):
+        return len(self.tree_strata) > 0
+
     def from_row(self, row):
         self.management_unit_id = conv(row[0], int)
         self.year = conv(row[1], int)
