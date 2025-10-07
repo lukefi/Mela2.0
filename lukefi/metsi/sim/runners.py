@@ -3,7 +3,6 @@ from copy import deepcopy
 from typing import TypeVar
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import ConditionFailed
-from lukefi.metsi.data.layered_model import PossiblyLayered
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.generators import Generator
@@ -50,7 +49,6 @@ def _run_chains_iteratively(payload: T, chains: list[list[Callable[[T], T]]]) ->
             results.append(evaluate_sequence(deepcopy(payload), *chain))
         except (ConditionFailed, UserWarning):
             ...
-            # TODO aborted run reporting
     return results
 
 
@@ -60,7 +58,7 @@ def chain_evaluator(payload: SimulationPayload[T], root_node: EventTree[T]) -> l
 
 
 def depth_first_evaluator(payload: SimulationPayload[T], root_node: EventTree[T]) -> list[SimulationPayload[T]]:
-    state_tree: StateTree[PossiblyLayered[T]] = StateTree()
+    state_tree: StateTree[T] = StateTree()
     return root_node.evaluate(payload, state_tree)
 
 

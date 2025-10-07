@@ -3,8 +3,8 @@ from copy import copy, deepcopy
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, TypeVar
 
-from lukefi.metsi.data.layered_model import LayeredObject, PossiblyLayered
 from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.sim.finalizable import Finalizable
 if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import TreatmentFn
 
@@ -12,16 +12,14 @@ if TYPE_CHECKING:
 class SimulationPayload[T](SimpleNamespace):
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
-    computational_unit: PossiblyLayered[T]
+    computational_unit: T
     collected_data: CollectedData
     operation_history: list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]
 
     def __copy__(self) -> "SimulationPayload[T]":
-        copy_like: PossiblyLayered[T]
-        if isinstance(self.computational_unit, LayeredObject):
-            copy_like = self.computational_unit.new_layer()
-            copy_like.reference_trees = [tree.new_layer() for tree in copy_like.reference_trees]
-            copy_like.tree_strata = [stratum.new_layer() for stratum in copy_like.tree_strata]
+        copy_like: T
+        if isinstance(self.computational_unit, Finalizable):
+            copy_like = self.computational_unit.finalize()
         else:
             copy_like = deepcopy(self.computational_unit)
 

@@ -2,7 +2,6 @@ from typing import Optional
 from copy import copy, deepcopy
 
 from lukefi.metsi.app.utils import ConditionFailed
-from lukefi.metsi.data.layered_model import PossiblyLayered
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
 from lukefi.metsi.sim.state_tree import StateTree
@@ -44,7 +43,7 @@ class EventTree[T]:
 
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 state_tree: Optional[StateTree[PossiblyLayered[T]]] = None) -> list[SimulationPayload[T]]:
+                 state_tree: Optional[StateTree[T]] = None) -> list[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If given a root node, a StateTree is also constructed, containing all complete

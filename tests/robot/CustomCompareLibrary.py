@@ -1,3 +1,4 @@
+import glob
 import itertools
 import math
 import re
@@ -162,3 +163,6 @@ def compare_numeric_files_with_tolerance(file1_path, file2_path, tolerance_str):
 
     # If we get here, the files match
     print(f"Files '{file1_path}' and '{file2_path}' match within tolerance {tolerance}.")
+    
+def list_directory_recursively(path) -> list[str]:
+    return list(glob.iglob('**/*.*', root_dir=path, recursive=True))

@@ -174,7 +174,7 @@ class VMIBuilder(ForestBuilder):
     def remove_strata(self, stands: StandList):
         """Empties the stands' `tree_strata` lists."""
         for stand in stands:
-            stand.tree_strata.clear()
+            stand.tree_strata_pre_vec.clear()
 
     @abstractmethod
     def find_row_type(self, row: str) -> int:
@@ -192,7 +192,6 @@ class VMI12Builder(VMIBuilder):
                  builder_flags: dict,
                  declared_conversions: dict,
                  data_rows: list[str] | None = None):
-        # TODO: data_rows sanity check for VMI12
         if data_rows is None:
             data_rows = []
         super().__init__(builder_flags, declared_conversions, data_rows)
@@ -277,7 +276,7 @@ class VMI12Builder(VMIBuilder):
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
                 stand = result[stand_id]
                 stratum.stand = stand
-                stand.tree_strata.append(stratum)
+                stand.tree_strata_pre_vec.append(stratum)
 
         if self.builder_flags['measured_trees']:
             for i, row in enumerate(self.reference_trees):
@@ -285,7 +284,7 @@ class VMI12Builder(VMIBuilder):
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
                 stand = result[stand_id]
                 tree.stand = stand
-                stand.reference_trees.append(tree)
+                stand.reference_trees_pre_vec.append(tree)
 
         return list(result.values())
 
@@ -300,7 +299,6 @@ class VMI13Builder(VMIBuilder):
         if data_rows is None:
             data_rows = []
         pre_parsed_rows = map(lambda raw: raw.split(), data_rows)
-        # TODO: data_rows sanity check for VMI13
         super().__init__(builder_flags, declared_conversions, pre_parsed_rows)
 
     def find_row_type(self, row: str) -> int:
@@ -385,7 +383,7 @@ class VMI13Builder(VMIBuilder):
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 stand = result[stand_id]
                 stratum.stand = stand
-                stand.tree_strata.append(stratum)
+                stand.tree_strata_pre_vec.append(stratum)
 
         if self.builder_flags['measured_trees']:
             for i, row in enumerate(self.reference_trees):
@@ -393,7 +391,7 @@ class VMI13Builder(VMIBuilder):
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 stand = result[stand_id]
                 tree.stand = stand
-                stand.reference_trees.append(tree)
+                stand.reference_trees_pre_vec.append(tree)
 
         return list(result.values())
 
@@ -484,7 +482,6 @@ class XMLBuilder(ForestCentreBuilder):
         stand.geo_location = (latitude, longitude, None, crs)  # RST record 5,6,8
         stand.identifier = stand_basic_data.id  # RST record 7
         stand.degree_days = None  # RST record 9
-        # TODO: need to figure out the source for this in the XML
         stand.owner_category = OwnerCategory.PRIVATE  # RST record 10
         stand.land_use_category = fc2internal.convert_land_use_category(stand_basic_data.MainGroup)  # RST record 11
         stand.soil_peatland_category = fc2internal.convert_soil_peatland_category(
@@ -533,8 +530,8 @@ class XMLBuilder(ForestCentreBuilder):
                 stratum.identifier = f"{stand.identifier}.{stratum.tree_number or stratum.identifier}-stratum"
                 stratum.stand = stand
                 strata.append(stratum)
-            stand.tree_strata = strata
-            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata)
+            stand.tree_strata_pre_vec = strata
+            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata_pre_vec)
             stands.append(stand)
         return stands
 
@@ -582,7 +579,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
             fc2internal.convert_drainage_category)  # RST record 16
         stand.drainage_feasibility = True  # RST record 17
         # RST record 18 is '0' by default
-        # TODO: parse operations -> RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
         stand.natural_regeneration_feasibility = False  # RST record 22
         stand.development_class = smk_util.parse_development_class(
             util.parse_type(entry.developmentclass, str))  # RST record 24
@@ -625,7 +621,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
                 stratum = self.convert_stratum_entry(rowj)
                 stratum.stand = stand
                 strata.append(stratum)
-            stand.tree_strata = strata
-            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata)
+            stand.tree_strata_pre_vec = strata
+            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata_pre_vec)
             stands.append(stand)
         return stands
