@@ -49,7 +49,6 @@ def _run_chains_iteratively(payload: T, chains: list[list[Callable[[T], T]]]) ->
             results.append(evaluate_sequence(deepcopy(payload), *chain))
         except (ConditionFailed, UserWarning):
             ...
-            # TODO aborted run reporting
     return results
 
 

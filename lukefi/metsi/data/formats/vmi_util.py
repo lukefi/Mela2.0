@@ -344,12 +344,6 @@ def determine_tax_class(sourcevalue: str) -> int:
     """
     Map and return number valued source string as int for values [0,4] => [1,5]. Otherwise 0.
     """
-    # TODO: string - int type ambiguity in maaluokka. Could not have matched int.
-    # Arto Haara comment please, is it needed?
-    # if (maaluokka == 2):
-    #     veroluokka = 6.0
-    # elif (maaluokka == 3):
-    #     veroluokka = 7.0
 
     if sourcevalue == '0':
         return 1
@@ -364,7 +358,6 @@ def determine_tax_class(sourcevalue: str) -> int:
     return 0
 
 
-# TODO: default case undefined. Problem? Original implementation raises NameError from undefined in else case
 def determine_owner_group(sourcevalue: str) -> int:
     """Map and transform integer valued source string as integer or raise on unknown values"""
     if sourcevalue in ['0', '1']:
@@ -395,7 +388,6 @@ def determine_forest_management_category(land_category: int, forestry_centre: in
     fmc = 1
     other_values = muuttujat[indices["muut_arvot"]]
 
-    # TODO: VMI13 full data shows regression with land category comparison. Probably a bug
     if is_vmi12:
         fmc = determine_fmc_by_land_category(fmc, land_category)
     fmc = determine_fmc_by_production_limitations(fmc, other_values, owner_group,

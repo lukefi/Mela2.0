@@ -192,7 +192,6 @@ class VMI12Builder(VMIBuilder):
                  builder_flags: dict,
                  declared_conversions: dict,
                  data_rows: list[str] | None = None):
-        # TODO: data_rows sanity check for VMI12
         if data_rows is None:
             data_rows = []
         super().__init__(builder_flags, declared_conversions, data_rows)
@@ -300,7 +299,6 @@ class VMI13Builder(VMIBuilder):
         if data_rows is None:
             data_rows = []
         pre_parsed_rows = map(lambda raw: raw.split(), data_rows)
-        # TODO: data_rows sanity check for VMI13
         super().__init__(builder_flags, declared_conversions, pre_parsed_rows)
 
     def find_row_type(self, row: str) -> int:
@@ -484,7 +482,6 @@ class XMLBuilder(ForestCentreBuilder):
         stand.geo_location = (latitude, longitude, None, crs)  # RST record 5,6,8
         stand.identifier = stand_basic_data.id  # RST record 7
         stand.degree_days = None  # RST record 9
-        # TODO: need to figure out the source for this in the XML
         stand.owner_category = OwnerCategory.PRIVATE  # RST record 10
         stand.land_use_category = fc2internal.convert_land_use_category(stand_basic_data.MainGroup)  # RST record 11
         stand.soil_peatland_category = fc2internal.convert_soil_peatland_category(
@@ -582,7 +579,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
             fc2internal.convert_drainage_category)  # RST record 16
         stand.drainage_feasibility = True  # RST record 17
         # RST record 18 is '0' by default
-        # TODO: parse operations -> RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
         stand.natural_regeneration_feasibility = False  # RST record 22
         stand.development_class = smk_util.parse_development_class(
             util.parse_type(entry.developmentclass, str))  # RST record 24

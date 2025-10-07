@@ -1,5 +1,3 @@
-# TODO: Add comment
-# 
 # Author: Lauri Mehtätalo 21.6.2023
 # Muutos 21.6. 
 # - skaalataan jakaumasta lasketut ppa:t uudelleen, jotta 

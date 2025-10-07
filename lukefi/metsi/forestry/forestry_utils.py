@@ -63,10 +63,6 @@ def find_matching_stratum_by_diameter(
     associated_stratum = strata[0]
     for stratum in strata[1:]:
         if stratum.has_diameter():
-            # TODO: this method is definitely not stable with strata lists of different orderings
-            # i.e. it will return different result depending on which order the strata are given
-            # this is not safe to use in other contexts than the current one being refactored
-            # and requires a more robust solution
             associated_stratum = override_from_diameter(associated_stratum, stratum, reference_tree)
     return associated_stratum
 

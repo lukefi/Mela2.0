@@ -30,10 +30,6 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
         Initial data record stand metadata
         Initial data record tree set metadata
     """
-    # TODO: this is not a desireable change but introduced as a user helper. First column should be stand id number
-    # for which we don't have a strict value, as long as it's internally unique in the RST file. User needs
-    # back referencing possibility from RST to actual forest stands in Forest Centre source. This is a hack to provide
-    # it. VMI stands should remain unaffected since their identifiers are not parseable as float values.
     outputtable_id = parse_float(stand.identifier) or stand.stand_id
 
     logical_record_length = sum([

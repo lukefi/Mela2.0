@@ -121,4 +121,3 @@ def supplement_age_for_reference_trees(reference_trees: list[ReferenceTree],
     age_stratums = list(filter(lambda s: s.breast_height_age > 0.0, stratums))
     trees_and_strategies = solve_supplement_strategy(no_age_trees, age_trees, age_stratums)
     return perform_supplementing(trees_and_strategies, age_trees, age_stratums)
-    # TODO: Remove zero stem stratums. See vmi-data-converter issue #55.
