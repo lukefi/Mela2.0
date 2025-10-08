@@ -29,8 +29,6 @@ class MetsiConfiguration(SimpleNamespace):
     state_input_container = StateInputFormat.CSV
     state_output_container: Optional[StateOutputFormat] = None
     derived_data_output_container: Optional[str] = None
-    formation_strategy = FormationStrategy.PARTIAL
-    evaluation_strategy = EvaluationStrategy.DEPTH
     measured_trees = False
     strata = True
     strata_origin = StrataOrigin.INVENTORY

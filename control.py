@@ -16,8 +16,6 @@ control_structure = {
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
         # "state_output_container": "csv",  # options: pickle, json, csv, null
         # "derived_data_output_container": "pickle",  # options: pickle, json, null
-        "formation_strategy": "partial",
-        "evaluation_strategy": "depth",
         "run_modes": ["preprocess", "export_prepro", "simulate", "postprocess"]
     },
     "preprocessing_operations": [
