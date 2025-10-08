@@ -1,8 +1,11 @@
 from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.domain.events import (
-    GrowActa
+    DoNothing,
+    GrowActa,
+    GrowMetsi,
 )
+from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
 
@@ -46,7 +49,11 @@ control_structure = {
         SimulationInstruction(
             time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
-                GrowActa(),
+                Alternatives([
+                    GrowActa(),
+                    GrowMetsi(),
+                    DoNothing()
+                ]),
             ]
         )
     ],
