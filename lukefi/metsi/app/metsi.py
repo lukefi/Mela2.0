@@ -31,14 +31,9 @@ def preprocess(config: MetsiConfiguration, control: dict, stands: StandList, _) 
     return result
 
 
-def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: sqlite3.Connection) -> SimResults:
+def simulate(_, control: dict, stands: StandList, db: sqlite3.Connection) -> None:
     print_logline("Simulating alternatives...")
-    result = simulate_alternatives(control, stands, db, run_stands)
-
-    if config.state_output_container is not None or config.derived_data_output_container is not None:
-        print_logline(f"Writing simulation results to '{config.target_directory}'")
-        write_full_simulation_result_dirtree(result, config)
-    return result
+    simulate_alternatives(control, stands, db, run_stands)
 
 
 def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
