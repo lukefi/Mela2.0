@@ -3,13 +3,14 @@ from copy import copy, deepcopy
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, TypeVar
 
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.finalizable import Finalizable
 if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import TreatmentFn
 
 
-class SimulationPayload[T](SimpleNamespace):
+class SimulationPayload[T: ComputationalUnit](SimpleNamespace):
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
     computational_unit: T
@@ -29,5 +30,5 @@ class SimulationPayload[T](SimpleNamespace):
             operation_history=list(self.operation_history)
         )
 
-T = TypeVar("T")
+T = TypeVar("T", bound=ComputationalUnit)
 ProcessedTreatment = Callable[[SimulationPayload[T]], SimulationPayload[T]]

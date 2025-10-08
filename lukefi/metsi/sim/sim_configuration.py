@@ -1,9 +1,10 @@
 from types import SimpleNamespace
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction, generator_declarations_for_time_point
 from lukefi.metsi.sim.generators import Generator, Sequence
 
 
-class SimConfiguration[T](SimpleNamespace):
+class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
     """
     A class to manage simulation configuration, including treatments, generators,
     events, and time points.

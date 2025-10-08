@@ -14,85 +14,34 @@ from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, gen
 from lukefi.metsi.domain.forestry_types import SimResults
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.app.export import export_files, export_preprocessed
-from lukefi.metsi.app.file_io import prepare_target_directory, read_stands_from_file, \
+from lukefi.metsi.app.file_io import init_sqlite_database, prepare_target_directory, read_stands_from_file, \
     read_full_simulation_result_dirtree, write_full_simulation_result_dirtree, read_control_module
 from lukefi.metsi.app.post_processing import post_process_alternatives
 from lukefi.metsi.domain.stand_runner import run_stands
+from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
 
-def preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
+def preprocess(config: MetsiConfiguration, control: dict, stands: StandList, _) -> StandList:
     _ = config
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def simulate(config: MetsiConfiguration, control: dict, stands: StandList) -> SimResults:
+def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: sqlite3.Connection) -> SimResults:
     print_logline("Simulating alternatives...")
-    db_path = f"{config.target_directory}/simulation_results.db"
-    try:
-        os.remove(db_path)
-    except OSError:
-        pass
-    db = sqlite3.connect(db_path)
-    cur = db.cursor()
-    cur.execute(
-        """
-        CREATE TABLE nodes(identifier, stand, done_treatment, treatment_params, PRIMARY KEY(identifier, stand))
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE stands(node, identifier, year, management_unit_id, stand_id, area, area_weight, geo_location,
-                            degree_days, owner_category, land_use_category, soil_peatland_category,
-                            site_type_category, tax_class_reduction, tax_class, drainage_category,
-                            drainage_feasibility, drainage_year, fertilization_year,
-                            soil_surface_preparation_year, natural_regeneration_feasibility,
-                            regeneration_area_cleaning_year, development_class, artificial_regeneration_year,
-                            young_stand_tending_year, pruning_year, cutting_year, forestry_centre_id,
-                            forest_management_category, method_of_last_cutting, municipality_id,
-                            dominant_storey_age, area_weight_factors, fra_category,land_use_category_detail,
-                            auxiliary_stand, sea_effect, lake_effect, basal_area,
-                            PRIMARY KEY(node, identifier),
-                            FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand))
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE trees(node, stand, identifier, tree_number, species, breast_height_diameter, height,
-                           measured_height, breast_height_age, biological_age, stems_per_ha, origin,
-                           management_category, saw_log_volume_reduction_factor, pruning_year,
-                           age_when_10cm_diameter_at_breast_height, stand_origin_relative_position,
-                           lowest_living_branch_height, tree_category, storey, sapling, tree_type, tuhon_ilmiasu,
-                           PRIMARY KEY (node, identifier),
-                           FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))
-        """
-    )
-    cur.execute(
-        """
-        CREATE TABLE strata(node, stand, identifier, species, mean_diameter, mean_height, breast_height_age,
-                            biological_age, stems_per_ha, basal_area, origin, management_category,
-                            saw_log_volume_reduction_factor, cutting_year, age_when_10cm_diameter_at_breast_height,
-                            tree_number, stand_origin_relative_position, lowest_living_branch_height, storey,
-                            sapling_stems_per_ha, sapling_stratum, number_of_generated_trees,
-                            PRIMARY KEY (node, identifier),
-                            FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))
-        """
-    )
-
     result = simulate_alternatives(control, stands, db, run_stands)
-    db.commit()
-    db.close()
+
     if config.state_output_container is not None or config.derived_data_output_container is not None:
         print_logline(f"Writing simulation results to '{config.target_directory}'")
         write_full_simulation_result_dirtree(result, config)
     return result
 
 
-def post_process(config: MetsiConfiguration, control: dict, data: SimResults) -> SimResults:
+def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
     print_logline("Post-processing alternatives...")
     result = post_process_alternatives(config, control['post_processing'], data)
     if config.state_output_container is not None or config.derived_data_output_container is not None:
@@ -101,13 +50,13 @@ def post_process(config: MetsiConfiguration, control: dict, data: SimResults) ->
     return result
 
 
-def export(config: MetsiConfiguration, control: dict, data: SimResults) -> None:
+def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
     print_logline("Exporting simulation results...")
     if control['export']:
         export_files(config, control['export'], data)
 
 
-def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> StandList:
+def export_prepro(config: MetsiConfiguration, control: dict, data: StandList, _) -> StandList:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data)
@@ -175,6 +124,10 @@ def main() -> int:
         # deleting old target files
         remove_existing_export_files(app_config, control_structure)
 
+        print_logline("Initializing output database")
+        db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
+        create_database_tables(db)
+
         if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
             # 1) read full stand list
             full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
@@ -217,7 +170,10 @@ def main() -> int:
         current = stands
         for mode in cfg.run_modes:
             runner = mode_runners[mode]
-            current = runner(cfg, control_structure, current)
+            current = runner(cfg, control_structure, current, db)
+
+    db.commit()
+    db.close()
 
     _, dirs, files = next(os.walk(app_config.target_directory))
     if len(dirs) == 0 and len(files) == 0:
