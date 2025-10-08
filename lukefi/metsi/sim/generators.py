@@ -4,6 +4,7 @@ from typing import Any, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 
 from collections.abc import Callable
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.operations import prepared_operation
 from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import OpTuple
@@ -12,21 +13,21 @@ from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
 from lukefi.metsi.app.utils import MetsiException
 
-T = TypeVar("T")
+T = TypeVar("T", bound=ComputationalUnit)
 
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
 TreatmentFn = Callable[[OpTuple[T]], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
-class GeneratorBase[T](ABC):
+class GeneratorBase[T: ComputationalUnit](ABC):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
     def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
         pass
 
 
-class Generator[T](GeneratorBase, ABC):
+class Generator[T: ComputationalUnit](GeneratorBase, ABC):
     """Abstract base class for generator types."""
     children: Sequence_[GeneratorBase]
     time_point: Optional[int]
@@ -47,7 +48,7 @@ class Generator[T](GeneratorBase, ABC):
         return root
 
 
-class Sequence[T](Generator[T]):
+class Sequence[T: ComputationalUnit](Generator[T]):
     """Generator for sequential events."""
 
     @override
@@ -58,7 +59,7 @@ class Sequence[T](Generator[T]):
         return current
 
 
-class Alternatives[T](Generator[T]):
+class Alternatives[T: ComputationalUnit](Generator[T]):
     """Generator for branching events"""
 
     @override
@@ -69,7 +70,7 @@ class Alternatives[T](Generator[T]):
         return retval
 
 
-class Event[T](GeneratorBase):
+class Event[T: ComputationalUnit](GeneratorBase):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     preconditions: list[Condition[SimulationPayload[T]]]

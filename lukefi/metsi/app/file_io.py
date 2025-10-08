@@ -4,6 +4,7 @@ import pickle
 import importlib.util
 from collections.abc import Iterator, Callable
 from pathlib import Path
+import sqlite3
 from typing import Any, Optional
 import numpy as np
 import jsonpickle
@@ -362,3 +363,11 @@ def npz_file_reader(file_path: str | Path):
         for v in data.values():
             retval.append(v)
     return retval
+
+def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
+    try:
+        os.remove(file_path)
+    except OSError:
+        pass
+    db = sqlite3.connect(file_path)
+    return db

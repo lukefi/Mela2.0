@@ -1,8 +1,10 @@
 from copy import copy
 import dataclasses
+import sqlite3
 from typing import Optional, override
 from dataclasses import dataclass
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
                                               TreeSpecies, DrainageCategory, Storey)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
@@ -329,7 +331,7 @@ class ReferenceTree():
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
            slots=False, weakref_slot=False, eq=False)
-class ForestStand(Finalizable):
+class ForestStand(Finalizable, ComputationalUnit):
     # VMI data type 1
     # SMK data type Stand
 
@@ -500,6 +502,125 @@ class ForestStand(Finalizable):
         retval.reference_trees = self.reference_trees.finalize()
         retval.tree_strata = self.tree_strata.finalize()
         return retval
+
+    @override
+    def output_to_db(self, db: sqlite3.Connection, node: str):
+        cur = db.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO stands
+            VALUES
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                node,
+                self.identifier,
+                self.year,
+                self.management_unit_id,
+                self.stand_id,
+                self.area,
+                self.area_weight,
+                str(self.geo_location),
+                self.degree_days,
+                self.owner_category,
+                self.land_use_category,
+                self.soil_peatland_category,
+                self.site_type_category,
+                self.tax_class_reduction,
+                self.tax_class,
+                self.drainage_category,
+                self.drainage_feasibility,
+                self.drainage_year,
+                self.fertilization_year,
+                self.soil_surface_preparation_year,
+                self.natural_regeneration_feasibility,
+                self.regeneration_area_cleaning_year,
+                self.development_class,
+                self.artificial_regeneration_year,
+                self.young_stand_tending_year,
+                self.pruning_year,
+                self.cutting_year,
+                self.forestry_centre_id,
+                self.forest_management_category,
+                self.method_of_last_cutting,
+                self.municipality_id,
+                self.dominant_storey_age,
+                str(self.area_weight_factors),
+                self.fra_category,
+                self.land_use_category_detail,
+                self.auxiliary_stand,
+                self.sea_effect,
+                self.lake_effect,
+                self.basal_area))
+        for i in range(self.reference_trees.size):
+            cur.execute(
+                """
+                INSERT INTO trees
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (node,
+                 self.identifier,
+                 self.reference_trees.identifier[i],
+                 int(self.reference_trees.tree_number[i]),
+                 int(self.reference_trees.species[i]),
+                 self.reference_trees.breast_height_diameter[i],
+                 self.reference_trees.height[i],
+                 self.reference_trees.measured_height[i],
+                 self.reference_trees.breast_height_age[i],
+                 self.reference_trees.biological_age[i],
+                 self.reference_trees.stems_per_ha[i],
+                 int(self.reference_trees.origin[i]),
+                 int(self.reference_trees.management_category[i]),
+                 self.reference_trees.saw_log_volume_reduction_factor[i],
+                 int(self.reference_trees.pruning_year[i]),
+                 int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
+                 f"({self.reference_trees.stand_origin_relative_position[i][0]}, "
+                 f"{self.reference_trees.stand_origin_relative_position[i][1]}, "
+                 f"{self.reference_trees.stand_origin_relative_position[i][2]})",
+                 self.reference_trees.lowest_living_branch_height[i],
+                 self.reference_trees.tree_category[i],
+                 int(self.reference_trees.storey[i]),
+                 bool(self.reference_trees.sapling[i]),
+                 self.reference_trees.tree_type[i],
+                 self.reference_trees.tuhon_ilmiasu[i]
+                 )
+            )
+        for i in range(self.tree_strata.size):
+
+            cur.execute(
+                """
+                INSERT INTO strata
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (node,
+                 self.identifier,
+                 self.tree_strata.identifier[i],
+                 int(self.tree_strata.species[i]),
+                 self.tree_strata.mean_diameter[i],
+                 self.tree_strata.mean_height[i],
+                 self.tree_strata.breast_height_age[i],
+                 self.tree_strata.biological_age[i],
+                 self.tree_strata.stems_per_ha[i],
+                 self.tree_strata.basal_area[i],
+                 int(self.tree_strata.origin[i]),
+                 int(self.tree_strata.management_category[i]),
+                 self.tree_strata.saw_log_volume_reduction_factor[i],
+                 int(self.tree_strata.cutting_year[i]),
+                 int(self.tree_strata.age_when_10cm_diameter_at_breast_height[i]),
+                 int(self.tree_strata.tree_number[i]),
+                 f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
+                 f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
+                 f"{self.tree_strata.stand_origin_relative_position[i][2]})",
+                 self.tree_strata.lowest_living_branch_height[i],
+                 int(self.tree_strata.storey[i]),
+                 self.tree_strata.sapling_stems_per_ha[i],
+                 bool(self.tree_strata.sapling_stratum[i]),
+                 int(self.tree_strata.number_of_generated_trees[i])
+                 )
+            )
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
