@@ -30,7 +30,7 @@ def select_units[T, V: VectorData](context: T,
                                    sets: list[SelectionSet[T, V]],
                                    freq_var: str = "stems_per_ha",
                                    select_from: str = "all",
-                                   mode: str = "odds_trees"):
+                                   mode: str = "odds_trees") -> npt.NDArray[np.float64]:
 
     if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
@@ -250,7 +250,7 @@ def _get_target(data: VectorData,
                 target_var: Optional[str],
                 target_type: Optional[str],
                 target_amount: Optional[float],
-                freq_var: str = "stems_per_ha"):
+                freq_var: str = "stems_per_ha") -> float:
 
     if target_var is None or target_type is None or target_amount is None:
         return np.inf
@@ -338,7 +338,7 @@ def _scale_y(mode: str,
              interval_id: npt.NDArray[np.integer],
              data: VectorData,
              cur_set_idx_ord: npt.NDArray[np.integer],
-             cur_set_order_var: str):
+             cur_set_order_var: str) -> npt.NDArray[np.float64]:
 
     odds_y0 = y0.copy()
     y = y0.copy()
