@@ -41,22 +41,22 @@ def select_units[T, V: VectorData](context: T,
         target_type = None
         target_amount = None
 
-    # tarkista, että y-arvot välillä [0,1]
+    # check that y values are between [0,1]
     for set_ in sets:
         if (np.max(set_.profile_y) > 1) or (np.min(set_.profile_y) < 0):
             raise MetsiException("Invalid y value in profile. Should be between 0 and 1.")
 
-    # kerättävä määrä
+    # amount to collect
     all_units: npt.NDArray[np.bool_] = np.repeat(True, data.size)
     total_target = _get_target(data, all_units, target_var, target_type, target_amount)
 
-    # sallittu toleranssi --> hyväksyttävä väli [target - eps, target + eps]
+    # allowed tolerance --> acceptable interval [target - eps, target + eps]
     # epsilon
     tolerance = 0.001
     eps_total = max(0.005, min(total_target * tolerance, 100))
-    eps_step = 0.0001  # lopetetaan binäärihaku, jos askel tätä pienempi
+    eps_step = 0.0001  # stop binary search if step is smaller than this
 
-    # valitut muuttujat
+    # chosen variables
     selected_units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
     tmp_units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
     units: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
@@ -65,22 +65,22 @@ def select_units[T, V: VectorData](context: T,
     cur_set_target_var = ""
     tmp_cur_set_target: float = 0.0
 
-    # valintajoukot, käydään läpi vain kokonaistavoitteeseen tarvittavat joukot
+    # selection sets, only iterate through sets needed for total target
     i_set = 0
     while not ((total_target - eps_total) <= total_target_selected <= (total_target + eps_total)) and i_set < len(sets):
-        # joukkoon kuuluvat rivit
+        # rows in set
         cur_set_mask = sets[i_set].sfunction(context, data)
         if np.any(cur_set_mask):
             cur_set_idx = np.nonzero(cur_set_mask)[0]
 
-            # järjestysmja ja 'kerättävä' muuttuja
+            # order variable and 'collected' variable
             cur_set_order_var = sets[i_set].order_var
             cur_set_target_var = sets[i_set].target_var
 
-            # joukon rivit järjestettynä
+            # rows in the set ordered
             cur_set_idx_ord = np.argsort(data[cur_set_order_var][cur_set_idx])
 
-            # joukon tavoitemäärä
+            # target for the set
             cur_set_target = _get_target(data,
                                          cur_set_mask,
                                          sets[i_set].target_var,
@@ -88,9 +88,9 @@ def select_units[T, V: VectorData](context: T,
                                          sets[i_set].target_amount)
             eps_set = max(0.005, cur_set_target * tolerance)
 
-            # lasketaan alkuarvo vakiolle tai skaalaukselle profiilin ensimmäisellä janalla
-            # muiden janojen vakiot riippuvat tästä
-            # Alkuarvosta eteenpäin binäärihaulla
+            # calculate initial value for constant or scaling on the first line segment of the profile
+            # constants for other line segments depend on this
+            # Continue with binary search starting from the initial value
             if sets[i_set].profile_xmode == "relative":
                 if hasattr(sets[i_set], "profile_xscale") and sets[i_set].profile_xscale == "all":
                     ord_x_min = np.min(data[cur_set_order_var])
@@ -101,7 +101,7 @@ def select_units[T, V: VectorData](context: T,
 
                 d_ord = ord_x_max - ord_x_min
 
-                # käytetään sisäisesti aina absoluuttista x-asteikkoa
+                # always use absolute x scale internally
                 d_profile_x = sets[i_set].profile_x[-1] - sets[i_set].profile_x[0]
                 prof_x = ord_x_min + (sets[i_set].profile_x - sets[i_set].profile_x[0]) * d_ord / d_profile_x
             else:
@@ -114,15 +114,15 @@ def select_units[T, V: VectorData](context: T,
             tmp_cur_set_target = 0.0
             tmp_units = selected_units.copy()
 
-            # lasketaan kullekin joukon riville alkuosuus y_i (skaalaus 0-1)
+            # calculate initial share y_i for each row of the set (scaling 0-1)
             i_ordx = 0  # rivin järjestysindeksi
             y: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
 
-            # lm: kulmakertoimet ja vakiotermit vektoreissa
+            # lm: slopes and constants in vectors
             b: npt.NDArray[np.float64] = np.diff(prof_y) / np.diff(prof_x)
 
-            # Jos vain yksi order_var-mjan arvo ja suhteellinen x, niin prof_x:n kaikki pisteet ovat samoja
-            # skaalataan siinä tapauksesa vain vakio-osaa a (kulmakertoimet b nolliksi)
+            # if only one order_var value and relative x, all points in prof_x are the same
+            # in that case scale only constant part a (set slopes b to zero)
             if np.any(np.isnan(b)):
                 b = np.repeat(0, b.size)
 
@@ -131,13 +131,13 @@ def select_units[T, V: VectorData](context: T,
             interval_func = np.vectorize(lambda x: np.arange(b.size)[(x >= bounds_x[:-1]) & (x < bounds_x[1:])])
             interval_id: npt.NDArray[np.integer] = interval_func(data[cur_set_order_var][cur_set_idx][cur_set_idx_ord])
 
-            # rivikohtainen osuus lähtötilanteessa
+            # shares at starting per row
             for i_ordx in range(cur_set_idx_ord.size):
-                idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # järjestysindeksiä vastaava rivin alkuperäinen indeksi
+                idx = cur_set_idx[cur_set_idx_ord[i_ordx]]  # original row index corresponding to order index
                 y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
                              * data[cur_set_order_var][cur_set_idx][cur_set_idx_ord][i_ordx]))
 
-            # tässä joukossa valittu muuttuja, ei voi ylittää jäljellä olevaa määrää
+            # chosen variable in this set, can not exceed remaining amount
             if select_from == "all":
                 units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
             else:
@@ -157,8 +157,8 @@ def select_units[T, V: VectorData](context: T,
             tmp_cur_set_target = tmp_cur_set_target + sub_target
             tmp_units = selected_units + units
 
-            # jos valintajoukon tavoite annettu, etsitään lopullinen profiili
-            # binäärihaulla, muuten käytetään suoraan annettua profiilia
+            # if selection set target is given, search for final profile with binary search
+            # otherwise use given profile directly
 
             if not np.isinf(cur_set_target):
                 # initial values for binary search
@@ -170,9 +170,9 @@ def select_units[T, V: VectorData](context: T,
                                                cur_set_target,
                                                tmp_cur_set_target)
 
-                # binäärihaku
-                # jatketaan kunnes riittävän lähellä tavoitetta (kokonais- tai
-                # valintajoukon) tai kaikki valintajoukon yksiköt valittu
+                # binary search
+                # continue until close enough to target (total or selection set)
+                # or until all units in the selection set have been selected
                 while ((tmp_cur_set_target < (cur_set_target - eps_set) and
                         tmp_total_target < (total_target - eps_total) and
                         np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])) or
@@ -182,7 +182,7 @@ def select_units[T, V: VectorData](context: T,
                     tmp_total_target = total_target_selected
                     tmp_cur_set_target = 0
 
-                    # uusi osuuskandidaatti
+                    # new share candidate
                     y = _scale_y(mode,
                                  y0,
                                  scale,
@@ -215,7 +215,7 @@ def select_units[T, V: VectorData](context: T,
                     tmp_cur_set_target = tmp_cur_set_target + sub_target
                     tmp_units = selected_units + units
 
-                    # seuraavan kierroksen skaalaus/vakio
+                    # scaling/constant for next round
                     step = step / 2
                     if tmp_cur_set_target > (cur_set_target + eps_set) or tmp_total_target > (total_target + eps_total):
                         scale = scale - step
@@ -290,7 +290,7 @@ def _init_search(mode: str,
                  cur_set_target: float,
                  tmp_cur_set_target: float) -> tuple[float, float, npt.NDArray[np.float64]]:
 
-    # Ääriarvot binäärihaulle
+    # Limits for binary search
 
     if mode in ("odds_profile", "odds_units"):
         if mode == "odds_profile":
@@ -347,11 +347,11 @@ def _scale_y(mode: str,
         prof_y = _i_odds(scale * odds_y0)
         y = np.empty((data.size), dtype=np.float64)
 
-        # Uudet kulmakertoimet ja rivien osuudet
+        # New slopes and row shares
         b = np.diff(prof_y) / np.diff(prof_x)
 
-        # Jos vain yksi ja sama order_var-mjan arvo ja suhteellinen x, niin prof_x:n kaikki pisteet ovat samoja
-        # skaalataan siinä tapauksessa vain vakio-osaa a (kulmakertoimet b nolliksi)
+        # if only one order_var value and relative x, all points in prof_x are the same
+        # in that case scale only constant part a (set slopes b to zero)
         if np.any(np.isnan(b)):
             b = np.repeat(0, b.size)
 
