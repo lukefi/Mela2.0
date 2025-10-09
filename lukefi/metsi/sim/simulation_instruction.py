@@ -1,14 +1,15 @@
 from copy import deepcopy
 from typing import Optional, TypeVar
 
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, GeneratorBase, Generator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
-T = TypeVar('T')  # T = ForestStand
+T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 
-class SimulationInstruction[T]:
+class SimulationInstruction[T: ComputationalUnit]:
     time_points: list[int]
     conditions: list[Condition[SimulationPayload[T]]]
     event_generator: Generator[T]

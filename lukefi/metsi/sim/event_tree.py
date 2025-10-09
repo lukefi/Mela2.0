@@ -1,17 +1,18 @@
+import sqlite3
 from typing import Optional
 from copy import copy, deepcopy
 
 from lukefi.metsi.app.utils import ConditionFailed
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
-from lukefi.metsi.sim.state_tree import StateTree
 
 
 def identity[T](x: T) -> T:
     return x
 
 
-class EventTree[T]:
+class EventTree[T: ComputationalUnit]:
     """
     Event represents a computational operation in a tree of following event paths.
     """
@@ -43,7 +44,9 @@ class EventTree[T]:
 
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 state_tree: Optional[StateTree[T]] = None) -> list[SimulationPayload[T]]:
+                 node_identifier: Optional[list[int]] = None,
+                 db: Optional[sqlite3.Connection] = None
+                 ) -> list[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If given a root node, a StateTree is also constructed, containing all complete
@@ -54,14 +57,22 @@ class EventTree[T]:
         :return: list of result payloads from this EventTree or as concatenated from its branches
         """
         current = self.processed_treatment(payload)
-        branching_state: StateTree | None = None
-
-        if state_tree is not None:
-            state_tree.state = deepcopy(current.computational_unit)
-            state_tree.done_treatment = current.operation_history[-1][1] if len(current.operation_history) > 0 else None
-            state_tree.time_point = current.operation_history[-1][0] if len(current.operation_history) > 0 else None
-            state_tree.treatment_params = current.operation_history[-1][2] if len(
-                current.operation_history) > 0 else None
+        if node_identifier is None:
+            node_identifier = [0]
+        if db is not None:
+            node_str = "-".join(map(str, node_identifier))
+            cur = db.cursor()
+            cur.execute(
+                """
+                INSERT INTO nodes
+                VALUES
+                    (?, ?, ?, ?)
+                """,
+                (node_str,
+                 current.computational_unit.identifier,
+                 str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
+                 str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
+            current.computational_unit.output_to_db(db, node_str)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()
@@ -70,20 +81,17 @@ class EventTree[T]:
             return [current]
 
         if len(self.branches) == 1:
-            if state_tree is not None:
-                branching_state = StateTree()
-                state_tree.add_branch(branching_state)
-            return self.branches[0].evaluate(current, branching_state)
+            node_identifier_ = deepcopy(node_identifier)
+            node_identifier_.append(0)
+            return self.branches[0].evaluate(current, node_identifier_, db)
 
         results: list[SimulationPayload[T]] = []
-        for branch in self.branches:
+        for i, branch in enumerate(self.branches):
             try:
-                if state_tree is not None:
-                    branching_state = StateTree()
-                evaluated_branch = branch.evaluate(copy(current), branching_state)
+                node_identifier_ = deepcopy(node_identifier)
+                node_identifier_.append(i)
+                evaluated_branch = branch.evaluate(copy(current), node_identifier_, db)
                 results.extend(evaluated_branch)
-                if state_tree is not None and branching_state is not None:
-                    state_tree.add_branch(branching_state)
             except (ConditionFailed, UserWarning):
                 ...
 

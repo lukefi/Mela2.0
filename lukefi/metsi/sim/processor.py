@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING
 from lukefi.metsi.app.utils import ConditionFailed
+from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import TreatmentFn
 
 
-def processor[T](payload: SimulationPayload[T],
+def processor[T: ComputationalUnit](payload: SimulationPayload[T],
                  operation: "TreatmentFn[T]",
                  operation_tag: "TreatmentFn[T]",
                  time_point: int,

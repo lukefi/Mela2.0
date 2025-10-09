@@ -2,11 +2,10 @@ import unittest
 from pathlib import Path
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence, run_full_tree_strategy, run_partial_tree_strategy, \
-    chain_evaluator, depth_first_evaluator
+from lukefi.metsi.sim.runners import evaluate_sequence, run_full_tree_strategy
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.test_utils import raises, identity, none, collect_results, collecting_increment
 from lukefi.metsi.app.file_io import read_control_module
+from tests.test_utils import raises, identity, none, collect_results, collecting_increment
 
 class RunnersTest(unittest.TestCase):
     def test_sequence_success(self):
@@ -42,10 +41,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results_full = collect_results(run_full_tree_strategy(initial, config))
-        results_partial = collect_results(run_partial_tree_strategy(initial, config))
         self.assertEqual(8, len(results_full))
-        self.assertEqual(8, len(results_partial))
-        self.assertEqual(results_partial, results_full)
 
     def test_full_formation_evaluation_strategies_by_comparison(self):
         control_path = str(Path("tests",
@@ -56,48 +52,13 @@ class RunnersTest(unittest.TestCase):
         config = SimConfiguration(operation_lookup={'inc': collecting_increment},
                                   **declaration)
         print(config)
-        chains_payload = SimulationPayload(
-            computational_unit=1,
-            collected_data=CollectedData(),
-            operation_history=[]
-        )
-        results_chains = collect_results(run_full_tree_strategy(chains_payload, config, chain_evaluator))
-
         depth_payload = SimulationPayload(
             computational_unit=1,
             collected_data=CollectedData(),
             operation_history=[]
         )
-        results_depth = collect_results(run_full_tree_strategy(depth_payload, config, depth_first_evaluator))
-        self.assertEqual(8, len(results_chains))
+        results_depth = collect_results(run_full_tree_strategy(depth_payload, config))
         self.assertEqual(8, len(results_depth))
-        self.assertEqual(results_chains, results_depth)
-
-    def test_partial_formation_evaluation_strategies_by_comparison(self):
-        control_path = str(Path("tests",
-                                "resources",
-                                "runners_test",
-                                "branching.py").resolve())
-        declaration = read_control_module(control_path)
-        config = SimConfiguration(operation_lookup={'inc': collecting_increment},
-                                  **declaration)
-        print(config)
-        chains_payload = SimulationPayload(
-            computational_unit=1,
-            collected_data=CollectedData(),
-            operation_history=[]
-        )
-        results_chains = collect_results(run_partial_tree_strategy(chains_payload, config, chain_evaluator))
-
-        depth_payload = SimulationPayload(
-            computational_unit=1,
-            collected_data=CollectedData(),
-            operation_history=[]
-        )
-        results_depth = collect_results(run_partial_tree_strategy(depth_payload, config, depth_first_evaluator))
-        self.assertEqual(8, len(results_chains))
-        self.assertEqual(8, len(results_depth))
-        self.assertEqual(results_chains, results_depth)
 
     def test_no_parameters_propagation(self):
         control_path = str(Path("tests",

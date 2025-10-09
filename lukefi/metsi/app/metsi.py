@@ -1,6 +1,7 @@
 import os
 import sys
 import copy
+import sqlite3
 import traceback
 from typing import Callable
 from pathlib import Path
@@ -13,32 +14,34 @@ from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, gen
 from lukefi.metsi.domain.forestry_types import SimResults
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.app.export import export_files, export_preprocessed
-from lukefi.metsi.app.file_io import prepare_target_directory, read_stands_from_file, \
+from lukefi.metsi.app.file_io import init_sqlite_database, prepare_target_directory, read_stands_from_file, \
     read_full_simulation_result_dirtree, write_full_simulation_result_dirtree, read_control_module
 from lukefi.metsi.app.post_processing import post_process_alternatives
 from lukefi.metsi.domain.stand_runner import run_stands
+from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
 
-def preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
+def preprocess(config: MetsiConfiguration, control: dict, stands: StandList, _) -> StandList:
     _ = config
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def simulate(config: MetsiConfiguration, control: dict, stands: StandList) -> SimResults:
+def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: sqlite3.Connection) -> SimResults:
     print_logline("Simulating alternatives...")
-    result = simulate_alternatives(config, control, stands, run_stands)
+    result = simulate_alternatives(control, stands, db, run_stands)
+
     if config.state_output_container is not None or config.derived_data_output_container is not None:
         print_logline(f"Writing simulation results to '{config.target_directory}'")
         write_full_simulation_result_dirtree(result, config)
     return result
 
 
-def post_process(config: MetsiConfiguration, control: dict, data: SimResults) -> SimResults:
+def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
     print_logline("Post-processing alternatives...")
     result = post_process_alternatives(config, control['post_processing'], data)
     if config.state_output_container is not None or config.derived_data_output_container is not None:
@@ -47,13 +50,13 @@ def post_process(config: MetsiConfiguration, control: dict, data: SimResults) ->
     return result
 
 
-def export(config: MetsiConfiguration, control: dict, data: SimResults) -> None:
+def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
     print_logline("Exporting simulation results...")
     if control['export']:
         export_files(config, control['export'], data)
 
 
-def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> StandList:
+def export_prepro(config: MetsiConfiguration, control: dict, data: StandList, _) -> StandList:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data)
@@ -121,6 +124,10 @@ def main() -> int:
         # deleting old target files
         remove_existing_export_files(app_config, control_structure)
 
+        print_logline("Initializing output database")
+        db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
+        create_database_tables(db)
+
         if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
             # 1) read full stand list
             full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
@@ -163,7 +170,10 @@ def main() -> int:
         current = stands
         for mode in cfg.run_modes:
             runner = mode_runners[mode]
-            current = runner(cfg, control_structure, current)
+            current = runner(cfg, control_structure, current, db)
+
+    db.commit()
+    db.close()
 
     _, dirs, files = next(os.walk(app_config.target_directory))
     if len(dirs) == 0 and len(files) == 0:
