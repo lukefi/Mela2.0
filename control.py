@@ -1,8 +1,10 @@
 from lukefi.metsi.data.vectorize import vectorize
+from lukefi.metsi.domain.forestry_operations.planting import planting
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.domain.events import (
     GrowActa
 )
+from lukefi.metsi.sim.generators import Event
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
 
@@ -44,9 +46,23 @@ control_structure = {
     },
     "simulation_instructions": [
         SimulationInstruction(
+            time_points=[2020],
+            events=[
+                Event(
+                    treatment=planting,
+                    parameters={
+                        "tree_count": 10,
+                    },
+                    file_parameters={
+                        "planting_instructions": "data/parameter_files/planting_instructions.txt"
+                    }
+                )
+            ]
+        ),
+        SimulationInstruction(
             time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
-                GrowActa(),
+                GrowActa()
             ]
         )
     ],
