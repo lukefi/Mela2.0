@@ -30,7 +30,7 @@ def select_units[T, V: VectorData](context: T,
                                    sets: list[SelectionSet[T, V]],
                                    freq_var: str = "stems_per_ha",
                                    select_from: str = "all",
-                                   mode: str = "odds_trees") -> npt.NDArray[np.float64]:
+                                   mode: str = "odds_units") -> npt.NDArray[np.float64]:
 
     if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
@@ -172,7 +172,7 @@ def select_units[T, V: VectorData](context: T,
 
                 # binäärihaku
                 # jatketaan kunnes riittävän lähellä tavoitetta (kokonais- tai
-                # valintajoukon) tai kaikki valintajoukon puut valittu
+                # valintajoukon) tai kaikki valintajoukon yksiköt valittu
                 while ((tmp_cur_set_target < (cur_set_target - eps_set) and
                         tmp_total_target < (total_target - eps_total) and
                         np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])) or
@@ -292,7 +292,7 @@ def _init_search(mode: str,
 
     # Ääriarvot binäärihaulle
 
-    if mode in ("odds_profile", "odds_trees"):
+    if mode in ("odds_profile", "odds_units"):
         if mode == "odds_profile":
             odds_y0 = _odds(prof_y)
         else:
@@ -362,7 +362,7 @@ def _scale_y(mode: str,
             y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
                                   * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
 
-    elif mode == "odds_trees":
+    elif mode == "odds_units":
         y[cur_set_idx_ord] = _i_odds(scale * odds_y0[cur_set_idx_ord])
 
     elif mode == "scale":

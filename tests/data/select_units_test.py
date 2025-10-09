@@ -73,9 +73,9 @@ class TestSelectTrees(unittest.TestCase):
         self.trees.tree_type = np.repeat("", self.trees.size)
         self.trees.tuhon_ilmiasu = np.repeat("", self.trees.size)
         self.trees.latvuskerros = np.repeat(0.0, self.trees.size)
-        self.stand.reference_trees_soa = self.trees
+        self.stand.reference_trees = self.trees
 
-    def test_odds_trees(self):
+    def test_odds_units(self):
         set3 = SelectionSet[ForestStand, ReferenceTrees]()
         set3.sfunction = lambda _, trees: trees.management_category <= 1
         set3.order_var = "breast_height_diameter"
