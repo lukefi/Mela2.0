@@ -69,7 +69,7 @@ def ftrt_cutting(
         sets=sets_py,
         freq_var="stems_per_ha",
         select_from="all",
-        mode="odds_trees",
+        mode="odds_units",
     )
     if np.any(removed_f < 0):
         raise MetsiException("cutting produced negative removals.")
@@ -89,4 +89,3 @@ def ftrt_cutting(
         "metrics_after": metrics_after,
     })
     return (stand, cdata)
-z

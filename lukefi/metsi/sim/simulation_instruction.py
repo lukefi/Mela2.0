@@ -13,11 +13,13 @@ class SimulationInstruction[T]:
     conditions: list[Condition[SimulationPayload[T]]]
     event_generator: Generator[T]
 
-    def __init__(self, time_points: list[int], events: Generator[T] | list[GeneratorBase] | set[GeneratorBase],
+    def __init__(self, time_points: list[int], events: Generator[T] | GeneratorBase | list[GeneratorBase] | set[GeneratorBase],
                  conditions: Optional[list[Condition[SimulationPayload[T]]]] = None) -> None:
         self.time_points = time_points
         if isinstance(events, Generator):
             self.event_generator = events
+        elif isinstance(events, GeneratorBase):
+            self.event_generator = Sequence([events])
         elif isinstance(events, list):
             self.event_generator = Sequence(events)
         elif isinstance(events, set):

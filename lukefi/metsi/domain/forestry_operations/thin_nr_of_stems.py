@@ -7,9 +7,9 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.domain.metrics.stand_metrics import compute_stand_metrics
-from lukefi.metsi.sim.select_units import SelectionSet, SelectionTarget, select_units
-from lukefi.metsi.domain.selection.selection_data import SelectionData
+from lukefi.metsi.domain.forestry_operations.metrics.stand_metrics import compute_stand_metrics
+from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
+from lukefi.metsi.domain.forestry_operations.metrics.selection_data import SelectionData
 
 def _removed_snapshot(trees: ReferenceTrees, removed_f: npt.NDArray[np.float64]) -> dict[str, npt.NDArray]:
     mask = removed_f > 0
@@ -111,7 +111,7 @@ def ftrt_thin_nr_of_stems(
         sets=sets_py,
         freq_var="stems_per_ha",
         select_from="all",
-        mode="odds_trees",
+        mode="odds_units",
     )
     if np.any(removed_f < 0):
         raise MetsiException("thin_nr_of_stems produced negative removals.")

@@ -32,7 +32,7 @@ def select_units[T, V: VectorData](context: T,
                                    select_from: str = "all",
                                    mode: str = "odds_units") -> npt.NDArray[np.float64]:
 
-    if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
+    if target_decl is not None and target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
         target_type = target_decl.type
         target_amount = target_decl.amount

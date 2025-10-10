@@ -5,8 +5,8 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.utils.select_units import SelectionSet, SelectionTarget, select_units
-from lukefi.metsi.domain.forestry_operationsselection.selection_data import SelectionData
+from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
+from lukefi.metsi.domain.forestry_operations.metrics.selection_data import SelectionData
 
 def ftrt_mark_trees(
     op: OpTuple[ForestStand],
@@ -54,7 +54,7 @@ def ftrt_mark_trees(
         sets=sets_py,
         freq_var="stems_per_ha",
         select_from="all",
-        mode="odds_trees",
+        mode="odds_units",
     )
     to_mark = np.minimum(to_mark, trees.stems_per_ha)
     if not np.any(to_mark > 0):

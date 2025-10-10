@@ -7,9 +7,9 @@ import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.domain.metrics.stand_metrics import compute_stand_metrics
-from lukefi.metsi.sim.select_units import SelectionSet, select_units  # adjust import to your layout
+from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.domain.forestry_operations.metrics.stand_metrics import compute_stand_metrics
+from lukefi.metsi.data.util.select_units import SelectionSet, select_units
 
 def _removed_snapshot(trees: ReferenceTrees, removed_f: npt.NDArray[np.float64]) -> dict[str, npt.NDArray]:
     """Return a compact snapshot of removed rows for reporting."""
@@ -89,7 +89,7 @@ def ftrt_ajourat(
         sets=sets_py,
         freq_var="stems_per_ha",
         select_from="all",
-        mode="odds_trees",
+        mode="odds_units",
     )
 
     if np.any(removed_f < 0):
