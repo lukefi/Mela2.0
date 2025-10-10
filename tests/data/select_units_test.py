@@ -12,7 +12,7 @@ from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, s
 from lukefi.metsi.data.vector_model import ReferenceTrees
 
 
-class TestSelectTrees(unittest.TestCase):
+class TestSelectUnits(unittest.TestCase):
 
     stand: ForestStand
     trees: ReferenceTrees
