@@ -70,12 +70,21 @@ def ftrt_mark_trees(
     idxs = np.nonzero(mask)[0]
     new_rows = []
     for i in idxs:
-        row = {k: trees[k][i] for k in trees.dtypes.keys()}
-        row["stems_per_ha"] = float(to_mark[i])
-        # apply attribute overrides
+        row = {}
+        for k in trees.dtypes.keys():
+            val = trees[k][i]
+            # Preserve shape for per-row vectors/matrices
+            if isinstance(val, np.ndarray):
+                # Ensure it is a real ndarray (not object), with its native shape
+                row[k] = np.array(val, copy=True)
+            else:
+                row[k] = val
+
+        # apply attribute overrides (and ensure dtypes-compat)
         for k, v in attributes.items():
             if k in trees.dtypes:
                 row[k] = v
+
         new_rows.append(row)
     trees.create(new_rows)
 

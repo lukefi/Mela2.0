@@ -15,8 +15,7 @@ from lukefi.metsi.domain.forestry_operations.ajourat import ftrt_ajourat
 from lukefi.metsi.domain.forestry_operations.thin_nr_of_stems import ftrt_thin_nr_of_stems
 from lukefi.metsi.domain.forestry_operations.thin_basal_area import ftrt_thin_basal_area
 
-# TEMP constants shim; will be replaced by real tables later
-from lukefi.metsi.domain.limit_constants import (
+from lukefi.metsi.data.limit_tables.limit_constants import (
     basal_area_instruction_lower_limit,
     basal_area_instructions_upper_limit,
     min_number_of_stems_after_thinning,

@@ -1,0 +1,82 @@
+*MIN_NUMBER_OF_STEMS_AFTER_THINNING (alue 2)
+* LEIMAUS- JA HARVENNUSRAJAT VALI-SUOMI 1000-1200 dd
+* "Metsanhoitosuositukset 2006" / OSa 21-08-2006
+* korjattu 09-05-2007 vastaamaan taysin J.Hynysen virallisia ppa-malleja
+* "Metsanhoitosuositukset 2013": ei muutoksia - OSal 7.1.2015
+* Huom1:
+* alaraja: ppa-ohjeiden alarajojen keskiarvo
+* ylaraja: alempi leimausraja vain kaytossa, koska ylempi eksplisiittisesti mukana
+* kasvatusvaihtoehdossa 
+* Turvemailla "Hyvan mestsanhoidon suositukset turvemaille" 2008:
+* mannylle omat, muilla kangasmaiden suositukset/OSal 26-05-2008
+* Huom3:
+* muut poikkeukset mainittu kunkin kasvupaikan kohdalla
+*
+* riveilla: manty, kuusi, koivu, muu lehtipuu
+* sarakkeilla puun pituusluokka (hdom):
+*PPA_OHJE
+*BASAL_AREA_INSTRUCTIONS
+***
+***
+*** HARVENNUSRAJAT
+***
+* KANGASMAAT:
+*OMT
+* 10   12   14   16   18   20   22   24   26 m
+* manty= MT
+* hieskoivu= Pohjois-Suomen luvut
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+ 15.2 15.2 17.9 20.3 22.1 23.3 23.9 23.9 23.9 
+  8.5  8.5 10.9 12.7 14.1 15.0 15.0 15.0 15.0
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*MT
+* hieskoivu= Pohjois-Suomen luvut
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+  8.5  8.5 10.9 12.7 14.1 15.0 15.0 15.0 15.0
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*VT
+* kuusi=MT
+* rako&hiko = Pohjois-Suomen luvut  
+ 13.4 13.4 15.3 16.8 17.9 18.4 18.3 18.3 18.3
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*CT
+* kuusi=manty
+* hiko&rako = P-S:n hiko  
+ 11.3 11.3 12.7 13.7 14.3 14.6 14.6 14.6 14.6
+ 11.3 11.3 12.7 13.7 14.3 14.6 14.6 14.6 14.6
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+***
+* TURVEMAAT:
+*OMT
+* 10   12   14   16   18   20   22   24   26 m
+* manty= MT
+* hieskoivu= Pohjois-Suomen luvut
+ 14.0 14.0 17.4 18.4 18.9 19.3 19.3 19.3 19.3 
+ 15.2 15.2 17.9 20.3 22.1 23.3 23.9 23.9 23.9
+  8.5  8.5 10.9 12.7 14.1 15.0 15.0 15.0 15.0
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*MT
+* hieskoivu= Pohjois-Suomen luvut
+ 14.0 14.0 17.4 18.4 18.9 19.3 19.3 19.3 19.3
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+  8.5  8.5 10.9 12.7 14.1 15.0 15.0 15.0 15.0
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*VT
+* kuusi=MT
+* rako&hiko = Pohjois-Suomen luvut
+ 13.2 13.2 16.3 17.3 17.8 18.0 18.0 18.0 18.0
+ 14.4 14.4 16.4 17.8 18.7 19.3 19.6 19.6 19.6
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*CT
+* kuusi=manty
+* hiko&rako = P-S:n hiko
+ 12.8 12.8 15.3 16.1 16.5 16.5 16.5 16.5 16.5
+ 12.8 12.8 15.3 16.1 16.5 16.5 16.5 16.5 16.5
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+ 10.4 10.4 11.7 12.7 13.4 13.4 13.4 13.4 13.4
+*

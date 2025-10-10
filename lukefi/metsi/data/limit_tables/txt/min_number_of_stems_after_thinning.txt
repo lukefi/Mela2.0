@@ -1,0 +1,16 @@
+*MIN_NUMBER_OF_STEMS_AFTER_THINNING (areas 1 and 2)
+* Runkolukuohje
+* Metsankasittelysuositusten runkoluohje 1. harv. jalkeen													 
+* "Metsanhoidon suositukset 2013" -paivitetty 2014-11-24/OSa
+* kpl/ha runkolukuun perustuvan harv. jalkeen
+* jos suosituksissa haarukka, niin käytetty keskiarvoa pyoristettyna alaspain
+* samat ohjeet ES-VS: 
+* riveilla tyyppi: 1 OMAT-OMT, 2 MT, 3 VT, 4 CT->
+* ma   ku  rako hiko
+*MIN_RLUKU_HARV_JALKEEN
+* 1. harvennus runkolukuohje Hdom </= 14 m (hbar < 12.5)
+ 1250 1000 750 1100
+ 1100 1000 750 1100
+ 1000 1000 700 1100
+  900 1000 700 1100
+*

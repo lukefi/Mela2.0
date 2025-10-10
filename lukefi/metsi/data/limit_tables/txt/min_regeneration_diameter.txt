@@ -1,0 +1,18 @@
+*MIN_REGENERATION_DIAMETER (area 1)
+* Lapimittaan perustuvat uudistamis(ala)rajat
+* "Metsanhoitosuositukset 2006" - OSa 21-08-2006
+* "Metsanhoitosuositukset 2013" ei muutoksia - OSa 7.1.2015
+*sarakkeella puulajit
+*rivilla tyyppi: 1 OMAT-OMT,2 MT, 3 VT 4 CT->
+*Etela-Suomi > 1200 dd
+*MIN_UUDISTUSLAPIMITTA
+*ma ku ra hi lp
+* jos puulajille ei ole kasvupakalle suositusta esim. VT kuusi ->
+* paremman kasvupaikan suhteen kaytetty seuraavaa sellaisenaan ja 
+* huonommalle kasvupaikalle edellinen -2 cm
+* hieskoivulle ja muulle lp ei suositusrajoja ole annettu
+ 26 28 28 23 23 
+ 26 26 27 23 23	
+ 25 24 25 21 21 
+ 22 22 22 19 19
+*

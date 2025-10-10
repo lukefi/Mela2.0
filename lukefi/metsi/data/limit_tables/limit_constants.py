@@ -28,21 +28,21 @@ _TABLES_STEMS = None    # (area12, area34)
 def _ba_tables():
     global _TABLES_BA
     if _TABLES_BA is None:
-        base_dir = Path(__file__).resolve().parent
+        base_dir = Path(__file__).resolve().parent / "txt"
         _TABLES_BA = load_ba_instruction_tables(base_dir)
     return _TABLES_BA
 
 def _reg_tables():
     global _TABLES_REG
     if _TABLES_REG is None:
-        base_dir = Path(__file__).resolve().parent
+        base_dir = Path(__file__).resolve().parent / "txt"
         _TABLES_REG = load_regeneration_tables(base_dir)
     return _TABLES_REG
 
 def _stems_tables():
     global _TABLES_STEMS
     if _TABLES_STEMS is None:
-        base_dir = Path(__file__).resolve().parent
+        base_dir = Path(__file__).resolve().parent / "txt"
         _TABLES_STEMS = load_stems_after_thinning_tables(base_dir)
     return _TABLES_STEMS
 

@@ -10,7 +10,7 @@ from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.domain.forestry_operations.metrics.stand_metrics import compute_stand_metrics
 from lukefi.metsi.domain.forestry_operations.metrics.selection_data import SelectionData
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
-from lukefi.metsi.domain.limit_constants import (
+from lukefi.metsi.data.limit_tables.limit_constants import (
     basal_area_instruction_lower_limit,
     basal_area_instructions_upper_limit,
 )

@@ -32,7 +32,8 @@ def select_units[T, V: VectorData](context: T,
                                    select_from: str = "all",
                                    mode: str = "odds_units") -> npt.NDArray[np.float64]:
 
-    if target_decl is not None and target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
+    if target_decl is not None and target_decl.var is not None and \
+        target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
         target_type = target_decl.type
         target_amount = target_decl.amount
@@ -363,7 +364,16 @@ def _scale_y(mode: str,
                                   * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
 
     elif mode == "odds_units":
-        y[cur_set_idx_ord] = _i_odds(scale * odds_y0[cur_set_idx_ord])
+        # Avoid 0 * inf -> NaN and negative scales.
+        if scale <= 0:
+            scale = 1e-12
+        o = scale * odds_y0[cur_set_idx_ord]
+        # If any 0*inf slipped through, force those to inf (limit behavior => y=1)
+        bad = np.isnan(o) & np.isinf(odds_y0[cur_set_idx_ord])
+        if np.any(bad):
+            o[bad] = np.inf
+        y[cur_set_idx_ord] = _i_odds(o)
+        y[cur_set_idx_ord] = np.clip(y[cur_set_idx_ord], 0.0, 1.0)
 
     elif mode == "scale":
         y[cur_set_idx_ord] = np.maximum(0.0, np.minimum(1.0, scale * y0[cur_set_idx_ord]))

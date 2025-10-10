@@ -1,0 +1,83 @@
+*MIN_NUMBER_OF_STEMS_AFTER_THINNING (alue 4)
+* LEIMAUS- JA HARVENNUSRAJAT POHJOIS-SUOMI < 900 dd
+* "Metsanhoitosuositukset 2006" / OSa 21-08-2006
+* korjattu 10-05-2007 vastaamaan taysin J.Hynysen virallisia ppa-malleja
+* "Metsanhoitosusoitukset 2013": ei muutoksia - OSa 7.1.2015
+* Huom1:
+* alaraja: ppa-ohjeiden alarajojen keskiarvo
+* ylaraja: alempi leimausraja vain kaytossa, koska ylempi eksplisiittisesti mukana
+* kasvatusvaihtoehdossa 
+* Kankailla ohjeisto sama kuin > 900 dd paitsi harvennusrajat - 1m2
+* Turvemailla "Hyvan mestsanhoidon suositukset turvemaille" 2008:
+* mannylle omat, muilla kangasmaiden suositukset/OSal 26-05-2008
+* Huom3:
+* muut poikkeukset mainittu kunkin kasvupaikan kohdalla
+*
+* riveilla: manty, kuusi, koivu, muu lehtipuu
+* sarakkeilla puun pituusluokka (hdom):
+*PPA_OHJE
+*BASAL_AREA_INSTRUCTIONS
+***
+***
+*** HARVENNUSRAJAT
+***
+*KANGASMAAT:
+*OMT
+* 10   12   14   16   18   20   22   24   26 m
+* manty= MT
+* rako=hieskoivu= Pohjois-Suomen viljava hies 
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+ 10.5 13.7 16.1 17.6 18.4 18.3 18.3 18.3 18.3 
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*MT
+* rako=hieskoivu= Pohjois-Suomen viljava hies 
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*VT
+* kuusi=MT
+* rako=hieskoivu= Pohjois-Suomen viljava hies 
+  8.2 10.6 12.5 13.8 14.4 14.5 14.5 14.5 14.5 
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*CT
+* kuusi=manty
+* rako=hieskoivu= Pohjois-Suomen viljava hies 
+  7.9  9.8 11.2 12.1 12.5 12.5 12.5 12.5 12.5
+  7.9  9.8 11.2 12.1 12.5 12.5 12.5 12.5 12.5
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+***
+*TURVEMAAT:
+*Rhtg
+* 10   12   14   16   18   20   22   24   26 m
+* manty= Mtkg
+* rako=hieskoivu= Pohjois-Suomen viljava hies
+ 12.0 12.0 15.2 16.3 16.9 17.0 17.0 17.0 17.0
+ 10.5 13.7 16.1 17.6 18.4 18.3 18.3 18.3 18.3
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*Mtkg
+* rako=hieskoivu= Pohjois-Suomen viljava hies
+ 12.0 12.0 15.2 16.3 16.9 17.0 17.0 17.0 17.0
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*Ptkg
+* kuusi=Mtkg
+* rako=hieskoivu= Pohjois-Suomen viljava hies
+ 11.1 11.1 14.3 15.4 15.9 16.0 16.0 16.0 16.0
+ 10.5 12.6 14.3 15.5 16.2 16.4 16.4 16.4 16.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+*Vatkg
+* kuusi=manty
+* rako=hieskoivu= Pohjois-Suomen viljava hies
+ 10.1 10.1 12.4 13.2 13.2 13.2 13.2 13.2 13.2
+ 10.1 10.1 12.4 13.2 13.2 13.2 13.2 13.2 13.2
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+  7.9  9.4 10.7 11.7 12.4 12.4 12.4 12.4 12.4
+***

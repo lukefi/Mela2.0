@@ -1,0 +1,16 @@
+*MIN_REGENERATION_AGE (area 1)
+* "Metsanhoitosuositukset 2013" - OSa 20-11-2013
+* Ikaan perustuvat uudistamis(ala)rajat
+*sarakkeella puulajit
+*rivilla tyyppi: 1 OMAT-OMT,2 MT, 3 VT 4 CT->
+*Etela-Suomi > 1200 dd
+*MIN_UUDISTUSIKA
+*ma ku ra hi lp
+* huom, jos puulla ei ole kiertoaikasuositusta ko. kasvupaikalle (esim. VT kuusi)
+* -> kaytetaan alinta Tapion ko. puulajille antamaan suositusta
+* Hi ja lp arvot kiv maiden 40-50 ja turvemaiden 50-60 väissä 
+ 70 60 60 50 50
+ 70 70 60 50 50
+ 80 60 60 50 50
+ 90 60 60 50 50
+*
