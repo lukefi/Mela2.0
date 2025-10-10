@@ -67,6 +67,9 @@ class VectorData():
     def __len__(self):
         return self.size
 
+    def __getitem__(self, name: str) -> npt.NDArray:
+        return getattr(self, name)
+
     def vectorize(self, attr_dict: dict[str, list[Any]]):
         self.set_size(attr_dict)
         for attribute_name, data_type in self.dtypes.items():
