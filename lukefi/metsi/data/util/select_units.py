@@ -143,6 +143,12 @@ def select_units[T, V: VectorData](context: T,
             else:
                 units = np.maximum(0.0, y * (data[freq_var] - selected_units))
 
+            # special case: select all units from set
+            if (target_type == "relative") and (sets[i_set].target_type == "relative") and (target_amount == 1) and \
+                    (sets[i_set].target_amount == 1):
+                units = np.repeat(0.0, data.size)
+                units[cur_set_idx] = data[freq_var][cur_set_idx]
+
             if target_var is None or target_var == freq_var:
                 target = np.sum(units)
             else:
