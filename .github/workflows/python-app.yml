@@ -117,8 +117,8 @@ jobs:
       run: |
         set -euo pipefail
         mkdir -p "$DEST"
-        cid=$(docker create "$IMAGE")
-        # You COPY-ed to /payload in the Dockerfile
+        # Image is FROM scratch and has no CMD/ENTRYPOINT, so pass a dummy command:
+        cid=$(docker create "$IMAGE" /bin/true)
         docker cp "$cid":/payload/. "$DEST"/
         docker rm "$cid"
         chmod +x "$DEST"/* 2>/dev/null || true
