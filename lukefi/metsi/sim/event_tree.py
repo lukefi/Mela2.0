@@ -73,6 +73,7 @@ class EventTree[T: ComputationalUnit]:
                  str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
                  str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
             current.computational_unit.output_to_db(db, node_str)
+            current.collected_data.output_to_db(db, node_str, current.computational_unit.identifier)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()

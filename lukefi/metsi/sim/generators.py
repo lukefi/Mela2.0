@@ -4,6 +4,7 @@ from typing import Any, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 
 from collections.abc import Callable
+from lukefi.metsi.domain.collected_data import CollectableData
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.operations import prepared_operation
 from lukefi.metsi.sim.processor import processor
@@ -26,6 +27,10 @@ class GeneratorBase[T: ComputationalUnit](ABC):
     def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
         pass
 
+    @abstractmethod
+    def get_types_of_collected_data(self) -> set[CollectableData]:
+        pass
+
 
 class Generator[T: ComputationalUnit](GeneratorBase, ABC):
     """Abstract base class for generator types."""
@@ -46,6 +51,13 @@ class Generator[T: ComputationalUnit](GeneratorBase, ABC):
         root: EventTree[T] = EventTree()
         self.unwrap([root], 0)
         return root
+
+    @override
+    def get_types_of_collected_data(self) -> set[CollectableData]:
+        retval = set()
+        for child in self.children:
+            retval.update(child.get_types_of_collected_data())
+        return retval
 
 
 class Sequence[T: ComputationalUnit](Generator[T]):
@@ -73,16 +85,20 @@ class Alternatives[T: ComputationalUnit](Generator[T]):
 class Event[T: ComputationalUnit](GeneratorBase):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
-    preconditions: list[Condition[SimulationPayload[T]]]
-    postconditions: list[Condition[SimulationPayload[T]]]
+    treatment: TreatmentFn[T]
     parameters: dict[str, Any]
     file_parameters: dict[str, str]
-    treatment: TreatmentFn[T]
+    preconditions: list[Condition[SimulationPayload[T]]]
+    postconditions: list[Condition[SimulationPayload[T]]]
+    tags: set[str]
+    collected_data: set[CollectableData]
 
     def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
                  postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 file_parameters: Optional[dict[str, str]] = None) -> None:
+                 file_parameters: Optional[dict[str, str]] = None,
+                 tags: Optional[set[str]] = None,
+                 collected_data: Optional[set[CollectableData]] = None) -> None:
         self.treatment = treatment
 
         if parameters is not None:
@@ -105,6 +121,16 @@ class Event[T: ComputationalUnit](GeneratorBase):
         else:
             self.postconditions = []
 
+        if tags is not None:
+            self.tags = tags
+        else:
+            self.tags = set()
+
+        if collected_data is not None:
+            self.collected_data = collected_data
+        else:
+            self.collected_data = set()
+
     @override
     def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
         retval = []
@@ -113,6 +139,10 @@ class Event[T: ComputationalUnit](GeneratorBase):
             parent.add_branch(branch)
             retval.append(branch)
         return retval
+
+    @override
+    def get_types_of_collected_data(self) -> set[CollectableData]:
+        return self.collected_data
 
     def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
         self._check_file_params()

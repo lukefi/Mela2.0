@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from lukefi.metsi.domain.collected_data import CollectableData
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction, generator_declarations_for_time_point
 from lukefi.metsi.sim.generators import Generator, Sequence
@@ -17,6 +18,7 @@ class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
     """
     instructions: list[SimulationInstruction[T]] = []
     time_points: list[int] = []
+    collected_data: set[CollectableData]
 
     def __init__(self, **kwargs):
         """
@@ -29,11 +31,14 @@ class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
 
     def _populate_simulation_instructions(self, instructions: list["SimulationInstruction[T]"]):
         time_points = set()
+        collected_data = set()
         self.instructions = instructions
         for instruction in instructions:
+            collected_data.update(instruction.event_generator.get_types_of_collected_data())
             source_time_points = instruction.time_points
             time_points.update(source_time_points)
         self.time_points = sorted(time_points)
+        self.collected_data = collected_data
 
     def full_tree_generators(self) -> Generator[T]:
         """

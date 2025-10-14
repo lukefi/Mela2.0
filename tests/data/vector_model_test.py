@@ -282,3 +282,10 @@ class VectorModelTest(unittest.TestCase):
         self.assertTrue(np.array_equal(vector_data.z, np.asarray([[11.0, 12.0, 13.0],
                                                                   [5.0, 6.0, 7.0],
                                                                   [17.0, 18.0, 19.0]], dtype=np.float64)))
+    def test_slice(self):
+        self.vector_data.create([{"x": 1, "y": 2, "z": 3.0}, {"x": 4, "y": 5, "z": 6.0}, {"x": 7, "y": 8, "z": 9.0}])
+        sliced_data = self.vector_data[1:2]
+        self.assertEqual(len(sliced_data), 1)
+        self.assertEqual(sliced_data.x[0], 4)
+        self.assertEqual(sliced_data.y[0], 5)
+        self.assertEqual(sliced_data.z[0], 6.0)
