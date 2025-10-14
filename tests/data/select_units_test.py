@@ -76,17 +76,17 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.reference_trees = self.trees
 
     def test_odds_units(self):
-        set3 = SelectionSet[ForestStand, ReferenceTrees]()
-        set3.sfunction = lambda _, trees: trees.management_category <= 1
-        set3.order_var = "breast_height_diameter"
-        set3.target_var = "stems_per_ha"
-        set3.target_type = "relative"
-        set3.target_amount = 0.5
-        set3.profile_x = np.array([0.0, 0.5, 1.0])
-        set3.profile_y = np.array([0.01, 0.5, 0.99])
-        set3.profile_xmode = "relative"
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.5
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
 
-        sets = [set3]
+        sets = [set1]
 
         target = SelectionTarget()
         target.type = "absolute_remain"
@@ -101,17 +101,17 @@ class TestSelectUnits(unittest.TestCase):
         self.assertTrue(np.all(np.abs(selected - expected) < 0.000000001))
 
     def test_odds_profile(self):
-        set3 = SelectionSet[ForestStand, ReferenceTrees]()
-        set3.sfunction = lambda _, trees: trees.management_category <= 1
-        set3.order_var = "breast_height_diameter"
-        set3.target_var = "stems_per_ha"
-        set3.target_type = "relative"
-        set3.target_amount = 0.5
-        set3.profile_x = np.array([0.0, 0.5, 1.0])
-        set3.profile_y = np.array([0.01, 0.5, 0.99])
-        set3.profile_xmode = "relative"
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.5
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
 
-        sets = [set3]
+        sets = [set1]
 
         target = SelectionTarget()
         target.type = "absolute_remain"
@@ -126,17 +126,17 @@ class TestSelectUnits(unittest.TestCase):
         self.assertTrue(np.all(np.abs(selected - expected) < 0.000000001))
 
     def test_scale(self):
-        set3 = SelectionSet[ForestStand, ReferenceTrees]()
-        set3.sfunction = lambda _, trees: trees.management_category <= 1
-        set3.order_var = "breast_height_diameter"
-        set3.target_var = "stems_per_ha"
-        set3.target_type = "relative"
-        set3.target_amount = 0.5
-        set3.profile_x = np.array([0.0, 0.5, 1.0])
-        set3.profile_y = np.array([0.01, 0.5, 0.99])
-        set3.profile_xmode = "relative"
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.5
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
 
-        sets = [set3]
+        sets = [set1]
 
         target = SelectionTarget()
         target.type = "absolute_remain"
@@ -152,17 +152,17 @@ class TestSelectUnits(unittest.TestCase):
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
 
     def test_level(self):
-        set3 = SelectionSet[ForestStand, ReferenceTrees]()
-        set3.sfunction = lambda _, trees: trees.management_category <= 1
-        set3.order_var = "breast_height_diameter"
-        set3.target_var = "stems_per_ha"
-        set3.target_type = "relative"
-        set3.target_amount = 0.5
-        set3.profile_x = np.array([0.0, 0.5, 1.0])
-        set3.profile_y = np.array([0.01, 0.5, 0.99])
-        set3.profile_xmode = "relative"
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.5
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
 
-        sets = [set3]
+        sets = [set1]
 
         target = SelectionTarget()
         target.type = "absolute_remain"
@@ -178,17 +178,17 @@ class TestSelectUnits(unittest.TestCase):
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
 
     def test_relative_remain(self):
-        set3 = SelectionSet[ForestStand, ReferenceTrees]()
-        set3.sfunction = lambda _, trees: trees.management_category <= 1
-        set3.order_var = "breast_height_diameter"
-        set3.target_var = "stems_per_ha"
-        set3.target_type = "relative"
-        set3.target_amount = 0.5
-        set3.profile_x = np.array([0.0, 0.5, 1.0])
-        set3.profile_y = np.array([0.01, 0.5, 0.99])
-        set3.profile_xmode = "relative"
+        set1 = SelectionSet[ForestStand, ReferenceTrees]()
+        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.order_var = "breast_height_diameter"
+        set1.target_var = "stems_per_ha"
+        set1.target_type = "relative"
+        set1.target_amount = 0.5
+        set1.profile_x = np.array([0.0, 0.5, 1.0])
+        set1.profile_y = np.array([0.01, 0.5, 0.99])
+        set1.profile_xmode = "relative"
 
-        sets = [set3]
+        sets = [set1]
 
         target = SelectionTarget()
         target.type = "relative_remain"
