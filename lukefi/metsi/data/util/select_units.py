@@ -28,7 +28,7 @@ def select_units[T, V: VectorData](context: T,
                                    data: V,
                                    target_decl: SelectionTarget,
                                    sets: list[SelectionSet[T, V]],
-                                   freq_var: str = "stems_per_ha",
+                                   freq_var: str,
                                    select_from: str = "all",
                                    mode: str = "odds_units") -> npt.NDArray[np.float64]:
 
@@ -48,7 +48,7 @@ def select_units[T, V: VectorData](context: T,
 
     # amount to collect
     all_units: npt.NDArray[np.bool_] = np.repeat(True, data.size)
-    total_target = _get_target(data, all_units, target_var, target_type, target_amount)
+    total_target = _get_target(data, all_units, target_var, target_type, target_amount, freq_var)
 
     # allowed tolerance --> acceptable interval [target - eps, target + eps]
     # epsilon
@@ -85,7 +85,8 @@ def select_units[T, V: VectorData](context: T,
                                          cur_set_mask,
                                          sets[i_set].target_var,
                                          sets[i_set].target_type,
-                                         sets[i_set].target_amount)
+                                         sets[i_set].target_amount,
+                                         freq_var)
             eps_set = max(0.005, cur_set_target * tolerance)
 
             # calculate initial value for constant or scaling on the first line segment of the profile
@@ -256,7 +257,7 @@ def _get_target(data: VectorData,
                 target_var: Optional[str],
                 target_type: Optional[str],
                 target_amount: Optional[float],
-                freq_var: str = "stems_per_ha") -> float:
+                freq_var: str) -> float:
 
     if target_var is None or target_type is None or target_amount is None:
         return np.inf

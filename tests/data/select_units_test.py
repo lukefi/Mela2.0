@@ -93,7 +93,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 100
 
-        selected = select_units(self.stand, self.trees, target, sets)
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([0.001285986, 0.026337014, 0.044398658, 0.064245866, 0.062085809, 0.081328615,
                              0.102171400, 0.125488095, 0.152262229, 0.183603001, 0.222128271, 0.268294736,
                              0.328393045, 0.407688528, 0.519838362, 0.690429783, 0.617979504, 0.971546129,
@@ -118,7 +118,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 100
 
-        selected = select_units(self.stand, self.trees, target, sets, mode="odds_profile")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="odds_profile")
         expected = np.array([0.0002173194, 0.0069249673, 0.0103028322, 0.0133604573, 0.0128780946,
                              0.0151229730, 0.0514119379, 0.1843021961, 0.3066456085, 0.4205515442,
                              0.5302387415, 0.6314884621, 0.7306288135, 0.8255504266, 0.9183626704,
@@ -143,7 +143,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 100
 
-        selected = select_units(self.stand, self.trees, target, sets, mode="scale")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="scale")
         expected = np.array([
             0.0102433, 0.1676316, 0.2474976, 0.3199432, 0.3083750, 0.3614502, 0.4073618,
             0.4486822, 0.4867233, 0.5221408, 0.5562466, 0.5877288, 0.6185552, 0.6480698,
@@ -169,7 +169,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 100
 
-        selected = select_units(self.stand, self.trees, target, sets, mode="level")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="level")
         expected = np.array([
             0.0704782, 1.1533761, 1.7028871, 2.2013436, 2.1217496, 2.4869289, 2.8028201,
             3.0871221, 3.3488604, 3.5925479, 3.8272099, 4.0438209, 4.2559193, 4.4589921,
@@ -195,7 +195,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 0.5
 
-        selected = select_units(self.stand, self.trees, target, sets)
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([
             0.03403949, 0.62297660, 0.97687819, 1.32466043, 1.27814020, 1.56559315,
             1.83683878, 2.10071695, 2.36219400, 2.62344304, 2.89304200, 3.15928884,
@@ -232,7 +232,7 @@ class TestSelectUnits(unittest.TestCase):
         target.var = "stems_per_ha"
         target.amount = 50
 
-        selected = select_units(self.stand, self.trees, target, sets)
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([
             7.047820, 3.039971, 2.428410, 2.161354, 2.067414, 1.817145, 1.627423, 1.482481,
             1.418895, 1.384098, 1.376576, 1.397957, 1.454208, 1.555003, 1.722350, 1.997521,
