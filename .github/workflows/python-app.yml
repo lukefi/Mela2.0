@@ -105,7 +105,7 @@ jobs:
         TOKEN=$(echo -n "${{ github.token }}")
         # Probe the registry API; expect HTTP 200/401/403
         code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
-          https://ghcr.io/v2/lukefi/growth-libs/tags/list)
+          https://ghcr.io/v2/mottisc-for-robot/tags/list)
         echo "GHCR /tags/list status: $code"
         if [ "$code" != "200" ]; then
           echo "Likely missing repo access to the private package, or wrong package path/tag."
