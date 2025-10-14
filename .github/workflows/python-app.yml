@@ -98,19 +98,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
-    - name: Diagnose GHCR access
-      if: steps.ghcr_access.outputs.can_pull == 'true'
-      run: |
-        set -euo pipefail
-        TOKEN=$(echo -n "${{ github.token }}")
-        # Probe the registry API; expect HTTP 200/401/403
-        code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $TOKEN" \
-          https://ghcr.io/v2/mottisc-for-robot/tags/list)
-        echo "GHCR /tags/list status: $code"
-        if [ "$code" != "200" ]; then
-          echo "Likely missing repo access to the private package, or wrong package path/tag."
-          exit 1
-        fi
 
     - name: Pull growth-libs image
       if: steps.ghcr_access.outputs.can_pull == 'true'
@@ -130,16 +117,10 @@ jobs:
       run: |
         set -euo pipefail
         mkdir -p "$DEST"
-        docker run --rm "$IMAGE" sh -lc '
-          set -e
-          cd /
-          files="$(ls -p | grep -v / || true)"
-          if [ -n "$files" ]; then
-            tar -cf - $files
-          else
-            tar -cf - --files-from /dev/null
-          fi
-        ' | tar -C "$DEST" -xf -
+        cid=$(docker create "$IMAGE")
+        # You COPY-ed to /payload in the Dockerfile
+        docker cp "$cid":/payload/. "$DEST"/
+        docker rm "$cid"
         chmod +x "$DEST"/* 2>/dev/null || true
         ls -al "$DEST" || true
 
