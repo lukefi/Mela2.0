@@ -1,3 +1,6 @@
+import os
+import re
+from pathlib import Path
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
@@ -37,6 +40,62 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
 
     return y1 / 1000.0, x1 / 1000.0
 
+def _expand_robot_variables_maybe(s: str) -> str:
+    """
+    Try to expand Robot variables like ${EXECDIR}, ${CURDIR}, ${/}, ${ENV_VAR}.
+    If Robot is not available or not running, degrade gracefully:
+      - ${EXECDIR} and ${CURDIR} -> os.getcwd()
+      - ${/} -> os.sep
+    Always expands ~ and $ENV_VAR after that.
+    """
+    original = s
+
+    # 1) Try Robot's own expander if available and active
+    try:
+        from robot.libraries.BuiltIn import BuiltIn  # type: ignore
+        try:
+            s = BuiltIn().replace_variables(s)
+        except Exception:
+            # Robot import ok but not in active context -> fall back
+            pass
+    except Exception:
+        pass
+
+    # 2) If placeholders remain, do safe fallbacks
+    # ${/} -> platform sep
+    s = s.replace("${/}", os.sep)
+
+    # ${EXECDIR} / ${CURDIR} -> current working directory
+    # (only if they still exist; Robot would have replaced if active)
+    cwd = os.getcwd()
+    s = s.replace("${EXECDIR}", cwd)
+    s = s.replace("${CURDIR}", cwd)
+
+    # 3) Expand env vars and ~
+    s = os.path.expandvars(os.path.expanduser(s))
+
+    # 4) Guard against accidental drive/rooted-without-drive like "\data\motti" on Windows
+    if re.match(r"^[\\/](?![\\/])", s) and not re.match(r"^[A-Za-z]:[\\/]", s):
+        # Treat as relative to CWD
+        s = s.lstrip("\\/")
+
+    return s
+
+
+def _resolve_dir_or_file(path_like: str | Path) -> Path:
+    """
+    Turn the (possibly Robot-variable) path into an absolute Path.
+    """
+    if path_like is None:
+        raise ValueError("data_dir must be provided (directory containing the Motti library).")
+
+    s = str(path_like)
+    s = _expand_robot_variables_maybe(s)
+
+    p = Path(s)
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    return p.resolve()
 
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
@@ -98,7 +157,12 @@ class MottiDLLPredictorVec:
         else:
             if data_dir is None:
                 raise ValueError("data_dir must be provided (directory containing the Motti library).")
-            self.dll = Motti4DLL(_resolve_shared_object(data_dir), data_dir=data_dir)
+
+            #This is to normalize relative paths (robot tests) to absolute paths
+            data_dir_path = _resolve_dir_or_file(data_dir)
+
+            so_path = _resolve_shared_object(data_dir_path)
+            self.dll = Motti4DLL(so_path, data_dir=str(data_dir_path))
 
     # ---- stand/site properties ----
     @property
@@ -333,7 +397,8 @@ def grow_motti_dll_vec(input_: OpTuple[ForestStand], /, **operation_parameters) 
     if predictor is None:
         if data_dir is None:
             raise ModuleNotFoundError("data_dir must be provided (directory containing the Motti library).")
-        pred = MottiDLLPredictorVec(stand, data_dir= data_dir)
+        resolved_dir = _resolve_dir_or_file(data_dir)
+        pred = MottiDLLPredictorVec(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
 

@@ -57,7 +57,7 @@ control_structure = {
                     vectorized= True,
                     parameters={
                         "step": 5,
-                        "data_dir": r"C:\Users\Ari-AnttiTervonen\luke\metsi\data\motti",
+                        "data_dir": "${EXECDIR}${/}data${/}motti",
                     }
 
                 )
