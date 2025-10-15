@@ -7,10 +7,10 @@ name: CI - Unit and Robot Tests
 on:
   # trigger on push to main
   push:
-    branches: [ main  , MELA2-81 ]
+    branches: [ main , MELA2-81]
   # trigger on new PR to main
   pull_request:
-    branches: [ main]
+    branches: [ main ]
   # enables manual triggering
   workflow_dispatch:
 
@@ -19,14 +19,14 @@ permissions:
   packages: read
 
 jobs:
-  run-tests: 
+  run-tests:
     name: Run Unit and Robot Tests
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.13.5"]
         r-version: ["4.5.0"]
-        
+
     runs-on: ubuntu-latest
 
     steps:
@@ -57,7 +57,7 @@ jobs:
       continue-on-error: true
       run: |
         pylint lukefi --output-format=github --disable=all --enable=fixme --fail-under=0
-    
+  
     - name: Run mypy
       run: |
         sudo apt-get install -y jq

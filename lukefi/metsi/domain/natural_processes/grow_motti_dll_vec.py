@@ -65,8 +65,8 @@ def _expand_robot_variables_maybe(s: str) -> str:
         # e.g., "\data\motti" or "/data/motti" -> make relative
         if (s.startswith("\\") or s.startswith("/")) and not re.match(r"^[A-Za-z]:[\\/]", s):
             s = s.lstrip("\\/")
-
     return s
+
 def _resolve_dir_or_file(path_like: str | Path) -> Path:
     """
     Turn the (possibly Robot-variable) path into an absolute Path.
@@ -81,10 +81,13 @@ def _resolve_dir_or_file(path_like: str | Path) -> Path:
     if not p.is_absolute():
         p = Path.cwd() / p
     return p.resolve()
+
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
-    Dominant species from SoA data (Motti species code).
+    Returns dominant species from Motti species.
+
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
+    If trees are empty fall back to PINE, we need to give valid value for growth.
     """
     if rt is None:
         return TreeSpecies.PINE
@@ -374,8 +377,6 @@ def grow_motti_dll_vec(input_: OpTuple[ForestStand], /, **operation_parameters) 
     rt = stand.reference_trees_soa
     if rt is None:
         raise ValueError("Reference trees not vectorized (stand.reference_trees_soa is None).")
-    if rt.size == 0:
-        return input_
 
     # Construct predictor
     if predictor is None:
