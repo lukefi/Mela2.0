@@ -151,8 +151,8 @@ class VectorData():
                 arr = np.asarray(val)
                 arr = arr.reshape(tail)  # ensure (3,), (p,q), ...
                 return arr.reshape((1,) + tail)  # (1,3) etc.
-            else:  # scalar column
-                return np.asarray([val], dtype=col.dtype)  # (1,)
+
+            return np.asarray([val], dtype=col.dtype)  # (1,)
 
         def _many_block_like(col: np.ndarray, vals_list):
             tail = col.shape[1:]
@@ -160,8 +160,8 @@ class VectorData():
                 # stack each value reshaped to tail
                 stacked = np.stack([np.asarray(v).reshape(tail) for v in vals_list], axis=0)  # (m, *tail)
                 return stacked
-            else:
-                return np.asarray(vals_list, dtype=col.dtype).reshape(-1, *tail)  # (m,)
+
+            return np.asarray(vals_list, dtype=col.dtype).reshape(-1, *tail)  # (m,)
 
         def _concat_insert(col: np.ndarray, block: np.ndarray, idx: int | None):
             if idx is None:
