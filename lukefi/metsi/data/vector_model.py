@@ -72,10 +72,10 @@ class VectorData():
         pass
 
     @overload
-    def __getitem__[T: "VectorData"](self: T, name: slice) -> T:
+    def __getitem__[T: "VectorData"](self: T, name: slice | npt.NDArray) -> T:
         pass
 
-    def __getitem__[T: "VectorData"](self: T, name: str | slice) -> npt.NDArray | T:
+    def __getitem__[T: "VectorData"](self: T, name: str | slice | npt.NDArray) -> npt.NDArray | T:
         if isinstance(name, str):
             return getattr(self, name)
 
