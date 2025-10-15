@@ -61,11 +61,12 @@ def _expand_robot_variables_maybe(s: str) -> str:
     s = os.path.expandvars(os.path.expanduser(s))
 
     # Guard against leading single slash/backslash paths like "\data\motti" on Windows
-    if re.match(r"^[\\/](?![\\/])", s) and not re.match(r"^[A-Za-z]:[\\/]", s):
-        s = s.lstrip("\\/")
+    if os.name == "nt":
+        # e.g., "\data\motti" or "/data/motti" -> make relative
+        if (s.startswith("\\") or s.startswith("/")) and not re.match(r"^[A-Za-z]:[\\/]", s):
+            s = s.lstrip("\\/")
 
     return s
-
 def _resolve_dir_or_file(path_like: str | Path) -> Path:
     """
     Turn the (possibly Robot-variable) path into an absolute Path.
