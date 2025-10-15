@@ -1,11 +1,9 @@
 import builtins
-from enum import Enum
-from functools import lru_cache, cache
+from functools import lru_cache
 from operator import call
 from typing import Any, Optional
 from collections.abc import Iterator, Callable
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 
 GetVarFn = Callable[[str], Any]
 """A function that returns the value of a global variable given its name."""
