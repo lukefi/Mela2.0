@@ -142,6 +142,26 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
             strata_origin=app_config.strata_origin)(app_config.input_path)
     raise MetsiException(f"Unsupported state format '{app_config.state_format}'")
 
+def write_full_simulation_result_dirtree(result: SimResults, app_arguments: MetsiConfiguration):
+    """
+    Unwraps the given simulation result structure into computational units and further into produced schedules.
+    Writes these as a matching directory structure, splitting OperationPayloads into unit_state and derived_data files.
+    Details for output directory, unit state container format and derived data container format are extracted from
+    given app_arguments structure.
+
+    :param result: the simulation results structure
+    :param app_arguments: application run configuration
+    :return: None
+    """
+    for stand_id, schedules in result.items():
+        for i, schedule in enumerate(schedules):
+            if app_arguments.state_output_container is not None:
+                schedule_dir = prepare_target_directory(f"{app_arguments.target_directory}/{stand_id}/{i}")
+                filepath = determine_file_path(schedule_dir, f"sim_result.{app_arguments.state_output_container.value}")
+                write_stands_to_file(ExportableContainer([schedule.computational_unit], None),
+                                     filepath,
+                                     app_arguments.state_output_container.value)
+
 # io_util?
 def scan_dir_for_file(dirpath: Path, basename: str, suffixes: list[str]) -> Optional[tuple[Path, str]]:
     """
