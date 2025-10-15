@@ -45,30 +45,31 @@ class RemovedTrees(CollectedData):
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (node_str,
-                 identifier,
-                 self.removed_trees.identifier[i],
-                 int(self.removed_trees.tree_number[i]),
-                 int(self.removed_trees.species[i]),
-                 self.removed_trees.breast_height_diameter[i],
-                 self.removed_trees.height[i],
-                 self.removed_trees.measured_height[i],
-                 self.removed_trees.breast_height_age[i],
-                 self.removed_trees.biological_age[i],
-                 self.removed_trees.stems_per_ha[i],
-                 int(self.removed_trees.origin[i]),
-                 int(self.removed_trees.management_category[i]),
-                 self.removed_trees.saw_log_volume_reduction_factor[i],
-                 int(self.removed_trees.pruning_year[i]),
-                 int(self.removed_trees.age_when_10cm_diameter_at_breast_height[i]),
-                 f"({self.removed_trees.stand_origin_relative_position[i][0]}, "
-                 f"{self.removed_trees.stand_origin_relative_position[i][1]}, "
-                 f"{self.removed_trees.stand_origin_relative_position[i][2]})",
-                 self.removed_trees.lowest_living_branch_height[i],
-                 self.removed_trees.tree_category[i],
-                 int(self.removed_trees.storey[i]),
-                 bool(self.removed_trees.sapling[i]),
-                 self.removed_trees.tree_type[i],
-                 self.removed_trees.tuhon_ilmiasu[i]
-                 )
+                (
+                    node_str,
+                    identifier,
+                    self.removed_trees.identifier[i],
+                    int(self.removed_trees.tree_number[i]),
+                    int(self.removed_trees.species[i]),
+                    self.removed_trees.breast_height_diameter[i],
+                    self.removed_trees.height[i],
+                    self.removed_trees.measured_height[i],
+                    self.removed_trees.breast_height_age[i],
+                    self.removed_trees.biological_age[i],
+                    self.removed_trees.stems_per_ha[i],
+                    int(self.removed_trees.origin[i]),
+                    int(self.removed_trees.management_category[i]),
+                    self.removed_trees.saw_log_volume_reduction_factor[i],
+                    int(self.removed_trees.pruning_year[i]),
+                    int(self.removed_trees.age_when_10cm_diameter_at_breast_height[i]),
+                    f"({self.removed_trees.stand_origin_relative_position[i][0]}, "
+                    f"{self.removed_trees.stand_origin_relative_position[i][1]}, "
+                    f"{self.removed_trees.stand_origin_relative_position[i][2]})",
+                    self.removed_trees.lowest_living_branch_height[i],
+                    self.removed_trees.tree_category[i],
+                    int(self.removed_trees.storey[i]),
+                    bool(self.removed_trees.sapling[i]),
+                    self.removed_trees.tree_type[i],
+                    self.removed_trees.tuhon_ilmiasu[i]
+                )
             )

@@ -560,32 +560,33 @@ class ForestStand(Finalizable, ComputationalUnit):
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (node,
-                 self.identifier,
-                 self.reference_trees.identifier[i],
-                 int(self.reference_trees.tree_number[i]),
-                 int(self.reference_trees.species[i]),
-                 self.reference_trees.breast_height_diameter[i],
-                 self.reference_trees.height[i],
-                 self.reference_trees.measured_height[i],
-                 self.reference_trees.breast_height_age[i],
-                 self.reference_trees.biological_age[i],
-                 self.reference_trees.stems_per_ha[i],
-                 int(self.reference_trees.origin[i]),
-                 int(self.reference_trees.management_category[i]),
-                 self.reference_trees.saw_log_volume_reduction_factor[i],
-                 int(self.reference_trees.pruning_year[i]),
-                 int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
-                 f"({self.reference_trees.stand_origin_relative_position[i][0]}, "
-                 f"{self.reference_trees.stand_origin_relative_position[i][1]}, "
-                 f"{self.reference_trees.stand_origin_relative_position[i][2]})",
-                 self.reference_trees.lowest_living_branch_height[i],
-                 self.reference_trees.tree_category[i],
-                 int(self.reference_trees.storey[i]),
-                 bool(self.reference_trees.sapling[i]),
-                 self.reference_trees.tree_type[i],
-                 self.reference_trees.tuhon_ilmiasu[i]
-                 )
+                (
+                    node,
+                    self.identifier,
+                    self.reference_trees.identifier[i],
+                    int(self.reference_trees.tree_number[i]),
+                    int(self.reference_trees.species[i]),
+                    self.reference_trees.breast_height_diameter[i],
+                    self.reference_trees.height[i],
+                    self.reference_trees.measured_height[i],
+                    self.reference_trees.breast_height_age[i],
+                    self.reference_trees.biological_age[i],
+                    self.reference_trees.stems_per_ha[i],
+                    int(self.reference_trees.origin[i]),
+                    int(self.reference_trees.management_category[i]),
+                    self.reference_trees.saw_log_volume_reduction_factor[i],
+                    int(self.reference_trees.pruning_year[i]),
+                    int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
+                    f"({self.reference_trees.stand_origin_relative_position[i][0]}, "
+                    f"{self.reference_trees.stand_origin_relative_position[i][1]}, "
+                    f"{self.reference_trees.stand_origin_relative_position[i][2]})",
+                    self.reference_trees.lowest_living_branch_height[i],
+                    self.reference_trees.tree_category[i],
+                    int(self.reference_trees.storey[i]),
+                    bool(self.reference_trees.sapling[i]),
+                    self.reference_trees.tree_type[i],
+                    self.reference_trees.tuhon_ilmiasu[i]
+                )
             )
         for i in range(self.tree_strata.size):
 
@@ -595,31 +596,32 @@ class ForestStand(Finalizable, ComputationalUnit):
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (node,
-                 self.identifier,
-                 self.tree_strata.identifier[i],
-                 int(self.tree_strata.species[i]),
-                 self.tree_strata.mean_diameter[i],
-                 self.tree_strata.mean_height[i],
-                 self.tree_strata.breast_height_age[i],
-                 self.tree_strata.biological_age[i],
-                 self.tree_strata.stems_per_ha[i],
-                 self.tree_strata.basal_area[i],
-                 int(self.tree_strata.origin[i]),
-                 int(self.tree_strata.management_category[i]),
-                 self.tree_strata.saw_log_volume_reduction_factor[i],
-                 int(self.tree_strata.cutting_year[i]),
-                 int(self.tree_strata.age_when_10cm_diameter_at_breast_height[i]),
-                 int(self.tree_strata.tree_number[i]),
-                 f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
-                 f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
-                 f"{self.tree_strata.stand_origin_relative_position[i][2]})",
-                 self.tree_strata.lowest_living_branch_height[i],
-                 int(self.tree_strata.storey[i]),
-                 self.tree_strata.sapling_stems_per_ha[i],
-                 bool(self.tree_strata.sapling_stratum[i]),
-                 int(self.tree_strata.number_of_generated_trees[i])
-                 )
+                (
+                    node,
+                    self.identifier,
+                    self.tree_strata.identifier[i],
+                    int(self.tree_strata.species[i]),
+                    self.tree_strata.mean_diameter[i],
+                    self.tree_strata.mean_height[i],
+                    self.tree_strata.breast_height_age[i],
+                    self.tree_strata.biological_age[i],
+                    self.tree_strata.stems_per_ha[i],
+                    self.tree_strata.basal_area[i],
+                    int(self.tree_strata.origin[i]),
+                    int(self.tree_strata.management_category[i]),
+                    self.tree_strata.saw_log_volume_reduction_factor[i],
+                    int(self.tree_strata.cutting_year[i]),
+                    int(self.tree_strata.age_when_10cm_diameter_at_breast_height[i]),
+                    int(self.tree_strata.tree_number[i]),
+                    f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
+                    f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
+                    f"{self.tree_strata.stand_origin_relative_position[i][2]})",
+                    self.tree_strata.lowest_living_branch_height[i],
+                    int(self.tree_strata.storey[i]),
+                    self.tree_strata.sapling_stems_per_ha[i],
+                    bool(self.tree_strata.sapling_stratum[i]),
+                    int(self.tree_strata.number_of_generated_trees[i])
+                )
             )
 
 
