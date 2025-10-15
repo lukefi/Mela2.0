@@ -28,24 +28,3 @@ def evaluate_sequence[V](payload: V, *operations: Callable[[V], V]) -> V:
     for func in operations:
         current = func(current)
     return current
-
-
-def run_full_tree_strategy(payload: SimulationPayload[T],
-                           config: SimConfiguration,
-                           db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
-    """Process the given operation payload using a simulation state tree created from the declaration. Full simulation
-    tree and operation chains are pre-generated for the run. This tree strategy creates the full theoretical branching
-    tree for the simulation, carrying a significant memory and runtime overhead for large trees.
-
-    :param payload: a simulation state payload
-    :param config: a prepared SimConfiguration object
-    :param evaluator: a function for performing computation from given EventTree and for given OperationPayload
-    :return: a list of resulting simulation state payloads
-    """
-
-    nestable_generator: Generator[T] = config.full_tree_generators()
-    if db is not None:
-        collected_data_types = nestable_generator.get_types_of_collected_data()
-        init_collected_data_tables(db, collected_data_types)
-    root_node: EventTree[T] = nestable_generator.compose_nested()
-    return root_node.evaluate(payload, [0], db)
