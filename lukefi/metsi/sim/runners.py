@@ -48,16 +48,4 @@ def run_full_tree_strategy(payload: SimulationPayload[T],
     nestable_generator: Generator[T] = config.full_tree_generators()
     collected_data = nestable_generator.get_types_of_collected_data()
     root_node: EventTree[T] = nestable_generator.compose_nested()
-    root_node.evaluate(payload, [0], db)
-
-
-def default_runner(units: list[T],
-                   config: SimConfiguration[T],
-                   db: Optional[sqlite3.Connection] = None) -> None:
-    for unit in units:
-        payload = SimulationPayload[T](
-            computational_unit=unit,
-            collected_data=CollectedData(initial_time_point=config.time_points[0]),
-            operation_history=[])
-
-        run_full_tree_strategy(payload, config, db)
+    return root_node.evaluate(payload, [0], db)
