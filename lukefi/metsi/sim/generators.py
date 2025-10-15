@@ -6,7 +6,7 @@ from typing import Sequence as Sequence_
 from collections.abc import Callable
 from lukefi.metsi.domain.collected_data import CollectableData
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.operations import prepared_operation
+from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.condition import Condition
@@ -17,7 +17,7 @@ from lukefi.metsi.app.utils import MetsiException
 T = TypeVar("T", bound=ComputationalUnit)
 
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
-TreatmentFn = Callable[[OpTuple[T]], OpTuple[T]]
+TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
@@ -147,8 +147,8 @@ class Event[T: ComputationalUnit](GeneratorBase):
     def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
-        prepared_treatment = prepared_operation(self.treatment, **combined_params)
-        return lambda payload: processor(payload, prepared_treatment, self.treatment, time_point,
+        treatment = prepared_treatment(self.treatment, **combined_params)
+        return lambda payload: processor(payload, treatment, self.treatment, time_point,
                                          self.preconditions, self.postconditions, **combined_params)
 
     def _check_file_params(self):

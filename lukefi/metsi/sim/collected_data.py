@@ -10,4 +10,4 @@ class CollectedData(ABC):
         pass
 
 T = TypeVar("T")
-OpTuple = tuple[T, CollectedData]
+OpTuple = tuple[T, list[CollectedData]]

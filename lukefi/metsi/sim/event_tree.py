@@ -4,12 +4,13 @@ from copy import copy, deepcopy
 
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
 
 
-def identity[T](x: T) -> T:
-    return x
+def identity[T](x: T) -> tuple[T, list[CollectedData]]:
+    return x, []
 
 
 class EventTree[T: ComputationalUnit]:
@@ -41,7 +42,7 @@ class EventTree[T: ComputationalUnit]:
         :param state_tree: optional state tree node
         :return: list of result payloads from this EventTree or as concatenated from its branches
         """
-        current = self.processed_treatment(payload)
+        current, collected_data = self.processed_treatment(payload)
         if node_identifier is None:
             node_identifier = [0]
         if db is not None:
@@ -58,7 +59,8 @@ class EventTree[T: ComputationalUnit]:
                  str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
                  str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
             current.computational_unit.output_to_db(db, node_str)
-            current.collected_data.output_to_db(db, node_str, current.computational_unit.identifier)
+            for datum in collected_data:
+                datum.output_to_db(db, node_str, current.computational_unit.identifier)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()

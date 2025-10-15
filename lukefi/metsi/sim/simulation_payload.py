@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from copy import copy, deepcopy
+from copy import deepcopy
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, TypeVar
 
@@ -14,7 +14,6 @@ class SimulationPayload[T: ComputationalUnit](SimpleNamespace):
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
     computational_unit: T
-    collected_data: CollectedData
     operation_history: list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]
 
     def __copy__(self) -> "SimulationPayload[T]":
@@ -26,9 +25,8 @@ class SimulationPayload[T: ComputationalUnit](SimpleNamespace):
 
         return SimulationPayload(
             computational_unit=copy_like,
-            collected_data=copy(self.collected_data),
             operation_history=list(self.operation_history)
         )
 
 T = TypeVar("T", bound=ComputationalUnit)
-ProcessedTreatment = Callable[[SimulationPayload[T]], SimulationPayload[T]]
+ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]

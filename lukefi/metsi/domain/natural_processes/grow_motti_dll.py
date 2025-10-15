@@ -301,7 +301,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 
-def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees_soa
@@ -317,14 +317,13 @@ def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> O
     data_dir = operation_parameters.get("data_dir", None)
     predictor = operation_parameters.get("predictor", None)
 
-    stand, collected_data = input_
+    stand = input_
 
-    sim_year: int = int(collected_data.current_time_point if collected_data.current_time_point is not None
-                        else (stand.year or 0))
+    sim_year: int = stand.year or 0
 
     rt = stand.reference_trees
     if rt.size == 0:
-        return input_
+        return stand, []
 
     # Construct predictor
     if predictor is None:
@@ -366,4 +365,4 @@ def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> O
     # Apply vectorized update (also advances ages etc. inside util)
     update_stand_growth(stand, d_new, h_new, f_new, step)
 
-    return stand, collected_data
+    return stand, []
