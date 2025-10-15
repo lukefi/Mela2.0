@@ -150,16 +150,16 @@ class VectorData():
             if tail:
                 arr = np.asarray(val, dtype=dtype).reshape(tail)   # (p,), (p,q) ...
                 return arr.reshape((1,)+tail)                      # (1,p) or (1,p,q)
-            else:
-                return np.asarray([val], dtype=dtype)              # (1,)
+
+            return np.asarray([val], dtype=dtype)              # (1,)
 
         def _many_block_like(col: np.ndarray, vals_list, dtype):
             tail = col.shape[1:]
             if tail:
                 stacked = np.stack([np.asarray(v, dtype=dtype).reshape(tail) for v in vals_list], axis=0)  # (m,*tail)
                 return stacked
-            else:
-                return np.asarray(vals_list, dtype=dtype).reshape(-1, *tail)  # (m,)
+
+            return np.asarray(vals_list, dtype=dtype).reshape(-1, *tail)  # (m,)
 
         def _concat(col: np.ndarray, block: np.ndarray, at: int | None):
             if at is None:
