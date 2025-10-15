@@ -46,6 +46,8 @@ def run_full_tree_strategy(payload: SimulationPayload[T],
     """
 
     nestable_generator: Generator[T] = config.full_tree_generators()
-    collected_data = nestable_generator.get_types_of_collected_data()
+    if db is not None:
+        collected_data_types = nestable_generator.get_types_of_collected_data()
+        init_collected_data_tables(db, collected_data_types)
     root_node: EventTree[T] = nestable_generator.compose_nested()
     return root_node.evaluate(payload, [0], db)

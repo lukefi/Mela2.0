@@ -24,6 +24,12 @@ DB_TABLE_INIT = {
 }
 
 
+def init_collected_data_tables(db: sqlite3.Connection, data_types: set[CollectableData]):
+    cur = db.cursor()
+    for data_type in data_types:
+        cur.execute(DB_TABLE_INIT[data_type])
+
+
 class RemovedTrees(CollectedData):
 
     removed_trees: ReferenceTrees
