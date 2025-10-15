@@ -67,6 +67,9 @@ class VectorData():
     def __len__(self):
         return self.size
 
+    def __getitem__(self, name: str) -> npt.NDArray:
+        return getattr(self, name)
+
     def vectorize(self, attr_dict: dict[str, list[Any]]):
         self.set_size(attr_dict)
         for attribute_name, data_type in self.dtypes.items():
@@ -142,22 +145,43 @@ class VectorData():
                                                       If not given, values are appended to the ends of the arrays.
                                                       Defaults to None.
         """
+        def _row_block_like(col: np.ndarray, val):
+            tail = col.shape[1:]  # () for scalar columns, e.g. (3,) for vec3
+            if tail:  # subarray column
+                arr = np.asarray(val)
+                arr = arr.reshape(tail)  # ensure (3,), (p,q), ...
+                return arr.reshape((1,) + tail)  # (1,3) etc.
+            else:  # scalar column
+                return np.asarray([val], dtype=col.dtype)  # (1,)
+
+        def _many_block_like(col: np.ndarray, vals_list):
+            tail = col.shape[1:]
+            if tail:
+                # stack each value reshaped to tail
+                stacked = np.stack([np.asarray(v).reshape(tail) for v in vals_list], axis=0)  # (m, *tail)
+                return stacked
+            else:
+                return np.asarray(vals_list, dtype=col.dtype).reshape(-1, *tail)  # (m,)
+
+        def _concat_insert(col: np.ndarray, block: np.ndarray, idx: int | None):
+            if idx is None:
+                return np.concatenate([col, block], axis=0)
+            # support single index only (common case). If list of idx is needed, handle separately.
+            return np.concatenate([col[:idx], block, col[idx:]], axis=0)
+
+
         if isinstance(new, list):
             for key, dtype in self.dtypes.items():
-                values = [self.to_default(new_item.get(key), dtype) for new_item in new]
-                vector: npt.NDArray = getattr(self, key)
-                if index is not None:
-                    setattr(self, key, np.insert(vector, index, values))  # insert always creates a copy
-                else:
-                    setattr(self, key, np.append(vector, values))  # append always creates a copy
+                col = getattr(self, key)
+                vals_list = [self.to_default(item.get(key), dtype) for item in new]
+                block = _many_block_like(col, vals_list)  # shape matches col’s tail
+                setattr(self, key, _concat_insert(col, block, index if isinstance(index, int) else None))
         else:
             for key, dtype in self.dtypes.items():
-                value = self.to_default(new.get(key), dtype)
-                vector = getattr(self, key)
-                if index is not None:
-                    setattr(self, key, np.insert(vector, index, value))  # insert always creates a copy
-                else:
-                    setattr(self, key, np.append(vector, value))  # append always creates a copy
+                col = getattr(self, key)
+                val = self.to_default(new.get(key), dtype)
+                block = _row_block_like(col, val)  # (1, *tail)
+                setattr(self, key, _concat_insert(col, block, index if isinstance(index, int) else None))
 
         self._recompute_size()
 
