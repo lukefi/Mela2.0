@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence, run_full_tree_strategy
+from lukefi.metsi.sim.runners import evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.app.file_io import read_control_module
 from tests.test_utils import collect_results, raises, identity, none
@@ -37,7 +37,9 @@ class RunnersTest(unittest.TestCase):
             computational_unit=1,
             operation_history=[]
         )
-        results_depth = collect_results(run_full_tree_strategy(depth_payload, config))
+        generator = config.full_tree_generators()
+        root_node = generator.compose_nested()
+        results_depth = collect_results(root_node.evaluate(depth_payload))
         self.assertEqual(8, len(results_depth))
 
     def test_no_parameters_propagation(self):
@@ -52,8 +54,9 @@ class RunnersTest(unittest.TestCase):
             computational_unit=1,
             operation_history=[]
         )
-
-        results = collect_results(run_full_tree_strategy(initial, config))
+        generator = config.full_tree_generators()
+        root_node = generator.compose_nested()
+        results = collect_results(root_node.evaluate(initial))
         self.assertEqual(5, results[0])
 
     def test_parameters_propagation(self):
@@ -68,8 +71,9 @@ class RunnersTest(unittest.TestCase):
             computational_unit=1,
             operation_history=[]
         )
-
-        results = collect_results(run_full_tree_strategy(initial, config))
+        generator = config.full_tree_generators()
+        root_node = generator.compose_nested()
+        results = collect_results(root_node.evaluate(initial))
         self.assertEqual(9, results[0])
 
     def test_parameters_branching(self):
@@ -83,8 +87,9 @@ class RunnersTest(unittest.TestCase):
             computational_unit=1,
             operation_history=[]
         )
-
-        results = collect_results(run_full_tree_strategy(initial, config))
+        generator = config.full_tree_generators()
+        root_node = generator.compose_nested()
+        results = collect_results(root_node.evaluate(initial))
         # do_nothing, do_nothing = 1
         # do_nothing, inc#1      = 2
         # do_nothing, inc#2      = 3
