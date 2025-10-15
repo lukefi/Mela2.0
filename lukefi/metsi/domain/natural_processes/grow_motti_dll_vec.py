@@ -1,10 +1,8 @@
 import os
 import re
-from pathlib import Path
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
-
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -20,7 +18,12 @@ from lukefi.metsi.domain.natural_processes.util import update_stand_growth_vecto
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.data.layered_model import PossiblyLayered
 
-
+try:
+    from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError  # type: ignore
+except (ImportError, ModuleNotFoundError):
+    BuiltIn = None
+    class RobotNotRunningError(RuntimeError):  # noqa: N818  (name mirrors Robot)
+        pass
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     """
     Normalize to EUREF-FIN/TM35FIN kilometers.
@@ -40,47 +43,28 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
 
     return y1 / 1000.0, x1 / 1000.0
 
+
 def _expand_robot_variables_maybe(s: str) -> str:
-    """
-    Try to expand Robot variables like ${EXECDIR}, ${CURDIR}, ${/}, ${ENV_VAR}.
-    If Robot is not available or not running, degrade gracefully:
-      - ${EXECDIR} and ${CURDIR} -> os.getcwd()
-      - ${/} -> os.sep
-    Always expands ~ and $ENV_VAR after that.
-    """
-    original = s
-
-    # 1) Try Robot's own expander if available and active
-    try:
-        from robot.libraries.BuiltIn import BuiltIn  # type: ignore
+    # Try Robot’s own expansion when available and running
+    if BuiltIn is not None:
         try:
-            s = BuiltIn().replace_variables(s)
-        except Exception:
-            # Robot import ok but not in active context -> fall back
+            s = BuiltIn().replace_variables(s)  # expands ${EXECDIR}, ${CURDIR}, ${/}, ${ENV_*}, etc.
+        except (RobotNotRunningError, RuntimeError):
+            # Robot is installed but there is no active execution context, or older RF raised RuntimeError.
+            # Fall through to manual expansion.
             pass
-    except Exception:
-        pass
 
-    # 2) If placeholders remain, do safe fallbacks
-    # ${/} -> platform sep
+    # Manual fallbacks (also used when Robot isn't installed)
     s = s.replace("${/}", os.sep)
-
-    # ${EXECDIR} / ${CURDIR} -> current working directory
-    # (only if they still exist; Robot would have replaced if active)
     cwd = os.getcwd()
-    s = s.replace("${EXECDIR}", cwd)
-    s = s.replace("${CURDIR}", cwd)
-
-    # 3) Expand env vars and ~
+    s = s.replace("${EXECDIR}", cwd).replace("${CURDIR}", cwd)
     s = os.path.expandvars(os.path.expanduser(s))
 
-    # 4) Guard against accidental drive/rooted-without-drive like "\data\motti" on Windows
+    # Guard against leading single slash/backslash paths like "\data\motti" on Windows
     if re.match(r"^[\\/](?![\\/])", s) and not re.match(r"^[A-Za-z]:[\\/]", s):
-        # Treat as relative to CWD
         s = s.lstrip("\\/")
 
     return s
-
 
 def _resolve_dir_or_file(path_like: str | Path) -> Path:
     """
@@ -96,7 +80,6 @@ def _resolve_dir_or_file(path_like: str | Path) -> Path:
     if not p.is_absolute():
         p = Path.cwd() / p
     return p.resolve()
-
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
     Dominant species from SoA data (Motti species code).
