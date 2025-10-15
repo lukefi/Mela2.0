@@ -8,8 +8,9 @@ import numpy as np
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand, ReferenceTree
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
+
 
 class ConverterTestSuite(unittest.TestCase):
     def run_with_test_assertions(self, assertions: list[tuple], fn: Callable):
@@ -29,19 +30,9 @@ def identity(x: Any) -> Any:
 def none(x: Any) -> None:
     return None
 
-
-def collecting_increment(input: OpTuple[int], **operation_params) -> OpTuple[int]:
-    incrementation = operation_params.get('incrementation', 1)
-    state, collected_data = input
-    previous_collected_data = collected_data.prev('collecting_increment')
-    new_collected_data = {'run_count': 1} if previous_collected_data is None else {'run_count': previous_collected_data['run_count'] + 1}
-    collected_data.store('collecting_increment', new_collected_data)
-    return state + incrementation, collected_data
-
-
-def inc(x: SimulationPayload[int]) -> SimulationPayload[int]:
-    x.computational_unit += 1
-    return x
+def inc(x: int, **operation_params) -> tuple[int, list[CollectedData]]:
+    incrementation = operation_params.get("incrementation", 1)
+    return x + incrementation, []
 
 
 def dec(x: int) -> int:
@@ -53,13 +44,14 @@ def max_reducer(x: list[int]) -> Optional[int]:
 
 
 def grow_dummy(f: float, d: float, h: float, dd: float) -> tuple[float, float, float]:
-    return f-f%100, d+dd/500, h+dd/1000
+    return f - f % 100, d + dd / 500, h + dd / 1000
 
 
 def parametrized_operation(x: SimulationPayload[int], **kwargs) -> SimulationPayload[int]:
     if kwargs.get('amplify') is True:
         x.computational_unit *= 1000
     return x
+
 
 def parametrized_operation_using_file_parameter(x, **kwargs):
     file_path = kwargs.get("dummy_file")
@@ -90,31 +82,54 @@ def prepare_growth_test_stand():
         site_type_category=1,
         tax_class_reduction=1,
         land_use_category=1,
-        geo_location=(6656996.0, 310260.0, 10.0, "EPSG:3067"),
+        geo_location=(
+            6656996.0,
+            310260.0,
+            10.0,
+            "EPSG:3067"),
         reference_trees_pre_vec=[
-            ReferenceTree(species=TreeSpecies.PINE, stems_per_ha=123, breast_height_diameter=30, height=20, biological_age=55, breast_height_age=15, sapling=False),
-            ReferenceTree(species=TreeSpecies.SPRUCE, stems_per_ha=123, breast_height_diameter=25, height=17, biological_age=37, breast_height_age=15, sapling=False),
-            ReferenceTree(species=TreeSpecies.PINE, stems_per_ha=123, breast_height_diameter=0, height=0.3, biological_age=1, breast_height_age=0, sapling=True)
-        ],
-        year=2025
-    )
+            ReferenceTree(
+                species=TreeSpecies.PINE,
+                stems_per_ha=123,
+                breast_height_diameter=30,
+                height=20,
+                biological_age=55,
+                breast_height_age=15,
+                sapling=False),
+            ReferenceTree(
+                species=TreeSpecies.SPRUCE,
+                stems_per_ha=123,
+                breast_height_diameter=25,
+                height=17,
+                biological_age=37,
+                breast_height_age=15,
+                sapling=False),
+            ReferenceTree(
+                species=TreeSpecies.PINE,
+                stems_per_ha=123,
+                breast_height_diameter=0,
+                height=0.3,
+                biological_age=1,
+                breast_height_age=0,
+                sapling=True)],
+        year=2025)
     return stand
 
 
 DEFAULT_TIMBER_PRICE_TABLE = np.array(
-                        [[  1., 160., 370.,  55.],
-                        [  1., 160., 400.,  57.],
-                        [  1., 160., 430.,  59.],
-                        [  1., 160., 460.,  59.],
-                        [  2.,  70., 300.,  17.]])
+    [[1., 160., 370., 55.],
+     [1., 160., 400., 57.],
+     [1., 160., 430., 59.],
+     [1., 160., 460., 59.],
+     [2., 70., 300., 17.]])
 
 
 TIMBER_PRICE_TABLE_THREE_GRADES = np.array(
-                        [[  1., 160., 370.,  55.],
-                        [  1., 160., 400.,  57.],
-                        [  1., 160., 430.,  59.],
-                        [  1., 160., 460.,  59.],
-                        [  2.,  70., 300.,  17.],
-                        [  2.,  70., 270.,  15.],
-                        [  3.,  70., 220.,  10.]
-                        ])
+    [[1., 160., 370., 55.],
+     [1., 160., 400., 57.],
+     [1., 160., 430., 59.],
+     [1., 160., 460., 59.],
+     [2., 70., 300., 17.],
+     [2., 70., 270., 15.],
+     [3., 70., 220., 10.]
+     ])

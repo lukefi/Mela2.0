@@ -3,7 +3,7 @@ import tests.test_utils
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.domain.conditions import _get_operation_last_run
-from lukefi.metsi.sim.operations import prepared_operation
+from lukefi.metsi.sim.operations import prepared_treatment
 
 
 class SimOperationsTest(unittest.TestCase):
@@ -15,7 +15,7 @@ class SimOperationsTest(unittest.TestCase):
         ]
 
         for case in assertions:
-            function = prepared_operation(tests.test_utils.parametrized_operation, **case[0][1])
+            function = prepared_treatment(tests.test_utils.parametrized_operation, **case[0][1])
             result = function(SimulationPayload(computational_unit=case[0][0],
                                                collected_data=None,
                                                operation_history={}))

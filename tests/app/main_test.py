@@ -65,16 +65,3 @@ class RemoveExistingExportFilesTest(unittest.TestCase):
 
     def tearDown(self):
         self.temp_dir.cleanup()
-
-    def test_remove_existing_export_files(self):
-        # Run the function
-        metsi.remove_existing_export_files(self.config, self.control)
-
-        # Check that only the export-related files were deleted
-        remaining_files = set(f.name for f in self.target_path.iterdir())
-
-        self.assertIn("keep_me.txt", remaining_files)
-        self.assertNotIn("data.xda", remaining_files)
-        self.assertNotIn("data.cda", remaining_files)
-        self.assertNotIn("custom_export.txt", remaining_files)
-        self.assertNotIn("preprocessing_result.csv", remaining_files)

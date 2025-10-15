@@ -8,7 +8,7 @@ from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.runners import evaluate_sequence as run_sequence, evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.test_utils import inc, collecting_increment, parametrized_operation
+from tests.test_utils import inc, parametrized_operation
 
 
 class TestGenerators(unittest.TestCase):
@@ -19,10 +19,10 @@ class TestGenerators(unittest.TestCase):
                     time_points=[0, 1],
                     events=Sequence([
                         Event(
-                            treatment=collecting_increment
+                            treatment=inc
                         ),
                         Event(
-                            treatment=collecting_increment
+                            treatment=inc
                         ),
                     ])
                 )
@@ -31,15 +31,12 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         generator = config.full_tree_generators()
         result = generator.compose_nested()
-        chain = result.operation_chains()[0]
         payload = SimulationPayload(
             computational_unit=0,
-            collected_data=CollectedData(),
             operation_history=[]
         )
-        computation_result = run_sequence(payload, *chain)
-        self.assertEqual(5, len(chain))
-        self.assertEqual(4, computation_result.computational_unit)
+        computation_result = result.evaluate(payload)
+        self.assertEqual(4, computation_result[0].computational_unit)
 
     def test_operation_run_constraints_success(self):
         declaration = {
@@ -49,9 +46,9 @@ class TestGenerators(unittest.TestCase):
                     events=Sequence([
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, collecting_increment)
+                                MinimumTimeInterval(2, inc)
                             ],
-                            treatment=collecting_increment
+                            treatment=inc
                         )
                     ])
                 )
@@ -60,15 +57,12 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         generator = config.full_tree_generators()
         result = generator.compose_nested()
-        chain = result.operation_chains()[0]
         payload = SimulationPayload(
             computational_unit=0,
-            collected_data=CollectedData(),
             operation_history=[]
         )
-        computation_result = run_sequence(payload, *chain)
-        self.assertEqual(3, len(chain))
-        self.assertEqual(2, computation_result.computational_unit)
+        computation_result = result.evaluate(payload)
+        self.assertEqual(2, computation_result[0].computational_unit)
 
     def test_operation_run_constraints_fail(self):
         declaration = {
@@ -95,47 +89,9 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         generator = config.full_tree_generators()
         result = generator.compose_nested()
-        chain = result.operation_chains()[0]
         payload = SimulationPayload(computational_unit=0,
-                                   operation_history=[],
-                                   collected_data=CollectedData())
-        self.assertRaises(Exception, run_sequence, payload, *chain)
-
-    def test_tree_generators_by_time_point(self):
-        declaration = {
-            "simulation_instructions": [
-                SimulationInstruction(
-                    time_points=[0, 1],
-                    events=Sequence([
-                        Event(
-                            inc
-                        ),
-                        Event(
-                            inc
-                        )
-                    ])
-                )
-            ]
-        }
-        config = SimConfiguration(**declaration)
-        # generators for 2 time points'
-        generators = config.partial_tree_generators_by_time_point()
-        self.assertEqual(2, len(generators.values()))
-
-        # 1 sequence generators in each time point
-        gen_one = generators[0]
-        gen_two = generators[1]
-
-        # 1 chain from both generated trees
-        # 1 root + 2 processors (inc) in both chains
-        tree_one = gen_one.compose_nested()
-        tree_two = gen_two.compose_nested()
-        chain_one = tree_one.operation_chains()
-        chain_two = tree_two.operation_chains()
-        self.assertEqual(1, len(chain_one))
-        self.assertEqual(1, len(chain_two))
-        self.assertEqual(3, len(chain_one[0]))
-        self.assertEqual(3, len(chain_two[0]))
+                                    operation_history=[])
+        self.assertRaises(Exception, result.evaluate, payload)
 
     def test_nested_tree_generators(self):
         """Create a nested generators event tree. Use simple incrementation operation with starting value 0. Sequences
@@ -145,31 +101,31 @@ class TestGenerators(unittest.TestCase):
                 SimulationInstruction(
                     time_points=[0],
                     events=Sequence([
-                        Event(collecting_increment),
+                        Event(inc),
                         Sequence([
-                            Event(collecting_increment)
+                            Event(inc)
                         ]),
                         Alternatives([
-                            Event(collecting_increment),
+                            Event(inc),
                             Sequence([
-                                Event(collecting_increment),
+                                Event(inc),
                                 Alternatives([
-                                    Event(collecting_increment),
+                                    Event(inc),
                                     Sequence([
-                                        Event(collecting_increment),
-                                        Event(collecting_increment)
+                                        Event(inc),
+                                        Event(inc)
                                     ])
                                 ])
                             ]),
                             Sequence([
-                                Event(collecting_increment),
-                                Event(collecting_increment),
-                                Event(collecting_increment),
-                                Event(collecting_increment)
+                                Event(inc),
+                                Event(inc),
+                                Event(inc),
+                                Event(inc)
                             ])
                         ]),
-                        Event(collecting_increment),
-                        Event(collecting_increment)
+                        Event(inc),
+                        Event(inc)
                     ])
                 )
             ]
@@ -177,33 +133,17 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         generator = config.full_tree_generators()
         tree = generator.compose_nested()
-        chains = tree.operation_chains()
-        self.assertEqual(4, len(chains))
 
-        lengths = []
-        results = []
+        results = tree.evaluate(SimulationPayload(computational_unit=0, operation_history=[]))
 
-        for chain in chains:
-            value = evaluate_sequence(
-                SimulationPayload(
-                    computational_unit=0,
-                    operation_history=[],
-                    collected_data=CollectedData()),
-                *chain
-            ).computational_unit
-            results.append(value)
-            lengths.append(len(chain))
-
-        # chain lengths have the root no_op function at start
-        self.assertListEqual([6, 7, 8, 9], lengths)
-        self.assertListEqual([5, 6, 7, 8], results)
+        self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit, results)))
 
     def test_nested_tree_generators_multiparameter_alternative(self):
         def increment(x, **y):
-            return collecting_increment(x, **y)
+            return inc(x, **y)
 
         def inc_param(x, **y):
-            return collecting_increment(x, **y)
+            return inc(x, **y)
 
         declaration = {
             "operation_params": {
@@ -245,24 +185,10 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         generator = config.full_tree_generators()
         tree = generator.compose_nested()
-        chains = tree.operation_chains()
-        self.assertEqual(3, len(chains))
 
-        lengths = []
-        results = []
+        results = tree.evaluate(SimulationPayload(computational_unit=0, operation_history=[]))
 
-        for chain in chains:
-            value = evaluate_sequence(
-                SimulationPayload(
-                    computational_unit=0,
-                    operation_history=[],
-                    collected_data=CollectedData()),
-                *chain
-            ).computational_unit
-            results.append(value)
-            lengths.append(len(chain))
-
-        self.assertListEqual([3, 4, 5], results)
+        self.assertListEqual([3, 4, 5], list(map(lambda result: result.computational_unit, results)))
 
     def test_alternatives_embedding_equivalence(self):
         """
@@ -274,22 +200,22 @@ class TestGenerators(unittest.TestCase):
                 SimulationInstruction(
                     time_points=[0],
                     events=Sequence([
-                        Event(collecting_increment),
+                        Event(inc),
                         Alternatives([
                             Alternatives([
-                                Event(collecting_increment),
-                                Event(collecting_increment)
+                                Event(inc),
+                                Event(inc)
                             ]),
                             Sequence([
-                                Event(collecting_increment),
-                                Event(collecting_increment)
+                                Event(inc),
+                                Event(inc)
                             ]),
                             Alternatives([
-                                Event(collecting_increment),
-                                Event(collecting_increment)
+                                Event(inc),
+                                Event(inc)
                             ])
                         ]),
-                        Event(collecting_increment)
+                        Event(inc)
                     ])
                 )
             ]
@@ -299,15 +225,15 @@ class TestGenerators(unittest.TestCase):
                 SimulationInstruction(
                     time_points=[0],
                     events=Sequence([
-                        Event(collecting_increment),
+                        Event(inc),
                         Alternatives([
-                            Sequence([Event(collecting_increment)]),
-                            Sequence([Event(collecting_increment)]),
-                            Sequence([Event(collecting_increment), Event(collecting_increment)]),
-                            Sequence([Event(collecting_increment)]),
-                            Sequence([Event(collecting_increment)])
+                            Sequence([Event(inc)]),
+                            Sequence([Event(inc)]),
+                            Sequence([Event(inc), Event(inc)]),
+                            Sequence([Event(inc)]),
+                            Sequence([Event(inc)])
                         ]),
-                        Event(collecting_increment)
+                        Event(inc)
                     ])
                 )
             ]
@@ -318,31 +244,11 @@ class TestGenerators(unittest.TestCase):
         ]
         generators = [config.full_tree_generators() for config in configs]
         trees = [generator.compose_nested() for generator in generators]
-        chains_sets = [tree.operation_chains() for tree in trees]
 
-        results = ([], [])
-        for i, chains in enumerate(chains_sets):
-            for chain in chains:
-                value = evaluate_sequence(
-                    SimulationPayload(
-                        computational_unit=0,
-                        operation_history=[],
-                        collected_data=CollectedData()),
-                    *chain
-                ).computational_unit
-                results[i].append(value)
+        results = (trees[0].evaluate(SimulationPayload(computational_unit=0, operation_history=[])),
+                   trees[1].evaluate(SimulationPayload(computational_unit=0, operation_history=[])))
+
         self.assertListEqual(results[0], results[1])
-
-    def test_simple_processable_chain(self):
-        operation_tags: list[Callable] = [inc, inc, inc, parametrized_operation]
-        operation_params = {parametrized_operation: [{'amplify': True}]}
-        chain = simple_processable_chain(operation_tags,
-                                                                     operation_params)
-        self.assertEqual(len(operation_tags), len(chain))
-        result = evaluate_sequence(SimulationPayload(computational_unit=1,
-                                                    collected_data=None,
-                                                    operation_history={}), *chain)
-        self.assertEqual(4000, result.computational_unit)
 
     def test_simple_processable_chain_multiparameter_exception(self):
         operation_tags = ['param_oper']

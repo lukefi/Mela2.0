@@ -1,7 +1,7 @@
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.operations import do_nothing
-from tests.test_utils import collecting_increment
+from tests.test_utils import inc
 
 
 control_structure = {
@@ -12,8 +12,8 @@ control_structure = {
                 Sequence([Event(do_nothing)]),
                 Alternatives([
                     Event(do_nothing),
-                    Event(collecting_increment, parameters={"incrementation": 1}),
-                    Event(collecting_increment, parameters={"incrementation": 2})
+                    Event(inc, parameters={"incrementation": 1}),
+                    Event(inc, parameters={"incrementation": 2})
                 ])
             ])
         )
