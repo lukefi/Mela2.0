@@ -31,7 +31,7 @@ class EventTree[T: ComputationalUnit]:
                  payload: SimulationPayload[T],
                  node_identifier: Optional[list[int]] = None,
                  db: Optional[sqlite3.Connection] = None
-                 ) -> None:
+                 ) -> list[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If given a root node, a StateTree is also constructed, containing all complete
@@ -64,22 +64,27 @@ class EventTree[T: ComputationalUnit]:
             current.computational_unit.finalize()
 
         if len(self.branches) == 0:
-            return
+            return [current]
 
         if len(self.branches) == 1:
             node_identifier_ = deepcopy(node_identifier)
             node_identifier_.append(0)
-            self.branches[0].evaluate(current, node_identifier_, db)
-            return
+            return self.branches[0].evaluate(current, node_identifier_, db)
 
+        results: list[SimulationPayload[T]] = []
         for i, branch in enumerate(self.branches):
             try:
                 node_identifier_ = deepcopy(node_identifier)
                 node_identifier_.append(i)
-                branch.evaluate(copy(current), node_identifier_, db)
-
+                evaluated_branch = branch.evaluate(copy(current), node_identifier_, db)
+                results.extend(evaluated_branch)
             except (ConditionFailed, UserWarning):
                 ...
+
+        if len(results) == 0:
+            raise UserWarning("Branch aborted with all children failing")
+
+        return results
 
     def add_branch(self, et: 'EventTree[T]'):
         self.branches.append(et)
