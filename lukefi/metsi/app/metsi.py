@@ -3,7 +3,6 @@ import sys
 import copy
 import sqlite3
 import traceback
-from typing import Callable
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
     slice_stands_by_percentage,
@@ -25,21 +24,20 @@ from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
 
-def preprocess(config: MetsiConfiguration, control: dict, stands: StandList, _) -> StandList:
+def preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
     _ = config
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def export_prepro(config: MetsiConfiguration, control: dict, data: StandList, _) -> StandList:
+def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data)
     else:
         print_logline("Declaration for 'export_prerocessed' not found from control.")
         print_logline("Skipping export of preprocessing results.")
-    return data  # returned as is just for workflow reasons
 
 
 def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: sqlite3.Connection) -> None:
@@ -56,15 +54,6 @@ def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _)
 
 def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
     raise MetsiException("Export currently not implemented")
-
-
-mode_runners: dict[RunMode, Callable] = {
-    RunMode.PREPROCESS: preprocess,
-    RunMode.EXPORT_PREPRO: export_prepro,
-    RunMode.SIMULATE: simulate,
-    RunMode.POSTPROCESS: post_process,
-    RunMode.EXPORT: export
-}
 
 
 def main() -> int:
@@ -99,7 +88,7 @@ def main() -> int:
             else:
                 stand_sublists = [full_stands]
 
-            input_data: list[StandList] | SimResults = stand_sublists
+            input_data: list[StandList] = stand_sublists
 
         elif app_config.run_modes[0] in [RunMode.POSTPROCESS, RunMode.EXPORT]:
             raise MetsiException("Post-processing and export currently not implemented")
@@ -126,9 +115,12 @@ def main() -> int:
 
         # feed this sub‐list of stands through the normal run_modes
         current = stands
-        for mode in cfg.run_modes:
-            runner = mode_runners[mode]
-            current = runner(cfg, control_structure, current, db)
+        if RunMode.PREPROCESS in cfg.run_modes:
+            current = preprocess(cfg, control_structure, current)
+        if RunMode.EXPORT_PREPRO in cfg.run_modes:
+            export_prepro(cfg, control_structure, current)
+        if RunMode.SIMULATE in cfg.run_modes:
+            simulate(cfg, control_structure, current, db)
 
     db.commit()
     db.close()
