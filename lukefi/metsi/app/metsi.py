@@ -4,7 +4,6 @@ import copy
 import sqlite3
 import traceback
 from typing import Callable
-from pathlib import Path
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
     slice_stands_by_percentage,
@@ -13,11 +12,12 @@ from lukefi.metsi.app.preprocessor import (
 from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
 from lukefi.metsi.domain.forestry_types import SimResults
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.app.export import export_files, export_preprocessed
-from lukefi.metsi.app.file_io import init_sqlite_database, prepare_target_directory, read_stands_from_file, \
-    read_full_simulation_result_dirtree, write_full_simulation_result_dirtree, read_control_module
-from lukefi.metsi.app.post_processing import post_process_alternatives
-from lukefi.metsi.domain.stand_runner import run_stands
+from lukefi.metsi.app.export import export_preprocessed
+from lukefi.metsi.app.file_io import (
+    init_sqlite_database,
+    prepare_target_directory,
+    read_stands_from_file,
+    read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
@@ -31,26 +31,6 @@ def preprocess(config: MetsiConfiguration, control: dict, stands: StandList, _) 
     return result
 
 
-def simulate(_, control: dict, stands: StandList, db: sqlite3.Connection) -> None:
-    print_logline("Simulating alternatives...")
-    simulate_alternatives(control, stands, db, run_stands)
-
-
-def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
-    print_logline("Post-processing alternatives...")
-    result = post_process_alternatives(config, control['post_processing'], data)
-    if config.state_output_container is not None or config.derived_data_output_container is not None:
-        print_logline(f"Writing post-processing results to '{config.target_directory}'")
-        write_full_simulation_result_dirtree(result, config)
-    return result
-
-
-def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
-    print_logline("Exporting simulation results...")
-    if control['export']:
-        export_files(config, control['export'], data)
-
-
 def export_prepro(config: MetsiConfiguration, control: dict, data: StandList, _) -> StandList:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
@@ -61,36 +41,17 @@ def export_prepro(config: MetsiConfiguration, control: dict, data: StandList, _)
     return data  # returned as is just for workflow reasons
 
 
-def remove_existing_export_files(config: MetsiConfiguration, control: dict):
-    """Remove known export and preprocessing output files from target_directory"""
-    target_dir = Path(config.target_directory).resolve()
-    safe_targets = set()
+def simulate(_, control: dict, stands: StandList, db: sqlite3.Connection) -> None:
+    print_logline("Simulating alternatives...")
+    simulate_alternatives(control, stands, db)
 
-    # Collect export files from control["export"]
-    if 'export' in control:
-        for decl in control['export']:
-            fmt = decl.get('format')
-            if fmt == 'J':
-                xda = decl.get('xda_filename', "data.xda")
-                cda = decl.get('cda_filename', "data.cda")
-                safe_targets.add(xda)
-                safe_targets.add(cda)
-            elif 'filename' in decl:
-                safe_targets.add(decl['filename'])
 
-    # Add preprocessing known output names
-    if 'export_prepro' in control:
-        for ext in control['export_prepro'].keys():
-            safe_targets.add(f"preprocessing_result.{ext}")
+def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
+    raise MetsiException("Post-processing currently not implemented")
 
-    # Delete all collected files if they exist in the correct directory
-    for filename in safe_targets:
-        file_path = target_dir / filename
-        try:
-            if file_path.exists() and file_path.resolve().parent == target_dir:
-                file_path.unlink()
-        except (OSError, FileNotFoundError) as e:
-            print_logline(f"Warning: Failed to delete file {file_path}: {e}")
+
+def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
+    raise MetsiException("Export currently not implemented")
 
 
 mode_runners: dict[RunMode, Callable] = {
@@ -116,9 +77,6 @@ def main() -> int:
         prepare_target_directory(app_config.target_directory)
         print_logline("Reading input...")
 
-        # deleting old target files
-        remove_existing_export_files(app_config, control_structure)
-
         print_logline("Initializing output database")
         db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
         create_database_tables(db)
@@ -140,7 +98,8 @@ def main() -> int:
             input_data: list[StandList] | SimResults = stand_sublists
 
         elif app_config.run_modes[0] in [RunMode.POSTPROCESS, RunMode.EXPORT]:
-            input_data = read_full_simulation_result_dirtree(app_config.input_path)
+            raise MetsiException("Post-processing and export currently not implemented")
+
         else:
             raise MetsiException("Can not determine input data for unknown run mode")
     except Exception:  # pylint: disable=broad-exception-caught

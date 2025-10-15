@@ -1,29 +1,12 @@
 import copy
-from functools import partial
 from typing import Any, Callable, Optional
 
-from lukefi.metsi.app.app_io import MetsiConfiguration
 from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.app.export_handlers.j import j_out, parse_j_config
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.file_io import write_stands_to_file, determine_file_path
-from lukefi.metsi.domain.forestry_types import SimResults, StandList
+from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.runners import evaluate_sequence
-
-
-def export_files(config: MetsiConfiguration, decl: list[dict], data: SimResults):
-    output_handlers: list[tuple[str, Callable[[], None]]] = []
-    for export_module_declaration in decl:
-        export_module = export_module_declaration.get("format", None)
-        if export_module == "J":
-            j_config = parse_j_config(config, export_module_declaration)
-            output_handlers.append((export_module, partial(j_out, data, **j_config)))
-        else:
-            print_logline(f"Unknown output format for export: '{export_module}'")
-    for export_module, handler in output_handlers:
-        print_logline(f"Exporting {export_module}...")
-        handler()
 
 
 def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList) -> None:
