@@ -1,13 +1,7 @@
 from collections.abc import Callable
-import sqlite3
-from typing import Optional, TypeVar
+from typing import TypeVar
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.collected_data import init_collected_data_tables
-from lukefi.metsi.sim.event_tree import EventTree
-from lukefi.metsi.sim.generators import Generator
 
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
 
 T = TypeVar("T", bound=ComputationalUnit)
 
