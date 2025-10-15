@@ -27,21 +27,6 @@ class EventTree[T: ComputationalUnit]:
         self.processed_treatment = treatment or identity
         self.branches = []
 
-    def operation_chains(self) -> list[list[ProcessedTreatment[T]]]:
-        """
-        Recursively produce a list of lists of possible operation chains represented by this event tree in post-order
-        traversal.
-        """
-        if len(self.branches) == 0:
-            # Yes. A leaf node returns a single chain with a single operation.
-            return [[self.processed_treatment]]
-        result: list[list[ProcessedTreatment[T]]] = []
-        for branch in self.branches:
-            chains = branch.operation_chains()
-            for chain in chains:
-                result.append([self.processed_treatment] + chain)
-        return result
-
     def evaluate(self,
                  payload: SimulationPayload[T],
                  node_identifier: Optional[list[int]] = None,
