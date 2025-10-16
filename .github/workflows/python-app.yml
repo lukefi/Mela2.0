@@ -7,7 +7,7 @@ name: CI - Unit and Robot Tests
 on:
   # trigger on push to main
   push:
-    branches: [ main ]
+    branches: [ main , MELA2-81 ]
   # trigger on new PR to main
   pull_request:
     branches: [ main ]
