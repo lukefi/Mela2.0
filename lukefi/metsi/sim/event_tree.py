@@ -46,21 +46,7 @@ class EventTree[T: ComputationalUnit]:
         if node_identifier is None:
             node_identifier = [0]
         if db is not None:
-            node_str = "-".join(map(str, node_identifier))
-            cur = db.cursor()
-            cur.execute(
-                """
-                INSERT INTO nodes
-                VALUES
-                    (?, ?, ?, ?)
-                """,
-                (node_str,
-                 current.computational_unit.identifier,
-                 str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
-                 str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
-            current.computational_unit.output_to_db(db, node_str)
-            for datum in collected_data:
-                datum.output_to_db(db, node_str, current.computational_unit.identifier)
+            _output_node_to_db(db, node_identifier, current, collected_data)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()
@@ -90,3 +76,24 @@ class EventTree[T: ComputationalUnit]:
 
     def add_branch(self, et: 'EventTree[T]'):
         self.branches.append(et)
+
+
+def _output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
+                                             node: list[int],
+                                             current: SimulationPayload[T],
+                                             collected_data: list[CollectedData]):
+    node_str = "-".join(map(str, node))
+    cur = db.cursor()
+    cur.execute(
+        """
+        INSERT INTO nodes
+        VALUES
+            (?, ?, ?, ?)
+        """,
+        (node_str,
+         current.computational_unit.identifier,
+         str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
+         str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
+    current.computational_unit.output_to_db(db, node_str)
+    for datum in collected_data:
+        datum.output_to_db(db, node_str, current.computational_unit.identifier)
