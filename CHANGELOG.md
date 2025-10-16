@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.0.5] - 2025-10-16
+
+### Added
+
+- Added robot test with motti binaries #MELA2-81
+
 ## [0.0.4] - 2025-10-16
 
 ### Fixed
