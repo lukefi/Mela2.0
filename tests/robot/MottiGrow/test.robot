@@ -12,8 +12,9 @@ ${INPUT_JSON}       ${CURDIR}/input/data.xml
 ${OUTPUT_DIR}       ${CURDIR}/output/test
 ${CONTROL_SCRIPT}   ${CURDIR}/input/control_motti_vec_grow.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
-${TOLERANCE}        0.01  # Set your desired tolerance here
-${REL_TOL}        1e-4
+${TOLERANCE}        0.00001  # Set your desired tolerance here
+${REL_TOL}          1e-4
+
 *** Test Cases ***
 Run Simulation And Compare Output Files
     [Tags]    simulation
@@ -40,7 +41,7 @@ Run Simulation And Compare Output Files
 
     Log To Console    Simulation Succeeded. Verifying output files...
 
-    ${files}=    List Directory    ${REFERENCE_DIR}
+    ${files}=    List Directory Recursively   ${REFERENCE_DIR}
     FOR    ${file}    IN    @{files}
         ${test_file}=    Set Variable    ${OUTPUT_DIR}/${file}
         ${ref_file}=     Set Variable    ${REFERENCE_DIR}/${file}
@@ -49,6 +50,5 @@ Run Simulation And Compare Output Files
         # MODIFIED: Replace the slow keyword with a single call to our fast one.
         # Robot Framework automatically converts the Python function name
         # 'compare_numeric_files_with_tolerance' into this keyword name.
-        # Compare Numeric Files With Tolerance    ${test_file}    ${ref_file}    ${TOLERANCE}
         Compare Files With Numeric In Text    ${test_file}    ${ref_file}    ${TOLERANCE}    ${REL_TOL}
     END
