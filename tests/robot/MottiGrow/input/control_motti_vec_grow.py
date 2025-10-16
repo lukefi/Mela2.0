@@ -54,7 +54,6 @@ control_structure = {
             time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
                 GrowMotti(
-                    vectorized= True,
                     parameters={
                         "step": 5,
                         "data_dir": "${EXECDIR}${/}data${/}motti",

@@ -17,7 +17,6 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll
-from lukefi.metsi.domain.natural_processes.grow_motti_dll_vec import grow_motti_dll_vec
 from lukefi.metsi.sim.generators import Event
 from lukefi.metsi.sim.operations import do_nothing
 
@@ -215,12 +214,12 @@ class GrowMetsi(Event[ForestStand]):
 
 
 class GrowMotti(Event[ForestStand]):
-    def __init__(self, vectorized: bool = False,
+    def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
-        super().__init__(treatment=grow_motti_dll_vec if vectorized else grow_motti_dll,
+        super().__init__(treatment=grow_motti_dll,
                          parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
