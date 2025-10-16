@@ -1,0 +1,12 @@
+stand;0-2-23-3-2;3;2033;0.0;164.2650475;8840354.0;7658345.0;124.0;EPSG:3067;1271.0;1;1;1;3;1;3;1;False;None;None;2018;False;None;5;None;None;None;2011;0;1;3;417;1;0;True;0.0;1.0;3;17.0;52.0
+tree;0-2-23-3-2-1-tree;1;None;6.224622572053584;13.734168485295086;15.687435308914715;None;43.0;67.0;None;0;None;1;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-2-tree;1;None;33.21207417257469;15.920130536003962;16.80614616734084;None;43.0;67.0;None;0;None;2;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-3-tree;1;None;67.404956167754;18.104681259989093;17.76551672457431;None;43.0;67.0;None;0;None;3;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-4-tree;1;None;94.12202031910391;20.29343552598993;18.61147965677666;None;43.0;67.0;None;0;None;4;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-5-tree;1;None;103.36640610827837;22.498220653132893;19.370543441165154;None;43.0;67.0;None;0;None;5;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-6-tree;1;None;92.31760827642506;24.67768588274674;20.063577517266307;None;43.0;67.0;None;0;None;6;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-7-tree;1;None;67.10628035773063;26.789875880422997;20.681733001247988;None;43.0;67.0;None;0;None;7;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-8-tree;1;None;39.19154167332314;28.80449769996642;21.125657022588356;None;43.0;67.0;None;0;None;8;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-9-tree;1;None;18.01774086481047;30.730307097464642;21.487584442119257;None;43.0;67.0;None;0;None;9;0.0;0.0;0.0;None;None;None;False;None;None;None
+tree;0-2-23-3-2-10-tree;1;None;8.776065898696533;32.589865918811036;21.807312915270963;None;43.0;67.0;None;0;None;10;0.0;0.0;0.0;None;None;None;False;None;None;None
+stratum;0-2-23-3-2-1-stratum;1;0;0.0;20.0;16.5;43.0;52.0;15.0;None;0;0;1;0.0;0.0;0.0;0.0;1;0.0;False;1

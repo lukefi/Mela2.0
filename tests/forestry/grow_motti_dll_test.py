@@ -37,7 +37,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         soil_peatland_category=SimpleNamespace(value=1),
         tax_class=1,
         tax_class_reduction=0,
-        reference_trees_soa=rt,
+        reference_trees=rt,
         sapling=sap,
         saplings=sap,  # alias, just in case downstream code uses plural
     )
@@ -170,15 +170,15 @@ class TestGrowMottiDLL(unittest.TestCase):
         pred = gm_vec.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
         input_tuple = (stand, SimpleNamespace(current_time_point=stand.year))
 
-        out_stand, _ = gm_vec.grow_motti_dll(   
+        out_stand, _ = gm_vec.grow_motti_dll(
             input_tuple,# type: ignore[arg-type]
             predictor=pred,
             step=5,
         )
 
         # Make linters happy: ensure we got a vector trees container back
-        self.assertIsNotNone(out_stand.reference_trees_soa)
-        rt_out = out_stand.reference_trees_soa
+        self.assertIsNotNone(out_stand.reference_trees)
+        rt_out = out_stand.reference_trees
         assert rt_out is not None
 
         # tree 1 updated by deltas

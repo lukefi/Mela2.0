@@ -1,12 +1,12 @@
 from typing import Any
-from lukefi.metsi.data.vector_model import ReferenceTrees, Strata
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.domain.forestry_types import StandList
 
 
 CONTAINERS = {
     "reference_trees": ReferenceTrees,
-    "tree_strata": Strata
+    "tree_strata": TreeStrata
 }
 
 
@@ -36,7 +36,7 @@ def vectorize(stands: StandList, **operation_params) -> StandList:
         for t in target:
             attr_dict: dict[str, Any] = {}
 
-            for data in getattr(stand, t, []):
+            for data in getattr(stand, f"{t}_pre_vec", []):
                 delattr(data, "stand")
                 for k, v in data.__dict__.items():
                     attr_dict.setdefault(k, []).append(v)
@@ -45,8 +45,8 @@ def vectorize(stands: StandList, **operation_params) -> StandList:
             container_obj = CONTAINERS.get(t)
             if not container_obj:
                 raise MetsiException(f"Unknown target type '{t}'")
-            setattr(stand, f"{t}_soa", container_obj().vectorize(attr_dict))
-            delattr(stand, t)
+            setattr(stand, t, container_obj().vectorize(attr_dict))
+            delattr(stand, f"{t}_pre_vec")
     return stands
 
 

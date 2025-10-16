@@ -2,8 +2,6 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import Any, Optional, TypeVar
 
-from lukefi.metsi.data.layered_model import PossiblyLayered
-
 
 class CollectedData:
 
@@ -63,4 +61,4 @@ class CollectedData:
 
 
 T = TypeVar("T")
-OpTuple = tuple[PossiblyLayered[T], CollectedData]
+OpTuple = tuple[T, CollectedData]

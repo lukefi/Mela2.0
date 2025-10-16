@@ -14,9 +14,8 @@ from lukefi.metsi.data.enums.internal import (
 )
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth_vectorized
+from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.layered_model import PossiblyLayered
 
 try:
     from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError  # type: ignore
@@ -131,7 +130,7 @@ class MottiDLLPredictor:
 
     def __init__(
         self,
-        stand: PossiblyLayered[ForestStand],
+        stand: ForestStand,
         data_dir: Optional[str] = None,
         use_dll_site_convert: bool = True,
         dll: Optional["Motti4DLL"] = None,
@@ -217,7 +216,7 @@ class MottiDLLPredictor:
     # ---- evolve ----
 
     def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
-        rt = self.stand.reference_trees_soa
+        rt = self.stand.reference_trees
         if not rt:
             return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
         n = rt.size
@@ -227,7 +226,7 @@ class MottiDLLPredictor:
 
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
-        spedom = _spedom(self.stand.reference_trees_soa)
+        spedom = _spedom(self.stand.reference_trees)
 
         # site (DLL converts site index if asked)
         y_km, x_km = auto_euref_km(self.get_y, self.get_x)
@@ -356,7 +355,7 @@ def species_to_motti(spe: int) -> int:
 def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
-      - Requires stand.reference_trees_soa
+      - Requires stand.reference_trees
       - Builds DLL input from SoA, runs growth, applies deltas vectorized
       - Prunes trees with stems_per_ha < 1.0 after update
     operation_parameters:
@@ -374,9 +373,7 @@ def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> O
     sim_year: int = int(collected_data.current_time_point if collected_data.current_time_point is not None
                         else (stand.year or 0))
 
-    rt = stand.reference_trees_soa
-    if rt is None:
-        raise ValueError("Reference trees not vectorized (stand.reference_trees_soa is None).")
+    rt = stand.reference_trees
 
     # Construct predictor
     if predictor is None:
@@ -417,6 +414,6 @@ def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> O
             f_new[idx] = 0.0
 
     # Apply vectorized update (also advances ages etc. inside util)
-    update_stand_growth_vectorized(stand, d_new, h_new, f_new, step)
+    update_stand_growth(stand, d_new, h_new, f_new, step)
 
     return stand, collected_data

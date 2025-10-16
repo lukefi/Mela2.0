@@ -14,7 +14,7 @@ class TestExpOps(unittest.TestCase):
         # Create mock data for testing
         self.stand1 = Mock(
             spec=ForestStand,
-            reference_trees=[
+            reference_trees_pre_vec=[
                 Mock(spec=ReferenceTree, is_living=Mock(return_value=True)),
                 Mock(spec=ReferenceTree, is_living=Mock(return_value=False))
             ],
@@ -25,7 +25,7 @@ class TestExpOps(unittest.TestCase):
         )
         self.stand2 = Mock(
             spec=ForestStand,
-            reference_trees=[
+            reference_trees_pre_vec=[
                 Mock(spec=ReferenceTree, is_living=Mock(return_value=True)),
                 Mock(spec=ReferenceTree, is_living=Mock(return_value=True))
             ],
@@ -39,7 +39,7 @@ class TestExpOps(unittest.TestCase):
     def test_prepare_rst_output(self):
         result = prepare_rst_output(self.stands)
         self.assertEqual(len(result), 1)  # Only one stand should remain
-        self.assertEqual(len(result[0].reference_trees), 1)  # Only living trees should remain
+        self.assertEqual(len(result[0].reference_trees_pre_vec), 1)  # Only living trees should remain
 
     def test_classify_values_to_valid_format(self):
         # Dummy data
@@ -47,9 +47,9 @@ class TestExpOps(unittest.TestCase):
             geo_location=(6654200, 102598, 0.0, "EPSG:3067"),
             area_weight=100.0,
             auxiliary_stand=True)
-        stand.reference_trees.append(
+        stand.reference_trees_pre_vec.append(
             ReferenceTree(species=TreeSpecies.SPRUCE, stand=stand))
-        stand.tree_strata.append(
+        stand.tree_strata_pre_vec.append(
             TreeStratum(species=TreeSpecies.PINE, stand=stand))
         
         # fixture

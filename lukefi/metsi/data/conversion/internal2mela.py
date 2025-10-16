@@ -225,11 +225,11 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     result.geo_location = copy(stand.geo_location)
     result.area_weight_factors = copy(stand.area_weight_factors)
     result = apply_mappers(result, *default_mela_stand_mappers)
-    result.reference_trees = list(map(mela_tree, result.reference_trees))
-    for tree in result.reference_trees:
+    result.reference_trees_pre_vec = list(map(mela_tree, result.reference_trees_pre_vec))
+    for tree in result.reference_trees_pre_vec:
         tree.stand = result
-    result.tree_strata = list(map(mela_stratum, result.tree_strata))
-    for stratum in result.tree_strata:
+    result.tree_strata_pre_vec = list(map(mela_stratum, result.tree_strata_pre_vec))
+    for stratum in result.tree_strata_pre_vec:
         stratum.stand = result
     # Some  fixed RST spesific classifier conversions TODO: find a better place for these.
     # stand level
@@ -244,7 +244,7 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     result.drainage_category = (0 if result.drainage_category is None
                                 else result.drainage_category.value)
     # tree level
-    for t in result.reference_trees:
+    for t in result.reference_trees_pre_vec:
         t.saw_log_volume_reduction_factor = (
             -1
             if t.saw_log_volume_reduction_factor is None
@@ -252,7 +252,7 @@ def mela_stand(stand: ForestStand) -> ForestStand:
         )
         t.species = 0 if t.species is None else t.species.value
     # strata level
-    for s in result.tree_strata:
+    for s in result.tree_strata_pre_vec:
         s.species = 0 if s.species is None else s.species.value
         s.storey = 0 if s.storey is None else s.storey.value
         # all None values to -1

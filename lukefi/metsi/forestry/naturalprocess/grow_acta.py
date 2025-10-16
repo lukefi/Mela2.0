@@ -1,119 +1,75 @@
-from collections import defaultdict
-import math
-from statistics import median
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.model import ReferenceTree, TreeSpecies
+from lukefi.metsi.data.model import TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTrees
 
 
 def yearly_diameter_growth_by_species(
     spe: TreeSpecies,
-    d: float,
-    h: float,
+    d: npt.NDArray[np.float64],
+    h: npt.NDArray[np.float64],
     biological_age_aggregate: float,
     d13_aggregate: float,
     height_aggregate: float,
-    dominant_height: float,
+    dominant_height: np.floating,
     basal_area_total: float
-) -> float:
+) -> npt.NDArray[np.float64]:
     """ Model source: Acta Forestalia Fennica 163 """
     if spe == TreeSpecies.PINE:
-        growth_percent = math.exp(5.4625
-                                  - 0.6675 * math.log(biological_age_aggregate)
-                                  - 0.4758 * math.log(basal_area_total)
-                                  + 0.1173 * math.log(d13_aggregate)
-                                  - 0.9442 * math.log(dominant_height)
-                                  - 0.3631 * math.log(d)
-                                  + 0.7762 * math.log(h))
+        growth_percent = np.exp(5.4625
+                                - 0.6675 * np.log(biological_age_aggregate)
+                                - 0.4758 * np.log(basal_area_total)
+                                + 0.1173 * np.log(d13_aggregate)
+                                - 0.9442 * np.log(dominant_height)
+                                - 0.3631 * np.log(d)
+                                + 0.7762 * np.log(h))
     else:
-        growth_percent = math.exp(6.9342
-                                  - 0.8808 * math.log(biological_age_aggregate)
-                                  - 0.4982 * math.log(basal_area_total)
-                                  + 0.4159 * math.log(d13_aggregate)
-                                  - 0.3865 * math.log(height_aggregate)
-                                  - 0.6267 * math.log(d)
-                                  + 0.1287 * math.log(h))
+        growth_percent = np.exp(6.9342
+                                - 0.8808 * np.log(biological_age_aggregate)
+                                - 0.4982 * np.log(basal_area_total)
+                                + 0.4159 * np.log(d13_aggregate)
+                                - 0.3865 * np.log(height_aggregate)
+                                - 0.6267 * np.log(d)
+                                + 0.1287 * np.log(h))
     return growth_percent
 
 
 def yearly_height_growth_by_species(
     spe: TreeSpecies,
-    d: float,
-    h: float,
+    d: npt.NDArray[np.float64],
+    h: npt.NDArray[np.float64],
     biological_age_aggregate: float,
     d13_aggregate: float,
     height_aggregate: float,
     basal_area_total: float
-) -> float:
+) -> npt.NDArray[np.float64]:
     """ Model source: Acta Forestalia Fennica 163 """
     if spe == TreeSpecies.PINE:
-        growth_percent = math.exp(5.4636
-                                  - 0.9002 * math.log(biological_age_aggregate)
-                                  + 0.5475 * math.log(d13_aggregate)
-                                  - 1.1339 * math.log(h))
+        growth_percent = np.exp(5.4636
+                                - 0.9002 * np.log(biological_age_aggregate)
+                                + 0.5475 * np.log(d13_aggregate)
+                                - 1.1339 * np.log(h))
     else:
         growth_percent = (12.7402
-                          - 1.1786 * math.log(biological_age_aggregate)
-                          - 0.0937 * math.log(basal_area_total)
-                          - 0.1434 * math.log(d13_aggregate)
-                          - 0.8070 * math.log(height_aggregate)
-                          + 0.7563 * math.log(d)
-                          - 2.0522 * math.log(h))
+                          - 1.1786 * np.log(biological_age_aggregate)
+                          - 0.0937 * np.log(basal_area_total)
+                          - 0.1434 * np.log(d13_aggregate)
+                          - 0.8070 * np.log(height_aggregate)
+                          + 0.7563 * np.log(d)
+                          - 2.0522 * np.log(h))
     return growth_percent
 
 
-def grow_diameter_and_height(
-    trees: list[ReferenceTree],
-    step: int = 5
-) -> tuple[list[float], list[float]]:
-    """ Diameter and height growth for trees with height > 1.3 meters. Based on Acta Forestalia Fennica 163. """
-    if not trees:
-        return [], []
-    group = defaultdict(list)
-    for i, t in enumerate(trees):
-        group[t.species].append(i)
-    ds = [t.breast_height_diameter or 0 for t in trees]
-    hs = [t.height for t in trees]
-    for s in range(step):
-        bigh = [h for h in hs if h >= 1.3]
-        if bigh:
-            hdom = median(bigh)
-            gs = [t.stems_per_ha * math.pi * (0.01 * 0.5 * d)**2 for t, d in zip(trees, ds)]
-            g = sum(gs)
-            for spe, idx in group.items():
-                gg = sum(gs[i] for i in idx)
-                ag = sum((trees[i].biological_age + s) * gs[i] for i in idx) / gg
-                dg = sum(ds[i] * gs[i] for i in idx) / gg
-                hg = sum(hs[i] * gs[i] for i in idx) / gg
-                for i in idx:
-                    if hs[i] >= 1.3:
-                        pd = yearly_diameter_growth_by_species(spe, ds[i], hs[i], ag, dg, hg, hdom, g) / 100
-                        ph = yearly_height_growth_by_species(spe, ds[i], hs[i], ag, dg, hg, g) / 100
-                        ds[i] *= 1 + pd
-                        hs[i] *= 1 + ph
-        for i, h in enumerate(hs):
-            if h < 1.3:
-                hs[i] += 0.3
-                if hs[i] >= 1.3 and not ds[i]:
-                    ds[i] = 1.0
-    return ds, hs
-
-
-yearly_diameter_growth_by_species_vectorized = np.vectorize(yearly_diameter_growth_by_species)
-yearly_height_growth_by_species_vectorized = np.vectorize(yearly_height_growth_by_species)
-
-
-def grow_diameter_and_height_vectorized(trees: ReferenceTrees,
-                                        step: int = 5) -> tuple[npt.NDArray[np.float64],
-                                                                npt.NDArray[np.float64]]:
+def grow_diameter_and_height(trees: ReferenceTrees,
+                             step: int = 5) -> tuple[npt.NDArray[np.float64],
+                                                     npt.NDArray[np.float64]]:
     """
     Diameter and height growth for trees with height > 1.3 meters. Based on Acta Forestalia Fennica 163.
     Vector data implementation.
     """
     if trees.size == 0:
-        return np.array([]), np.array([])
+        return np.empty(0, dtype=np.float64), np.empty(0, dtype=np.float64)
 
     ds = trees.breast_height_diameter.copy()
     hs = trees.height.copy()
@@ -133,21 +89,21 @@ def grow_diameter_and_height_vectorized(trees: ReferenceTrees,
 
                 condition = (trees.species == spe) & (hs >= 1.3)
 
-                pd = yearly_diameter_growth_by_species_vectorized(spe,
-                                                                  ds[condition],
-                                                                  hs[condition],
-                                                                  ag,
-                                                                  dg,
-                                                                  hg,
-                                                                  hdom,
-                                                                  g) / 100
-                ph = yearly_height_growth_by_species_vectorized(spe,
-                                                                ds[condition],
-                                                                hs[condition],
-                                                                ag,
-                                                                dg,
-                                                                hg,
-                                                                g) / 100
+                pd = yearly_diameter_growth_by_species(spe,
+                                                       ds[condition],
+                                                       hs[condition],
+                                                       ag,
+                                                       dg,
+                                                       hg,
+                                                       hdom,
+                                                       g) / 100
+                ph = yearly_height_growth_by_species(spe,
+                                                     ds[condition],
+                                                     hs[condition],
+                                                     ag,
+                                                     dg,
+                                                     hg,
+                                                     g) / 100
                 ds[condition] *= (1 + pd)
                 hs[condition] *= (1 + ph)
         hs[hs < 1.3] += 0.3
