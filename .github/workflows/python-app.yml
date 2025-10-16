@@ -8,21 +8,25 @@ on:
   # trigger on push to main
   push:
     branches: [ main ]
-  # trigger on new PR to main 
+  # trigger on new PR to main
   pull_request:
     branches: [ main ]
   # enables manual triggering
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
-  run-tests: 
+  run-tests:
     name: Run Unit and Robot Tests
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.13.5"]
         r-version: ["4.5.0"]
-        
+
     runs-on: ubuntu-latest
 
     steps:
@@ -53,7 +57,7 @@ jobs:
       continue-on-error: true
       run: |
         pylint lukefi --output-format=github --disable=all --enable=fixme --fail-under=0
-    
+  
     - name: Run mypy
       run: |
         sudo apt-get install -y jq
@@ -71,7 +75,56 @@ jobs:
     - name: Test with pytest
       run: |
         python -m pytest --junit-xml=pytest.xml --cov=lukefi --cov-report xml --cov-branch
-      
+
+    - name: Ensure no stale GHCR creds
+      run: |
+        docker logout ghcr.io || true
+
+    - name: Check if this run can access private GHCR
+      id: ghcr_access
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ] && [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+          echo "can_pull=false" >> $GITHUB_OUTPUT
+          echo "This is a PR from a fork; skipping private GHCR pull."
+        else
+          echo "can_pull=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Log in to GHCR
+      if: steps.ghcr_access.outputs.can_pull == 'true'
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+
+    - name: Pull growth-libs image
+      if: steps.ghcr_access.outputs.can_pull == 'true'
+      run: |
+        set -euxo pipefail
+        docker pull ghcr.io/lukefi/mottisc-for-robot:latest || {
+          echo "Pull failed. Printing debug info..."
+          docker logout ghcr.io || true
+          exit 1
+        }
+
+    - name: Extract binaries from image
+      if: steps.ghcr_access.outputs.can_pull == 'true'
+      env:
+        IMAGE: ghcr.io/lukefi/mottisc-for-robot:latest
+        DEST: ${{ github.workspace }}/data/motti
+      run: |
+        set -euo pipefail
+        mkdir -p "$DEST"
+        # Image is FROM scratch and has no CMD/ENTRYPOINT, so pass a dummy command:
+        cid=$(docker create "$IMAGE" /bin/true)
+        docker cp "$cid":/payload/. "$DEST"/
+        docker rm "$cid"
+        chmod +x "$DEST"/* 2>/dev/null || true
+        ls -al "$DEST" || true
+        echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GITHUB_WORKSPACE}/data/motti" >> $GITHUB_ENV
+
     - name: Run Robot Tests
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}
@@ -94,6 +147,7 @@ jobs:
     - name: Clean up
       run: |
         make -C lukefi/metsi/forestry/c clean
+        rm -rf ./data/motti || true
 
   
   publish-test-results:

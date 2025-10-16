@@ -1,7 +1,8 @@
+import os
+import re
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
-
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -16,7 +17,12 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 
-
+try:
+    from robot.libraries.BuiltIn import BuiltIn, RobotNotRunningError  # type: ignore
+except (ImportError, ModuleNotFoundError):
+    BuiltIn = None
+    class RobotNotRunningError(RuntimeError):  # noqa: N818  (name mirrors Robot)
+        pass
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     """
     Normalize to EUREF-FIN/TM35FIN kilometers.
@@ -37,10 +43,50 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     return y1 / 1000.0, x1 / 1000.0
 
 
+def _expand_robot_variables_maybe(s: str) -> str:
+    # Try Robot’s own expansion when available and running
+    if BuiltIn is not None:
+        try:
+            s = BuiltIn().replace_variables(s)  # expands ${EXECDIR}, ${CURDIR}, ${/}, ${ENV_*}, etc.
+        except (RobotNotRunningError, RuntimeError):
+            # Robot is installed but there is no active execution context, or older RF raised RuntimeError.
+            # Fall through to manual expansion.
+            pass
+
+    # Manual fallbacks (also used when Robot isn't installed)
+    s = s.replace("${/}", os.sep)
+    cwd = os.getcwd()
+    s = s.replace("${EXECDIR}", cwd).replace("${CURDIR}", cwd)
+    s = os.path.expandvars(os.path.expanduser(s))
+
+    # Guard against leading single slash/backslash paths like "\data\motti" on Windows
+    if os.name == "nt":
+        # e.g., "\data\motti" or "/data/motti" -> make relative
+        if (s.startswith("\\") or s.startswith("/")) and not re.match(r"^[A-Za-z]:[\\/]", s):
+            s = s.lstrip("\\/")
+    return s
+
+def _resolve_dir_or_file(path_like: str | Path) -> Path:
+    """
+    Turn the (possibly Robot-variable) path into an absolute Path.
+    """
+    if path_like is None:
+        raise ValueError("data_dir must be provided (directory containing the Motti library).")
+
+    s = str(path_like)
+    s = _expand_robot_variables_maybe(s)
+
+    p = Path(s)
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    return p.resolve()
+
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
-    Dominant species from SoA data (Motti species code).
+    Returns dominant species from Motti species.
+
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
+    If trees are empty fall back to PINE, we need to give valid value for growth.
     """
     if rt is None:
         return TreeSpecies.PINE
@@ -97,7 +143,12 @@ class MottiDLLPredictor:
         else:
             if data_dir is None:
                 raise ValueError("data_dir must be provided (directory containing the Motti library).")
-            self.dll = Motti4DLL(_resolve_shared_object(data_dir), data_dir=data_dir)
+
+            #This is to normalize relative paths (robot tests) to absolute paths
+            data_dir_path = _resolve_dir_or_file(data_dir)
+
+            so_path = _resolve_shared_object(data_dir_path)
+            self.dll = Motti4DLL(so_path, data_dir=str(data_dir_path))
 
     # ---- stand/site properties ----
     @property
@@ -304,7 +355,7 @@ def species_to_motti(spe: int) -> int:
 def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
-      - Requires stand.reference_trees_soa
+      - Requires stand.reference_trees
       - Builds DLL input from SoA, runs growth, applies deltas vectorized
       - Prunes trees with stems_per_ha < 1.0 after update
     operation_parameters:
@@ -323,14 +374,13 @@ def grow_motti_dll(input_: OpTuple[ForestStand], /, **operation_parameters) -> O
                         else (stand.year or 0))
 
     rt = stand.reference_trees
-    if rt.size == 0:
-        return input_
 
     # Construct predictor
     if predictor is None:
         if data_dir is None:
             raise ModuleNotFoundError("data_dir must be provided (directory containing the Motti library).")
-        pred = MottiDLLPredictor(stand, data_dir= data_dir)
+        resolved_dir = _resolve_dir_or_file(data_dir)
+        pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
 
