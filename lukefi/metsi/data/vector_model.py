@@ -147,17 +147,17 @@ class VectorData():
                 values = [self.to_default(new_item.get(key), dtype) for new_item in new]
                 vector: npt.NDArray = getattr(self, key)
                 if index is not None:
-                    setattr(self, key, np.insert(vector, index, values))  # insert always creates a copy
+                    setattr(self, key, np.insert(vector, index, values, axis=0))  # insert always creates a copy
                 else:
-                    setattr(self, key, np.append(vector, values))  # append always creates a copy
+                    setattr(self, key, np.append(vector, values, axis=0))  # append always creates a copy
         else:
             for key, dtype in self.dtypes.items():
                 value = self.to_default(new.get(key), dtype)
                 vector = getattr(self, key)
                 if index is not None:
-                    setattr(self, key, np.insert(vector, index, value))  # insert always creates a copy
+                    setattr(self, key, np.insert(vector, index, value, axis=0))  # insert always creates a copy
                 else:
-                    setattr(self, key, np.append(vector, value))  # append always creates a copy
+                    setattr(self, key, np.append(vector, [value], axis=0))  # append always creates a copy
 
         self._recompute_size()
 

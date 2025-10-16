@@ -11,6 +11,12 @@ DUMMY_DTYPES: dict[str, npt.DTypeLike] = {
     "z": np.float64
 }
 
+MULTIDIMENSIONAL_DUMMY_DTYPES: dict[str, npt.DTypeLike] = {
+    "x": np.int32,
+    "y": np.dtype((np.int64, (2,))),
+    "z": np.dtype((np.float64, (3,)))
+}
+
 
 class DummyVectors(VectorData):
     x: npt.NDArray[np.int32]
@@ -242,3 +248,37 @@ class VectorModelTest(unittest.TestCase):
         self.assertEqual(self.vector_data.x[2], 7)
         self.assertEqual(self.vector_data.y[2], 8)
         self.assertEqual(self.vector_data.z[2], 9.0)
+
+    def test_multidimensional_create(self):
+        vector_data = DummyVectors(MULTIDIMENSIONAL_DUMMY_DTYPES)
+        vector_data.x = np.array([], np.int32)
+        vector_data.y = np.array([], (np.int64, (2,)))
+        vector_data.z = np.array([], (np.float64, (3,)))
+
+        vector_data.create(
+            {
+                "x": 1,
+                "y": np.asarray([2, 3]),
+                "z": np.asarray([5.0, 6.0, 7.0])
+            }
+        )
+        vector_data.create([
+            {
+                "x": 8,
+                "y": np.asarray([9, 10]),
+                "z": np.asarray([11.0, 12.0, 13.0])
+            },
+            {
+                "x": 14,
+                "y": np.asarray([15, 16]),
+                "z": np.asarray([17.0, 18.0, 19.0])
+            }
+        ], [0, 1])
+
+        self.assertEqual(len(vector_data), 3)
+
+        self.assertTrue(np.array_equal(vector_data.x, np.asarray([8, 1, 14], dtype=np.int32)))
+        self.assertTrue(np.array_equal(vector_data.y, np.asarray([[9, 10], [2, 3], [15, 16]], dtype=np.int64)))
+        self.assertTrue(np.array_equal(vector_data.z, np.asarray([[11.0, 12.0, 13.0],
+                                                                  [5.0, 6.0, 7.0],
+                                                                  [17.0, 18.0, 19.0]], dtype=np.float64)))
