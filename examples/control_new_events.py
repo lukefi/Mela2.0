@@ -9,8 +9,6 @@ from lukefi.metsi.domain.pre_ops import (
     preproc_filter,
     scale_area_weight)
 from lukefi.metsi.domain.events import (
-    DoNothing,
-    GrowMotti, 
     GrowMetsi,
     SoilSurfacePreparation,
     )
@@ -24,12 +22,11 @@ control_structure = {
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
         # "state_output_container": "csv",  # options: pickle, json, csv, null
         # "derived_data_output_container": "pickle",  # options: pickle, json, null
-        "strata_origin": 2,
         "formation_strategy": "partial",
         "evaluation_strategy": "depth",
         #        "run_modes": ["preprocess", "export_prepro", "simulate", "postprocess", "export"]
-        "run_modes": ["preprocess", "export_prepro", "simulate"],
-        #"state_output_container": "rst"
+        "run_modes": ["preprocess", "simulate"],
+        "state_output_container": "csv",
     },
     "preprocessing_operations": [
         scale_area_weight,
@@ -68,7 +65,7 @@ control_structure = {
 
         # Soil surface preparation (metadata)
         SimulationInstruction(
-            time_points=[2026],
+            time_points=[2025],
             events=[SoilSurfacePreparation(parameters={
                 "method": "mounding",
                 "intensity": 1200.0,
@@ -78,24 +75,6 @@ control_structure = {
         ),
 
     ],
-    "post_processing": {
-        "operation_params": {
-            "do_nothing": [
-                {"param": "value"}
-            ]
-        },
-        "post_processing": [
-            "do_nothing"
-        ]
-    },
-    'export_prepro': {
-        # "csv": {},  # default csv export
-        # "rst": {},
-        # "json": {}
-        "pickle": {},
-        "npy": {},
-        "npz": {},
-    }
 }
 
 
