@@ -34,8 +34,9 @@ control_structure = {
         ],
         preproc_filter: [
             {
-                "remove trees": "sapling or stems_per_ha == 0",
-                "remove stands": "(site_type_category == None) or (site_type_category == 0)",  # not reference_trees
+                "remove trees": (lambda tree: tree.sapling or tree.stems_per_ha == 0),
+                # not reference_trees
+                "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0)),
             }
         ]
     },
