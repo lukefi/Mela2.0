@@ -7,6 +7,7 @@ import re
 # Floats not adjacent to letters (so 'm3/ha' won't be parsed as 3)
 _NUM_RE = re.compile(r'(?<![A-Za-z])[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z])')
 
+
 def _split_text_and_numbers(s: str):
     """Return [("text", str) or ("num", float), ...] segments from a string."""
     parts = []
@@ -19,6 +20,7 @@ def _split_text_and_numbers(s: str):
     if last < len(s):
         parts.append(("text", s[last:]))
     return parts
+
 
 def _compare_mixed_segment(a: str, b: str, line_num: int, abs_tol: float, rel_tol: float):
     """
@@ -55,6 +57,7 @@ def _compare_mixed_segment(a: str, b: str, line_num: int, abs_tol: float, rel_to
                     f"(abs diff {diff}, abs_tol {abs_tol}, rel_tol {rel_tol})."
                 )
 
+
 def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_tol_str="0.0"):
     """
     NEW keyword: like compare_numeric_files_with_tolerance, but if a column
@@ -70,10 +73,10 @@ def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_
     try:
         abs_tol = float(abs_tol_str)
         rel_tol = float(rel_tol_str)
-    except ValueError:
-        raise AssertionError(f"Invalid tolerance values: abs={abs_tol_str!r}, rel={rel_tol_str!r}")
+    except ValueError as e:
+        raise AssertionError(f"Invalid tolerance values: abs={abs_tol_str!r}, rel={rel_tol_str!r}") from e
 
-    with open(file1_path) as f1, open(file2_path) as f2:
+    with open(file1_path, encoding="utf-8") as f1, open(file2_path, encoding="utf-8") as f2:
         for line_num, (line1, line2) in enumerate(itertools.zip_longest(f1, f2, fillvalue=None), 1):
             if line1 is None:
                 raise AssertionError(f"File '{file1_path}' is shorter than reference '{file2_path}'.")
@@ -91,7 +94,8 @@ def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_
             for col_num, (v1_str, v2_str) in enumerate(zip(vals1, vals2), 1):
                 # First try pure-float comparison for speed/back-compat
                 try:
-                    n1 = float(v1_str); n2 = float(v2_str)
+                    n1 = float(v1_str)
+                    n2 = float(v2_str)
                 except ValueError:
                     # Not pure numbers -> mixed comparison
                     _compare_mixed_segment(v1_str, v2_str, line_num, abs_tol, rel_tol)
@@ -105,6 +109,7 @@ def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_
                         )
 
     print(f"Files '{file1_path}' and '{file2_path}' match within abs_tol={abs_tol} rel_tol={rel_tol}.")
+
 
 def compare_numeric_files_with_tolerance(file1_path, file2_path, tolerance_str):
     """
@@ -122,10 +127,10 @@ def compare_numeric_files_with_tolerance(file1_path, file2_path, tolerance_str):
     """
     try:
         tolerance = float(tolerance_str)
-    except ValueError:
-        raise AssertionError(f"Invalid tolerance value: '{tolerance_str}'")
+    except ValueError as e:
+        raise AssertionError(f"Invalid tolerance value: '{tolerance_str}'") from e
 
-    with open(file1_path) as f1, open(file2_path) as f2:
+    with open(file1_path, encoding="utf-8") as f1, open(file2_path, encoding="utf-8") as f2:
         # Use zip_longest to handle files with different line counts
         for line_num, (line1, line2) in enumerate(itertools.zip_longest(f1, f2, fillvalue=None), 1):
 
@@ -153,16 +158,17 @@ def compare_numeric_files_with_tolerance(file1_path, file2_path, tolerance_str):
                             f"Mismatch at Line {line_num}, Column {col_num}: "
                             f"Got '{v1_str}', expected '{v2_str}' (tolerance: {tolerance})."
                         )
-                except ValueError:
+                except ValueError as e:
                     # If they are not numbers (e.g., headers), compare as strings
                     if v1_str != v2_str:
                         raise AssertionError(
                             f"Mismatch at Line {line_num}, Column {col_num}: "
                             f"Got text '{v1_str}', expected text '{v2_str}'."
-                        )
+                        ) from e
 
     # If we get here, the files match
     print(f"Files '{file1_path}' and '{file2_path}' match within tolerance {tolerance}.")
-    
+
+
 def list_directory_recursively(path) -> list[str]:
     return list(glob.iglob('**/*.*', root_dir=path, recursive=True))
