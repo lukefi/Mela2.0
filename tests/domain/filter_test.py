@@ -11,11 +11,11 @@ class FilterTest(unittest.TestCase):
         s1000 = ForestStand(identifier="2", degree_days=1000)
         s1100 = ForestStand(identifier="3", degree_days=1100)
         self.assertEqual(
-            applyfilter([s900, s1000, s1100], "select stands", "degree_days > 1050"),
+            applyfilter([s900, s1000, s1100], "select stands", lambda stand: stand.degree_days > 1050),
             [s1100]
         )
         self.assertEqual(
-            applyfilter([s900, s1000, s1100], "remove stands", "degree_days > 1050"),
+            applyfilter([s900, s1000, s1100], "remove stands", lambda stand: stand.degree_days > 1050),
             [s900, s1000]
         )
 
@@ -29,13 +29,13 @@ class FilterTest(unittest.TestCase):
         s2 = TreeStratum(identifier="s-2", species=TreeSpecies.SPRUCE)
         stand1 = ForestStand(identifier="S-1", reference_trees_pre_vec = [t1, t2, t3], tree_strata_pre_vec = [s1, s2])
         stand2 = ForestStand(identifier="S-2", reference_trees_pre_vec = [t4, t5], tree_strata_pre_vec = [])
-        applyfilter([stand1, stand2], "remove trees", "height < 1.3 and species == 1")
+        applyfilter([stand1, stand2], "remove trees", lambda tree: tree.height < 1.3 and tree.species == 1) 
         self.assertEqual(stand1.reference_trees_pre_vec, [t2, t3])
         self.assertEqual(stand2.reference_trees_pre_vec, [t4, t5])
-        applyfilter([stand1, stand2], "select trees", "height > 20")
+        applyfilter([stand1, stand2], "select trees", lambda tree: tree.height > 20)
         self.assertEqual(stand1.reference_trees_pre_vec, [t3])
         self.assertEqual(stand2.reference_trees_pre_vec, [])
-        applyfilter([stand1, stand2], "select strata", "species == 2")
+        applyfilter([stand1, stand2], "select strata", lambda stratum: stratum.species == 2)
         self.assertEqual(stand1.tree_strata_pre_vec, [s2])
         self.assertEqual(stand2.tree_strata_pre_vec, [])
 
@@ -47,23 +47,18 @@ class FilterTest(unittest.TestCase):
             applyfilter(
                 [s1, s2, s3],
                 "select",
-                "first or third",
-                named = {
-                    "first":  "identifier == '1'",
-                    "second": "identifier == '2'",
-                    "third":  "identifier == '3'"
-                }
+                lambda stand: stand.identifier in ['1', '3'],
             ),
             [s1, s3]
         )
 
     def test_reject_invalid_command(self):
         with self.assertRaisesRegex(ValueError, "filter syntax error"):
-            applyfilter([], "? ? ?", "1")
+            applyfilter([], "? ? ?", lambda x: 1)
         with self.assertRaisesRegex(ValueError, "invalid filter verb"):
-            applyfilter([], "choose", "1")
+            applyfilter([], "choose", lambda x: 1)
         with self.assertRaisesRegex(ValueError, "invalid filter object"):
-            applyfilter([], "select something", "1")
+            applyfilter([], "select something", lambda x: 1)
 
     def test_preproc_filter(self):
         t1 = ReferenceTree(identifier="1")
@@ -73,12 +68,8 @@ class FilterTest(unittest.TestCase):
         s1 = ForestStand(identifier="1", reference_trees_pre_vec=[t1, t2, t3])
         s2 = ForestStand(identifier="2", reference_trees_pre_vec=[t4])
         stands = preproc_filter([s1, s2], **{
-            "named": {
-                "four":  "identifier == '4'",
-                "empty": "not reference_trees_pre_vec"
-            },
-            "remove trees": "identifier == '3' or four",
-            "select": "not empty"
+            "remove trees": lambda tree: tree.identifier in ['3', '4'],
+            "select": lambda stand: bool(stand.reference_trees_pre_vec)
         })
         self.assertEqual(stands, [s1])
         self.assertEqual(s1.reference_trees_pre_vec, [t1, t2])
