@@ -67,8 +67,23 @@ class VectorData():
     def __len__(self):
         return self.size
 
+    @overload
     def __getitem__(self, name: str) -> npt.NDArray:
-        return getattr(self, name)
+        pass
+
+    @overload
+    def __getitem__[T: "VectorData"](self: T, name: slice | npt.NDArray) -> T:
+        pass
+
+    def __getitem__[T: "VectorData"](self: T, name: str | slice | npt.NDArray) -> npt.NDArray | T:
+        if isinstance(name, str):
+            return getattr(self, name)
+
+        retval = copy(self)
+        for attribute in self.dtypes.keys():
+            setattr(retval, attribute, getattr(self, attribute)[name])
+        retval._recompute_size()
+        return retval
 
     def vectorize(self, attr_dict: dict[str, list[Any]]):
         self.set_size(attr_dict)

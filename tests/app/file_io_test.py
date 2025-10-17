@@ -285,20 +285,6 @@ class TestFileReading(unittest.TestCase):
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 9)
 
-    def test_read_schedule_payload_from_directory(self):
-        dir_ = Path("tests/resources/file_io_test/testing_output_directory/3/0")
-        result = file_io.read_schedule_payload_from_directory(dir_)
-        self.assertEqual("3", result.computational_unit.identifier)
-        self.assertEqual(2, len(result.collected_data.get_list_result("calculate_biomass")))
-
-    def test_read_simulation_result_dirtree(self):
-        dir_ = Path("tests/resources/file_io_test/testing_output_directory")
-        result = file_io.read_full_simulation_result_dirtree(dir_)
-        self.assertEqual(1, len(result.items()))
-        self.assertEqual(1, len(result["3"]))
-        self.assertEqual("3", result["3"][0].computational_unit.identifier)
-        self.assertEqual(2, len(result["3"][0].collected_data.get_list_result("calculate_biomass")))
-
     def test_read_stands_from_nonexisting_file(self):
         config = MetsiConfiguration(
             input_path="nonexisting_file.pickle",

@@ -1,17 +1,19 @@
+import sqlite3
 from typing import Optional
 from copy import copy, deepcopy
 
 from lukefi.metsi.app.utils import ConditionFailed
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
-from lukefi.metsi.sim.state_tree import StateTree
 
 
-def identity[T](x: T) -> T:
-    return x
+def identity[T](x: T) -> tuple[T, list[CollectedData]]:
+    return x, []
 
 
-class EventTree[T]:
+class EventTree[T: ComputationalUnit]:
     """
     Event represents a computational operation in a tree of following event paths.
     """
@@ -26,24 +28,11 @@ class EventTree[T]:
         self.processed_treatment = treatment or identity
         self.branches = []
 
-    def operation_chains(self) -> list[list[ProcessedTreatment[T]]]:
-        """
-        Recursively produce a list of lists of possible operation chains represented by this event tree in post-order
-        traversal.
-        """
-        if len(self.branches) == 0:
-            # Yes. A leaf node returns a single chain with a single operation.
-            return [[self.processed_treatment]]
-        result: list[list[ProcessedTreatment[T]]] = []
-        for branch in self.branches:
-            chains = branch.operation_chains()
-            for chain in chains:
-                result.append([self.processed_treatment] + chain)
-        return result
-
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 state_tree: Optional[StateTree[T]] = None) -> list[SimulationPayload[T]]:
+                 node_identifier: Optional[list[int]] = None,
+                 db: Optional[sqlite3.Connection] = None
+                 ) -> list[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If given a root node, a StateTree is also constructed, containing all complete
@@ -53,15 +42,11 @@ class EventTree[T]:
         :param state_tree: optional state tree node
         :return: list of result payloads from this EventTree or as concatenated from its branches
         """
-        current = self.processed_treatment(payload)
-        branching_state: StateTree | None = None
-
-        if state_tree is not None:
-            state_tree.state = deepcopy(current.computational_unit)
-            state_tree.done_treatment = current.operation_history[-1][1] if len(current.operation_history) > 0 else None
-            state_tree.time_point = current.operation_history[-1][0] if len(current.operation_history) > 0 else None
-            state_tree.treatment_params = current.operation_history[-1][2] if len(
-                current.operation_history) > 0 else None
+        current, collected_data = self.processed_treatment(payload)
+        if node_identifier is None:
+            node_identifier = [0]
+        if db is not None:
+            _output_node_to_db(db, node_identifier, current, collected_data)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()
@@ -70,20 +55,17 @@ class EventTree[T]:
             return [current]
 
         if len(self.branches) == 1:
-            if state_tree is not None:
-                branching_state = StateTree()
-                state_tree.add_branch(branching_state)
-            return self.branches[0].evaluate(current, branching_state)
+            node_identifier_ = deepcopy(node_identifier)
+            node_identifier_.append(0)
+            return self.branches[0].evaluate(current, node_identifier_, db)
 
         results: list[SimulationPayload[T]] = []
-        for branch in self.branches:
+        for i, branch in enumerate(self.branches):
             try:
-                if state_tree is not None:
-                    branching_state = StateTree()
-                evaluated_branch = branch.evaluate(copy(current), branching_state)
+                node_identifier_ = deepcopy(node_identifier)
+                node_identifier_.append(i)
+                evaluated_branch = branch.evaluate(copy(current), node_identifier_, db)
                 results.extend(evaluated_branch)
-                if state_tree is not None and branching_state is not None:
-                    state_tree.add_branch(branching_state)
             except (ConditionFailed, UserWarning):
                 ...
 
@@ -94,3 +76,24 @@ class EventTree[T]:
 
     def add_branch(self, et: 'EventTree[T]'):
         self.branches.append(et)
+
+
+def _output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
+                                             node: list[int],
+                                             current: SimulationPayload[T],
+                                             collected_data: list[CollectedData]):
+    node_str = "-".join(map(str, node))
+    cur = db.cursor()
+    cur.execute(
+        """
+        INSERT INTO nodes
+        VALUES
+            (?, ?, ?, ?)
+        """,
+        (node_str,
+         current.computational_unit.identifier,
+         str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
+         str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
+    current.computational_unit.output_to_db(db, node_str)
+    for datum in collected_data:
+        datum.output_to_db(db, node_str, current.computational_unit.identifier)

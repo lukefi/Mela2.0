@@ -24,6 +24,7 @@ def make_empty_sapling() -> SimpleNamespace:
         tree_number=np.array([], dtype=int),
     )
 
+
 def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
     # NOTE: this version guarantees both `sapling` and `saplings` exist.
     sap = make_empty_sapling()
@@ -41,6 +42,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         sapling=sap,
         saplings=sap,  # alias, just in case downstream code uses plural
     )
+
 
 def make_rt(
     stems=(100.0, 120.0),
@@ -83,11 +85,13 @@ def make_rt(
     )
 # ---------- DLL stub ----------
 
+
 class FakeDLL:
     """
     Minimal DLL stub implementing the methods used by MottiDLLPredictorVec.
     Kept as its own concrete type so tests can access .captured_trees_py.
     """
+
     def __init__(self) -> None:
         self.captured_trees_py: List[Dict[str, Any]] | None = None
         self.captured_site: Dict[str, Any] | None = None
@@ -168,10 +172,9 @@ class TestGrowMottiDLLVec(unittest.TestCase):
 
         dll_stub = GrowingDLL()
         pred = gm_vec.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
-        input_tuple = (stand, SimpleNamespace(current_time_point=stand.year))
 
-        out_stand, _ = gm_vec.grow_motti_dll(   
-            input_tuple,# type: ignore[arg-type]
+        out_stand, _ = gm_vec.grow_motti_dll(
+            stand,  # type: ignore[arg-type]
             predictor=pred,
             step=5,
         )

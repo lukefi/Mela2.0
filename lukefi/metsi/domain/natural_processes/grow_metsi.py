@@ -247,17 +247,17 @@ class MetsiGrowPredictor(Predict):
 
 # ---------- public API  ----------
 
-def grow_metsi(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_metsi(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.
     Assumes input is vectorized
     """
     step = operation_parameters.get("step", 5)
-    stand, collected_data = input_
+    stand = input_
 
     if stand.reference_trees.size == 0:
         stand.year += step
-        return stand, collected_data
+        return stand, []
 
     # build predictor and run growth
     pred = MetsiGrowPredictor(stand)
@@ -283,4 +283,4 @@ def grow_metsi(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTup
     if to_delete.size > 0:
         stand.reference_trees.delete(to_delete.tolist())
 
-    return stand, collected_data
+    return stand, []
