@@ -67,9 +67,6 @@ class VectorData():
     def __len__(self):
         return self.size
 
-    def __getitem__(self, name: str) -> npt.NDArray:
-        return getattr(self, name)
-
     def vectorize(self, attr_dict: dict[str, list[Any]]):
         self.set_size(attr_dict)
         for attribute_name, data_type in self.dtypes.items():
@@ -145,64 +142,22 @@ class VectorData():
                                                       If not given, values are appended to the ends of the arrays.
                                                       Defaults to None.
         """
-        def _row_block_like(col: np.ndarray, val, dtype):
-            tail = col.shape[1:]
-            if tail:
-                arr = np.asarray(val, dtype=dtype).reshape(tail)   # (p,), (p,q) ...
-                return arr.reshape((1,)+tail)                      # (1,p) or (1,p,q)
-
-            return np.asarray([val], dtype=dtype)              # (1,)
-
-        def _many_block_like(col: np.ndarray, vals_list, dtype):
-            tail = col.shape[1:]
-            if tail:
-                stacked = np.stack([np.asarray(v, dtype=dtype).reshape(tail) for v in vals_list], axis=0)  # (m,*tail)
-                return stacked
-
-            return np.asarray(vals_list, dtype=dtype).reshape(-1, *tail)  # (m,)
-
-        def _concat(col: np.ndarray, block: np.ndarray, at: int | None):
-            if at is None:
-                return np.concatenate([col, block], axis=0)
-            return np.concatenate([col[:at], block, col[at:]], axis=0)
-
         if isinstance(new, list):
-            # Prepare per-column blocks
-            blocks = {}
             for key, dtype in self.dtypes.items():
-                col = getattr(self, key)
-                vals_list = [self.to_default(item.get(key), dtype) for item in new]
-                blocks[key] = _many_block_like(col, vals_list, dtype)
-
-            # Apply append / block-insert / per-row inserts
-            if index is None or isinstance(index, int):
-                for key in self.dtypes.keys():
-                    col = getattr(self, key)
-                    setattr(self, key, _concat(col, blocks[key], index if isinstance(index, int) else None))
-            else:
-                # index is list[int], same length as new
-                idx_list = list(index)
-                if len(idx_list) != len(new):
-                    raise ValueError("Length of 'index' must match length of 'new' when both are lists.")
-                # Insert rows in ascending order, adjusting for prior insertions
-                order = np.argsort(idx_list)
-                for k in order:
-                    at = idx_list[k]
-                    for key in self.dtypes.keys():
-                        col = getattr(self, key)
-                        row_block = blocks[key][k:k+1]  # (1,*tail)
-                        setattr(self, key, _concat(col, row_block, at))
-                    # After inserting one row, subsequent positions >= at must shift by +1
-                    idx_list = [i+1 if i >= at else i for i in idx_list]
+                values = [self.to_default(new_item.get(key), dtype) for new_item in new]
+                vector: npt.NDArray = getattr(self, key)
+                if index is not None:
+                    setattr(self, key, np.insert(vector, index, values, axis=0))  # insert always creates a copy
+                else:
+                    setattr(self, key, np.append(vector, values, axis=0))  # append always creates a copy
         else:
-            # Single-row create
             for key, dtype in self.dtypes.items():
-                col = getattr(self, key)
-                val = self.to_default(new.get(key), dtype)
-                row_block = _row_block_like(col, val, dtype)
-                if index is not None and not isinstance(index, int):
-                    raise ValueError("Index must be an int (or None) when creating a single row.")
-                setattr(self, key, _concat(col, row_block, index if isinstance(index, int) else None))
+                value = self.to_default(new.get(key), dtype)
+                vector = getattr(self, key)
+                if index is not None:
+                    setattr(self, key, np.insert(vector, index, value, axis=0))  # insert always creates a copy
+                else:
+                    setattr(self, key, np.append(vector, [value], axis=0))  # append always creates a copy
 
         self._recompute_size()
 
