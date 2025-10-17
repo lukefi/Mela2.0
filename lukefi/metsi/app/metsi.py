@@ -9,7 +9,6 @@ from lukefi.metsi.app.preprocessor import (
     slice_stands_by_size
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
-from lukefi.metsi.domain.forestry_types import SimResults
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.app.export import export_preprocessed
 from lukefi.metsi.app.file_io import (
@@ -46,14 +45,6 @@ def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: s
     if config.state_output_container is not None or config.derived_data_output_container is not None:
         print_logline(f"Writing simulation results to '{config.target_directory}'")
         write_full_simulation_result_dirtree(result, config)
-
-
-def post_process(config: MetsiConfiguration, control: dict, data: SimResults, _) -> SimResults:
-    raise MetsiException("Post-processing currently not implemented")
-
-
-def export(config: MetsiConfiguration, control: dict, data: SimResults, _) -> None:
-    raise MetsiException("Export currently not implemented")
 
 
 def main() -> int:
