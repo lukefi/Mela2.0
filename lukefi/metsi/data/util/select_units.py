@@ -31,7 +31,69 @@ def select_units[T, V: VectorData](context: T,
                                    freq_var: str,
                                    select_from: str = "all",
                                    mode: str = "odds_units") -> npt.NDArray[np.float64]:
+    """
+    Summary:
+        The tree selection routine returns for each reference tree the number of the stems (per ha) needed to meet the
+        required amount of a given tree-level variable.
+        The selection routine is controlled by:
+        1. The overall target which is described by the required amount of the given tree-level variable and the type
+            of the target.
+            Given a target amount A and target variable V, the four target types are
+            - "absolute": selected stems accumulate A units of variable V
+            - "relative": selected stems accumulate A percentages of variable V, 0 <= A <= 1
+            - "absolute_remain": selected stems accumulate Vtot-A units of variable V, Vtot = sum of all reference trees
+            - "relative_remain": selected stems accumulate 1-A percentages of variable V, 0 <= A <= 1
+        2.  1-N selection sets, each specifying the subset of trees eligible for selection, target for the set and a
+            profile. From the profile routine interpolates the proportion to be selected from the stems of each tree.
+        
+        The subset of trees eligible for selection is defined by a function that should return true for those trees
+        belonging to the selection set and false for those trees that cannot be selected.
+        
+        The target of the set is defined the same way as the overall target. No more stems are selected from the set
+        than are required to achieve the set's target. The sets are deployed in the given order and only as many sets
+        are deployed as are needed for the overall target.
+        
+        The profile consists of continuous linear segments represented by x and y coordinates. The x coordinates
+        correspond to the given tree level variable used to sort the trees. The y coordinates represent the relative
+        amounts at each segment's end points. x coordinates can be either absolute (corresponding to actual values of
+        the order variable) or relative (highest/lowest x coordinate corresponds to highest/lowest value of the order
+        variable in the set).
+        
+        For each segment a linear equation y = a + b * x is generated. The tree selection routine adjusts the linear
+        equations to achieve the overall and sets targets. The adjustment is done using binary search and there are four
+        adjustment modes:
+        - "level" : binary search is used to find a constant C that is added to all segments i.e. y = a + b * x + C.
+          The basic idea is to retain shape of the profile and lift/lower it. As y values are restricted to be in range
+          [0, 1] the shape may change as y reach it's limits.
+        - "scale" : binary search is used to find a constant C that is a multiplier to all segments i.e.
+          y = (a + b*x) * C. The basic idea is to retain the ratio of y values. As y values are restricted to be in
+          range [0, 1] the ratio may change as y reach it's limits.
+        - "odds_profile" : binary search is used to find a constant C that is a multiplier of the odds of end points of
+          segments.  i.e y = odds_inv(C*odds(a+b*x)), where odds_inv is the inverse of odds(y)=y/1-y. The basic idea is
+          to have a flexible profile shape so that the closer profile values are 0 and 1 the less the profile values are
+          changed. The new y values are calculated for the end points of the segments so for each iteration and new
+          value of C the new linear equations are generated to calculate new proportions of stems for each tree.
+        - "odds_tree" (default): like odds_profile, but the y values to be scaled are the proportions for each
+          individual reference tree instead of the end points  of segments.
+        
+        As a result of the binary search the values y are the proportions of stems to be selected. If option select_from
+        is set to "all", the number of selected stems is computed always as a proportion of the initial number of stems
+        of each tree. Otherwise number of selected stems is computed as a proportion of what is left after selections
+        from previous selection sets.
 
+    Args:
+        context:        Free-form contextual information
+        data:           Where the units are selected from
+        target_decl:    Description of selection target
+        sets:           List of SelectionSets describing the different kinds of selection methods to use in order to
+                        reach the total target
+        freq_var:       The name of the variable to describe the frequency of units in the data
+        select_from:
+        mode:           Selection mode to use
+
+    Returns:
+        npt.NDArray[np.float64]: The selected units for each element in data
+    """
     if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
         target_var = target_decl.var
         target_type = target_decl.type
