@@ -55,7 +55,6 @@ control_structure = {
                 GrowMotti(
                     parameters={
                         "step": 5,
-                        "data_dir": "${EXECDIR}${/}data${/}motti",
                     }
 
                 )
