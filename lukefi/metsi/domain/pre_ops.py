@@ -1,5 +1,5 @@
 import traceback
-from typing import Any
+from typing import Any, Callable
 from lukefi.metsi.data.model import ReferenceTree
 from lukefi.metsi.data.enums.internal import LandUseCategory
 from lukefi.metsi.domain.forestry_types import StandList
@@ -16,10 +16,10 @@ from lukefi.metsi.app.utils import MetsiException
 
 
 def preproc_filter(stands: StandList, **operation_params) -> StandList:
-    named = operation_params.get("named", {})
-    for k, v in operation_params.items():
-        if k != "named":
-            stands = applyfilter(stands, k, v, named)
+    command: str
+    predicate: Callable[..., bool]
+    for command, predicate in operation_params.items():
+        stands = applyfilter(stands, command, predicate)
     return stands
 
 

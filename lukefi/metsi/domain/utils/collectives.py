@@ -1,11 +1,9 @@
 import builtins
-from enum import Enum
-from functools import lru_cache, cache
+from functools import lru_cache
 from operator import call
 from typing import Any, Optional
 from collections.abc import Iterator, Callable
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 
 GetVarFn = Callable[[str], Any]
 """A function that returns the value of a global variable given its name."""
@@ -132,23 +130,3 @@ def autocollective(x: Any, **list_filters) -> Any:
                 x = [item for item in x if getattr(item, key) in values]
         return LazyListDataFrame(x)
     return x
-
-
-def _collector_wrapper(operation_parameters, *aliases, **named_aliases) -> dict[str, Any]:
-    getvar = cache(getvarfn(*aliases, **named_aliases))
-    return collect_all(operation_parameters, getvar=getvar)
-
-
-def property_collector(objects: list[object], properties: list[str]) -> list[list]:
-    result_rows = []
-    for o in objects:
-        row = []
-        for p in properties:
-            if not hasattr(o, p):
-                raise MetsiException(f"Unknown property {p} in {o.__class__}")
-            val = getattr(o, p) or 0.0
-            if isinstance(val, Enum):
-                val = val.value
-            row.append(val)
-        result_rows.append(row)
-    return result_rows

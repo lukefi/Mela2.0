@@ -4,11 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.0.5] - 2025-10-16
+## [0.0.7] - 2025-10-20
 
 ### Added
 
 - Added robot test with motti binaries #MELA2-81
+
+## [0.0.6] - 2025-10-17
+
+### Added
+
+- Added select_units helper algorithm
+
+## [0.0.5] - 2025-10-17
+
+### Changed
+
+- Removed evaluating strings in preproc_filter, predicates are now given as functions in control file
 
 ## [0.0.4] - 2025-10-16
 
