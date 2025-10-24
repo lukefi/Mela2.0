@@ -128,9 +128,10 @@ def cutting(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[
     if target_dict is None:
         # If omitted, supply an empty SelectionTarget (type-safe; linter-friendly)
         target_decl = SelectionTarget()
-        target_decl.type = ""
-        target_decl.var = ""
-        target_decl.amount = 0.0
+
+        target_decl.type = None # type: ignore
+        target_decl.var = None # type: ignore
+        target_decl.amount = None # type: ignore
     else:
         target_decl = SelectionTarget()
         target_decl.type=target_dict.get("type")
