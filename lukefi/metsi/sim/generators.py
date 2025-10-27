@@ -10,11 +10,12 @@ from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
-from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
 
 T = TypeVar("T", bound=ComputationalUnit)
 
+ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
 TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]

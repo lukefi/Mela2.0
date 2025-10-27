@@ -1,13 +1,14 @@
 import sqlite3
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from copy import copy, deepcopy
 
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
-
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
+if TYPE_CHECKING:
+    from lukefi.metsi.sim.generators import ProcessedTreatment
 
 def identity[T](x: T) -> tuple[T, list[CollectedData]]:
     return x, []
@@ -20,10 +21,10 @@ class EventTree[T: ComputationalUnit]:
 
     __slots__ = ('processed_treatment', 'branches')
 
-    processed_treatment: ProcessedTreatment[T]
+    processed_treatment: "ProcessedTreatment[T]"
     branches: list["EventTree[T]"]
 
-    def __init__(self, treatment: Optional[ProcessedTreatment[T]] = None):
+    def __init__(self, treatment: Optional["ProcessedTreatment[T]"] = None):
 
         self.processed_treatment = treatment or identity
         self.branches = []
