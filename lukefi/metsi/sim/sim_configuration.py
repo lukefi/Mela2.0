@@ -1,6 +1,6 @@
 from types import SimpleNamespace
-from lukefi.metsi.domain.collected_data import CollectableData
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction, generator_declarations_for_time_point
 from lukefi.metsi.sim.generators import Generator, Sequence
 
@@ -19,7 +19,7 @@ class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
     """
     instructions: list[SimulationInstruction[T]] = []
     time_points: list[int] = []
-    collected_data: set[CollectableData]
+    collected_data: CollectableDataTypes
 
     def __init__(self, **kwargs):
         """

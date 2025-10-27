@@ -4,11 +4,10 @@ from typing import Any, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 
 from collections.abc import Callable
-from lukefi.metsi.domain.collected_data import CollectableData
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.processor import processor
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
@@ -28,7 +27,7 @@ class GeneratorBase[T: ComputationalUnit](ABC):
         pass
 
     @abstractmethod
-    def get_types_of_collected_data(self) -> set[CollectableData]:
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
         pass
 
 
@@ -53,7 +52,7 @@ class Generator[T: ComputationalUnit](GeneratorBase, ABC):
         return root
 
     @override
-    def get_types_of_collected_data(self) -> set[CollectableData]:
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
         retval = set()
         for child in self.children:
             retval.update(child.get_types_of_collected_data())
@@ -91,14 +90,14 @@ class Event[T: ComputationalUnit](GeneratorBase):
     preconditions: list[Condition[SimulationPayload[T]]]
     postconditions: list[Condition[SimulationPayload[T]]]
     tags: set[str]
-    collected_data: set[CollectableData]
+    collected_data: CollectableDataTypes
 
     def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
                  postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  tags: Optional[set[str]] = None,
-                 collected_data: Optional[set[CollectableData]] = None) -> None:
+                 collected_data: Optional[CollectableDataTypes] = None) -> None:
         self.treatment = treatment
 
         if parameters is not None:
@@ -141,7 +140,7 @@ class Event[T: ComputationalUnit](GeneratorBase):
         return retval
 
     @override
-    def get_types_of_collected_data(self) -> set[CollectableData]:
+    def get_types_of_collected_data(self) -> set[type[CollectedData]]:
         return self.collected_data
 
     def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:

@@ -2,7 +2,7 @@ import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.collected_data import init_collected_data_tables
+from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
