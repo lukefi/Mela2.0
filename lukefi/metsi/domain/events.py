@@ -98,7 +98,6 @@ class ThinningFromBelow(Event[ForestStand]):
         super().__init__(treatment=cutting, parameters=(defaults | (parameters or {})),
                          preconditions=preconditions, postconditions=postconditions, file_parameters=file_parameters)
 
-
 class ThinningFromAbove(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
@@ -153,4 +152,9 @@ __all__ = [
     "GrowMotti",
     "GrowActa",
     "GrowMetsi",
+    "FirstThinning",
+    "ThinningFromBelow",
+    "ThinningFromAbove",
+    "EvenThinning",
+    "Ajourat",
 ]
