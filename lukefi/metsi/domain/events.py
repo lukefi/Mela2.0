@@ -57,17 +57,23 @@ class GrowMotti(Event[ForestStand]):
                          postconditions=postconditions,
                          file_parameters=file_parameters)
 
+
+
 class SoilSurfacePreparation(Event[ForestStand]):
     """Store soil surface prep info and log it."""
     def __init__(self, parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
-        super().__init__(treatment=ftrt_soil_surface_preparation,
-                         parameters=parameters,
-                         preconditions=preconditions,
-                         postconditions=postconditions,
-                         file_parameters=file_parameters)
+        defaults = {
+            "method": "mounding",
+            "intensity": 1200.0,
+            "labels": ["ssp_default"]
+        }
+        super().__init__(treatment=ftrt_soil_surface_preparation, parameters=(defaults | (parameters or {})),
+                         preconditions=preconditions, postconditions=postconditions, file_parameters=file_parameters)
+
+
 
 __all__ = [
     "DoNothing",

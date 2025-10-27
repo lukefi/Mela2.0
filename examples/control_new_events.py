@@ -14,7 +14,6 @@ from lukefi.metsi.domain.events import (
     )
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives
-from lukefi.metsi.sim.generators import Sequence
 
 control_structure = {
     "app_configuration": {
@@ -59,21 +58,17 @@ control_structure = {
         SimulationInstruction(
             time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
-                GrowMetsi()
+                GrowMetsi(),
+                SoilSurfacePreparation()
             ]
         ),
 
         # Soil surface preparation (metadata)
         SimulationInstruction(
-            time_points=[2025],
-            events=[SoilSurfacePreparation(parameters={
-                "method": "mounding",
-                "intensity": 1200.0,
-                "labels": ["ssp_default"]
-            })],
-            conditions=[MinimumTimeInterval(20, ftrt_soil_surface_preparation)]
+            time_points=[2020],
+            events=[SoilSurfacePreparation(),
+            ]
         ),
-
     ],
 }
 
