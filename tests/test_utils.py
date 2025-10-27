@@ -30,21 +30,10 @@ def identity(x: Any) -> Any:
 def none(x: Any) -> None:
     return None
 
+
 def inc(x: int, **operation_params) -> tuple[int, list[CollectedData]]:
     incrementation = operation_params.get("incrementation", 1)
     return x + incrementation, []
-
-
-def dec(x: int) -> int:
-    return x - 1
-
-
-def max_reducer(x: list[int]) -> Optional[int]:
-    return max(x)
-
-
-def grow_dummy(f: float, d: float, h: float, dd: float) -> tuple[float, float, float]:
-    return f - f % 100, d + dd / 500, h + dd / 1000
 
 
 def parametrized_operation(x: SimulationPayload[int], **kwargs) -> SimulationPayload[int]:
@@ -53,25 +42,8 @@ def parametrized_operation(x: SimulationPayload[int], **kwargs) -> SimulationPay
     return x
 
 
-def parametrized_operation_using_file_parameter(x, **kwargs):
-    file_path = kwargs.get("dummy_file")
-    file_contents = open(file_path, "r").read()
-    if file_contents == "kissa123\n":
-        return file_contents
-    else:
-        return x
-
 def collect_results(payloads: list[SimulationPayload]) -> list:
     return list(map(lambda payload: payload.computational_unit, payloads))
-
-
-def file_contents(file_path: str) -> str:
-    with open(file_path, 'r') as f:
-        return f.read()
-
-
-def get_default_timber_price_table() -> str:
-    return open("tests/resources/timber_price_table.csv", "r").read()
 
 
 def prepare_growth_test_stand():
@@ -114,22 +86,3 @@ def prepare_growth_test_stand():
                 sapling=True)],
         year=2025)
     return stand
-
-
-DEFAULT_TIMBER_PRICE_TABLE = np.array(
-    [[1., 160., 370., 55.],
-     [1., 160., 400., 57.],
-     [1., 160., 430., 59.],
-     [1., 160., 460., 59.],
-     [2., 70., 300., 17.]])
-
-
-TIMBER_PRICE_TABLE_THREE_GRADES = np.array(
-    [[1., 160., 370., 55.],
-     [1., 160., 400., 57.],
-     [1., 160., 430., 59.],
-     [1., 160., 460., 59.],
-     [2., 70., 300., 17.],
-     [2., 70., 270., 15.],
-     [3., 70., 220., 10.]
-     ])
