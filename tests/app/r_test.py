@@ -9,9 +9,6 @@ except ImportError:
 
 @unittest.skipIf(unrunnable, "rpy2 not installed")
 class RTest(unittest.TestCase):
-    def test_init(self):
-        print(robjects.__version__)
-
     def test_sum(self):
         rsum = robjects.r['sum']
         rsort = robjects.r['sort']
