@@ -15,8 +15,7 @@ def simulate_alternatives(control: dict[str, Any], units: list[T],
     simconfig = SimConfiguration[T](**control)
     nestable_generator = simconfig.full_tree_generators()
     if db is not None:
-        collected_data_types = nestable_generator.get_types_of_collected_data()
-        init_collected_data_tables(db, collected_data_types)
+        init_collected_data_tables(db, simconfig.collected_data)
     root_node = nestable_generator.compose_nested()
 
     retval: dict[str, list[SimulationPayload[T]]] = {}
