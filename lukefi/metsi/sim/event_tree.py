@@ -35,11 +35,11 @@ class EventTree[T: ComputationalUnit]:
                  ) -> list[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
-        copying it for branching. If given a root node, a StateTree is also constructed, containing all complete
-        intermediate states in the simulation.
+        copying it for branching. If a database connection is given, all simulated states and collected data is output
+        to the database.
 
         :param payload: the simulation data payload (we don't care what it is here)
-        :param state_tree: optional state tree node
+        :param db: optional connection to an initialized database for output
         :return: list of result payloads from this EventTree or as concatenated from its branches
         """
         current, collected_data = self.processed_treatment(payload)
@@ -82,6 +82,14 @@ def _output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                              node: list[int],
                                              current: SimulationPayload[T],
                                              collected_data: list[CollectedData]):
+    """
+    Writes current simulation state and collected data to database.
+
+    :param db: Connection to an initialized database
+    :param node: List of integers describing the position of the current node in the simulation tree
+    :param current: The current simulation payload (e.g. state and treatment history)
+    :param collected_data: List of data collected by the treament performed in the current node
+    """
     node_str = "-".join(map(str, node))
     cur = db.cursor()
     cur.execute(
