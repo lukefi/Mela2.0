@@ -32,7 +32,6 @@ class RunnersTest(unittest.TestCase):
                                 "branching.py").resolve())
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
-        print(config)
         depth_payload = SimulationPayload(
             computational_unit=1,
             operation_history=[]
@@ -49,7 +48,6 @@ class RunnersTest(unittest.TestCase):
                                 "no_parameters.py").resolve())
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
-        # print(config)
         initial = SimulationPayload(
             computational_unit=1,
             operation_history=[]
@@ -66,7 +64,6 @@ class RunnersTest(unittest.TestCase):
                                 "parameters.py").resolve())
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
-        # print(config)
         initial = SimulationPayload(
             computational_unit=1,
             operation_history=[]
