@@ -18,7 +18,7 @@ class SimOperationsTest(unittest.TestCase):
         for case in assertions:
             function = prepared_operation(tests.test_utils.parametrized_operation, **case[0][1])
             result = function(SimulationPayload(computational_unit=case[0][0],
-                                               operation_history={}))
+                                                operation_history={}))
             self.assertEqual(case[1], result.computational_unit)
 
     def test_operation_last_run(self):
