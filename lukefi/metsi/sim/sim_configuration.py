@@ -12,6 +12,7 @@ class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
     Attributes:
         instructions: A list of instructions for the simulation.
         time_points: A sorted list of unique time points derived from the simulation instructions.
+        collected_data: Set of CollectableData values describing the types of extra data collected by the simulation.
     Methods:
         __init__(**kwargs):
             Initializes the SimConfiguration instance with keyword arguments.
