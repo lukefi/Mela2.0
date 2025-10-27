@@ -1,4 +1,5 @@
 from typing import Any, Optional
+from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
@@ -60,19 +61,34 @@ class GrowMotti(Event[ForestStand]):
 
 
 class SoilSurfacePreparation(Event[ForestStand]):
-    """Store soil surface prep info and log it."""
-    def __init__(self, parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
-                 file_parameters: Optional[dict[str, str]] = None) -> None:
+    """Store soil surface preparation metadata and enforce a sensible default interval."""
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
         defaults = {
             "method": "mounding",
             "intensity": 1200.0,
-            "labels": ["ssp_default"]
+            "labels": ["ssp_default"],
         }
-        super().__init__(treatment=ftrt_soil_surface_preparation, parameters=(defaults | (parameters or {})),
-                         preconditions=preconditions, postconditions=postconditions, file_parameters=file_parameters)
+        # Default preconditions: at least 20 years since this treatment last ran
+        default_preconds: list[ForestCondition] = [
+            MinimumTimeInterval(20, ftrt_soil_surface_preparation)
+        ]
 
+        merged_params = defaults | (parameters or {})
+        merged_preconds = default_preconds + (preconditions or [])
+
+        super().__init__(
+            treatment=ftrt_soil_surface_preparation,
+            parameters=merged_params,
+            preconditions=merged_preconds,
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+        )
 
 
 __all__ = [
