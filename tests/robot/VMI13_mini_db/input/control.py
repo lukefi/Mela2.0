@@ -9,7 +9,7 @@ control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
-        "state_output_container": "csv",  # options: pickle, json, csv, null
+        # "state_output_container": "csv",  # options: pickle, json, csv, null
         # "derived_data_output_container": "pickle",  # options: pickle, json, null
         "formation_strategy": "partial",
         "evaluation_strategy": "depth",
