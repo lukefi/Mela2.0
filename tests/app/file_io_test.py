@@ -7,8 +7,9 @@ from dataclasses import dataclass
 
 import numpy as np
 from lukefi.metsi.app import file_io
-from lukefi.metsi.data.enums.internal import (DrainageCategory, LandUseCategory, OwnerCategory, SiteType,
-                                              SoilPeatlandCategory, Storey, TreeSpecies)
+from lukefi.metsi.data.enums.internal import (
+    DrainageCategory, LandUseCategory, OwnerCategory, SiteType,
+    SoilPeatlandCategory, TreeSpecies)
 from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.app_io import MetsiConfiguration
@@ -214,7 +215,6 @@ class TestFileReading(unittest.TestCase):
         self.assertTrue(exists)
         self.assertTrue(size > 0)
         shutil.rmtree('outdir')
-
 
     def test_read_stands_from_pickle_file(self):
         config = MetsiConfiguration(
