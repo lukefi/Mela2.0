@@ -1,4 +1,3 @@
-from typing import Any
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
