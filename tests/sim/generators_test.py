@@ -1,18 +1,15 @@
-from typing import Callable
 import unittest
 from lukefi.metsi.domain.conditions import MinimumTimeInterval
-from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence as run_sequence, evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from tests.test_utils import inc, parametrized_operation
 
 
 class TestGenerators(unittest.TestCase):
-    def test_yaml_declaration(self):
+    def test_simulation_instructions_declaration(self):
         declaration = {
             "simulation_instructions": [
                 SimulationInstruction(
