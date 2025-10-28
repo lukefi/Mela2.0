@@ -1,9 +1,6 @@
 *** Settings ***
-Library           OperatingSystem
-Library           Process
-Library           Collections
-Library           String
 Library           ${CURDIR}/../CustomCompareLibrary.py
+Resource          ../simulation.resource
 
 *** Variables ***
 ${SCRIPT}           -m
@@ -19,25 +16,7 @@ ${REL_TOL}          1e-4
 Run Simulation And Compare Output Files
     [Tags]    simulation
 
-    Remove Directory    ${OUTPUT_DIR}    recursive=True
-    Create Directory    ${OUTPUT_DIR}
-
-
-    ${orig_env}=    Get Environment Variables
-    Set To Dictionary    ${orig_env}    PYTHONPATH=${EXECDIR}
-    ${result}=    Run Process    python
-    ...           ${SCRIPT}
-    ...           ${MODULE}
-    ...           ${INPUT_JSON}
-    ...           ${OUTPUT_DIR}
-    ...           ${CONTROL_SCRIPT}
-    ...           shell=True
-    ...           env=${orig_env}
-
-    Log    STDOUT:\n${result.stdout}
-    Log    STDERR:\n${result.stderr}
-
-    Should Be Equal As Integers    ${result.rc}    0    msg=Python script failed! See STDERR log for details.
+    Run Simulation    ${INPUT_JSON}    ${OUTPUT_DIR}    ${CONTROL_SCRIPT}
 
     Log To Console    Simulation Succeeded. Verifying output files...
 
