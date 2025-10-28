@@ -5,7 +5,7 @@ from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi
 from lukefi.metsi.sim.generators import Event
 from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.forestry.naturalprocess.ftrt_regeneration import ftrt_regeneration
+from lukefi.metsi.forestry.naturalprocess.regeneration import regeneration
 
 
 class DoNothing(Event[ForestStand]):
@@ -68,7 +68,7 @@ class Planting(Event[ForestStand]):
         }
 
         merged = default_params | (parameters or {})
-        super().__init__(treatment=ftrt_regeneration,
+        super().__init__(treatment=regeneration,
                          parameters=merged,
                          preconditions=preconditions,
                          postconditions=postconditions,

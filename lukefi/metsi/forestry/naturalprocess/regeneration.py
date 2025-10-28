@@ -3,7 +3,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
 
-def ftrt_regeneration(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
+def regeneration(input_: OpTuple[ForestStand], /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.
@@ -18,12 +18,12 @@ def ftrt_regeneration(input_: OpTuple[ForestStand], /, **operation_parameters) -
         breast_height_age: Optional[float] = None
         ntrees: Optional[int] = 10  # number of reference trees to create
         labels: Optional[list[str]] = None  # accepted, unused
-        sim_time: Optional[int] = None      # accepted, unused here
+        type: str = "artificial"            # "artificial" | "natural"
     """
     stand, cdata = input_
 
-    # ---- required & optional params (with defaults) ----
-    def req(name: str) -> Any:
+    # ---- required ----
+    def req(name: str):
         if name not in operation_parameters:
             raise MetsiException(f"Missing required regeneration parameter: '{name}'")
         return operation_parameters[name]
@@ -34,23 +34,28 @@ def ftrt_regeneration(input_: OpTuple[ForestStand], /, **operation_parameters) -
     height = float(req("height"))
     biological_age = float(req("biological_age"))
 
-    # optionals
-    breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
-    breast_height_age = operation_parameters.get("breast_height_age", None)
+    # ---- optional ----
+    breast_height_diameter = operation_parameters.get("breast_height_diameter")
+    breast_height_age = operation_parameters.get("breast_height_age")
     ntrees = int(operation_parameters.get("ntrees", 10))
-    # present for parity, but ignored
-    _method = operation_parameters.get("method", None)
-    _labels = operation_parameters.get("labels", None)
-    _sim_time = operation_parameters.get("sim_time", None)
+    _method = operation_parameters.get("method")
+    _labels = operation_parameters.get("labels")
+    regen_type = str(operation_parameters.get("type", "artificial")).lower()
 
+    if regen_type not in ("artificial", "natural"):
+        raise MetsiException("regeneration 'type' must be 'artificial' or 'natural'")
     if ntrees <= 0:
         raise MetsiException("Parameter 'ntrees' must be positive")
-
     if stems_per_ha <= 0:
         raise MetsiException("Parameter 'stems_per_ha' must be > 0")
 
-    # ---- create reference trees ----
+    if regen_type == "artificial":
+        stand.artificial_regeneration_year = stand.year
+
+    # ---- create trees ----
     per_tree_stems = stems_per_ha / float(ntrees)
+    if height <= 0:
+        height = 0.01  # clamp to avoid downstream divide-by-zero
     new_rows = []
     for _ in range(ntrees):
         new_rows.append({
@@ -59,13 +64,12 @@ def ftrt_regeneration(input_: OpTuple[ForestStand], /, **operation_parameters) -
             "origin": origin,
             "stems_per_ha": per_tree_stems,
             "height": height,
+            "measured_height": height,  # helpful for growth models that prefer measured height
             "biological_age": biological_age,
-            # Optionals (leave None -> SoA defaultify handles NaN etc.)
             "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
             "breast_height_age": None if breast_height_age is None else float(breast_height_age),
         })
-
     stand.reference_trees.create(new_rows)
 
-    # No cdata writes here (by request)
+    # No cdata here by design
     return (stand, cdata)
