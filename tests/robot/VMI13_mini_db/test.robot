@@ -1,6 +1,7 @@
 *** Settings ***
 Library           ../DatabaseCompareLibrary.py
 Resource          ../simulation.resource
+Suite Setup       Run Simulation    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/VMI13_source_mini.dat
@@ -12,14 +13,20 @@ ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
 ${TOLERANCE}        0.0
 
 *** Test Cases ***
-Simulation Output Should Match Reference
+
+Node Table Should Match Reference
     [Tags]    simulation
-
-    Run Simulation    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}
-
-    Log To Console    Simulation Succeeded. Verifying output files...
-
     Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
+    
+Stand Table Should Match Reference
+    [Tags]    simulation
     Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+    
+Stratum Table Should Match Reference
+    [Tags]    simulation
     Stratum Tables Should Be Equal   ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+    
+Tree Table Should Match Reference
+    [Tags]    simulation
     Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+    
