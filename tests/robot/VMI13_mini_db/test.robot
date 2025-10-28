@@ -3,8 +3,7 @@ Library           OperatingSystem
 Library           Process
 Library           Collections
 Library           String
-Library           DatabaseLibrary
-Library           ${CURDIR}/../CustomCompareLibrary.py
+Library           ../DatabaseCompareLib.py
 
 *** Variables ***
 ${SCRIPT}           -m
@@ -13,20 +12,11 @@ ${INPUT_JSON}       ${CURDIR}/input/VMI13_source_mini.dat
 ${OUTPUT_DIR}       ${CURDIR}/output/test
 ${CONTROL_SCRIPT}   ${CURDIR}/input/control.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
+${OUTPUT_DB}        ${OUTPUT_DIR}/simulation_results.db
+${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
 ${TOLERANCE}        0.0000001  # Set your desired tolerance here
 ${REL_TOL}          1e-4
 
-*** Keywords ***
-Open Database Connections
-    Connect To Database
-    ...    sqlite3
-    ...    db_name=${OUTPUT_DIR}/simulation_results.db
-    ...    alias=sim
-
-    Connect To Database
-    ...    sqlite3
-    ...    db_name=${REFERENCE_DIR}/simulation_results.db
-    ...    alias=ref
 
 *** Test Cases ***
 Run Simulation And Compare Output Files
@@ -54,5 +44,7 @@ Run Simulation And Compare Output Files
 
     Log To Console    Simulation Succeeded. Verifying output files...
 
-    Open Database Connections
-    
+    Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
+    Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+    Stratum Tables Should Be Equal   ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+    Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
