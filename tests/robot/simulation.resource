@@ -1,11 +1,9 @@
 *** Settings ***
-
 Library    Collections
 Library    OperatingSystem
 Library    Process
 
 *** Keywords ***
-
 Run Simulation
     [Arguments]    ${input_path}    ${output_path}    ${control_path}
 

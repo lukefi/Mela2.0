@@ -13,7 +13,6 @@ ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
 ${TOLERANCE}        0.0
 
 *** Test Cases ***
-
 Node Table Should Match Reference
     [Tags]    simulation
     Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
