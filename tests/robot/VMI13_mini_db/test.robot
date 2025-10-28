@@ -3,7 +3,7 @@ Library           OperatingSystem
 Library           Process
 Library           Collections
 Library           String
-Library           ../DatabaseCompareLib.py
+Library           ../DatabaseCompareLibrary.py
 
 *** Variables ***
 ${SCRIPT}           -m
