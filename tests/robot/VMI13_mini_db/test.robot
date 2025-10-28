@@ -6,8 +6,6 @@ Library           String
 Library           ../DatabaseCompareLibrary.py
 
 *** Variables ***
-${SCRIPT}           -m
-${MODULE}           lukefi.metsi.app.metsi
 ${INPUT_JSON}       ${CURDIR}/input/VMI13_source_mini.dat
 ${OUTPUT_DIR}       ${CURDIR}/output/test
 ${CONTROL_SCRIPT}   ${CURDIR}/input/control.py
@@ -18,19 +16,16 @@ ${TOLERANCE}        0.0000001  # Set your desired tolerance here
 ${REL_TOL}          1e-4
 
 
-*** Test Cases ***
-Run Simulation And Compare Output Files
-    [Tags]    simulation
-
+*** Keywords ***
+Run Simulation
     Remove Directory    ${OUTPUT_DIR}    recursive=True
     Create Directory    ${OUTPUT_DIR}
-
 
     ${orig_env}=    Get Environment Variables
     Set To Dictionary    ${orig_env}    PYTHONPATH=${EXECDIR}
     ${result}=    Run Process    python
-    ...           ${SCRIPT}
-    ...           ${MODULE}
+    ...           -m
+    ...           lukefi.metsi.app.metsi
     ...           ${INPUT_JSON}
     ...           ${OUTPUT_DIR}
     ...           ${CONTROL_SCRIPT}
@@ -41,6 +36,12 @@ Run Simulation And Compare Output Files
     Log    STDERR:\n${result.stderr}
 
     Should Be Equal As Integers    ${result.rc}    0    msg=Python script failed! See STDERR log for details.
+
+*** Test Cases ***
+Simulation Output Should Match Reference
+    [Tags]    simulation
+
+    Run Simulation
 
     Log To Console    Simulation Succeeded. Verifying output files...
 
