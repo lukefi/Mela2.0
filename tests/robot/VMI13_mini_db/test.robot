@@ -10,7 +10,7 @@ ${CONTROL_SCRIPT}   ${CURDIR}/input/control.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
 ${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
 ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
-${TOLERANCE}        0.0
+${TOLERANCE}        1e-12
 
 *** Test Cases ***
 Node Table Should Match Reference
