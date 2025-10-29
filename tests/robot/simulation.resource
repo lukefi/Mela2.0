@@ -5,7 +5,8 @@ Library    Process
 
 *** Keywords ***
 Run Simulation
-    [Arguments]    ${input_path}    ${output_path}    ${control_path}
+    [Documentation]    Run Mela2.0 simulation with given parameters.
+    [Arguments]        ${input_path}    ${output_path}    ${control_path}
 
     Remove Directory    ${output_path}    recursive=True
     Create Directory    ${output_path}
