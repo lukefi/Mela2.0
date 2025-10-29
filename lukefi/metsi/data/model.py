@@ -624,6 +624,13 @@ class ForestStand(Finalizable, ComputationalUnit):
                 )
             )
 
+    def update_aggregates(self):
+        # basal area
+        # dominant species
+        # aggregates for trees
+        # aggregates for strata
+        pass
+
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
     result = ["stand", stand.identifier]
