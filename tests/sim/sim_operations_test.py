@@ -1,39 +1,37 @@
 from typing import Any
 import unittest
-import tests.test_utils
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.domain.conditions import _get_operation_last_run
-from lukefi.metsi.sim.operations import prepared_operation
+from lukefi.metsi.sim.operations import prepared_treatment
+from tests.test_utils import DummyUnit, parametrized_treatment
 
 
 class SimOperationsTest(unittest.TestCase):
-    def test_prepared_operation(self):
+    def test_prepared_treatment(self):
         assertions = [
-            ([10, {}], 10),
-            ([10, {'amplify': True}], 10000),
-            ([10, {'amplify': False}], 10)
+            ([DummyUnit(10), {}], 10),
+            ([DummyUnit(10), {'amplify': True}], 10000),
+            ([DummyUnit(10), {'amplify': False}], 10)
         ]
 
         for case in assertions:
-            function = prepared_operation(tests.test_utils.parametrized_operation, **case[0][1])
-            result = function(SimulationPayload(computational_unit=case[0][0],
-                                                operation_history={}))
-            self.assertEqual(case[1], result.computational_unit)
+            function = prepared_treatment(parametrized_treatment, **case[0][1])
+            result = function(case[0][0])
+            self.assertEqual(case[1], result[0].x)
 
     def test_operation_last_run(self):
 
         def operation1(x: Any) -> OpTuple:
-            return x
+            return x, []
 
         def operation2(x: Any) -> OpTuple:
-            return x
+            return x, []
 
         def operation3(x: Any) -> OpTuple:
-            return x
+            return x, []
 
         def operation4(x: Any) -> OpTuple:
-            return x
+            return x, []
 
         operation_history = [
             (1, operation1, {}),
