@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import os
-from typing import Any, Optional, TypeVar, override
+from typing import Any, Generic, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 
 from collections.abc import Callable
@@ -21,7 +21,7 @@ TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
-class GeneratorBase[T: ComputationalUnit](ABC):
+class GeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
     def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
@@ -32,7 +32,7 @@ class GeneratorBase[T: ComputationalUnit](ABC):
         pass
 
 
-class Generator[T: ComputationalUnit](GeneratorBase, ABC):
+class Generator(GeneratorBase[T], ABC):
     """Abstract base class for generator types."""
     children: Sequence_[GeneratorBase]
     time_point: Optional[int]
@@ -60,7 +60,7 @@ class Generator[T: ComputationalUnit](GeneratorBase, ABC):
         return retval
 
 
-class Sequence[T: ComputationalUnit](Generator[T]):
+class Sequence(Generator[T]):
     """Generator for sequential events."""
 
     @override
@@ -71,7 +71,7 @@ class Sequence[T: ComputationalUnit](Generator[T]):
         return current
 
 
-class Alternatives[T: ComputationalUnit](Generator[T]):
+class Alternatives(Generator[T]):
     """Generator for branching events"""
 
     @override
@@ -82,7 +82,7 @@ class Alternatives[T: ComputationalUnit](Generator[T]):
         return retval
 
 
-class Event[T: ComputationalUnit](GeneratorBase):
+class Event(GeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     treatment: TreatmentFn[T]
