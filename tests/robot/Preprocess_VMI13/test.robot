@@ -9,7 +9,7 @@ ${OUTPUT_PATH}           ${CURDIR}/output/test
 ${CONTROL_PATH}          ${CURDIR}/input/control.py
 ${REFERENCE_PATH}        ${CURDIR}/output/ref
 ${ABSOLUTE_TOLERANCE}    1e-12
-${RELATIVE_TOLERANCE}    1e-4
+${RELATIVE_TOLERANCE}    1e-12
 
 *** Test Cases ***
 Preprocessed VMI13 Data Exported As CSV Should Match Reference
