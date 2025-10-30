@@ -24,13 +24,11 @@ class MetsiConfiguration(SimpleNamespace):
     control_file = "control.py"
     input_path = ""
     target_directory = ""
-    run_modes = [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT]
+    run_modes = [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE]
     state_format = StateFormat.FDM
     state_input_container = StateInputFormat.CSV
     state_output_container: Optional[StateOutputFormat] = None
     derived_data_output_container: Optional[str] = None
-    formation_strategy = FormationStrategy.PARTIAL
-    evaluation_strategy = EvaluationStrategy.DEPTH
     measured_trees = False
     strata = True
     strata_origin = StrataOrigin.INVENTORY

@@ -1,8 +1,11 @@
 from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.domain.events import (
-    GrowActa
+    DoNothing,
+    GrowActa,
+    GrowMetsi,
 )
+from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
 
@@ -13,9 +16,7 @@ control_structure = {
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
         # "state_output_container": "csv",  # options: pickle, json, csv, null
         # "derived_data_output_container": "pickle",  # options: pickle, json, null
-        "formation_strategy": "partial",
-        "evaluation_strategy": "depth",
-        "run_modes": ["preprocess", "export_prepro", "simulate", "postprocess"]
+        "run_modes": ["preprocess", "export_prepro", "simulate"]
     },
     "preprocessing_operations": [
         scale_area_weight,
@@ -46,7 +47,11 @@ control_structure = {
         SimulationInstruction(
             time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
-                GrowActa(),
+                Alternatives([
+                    GrowActa(),
+                    GrowMetsi(),
+                    DoNothing()
+                ]),
             ]
         )
     ],
