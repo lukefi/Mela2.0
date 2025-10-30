@@ -2,7 +2,7 @@ from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.operations import do_nothing
-from tests.test_utils import collecting_increment
+from tests.test_utils import inc
 
 
 control_structure = {
@@ -17,9 +17,9 @@ control_structure = {
                     Event(do_nothing),
                     Event(
                         preconditions=[
-                            MinimumTimeInterval(2, collecting_increment)
+                            MinimumTimeInterval(2, inc)
                         ],
-                        treatment=collecting_increment
+                        treatment=inc
                     )
                 ])
             ])

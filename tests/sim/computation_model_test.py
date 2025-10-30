@@ -1,50 +1,39 @@
 import unittest
 
 from lukefi.metsi.domain.conditions import MinimumTimeInterval
+from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.test_utils import inc
 
+
+def prep_inc(x: SimulationPayload[int]) -> tuple[SimulationPayload[int], list[CollectedData]]:
+    x.computational_unit += 1
+    return x, []
 
 class ComputationModelTest(unittest.TestCase):
-    root = EventTree(inc)
+    
+    root = EventTree(prep_inc)
     root.branches = [
-        EventTree(inc),
-        EventTree(inc)
+        EventTree(prep_inc),
+        EventTree(prep_inc)
     ]
 
     root.branches[0].branches = [
-        EventTree(inc),
-        EventTree(inc)
+        EventTree(prep_inc),
+        EventTree(prep_inc)
     ]
 
     root.branches[1].branches = [
-        EventTree(inc),
-        EventTree(inc)
+        EventTree(prep_inc),
+        EventTree(prep_inc)
     ]
 
-    def test_event_generating(self):
-        chains = self.root.operation_chains()
-        self.assertEqual(4, len(chains))
-        self.assertEqual(3, len(chains[0]))
-        self.assertEqual(3, len(chains[1]))
-
-    def test_run_chains(self):
-        chains = self.root.operation_chains()
-        for chain in chains:
-            result = evaluate_sequence(SimulationPayload(computational_unit=0,
-                                                      collected_data=None,
-                                                      operation_history={}), *chain)
-            self.assertEqual(3, result.computational_unit)
-
     def test_evaluator(self):
-        results = self.root.evaluate(SimulationPayload(computational_unit=0,
-                                                      collected_data=None,
-                                                      operation_history={}))
+        results = self.root.evaluate(SimulationPayload(computational_unit=0, operation_history={}))
         self.assertListEqual([3, 3, 3, 3], [result.computational_unit for result in results])
 
     def test_sim_configuration(self):

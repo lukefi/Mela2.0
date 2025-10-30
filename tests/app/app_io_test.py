@@ -1,8 +1,10 @@
 import unittest
 from lukefi.metsi.app.utils import ConfigurationException
-from lukefi.metsi.app.app_io import MetsiConfiguration, RunMode, \
-    FormationStrategy, StateFormat, StateOutputFormat, \
+from lukefi.metsi.app.app_io import (
+    MetsiConfiguration, RunMode,
+    StateFormat, StateOutputFormat,
     parse_cli_arguments, generate_application_configuration
+)
 
 
 class TestAppIO(unittest.TestCase):
@@ -22,14 +24,13 @@ class TestAppIO(unittest.TestCase):
             'state_output_container': 'pickle',
             'run_modes': ['preprocess',
                           'simulate'],
-            'multiprocessing': True }
+            'multiprocessing': True}
         app_args = {**cli_args, **control_args}
         result = generate_application_configuration(app_args)
         self.assertEqual(args[0], result.input_path)
         self.assertEqual(args[1], result.target_directory)
         self.assertEqual(args[2], result.control_file)
-        self.assertEqual(FormationStrategy.PARTIAL, result.formation_strategy) # MetsiConfiguration default
-        self.assertEqual(StateFormat.FDM, result.state_format) # MetsiConfiguration default
+        self.assertEqual(StateFormat.FDM, result.state_format)  # MetsiConfiguration default
         self.assertEqual(None, result.derived_data_output_container)  # MetsiConfiguration default
         self.assertEqual(StateOutputFormat.PICKLE, result.state_output_container)  # Overrides default
         self.assertEqual([RunMode.PREPROCESS, RunMode.SIMULATE], result.run_modes)
@@ -43,8 +44,8 @@ class TestRunModes(unittest.TestCase):
     def test_valid_typical_run_modes(self):
         modes = ['preprocess', 'export_prepro', 'simulate', 'postprocess', 'export']
         result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
-
+        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO,
+                         RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
 
     def test_valid_run_modes_sorted(self):
         modes = ['simulate', 'PREPROCESS', 'export']
@@ -64,14 +65,12 @@ class TestRunModes(unittest.TestCase):
 
     def test_export_prepro_without_preprocess(self):
         modes = ['export_prepro']
-        self.assertRaises(ConfigurationException, 
+        self.assertRaises(ConfigurationException,
                           MetsiConfiguration._validate_and_sort_run_modes,
                           modes)
 
     def test_export_without_simulate_or_postprocess(self):
         modes = ['export']
-        self.assertRaises(ConfigurationException, 
+        self.assertRaises(ConfigurationException,
                           MetsiConfiguration._validate_and_sort_run_modes,
                           modes)
-
-

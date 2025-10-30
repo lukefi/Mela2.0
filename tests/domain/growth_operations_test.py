@@ -35,7 +35,7 @@ class GrowthOperationsTest(unittest.TestCase):
     def test_grow_acta(self):
         stand = prepare_growth_test_stand()
         stand = vectorize([stand])[0]
-        grow_acta((stand, CollectedData()))
+        grow_acta(stand)
         self.assert_domain_sensibility_vectorized(stand)
         self.assertFalse(stand.reference_trees.sapling[2])
         self.assertEqual(stand.reference_trees.biological_age[0], 60)

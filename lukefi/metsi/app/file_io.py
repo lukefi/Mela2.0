@@ -2,8 +2,9 @@ import csv
 import os
 import pickle
 import importlib.util
-from collections.abc import Iterator, Callable
+from collections.abc import Callable
 from pathlib import Path
+import sqlite3
 from typing import Any, Optional
 import numpy as np
 import jsonpickle
@@ -16,7 +17,7 @@ from lukefi.metsi.data.formats.io_utils import (
 from lukefi.metsi.app.app_io import MetsiConfiguration
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.domain.forestry_types import SimResults
-from lukefi.metsi.domain.forestry_types import ForestOpPayload, StandList, ForestStand
+from lukefi.metsi.domain.forestry_types import StandList, ForestStand
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.collected_data import CollectedData
@@ -141,6 +142,26 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
             strata_origin=app_config.strata_origin)(app_config.input_path)
     raise MetsiException(f"Unsupported state format '{app_config.state_format}'")
 
+def write_full_simulation_result_dirtree(result: SimResults, app_arguments: MetsiConfiguration):
+    """
+    Unwraps the given simulation result structure into computational units and further into produced schedules.
+    Writes these as a matching directory structure, splitting OperationPayloads into unit_state and derived_data files.
+    Details for output directory, unit state container format and derived data container format are extracted from
+    given app_arguments structure.
+
+    :param result: the simulation results structure
+    :param app_arguments: application run configuration
+    :return: None
+    """
+    for stand_id, schedules in result.items():
+        for i, schedule in enumerate(schedules):
+            if app_arguments.state_output_container is not None:
+                schedule_dir = prepare_target_directory(f"{app_arguments.target_directory}/{stand_id}/{i}")
+                filepath = determine_file_path(schedule_dir, f"sim_result.{app_arguments.state_output_container.value}")
+                write_stands_to_file(ExportableContainer([schedule.computational_unit], None),
+                                     filepath,
+                                     app_arguments.state_output_container.value)
+
 # io_util?
 def scan_dir_for_file(dirpath: Path, basename: str, suffixes: list[str]) -> Optional[tuple[Path, str]]:
     """
@@ -164,106 +185,12 @@ def parse_file_or_default(file: Path, reader: Callable[[Path], Any], default=Non
         return reader(file)
     return default
 
-# SimResultReader utility - scans schedules from files
-def read_schedule_payload_from_directory(schedule_path: Path) -> ForestOpPayload:
-    """
-    Create an OperationPayload from a directory which optionally contains usable unit_state and derived_data files.
-    Utilizes a scanner function to resolve the files with known container formats. Files may not exist.
-
-    :param schedule_path: Path for a schedule directory
-    :return: OperationPayload with computational_unit and collected_data if found
-    """
-    scan_result = scan_dir_for_file(schedule_path, "unit_state", ["csv", "json", "pickle"])
-    # unit_state_file, input_container = scan_dir_for_file(schedule_path, "unit_state", ["csv", "json", "pickle"])
-    if scan_result is not None:
-        unit_state_file, input_container = scan_result
-    else:
-        unit_state_file = None
-        input_container = None
-
-    scan_result = scan_dir_for_file(schedule_path, "derived_data", ["json", "pickle"])
-    # derived_data_file, derived_data_container = scan_dir_for_file(schedule_path, "derived_data", ["json", "pickle"])
-    if scan_result is not None:
-        derived_data_file, derived_data_container = scan_result
-    else:
-        derived_data_file = None
-        derived_data_container = None
-
-    stands = [] if unit_state_file is None or input_container is None else parse_file_or_default(
-        unit_state_file, fdm_reader(input_container), [])
-    derived_data = None if derived_data_file is None or derived_data_container is None else parse_file_or_default(
-        derived_data_file, object_reader(derived_data_container))
-
-    return ForestOpPayload(
-        computational_unit=None if stands == [] or stands is None else stands[0],
-        collected_data=derived_data,
-        operation_history=[]
-    )
-
 # io_util?
 def get_subdirectory_names(path: str | Path) -> list[str]:
     if not os.path.isdir(path):
         raise MetsiException(f"Given input path {path} is not a directory.")
     _, dirs, _ = next(os.walk(path))
     return dirs
-
-# SimResult entry function
-def read_full_simulation_result_dirtree(source_path: str | Path) -> SimResults:
-    """
-    Read simulation results from a given source directory, packing them into the simulation results dict structure.
-    Utilizes a directory scanner function to find unit_state and derived_data files for known possible container
-    formats.
-
-    :param source_path: Path for simulation results
-    :return: simulation results dict structure
-    """
-    def schedulepaths_for_stand(stand_path: Path) -> Iterator[Path]:
-        schedules = get_subdirectory_names(stand_path)
-        return map(lambda schedule: Path(stand_path, schedule), schedules)
-    result = {}
-    stand_identifiers = get_subdirectory_names(source_path)
-    stands_to_schedules = map(lambda stand_id: (
-        stand_id, schedulepaths_for_stand(Path(source_path, stand_id))), stand_identifiers)
-    for stand_id, schedulepaths in stands_to_schedules:
-        payloads = list(map(read_schedule_payload_from_directory, schedulepaths))
-        result[stand_id] = payloads
-    return result
-
-# CollectedResults writer, done when SimResults are written.
-# - can be seen as indivudual entry for writing CollectedResults
-def write_derived_data_to_file(result: CollectedData, filepath: Path, derived_data_output_container: str):
-    """
-    Resolve a writer function for AggregatedResults matching the given derived_data_output_container.
-    Invokes write.
-    """
-    writer = object_writer(derived_data_output_container)
-    writer(filepath, result)
-
-# SimResult writer entry
-def write_full_simulation_result_dirtree(result: SimResults, app_arguments: MetsiConfiguration):
-    """
-    Unwraps the given simulation result structure into computational units and further into produced schedules.
-    Writes these as a matching directory structure, splitting OperationPayloads into unit_state and derived_data files.
-    Details for output directory, unit state container format and derived data container format are extracted from
-    given app_arguments structure.
-
-    :param result: the simulation results structure
-    :param app_arguments: application run configuration
-    :return: None
-    """
-    for stand_id, schedules in result.items():
-        for i, schedule in enumerate(schedules):
-            if app_arguments.state_output_container is not None:
-                schedule_dir = prepare_target_directory(f"{app_arguments.target_directory}/{stand_id}/{i}")
-                filepath = determine_file_path(schedule_dir, f"sim_result.{app_arguments.state_output_container.value}")
-                write_stands_to_file(ExportableContainer([schedule.computational_unit], None),
-                                     filepath,
-                                     app_arguments.state_output_container.value)
-            if app_arguments.derived_data_output_container is not None:
-                schedule_dir = prepare_target_directory(f"{app_arguments.target_directory}/{stand_id}/{i}")
-                filepath = determine_file_path(schedule_dir, app_arguments.derived_data_output_container)
-                write_derived_data_to_file(schedule.collected_data, filepath,
-                                           app_arguments.derived_data_output_container)
 
 
 def read_control_module(control_path: str, control: str = "control_structure") -> dict[str, Any]:
@@ -362,3 +289,11 @@ def npz_file_reader(file_path: str | Path):
         for v in data.values():
             retval.append(v)
     return retval
+
+def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
+    try:
+        os.remove(file_path)
+    except OSError:
+        pass
+    db = sqlite3.connect(file_path)
+    return db

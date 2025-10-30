@@ -30,10 +30,10 @@ class ConditionTest(unittest.TestCase):
         self.assertFalse(c_or(1, 6))
 
     def test_condition_checking(self):
-        def step(x: OpTuple[int]) -> OpTuple[int]:
-            computational_unit, collected_data = x
+        def step(x: int) -> OpTuple[int]:
+            computational_unit = x
             computational_unit = computational_unit.__add__(1)
-            return computational_unit, collected_data
+            return computational_unit, []
 
         generator = Alternatives([
             Sequence([
@@ -60,7 +60,6 @@ class ConditionTest(unittest.TestCase):
         result = root.evaluate(
             SimulationPayload(
                 computational_unit=1,
-                collected_data=CollectedData(),
                 operation_history={}))
 
         self.assertEqual(len(result), 4)

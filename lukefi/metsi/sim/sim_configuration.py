@@ -1,21 +1,25 @@
 from types import SimpleNamespace
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction, generator_declarations_for_time_point
 from lukefi.metsi.sim.generators import Generator, Sequence
 
 
-class SimConfiguration[T](SimpleNamespace):
+class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
     """
     A class to manage simulation configuration, including treatments, generators,
     events, and time points.
     Attributes:
         instructions: A list of instructions for the simulation.
         time_points: A sorted list of unique time points derived from the simulation instructions.
+        collected_data: Set of CollectableData values describing the types of extra data collected by the simulation.
     Methods:
         __init__(**kwargs):
             Initializes the SimConfiguration instance with keyword arguments.
     """
     instructions: list[SimulationInstruction[T]] = []
     time_points: list[int] = []
+    collected_data: CollectableDataTypes
 
     def __init__(self, **kwargs):
         """
@@ -28,11 +32,14 @@ class SimConfiguration[T](SimpleNamespace):
 
     def _populate_simulation_instructions(self, instructions: list["SimulationInstruction[T]"]):
         time_points = set()
+        collected_data = set()
         self.instructions = instructions
         for instruction in instructions:
+            collected_data.update(instruction.event_generator.get_types_of_collected_data())
             source_time_points = instruction.time_points
             time_points.update(source_time_points)
         self.time_points = sorted(time_points)
+        self.collected_data = collected_data
 
     def full_tree_generators(self) -> Generator[T]:
         """
@@ -46,19 +53,3 @@ class SimConfiguration[T](SimpleNamespace):
             time_point_wrapper_declaration: Sequence[T] = Sequence(generator_declarations, time_point)
             wrapper.append(time_point_wrapper_declaration)
         return Sequence(wrapper, 0)
-
-    def partial_tree_generators_by_time_point(self) -> dict[int, Generator[T]]:
-        """
-        Create a dict of Generators keyed by their time_point in the simulation. Used for generating
-        partial EventTrees of the simulation.
-
-        :return: a list of prepared generator functions
-        """
-
-        generators_by_time_point = {}
-
-        for time_point in self.time_points:
-            generator_declarations = generator_declarations_for_time_point(self.instructions, time_point)
-            sequence_wrapper_declaration: Generator[T] = Sequence(generator_declarations, time_point)
-            generators_by_time_point[time_point] = sequence_wrapper_declaration
-        return generators_by_time_point

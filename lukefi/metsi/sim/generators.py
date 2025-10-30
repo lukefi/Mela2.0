@@ -1,32 +1,38 @@
 from abc import ABC, abstractmethod
 import os
-from typing import Any, Optional, TypeVar, override
+from typing import Any, Generic, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 
 from collections.abc import Callable
-from lukefi.metsi.sim.operations import prepared_operation
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.processor import processor
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
-from lukefi.metsi.sim.simulation_payload import SimulationPayload, ProcessedTreatment
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
 
-T = TypeVar("T")
+T = TypeVar("T", bound=ComputationalUnit)
 
+ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
-TreatmentFn = Callable[[OpTuple[T]], OpTuple[T]]
+TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
-class GeneratorBase[T](ABC):
+class GeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
     def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
         pass
 
+    @abstractmethod
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
+        pass
 
-class Generator[T](GeneratorBase, ABC):
+
+class Generator(GeneratorBase[T], ABC):
     """Abstract base class for generator types."""
     children: Sequence_[GeneratorBase]
     time_point: Optional[int]
@@ -46,8 +52,15 @@ class Generator[T](GeneratorBase, ABC):
         self.unwrap([root], 0)
         return root
 
+    @override
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
+        retval = set()
+        for child in self.children:
+            retval.update(child.get_types_of_collected_data())
+        return retval
 
-class Sequence[T](Generator[T]):
+
+class Sequence(Generator[T]):
     """Generator for sequential events."""
 
     @override
@@ -58,7 +71,7 @@ class Sequence[T](Generator[T]):
         return current
 
 
-class Alternatives[T](Generator[T]):
+class Alternatives(Generator[T]):
     """Generator for branching events"""
 
     @override
@@ -69,19 +82,23 @@ class Alternatives[T](Generator[T]):
         return retval
 
 
-class Event[T](GeneratorBase):
+class Event(GeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
-    preconditions: list[Condition[SimulationPayload[T]]]
-    postconditions: list[Condition[SimulationPayload[T]]]
+    treatment: TreatmentFn[T]
     parameters: dict[str, Any]
     file_parameters: dict[str, str]
-    treatment: TreatmentFn[T]
+    preconditions: list[Condition[SimulationPayload[T]]]
+    postconditions: list[Condition[SimulationPayload[T]]]
+    tags: set[str]
+    collected_data: CollectableDataTypes
 
     def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
                  postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 file_parameters: Optional[dict[str, str]] = None) -> None:
+                 file_parameters: Optional[dict[str, str]] = None,
+                 tags: Optional[set[str]] = None,
+                 collected_data: Optional[CollectableDataTypes] = None) -> None:
         self.treatment = treatment
 
         if parameters is not None:
@@ -104,6 +121,16 @@ class Event[T](GeneratorBase):
         else:
             self.postconditions = []
 
+        if tags is not None:
+            self.tags = tags
+        else:
+            self.tags = set()
+
+        if collected_data is not None:
+            self.collected_data = collected_data
+        else:
+            self.collected_data = set()
+
     @override
     def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
         retval = []
@@ -113,11 +140,15 @@ class Event[T](GeneratorBase):
             retval.append(branch)
         return retval
 
+    @override
+    def get_types_of_collected_data(self) -> set[type[CollectedData]]:
+        return self.collected_data
+
     def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
-        prepared_treatment = prepared_operation(self.treatment, **combined_params)
-        return lambda payload: processor(payload, prepared_treatment, self.treatment, time_point,
+        treatment = prepared_treatment(self.treatment, **combined_params)
+        return lambda payload: processor(payload, treatment, self.treatment, time_point,
                                          self.preconditions, self.postconditions, **combined_params)
 
     def _check_file_params(self):
