@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
