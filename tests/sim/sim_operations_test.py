@@ -1,3 +1,4 @@
+from typing import Any
 import unittest
 import tests.test_utils
 from lukefi.metsi.sim.collected_data import OpTuple
@@ -17,22 +18,21 @@ class SimOperationsTest(unittest.TestCase):
         for case in assertions:
             function = prepared_operation(tests.test_utils.parametrized_operation, **case[0][1])
             result = function(SimulationPayload(computational_unit=case[0][0],
-                                               collected_data=None,
-                                               operation_history={}))
+                                                operation_history={}))
             self.assertEqual(case[1], result.computational_unit)
 
     def test_operation_last_run(self):
 
-        def operation1(x: OpTuple) -> OpTuple:
+        def operation1(x: Any) -> OpTuple:
             return x
 
-        def operation2(x: OpTuple) -> OpTuple:
+        def operation2(x: Any) -> OpTuple:
             return x
 
-        def operation3(x: OpTuple) -> OpTuple:
+        def operation3(x: Any) -> OpTuple:
             return x
 
-        def operation4(x: OpTuple) -> OpTuple:
+        def operation4(x: Any) -> OpTuple:
             return x
 
         operation_history = [
