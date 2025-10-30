@@ -3,7 +3,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 
 def soil_surface_preparation(
-    op: OpTuple[ForestStand],
+    op: ForestStand,
     /,
     **_operation_parameters
 ) -> OpTuple[ForestStand]:
@@ -16,8 +16,8 @@ def soil_surface_preparation(
 
     Parameters
     ----------
-    op : OpTuple[ForestStand]
-        The (stand, collected_data) tuple to update.
+    op : ForestStand
+        The stand to update.
 
     Returns
     -------
@@ -26,9 +26,9 @@ def soil_surface_preparation(
 
     """
 
-    stand, cdata = op
+    stand = op
 
     sim_year: Optional[int] = stand.year
     stand.soil_surface_preparation_year = sim_year
 
-    return (stand, cdata)
+    return stand, []
