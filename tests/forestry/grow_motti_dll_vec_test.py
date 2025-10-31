@@ -8,7 +8,7 @@ import numpy as np
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
 
-import lukefi.metsi.domain.natural_processes.grow_motti_dll as gm_vec
+import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 
 
@@ -51,7 +51,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         tax_class_reduction=0,
         reference_trees=rt,
         sapling=sap,
-        saplings=sap,  # alias, just in case downstream code uses plural
+        saplings=sap,  
     )
 
 
@@ -78,7 +78,6 @@ def make_rt(
     n = stems.shape[0]
     tree_number = np.arange(1, n + 1, dtype=int)
 
-    # IMPORTANT: sapling flag must exist; default to height < 1.3 m
     sapling = h < 1.3
 
     return SimpleNamespace(
@@ -92,7 +91,7 @@ def make_rt(
         crown_ratio=crown_ratio,
         origin=origin,
         tree_number=tree_number,
-        sapling=sapling,  # <-- required by update_stand_growth_vectorized()
+        sapling=sapling,
     )
 # ---------- DLL stub ----------
 
@@ -261,24 +260,24 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
 class TestGrowMottiDLLVec(unittest.TestCase):
     def test_species_mapping_and_euref(self) -> None:
         # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
-        self.assertEqual(gm_vec.species_to_motti(7), 6)
-        self.assertEqual(gm_vec.species_to_motti(3), 3)
+        self.assertEqual(grow_motti.species_to_motti(7), 6)
+        self.assertEqual(grow_motti.species_to_motti(3), 3)
 
         # auto_euref_km conversion logic
-        y_km, x_km = gm_vec.auto_euref_km(6900000.0, 3400000.0)
+        y_km, x_km = grow_motti.auto_euref_km(6900000.0, 3400000.0)
         self.assertEqual((y_km, x_km), (6900.0, 3400.0))
-        y_10km, x_10km = gm_vec.auto_euref_km(6900.0, 3400.0)
+        y_10km, x_10km = grow_motti.auto_euref_km(6900.0, 3400.0)
         self.assertEqual((y_10km, x_10km), (6.9, 3.4))
         with self.assertRaises(ValueError):
-            gm_vec.auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
+            grow_motti.auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
         rt = make_rt(species=(3, 7))  # 7 -> 6
         stand = make_stand_vec(rt)
 
         dll_stub = FakeDLL()
-        # gm_vec.MottiDLLPredictorVec expects a Motti4DLL, but our stub is duck-typed.
-        pred = gm_vec.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
+        # grow_motti.MottiDLLPredictorVec expects a Motti4DLL, but our stub is duck-typed.
+        pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
         # Run evolve once to populate the payload
         _ = pred.evolve(step=5, sim_year=stand.year)
@@ -312,9 +311,9 @@ class TestGrowMottiDLLVec(unittest.TestCase):
                 )
 
         dll_stub = GrowingDLL()
-        pred = gm_vec.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
+        pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        out_stand, _ = gm_vec.grow_motti_dll(
+        out_stand, _ = grow_motti.grow_motti_dll(
             stand,  # type: ignore[arg-type]
             predictor=pred,
             step=5,
