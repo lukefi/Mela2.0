@@ -8,7 +8,6 @@ from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",
-        "state_output_container": "csv",
         "formation_strategy": "partial",
         "evaluation_strategy": "depth",
         "run_modes": ["preprocess", "simulate"]

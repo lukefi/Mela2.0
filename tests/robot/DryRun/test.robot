@@ -2,9 +2,8 @@
 Library    OperatingSystem
 Library    Process
 
-
 *** Test Cases ***
-Run Command With Help Option
+Metsi Command With Help Option Should Complete Successfully
     [Tags]         smoke
     
     ${env} =       Get Environment Variables
