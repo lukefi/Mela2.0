@@ -7,8 +7,9 @@ from dataclasses import dataclass
 
 import numpy as np
 from lukefi.metsi.app import file_io
-from lukefi.metsi.data.enums.internal import (DrainageCategory, LandUseCategory, OwnerCategory, SiteType,
-                                              SoilPeatlandCategory, Storey, TreeSpecies)
+from lukefi.metsi.data.enums.internal import (
+    DrainageCategory, LandUseCategory, OwnerCategory, SiteType,
+    SoilPeatlandCategory, TreeSpecies)
 from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.app_io import MetsiConfiguration
@@ -215,7 +216,6 @@ class TestFileReading(unittest.TestCase):
         self.assertTrue(size > 0)
         shutil.rmtree('outdir')
 
-
     def test_read_stands_from_pickle_file(self):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.pickle",
@@ -284,20 +284,6 @@ class TestFileReading(unittest.TestCase):
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 9)
-
-    def test_read_schedule_payload_from_directory(self):
-        dir_ = Path("tests/resources/file_io_test/testing_output_directory/3/0")
-        result = file_io.read_schedule_payload_from_directory(dir_)
-        self.assertEqual("3", result.computational_unit.identifier)
-        self.assertEqual(2, len(result.collected_data.get_list_result("calculate_biomass")))
-
-    def test_read_simulation_result_dirtree(self):
-        dir_ = Path("tests/resources/file_io_test/testing_output_directory")
-        result = file_io.read_full_simulation_result_dirtree(dir_)
-        self.assertEqual(1, len(result.items()))
-        self.assertEqual(1, len(result["3"]))
-        self.assertEqual("3", result["3"][0].computational_unit.identifier)
-        self.assertEqual(2, len(result["3"][0].collected_data.get_list_result("calculate_biomass")))
 
     def test_read_stands_from_nonexisting_file(self):
         config = MetsiConfiguration(
