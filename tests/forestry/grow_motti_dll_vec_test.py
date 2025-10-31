@@ -1,12 +1,23 @@
+import os
+import tempfile
+from pathlib import Path
 import unittest
 from types import SimpleNamespace
 from typing import Any, Dict, List
-
 import numpy as np
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
+
 
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as gm_vec
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 
+
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+    resolve_shared_object,
+    resolve_dir_or_file,
+    default_data_dir,
+    find_repo_root,
+)
 
 # ---------- helpers (SoA) ----------
 def make_empty_sapling() -> SimpleNamespace:
@@ -68,7 +79,7 @@ def make_rt(
     tree_number = np.arange(1, n + 1, dtype=int)
 
     # IMPORTANT: sapling flag must exist; default to height < 1.3 m
-    sapling = (h < 1.3)
+    sapling = h < 1.3
 
     return SimpleNamespace(
         size=n,
@@ -104,8 +115,7 @@ class FakeDLL:
         self.captured_trees_py = list(trees_py)
         return SimpleNamespace(buf="ok"), len(trees_py)
 
-    # use *args/**kwargs so linters don't warn about unused params
-    def grow(self, *args: Any, **kwargs: Any) -> GrowthDeltas:
+    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         # Default: zero deltas for every tree ID in order 1..n (infer n from last new_trees)
         if not self.captured_trees_py:
             return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
@@ -116,6 +126,137 @@ class FakeDLL:
 
 
 # ---------- Tests ----------
+
+class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
+    def setUp(self):
+        self._old_env = dict(os.environ)
+
+    def tearDown(self):
+        # restore environment as it was
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
+    def test_resolve_shared_object_exact_file(self):
+        with tempfile.TemporaryDirectory() as td:
+            lib = Path(td) / "libmottisc.so"
+            lib.write_text("")  # create empty placeholder
+            out = resolve_shared_object(lib)
+            self.assertTrue(out.is_file())
+            self.assertEqual(out.resolve(), lib.resolve())
+
+    def test_resolve_shared_object_discovers_in_dir(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            target = base / "libmottisc.so"
+            target.write_text("")
+            out = resolve_shared_object(base)
+            self.assertEqual(out.resolve(), target.resolve())
+
+    def test_resolve_shared_object_no_match_returns_dir(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            out = resolve_shared_object(base)
+            # No candidate found → function returns the directory for downstream to error clearly
+            self.assertTrue(out.is_dir())
+            self.assertEqual(out.resolve(), base.resolve())
+
+    def test_resolve_shared_object_none_raises(self):
+        # type: ignore to call with None on purpose (function raises by design)
+        with self.assertRaises(ValueError):
+            resolve_shared_object(None)  # type: ignore[arg-type]
+
+    def test_resolve_dir_or_file_none_uses_default_env_override(self):
+        with tempfile.TemporaryDirectory() as td:
+            override = Path(td) / "data" / "motti"
+            override.mkdir(parents=True, exist_ok=True)
+            os.environ["MOTTI_DATA_DIR"] = str(override)
+            out = resolve_dir_or_file(None)
+            self.assertEqual(out, override.resolve())
+
+    def test_resolve_dir_or_file_relative_and_tilde(self):
+        with tempfile.TemporaryDirectory() as td:
+            # Relative path becomes absolute from CWD
+            cwd = Path.cwd()
+            try:
+                os.chdir(td)
+                rel = Path("some/dir")
+                rel.mkdir(parents=True, exist_ok=True)
+                out_rel = resolve_dir_or_file("some/dir")
+                self.assertEqual(out_rel, (Path(td) / "some" / "dir").resolve())
+            finally:
+                os.chdir(cwd)
+
+            # Tilde + env expansion (cross-platform)
+            home_dir = Path(td) / "homeA"
+            (home_dir / "x").mkdir(parents=True, exist_ok=True)
+            # Make expanduser('~') point to our temp home on all OSes:
+            os.environ["HOME"] = str(home_dir)
+            os.environ["USERPROFILE"] = str(home_dir)  # Windows prefers this
+            os.environ.pop("HOMEDRIVE", None)          # Avoid legacy precedence
+            os.environ.pop("HOMEPATH", None)
+            expected = (Path(os.path.expanduser("~")) / "x").resolve()
+            out_tilde = resolve_dir_or_file("~/x")
+            self.assertEqual(out_tilde.resolve(), expected)
+
+    def test_default_data_dir_prefers_repo_root_or_env(self):
+        # 1) With MOTTI_DATA_DIR set
+        with tempfile.TemporaryDirectory() as td:
+            override = Path(td) / "over" / "ride"
+            override.mkdir(parents=True, exist_ok=True)
+            os.environ["MOTTI_DATA_DIR"] = str(override)
+            self.assertEqual(default_data_dir(), override.resolve())
+            os.environ.pop("MOTTI_DATA_DIR", None)
+
+        # 2) No env: it should pick {repo_root}/data/motti; validate root detection
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "data" / "motti").mkdir(parents=True, exist_ok=True)
+            # Create a nested child and simulate running from there
+            child = root / "nested" / "deeper"
+            child.mkdir(parents=True, exist_ok=True)
+            cwd = Path.cwd()
+            try:
+                os.chdir(child)
+                # Because repo root is discovered, default dir should be root/data/motti
+                out = default_data_dir()
+                self.assertEqual(out, (root / "data" / "motti").resolve())
+            finally:
+                os.chdir(cwd)
+
+    def test_find_repo_root_markers(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            # Any of these should count; try pyproject first
+            (base / "pyproject.toml").write_text("[tool.poetry]\nname='x'\n")
+            self.assertEqual(find_repo_root(base / "a" / "b" / "c"), base.resolve())
+
+            # Try .git marker
+            (base / "pyproject.toml").unlink()
+            (base / ".git").mkdir()
+            self.assertEqual(find_repo_root(base / "x"), base.resolve())
+
+            # Try data/motti marker
+            for p in (base / ".git",):
+                if p.exists() and p.is_dir():
+                    for _child in p.iterdir():
+                        pass
+                # clean .git directory
+            # Safer: use a fresh temp directory for clarity
+        with tempfile.TemporaryDirectory() as td2:
+            base2 = Path(td2)
+            (base2 / "data" / "motti").mkdir(parents=True, exist_ok=True)
+            self.assertEqual(find_repo_root(base2 / "n1" / "n2"), base2.resolve())
+
+    def test_wrapper_maybe_chdir_changes_cwd_temporarily(self):
+        start = Path.cwd().resolve()
+        with tempfile.TemporaryDirectory() as td:
+            target = Path(td).resolve()
+            with Motti4DLL.maybe_chdir(target):
+                self.assertEqual(Path.cwd().resolve(), target)
+            # back to original
+            self.assertEqual(Path.cwd().resolve(), start)
+
+
 
 class TestGrowMottiDLLVec(unittest.TestCase):
     def test_species_mapping_and_euref(self) -> None:
