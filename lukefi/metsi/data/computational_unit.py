@@ -4,6 +4,7 @@ import sqlite3
 
 class ComputationalUnit(ABC):
     identifier: str
+    time: int
 
     @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
