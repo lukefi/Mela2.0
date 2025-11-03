@@ -11,6 +11,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import ProcessedTreatment
 
+
 def identity[T](x: T) -> tuple[T, list[CollectedData]]:
     return x, []
 
@@ -55,11 +56,13 @@ class EventTree[T: ComputationalUnit]:
 
         if len(self.branches) == 0:
             yield current
+            return
 
         if len(self.branches) == 1:
             node_identifier_ = deepcopy(node_identifier)
             node_identifier_.append(0)
             yield from self.branches[0].evaluate(current, node_identifier_, db)
+            return
 
         for i, branch in enumerate(self.branches):
             try:
