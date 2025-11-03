@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import Optional, TypeVar
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -10,7 +9,6 @@ T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 
 class SimulationInstruction[T: ComputationalUnit]:
-    time_points: list[int]
     conditions: list[Condition[SimulationPayload[T]]]
     event_generator: Generator[T]
 
@@ -28,20 +26,5 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-
-def generator_declarations_for_time_point(
-        simulation_instructions: list[SimulationInstruction[T]], time: int) -> list[Generator[T]]:
-    """
-    From events declarations, find the EventTree generators declared for the given time point.
-
-    :param events: list of DeclaredEvents objects for generator declarations and time points
-    :param time: point of simulation time for selecting matching generators
-    :return: list of generator declarations for the desired point of time
-    """
-    generator_declarations: list[Generator[T]] = []
-    for instruction in simulation_instructions:
-        if time in instruction.time_points:
-            generator_copy = deepcopy(instruction.event_generator)
-            generator_copy.time_point = time
-            generator_declarations.append(generator_copy)
-    return generator_declarations
+    def unwrap(self, payload: SimulationPayload[T]):
+        yield from self.event_generator.compose_nested().evaluate(payload)

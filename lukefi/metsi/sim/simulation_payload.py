@@ -1,17 +1,24 @@
 from copy import deepcopy
-from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.finalizable import Finalizable
 if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import TreatmentFn
 
 
-class SimulationPayload[T: ComputationalUnit](SimpleNamespace):
+class SimulationPayload[T: ComputationalUnit]:
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
     computational_unit: T
     operation_history: list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]
+
+    def __init__(self, computational_unit: T,
+                 operation_history: Optional[list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]] = None) -> None:
+        self.computational_unit = computational_unit
+        if operation_history is None:
+            self.operation_history = []
+        else:
+            self.operation_history = operation_history
 
     def __copy__(self) -> "SimulationPayload[T]":
         copy_like: T

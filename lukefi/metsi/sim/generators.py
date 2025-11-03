@@ -24,7 +24,7 @@ ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]
 class GeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
-    def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
+    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
         pass
 
     @abstractmethod
@@ -35,11 +35,9 @@ class GeneratorBase(ABC, Generic[T]):
 class Generator(GeneratorBase[T], ABC):
     """Abstract base class for generator types."""
     children: Sequence_[GeneratorBase]
-    time_point: Optional[int]
 
-    def __init__(self, children: Sequence_[GeneratorBase], time_point: Optional[int] = None):
+    def __init__(self, children: Sequence_[GeneratorBase]):
         self.children = children
-        self.time_point = time_point
 
     def compose_nested(self) -> EventTree[T]:
         """
@@ -49,7 +47,7 @@ class Generator(GeneratorBase[T], ABC):
         :return: The root node of the generated EventTree
         """
         root: EventTree[T] = EventTree()
-        self.unwrap([root], 0)
+        self.unwrap([root])
         return root
 
     @override
@@ -64,10 +62,10 @@ class Sequence(Generator[T]):
     """Generator for sequential events."""
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         current = parents
         for child in self.children:
-            current = child.unwrap(current, self.time_point or time_point)
+            current = child.unwrap(current)
         return current
 
 
@@ -75,10 +73,10 @@ class Alternatives(Generator[T]):
     """Generator for branching events"""
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for child in self.children:
-            retval.extend(child.unwrap(parents, self.time_point or time_point))
+            retval.extend(child.unwrap(parents))
         return retval
 
 
@@ -132,10 +130,10 @@ class Event(GeneratorBase[T]):
             self.collected_data = set()
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment(time_point))
+            branch = EventTree(self._prepare_paremeterized_treatment())
             parent.add_branch(branch)
             retval.append(branch)
         return retval
@@ -144,11 +142,11 @@ class Event(GeneratorBase[T]):
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
         return self.collected_data
 
-    def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
+    def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
         treatment = prepared_treatment(self.treatment, **combined_params)
-        return lambda payload: processor(payload, treatment, self.treatment, time_point,
+        return lambda payload: processor(payload, treatment, self.treatment,
                                          self.preconditions, self.postconditions, **combined_params)
 
     def _check_file_params(self):
