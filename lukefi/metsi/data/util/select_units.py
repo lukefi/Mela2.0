@@ -391,7 +391,7 @@ def _init_search(mode: str,
         a_min = np.min(-1 * y)
         scale = (a_max + a_min) / 2
         step = abs(scale)
-        if step == 0:
+        if step < 0.001:
             step = a_max
         y0 = y
 
