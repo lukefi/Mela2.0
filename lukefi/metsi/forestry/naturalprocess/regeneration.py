@@ -18,7 +18,7 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
         breast_height_age: Optional[float] = None
         ntrees: Optional[int] = 10  # number of reference trees to create
         labels: Optional[list[str]] = None  # accepted, unused
-        type: str = "artificial"            # "artificial" | "natural"
+        type: str                   # "artificial" | "natural"
     """
     stand = input_
 
@@ -30,11 +30,13 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     biological_age = float(req(operation_parameters, "biological_age"))
 
     # ---- optional ----
-    breast_height_diameter = operation_parameters.get("breast_height_diameter")
-    breast_height_age = operation_parameters.get("breast_height_age")
-    ntrees = operation_parameters.get("ntrees")
+    breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
+    breast_height_age = operation_parameters.get("breast_height_age", None)
+    ntrees = operation_parameters.get("ntrees", 10)
     regen_type = str(operation_parameters.get("type")).lower()
 
+    if height <= 0:
+        raise MetsiException("Regeneration: Height can not be negative or zero")
     if regen_type not in ("artificial", "natural"):
         raise MetsiException("regeneration 'type' must be 'artificial' or 'natural'")
     if not ntrees or ntrees <= 0:
@@ -47,12 +49,12 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
 
     # ---- create trees ----
     per_tree_stems = stems_per_ha / float(ntrees)
-    if height <= 0:
-        raise MetsiException("Regeneration: Height can not be negative or zero")
+    start_idx = int(stand.reference_trees.size)
     new_rows = []
-    for _ in range(ntrees):
+    for i in range(ntrees):
+        identifier = f"{stand.identifier}-{start_idx + i + 1}-tree"
         new_rows.append({
-            "identifier": "",
+            "identifier": identifier,
             "species": species,
             "origin": origin,
             "stems_per_ha": per_tree_stems,

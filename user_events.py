@@ -79,6 +79,7 @@ class PlantingPines(Event[ForestStand]):
             "stems_per_ha": 1500.0,
             "height": 0.7,
             "biological_age": 3.0,
+            "type": "artificial",
             # You may also set ntrees (default 10), breast_height_diameter/age if desired
             # "ntrees": 10,
         }

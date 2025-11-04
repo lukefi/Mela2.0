@@ -1,7 +1,7 @@
+import os
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
-
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -36,11 +36,54 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
 
     return y1 / 1000.0, x1 / 1000.0
 
+def find_repo_root(start: Path) -> Optional[Path]:
+    """
+    Walk up from 'start' to find a repository root by markers:
+    - a directory that contains 'data/motti'
+    - or has a '.git' directory
+    - or has a 'pyproject.toml' file
+    """
+    cur = start.resolve()
+    for p in [cur, *cur.parents]:
+        if (p / "data" / "motti").exists():
+            return p
+        if (p / ".git").exists():
+            return p
+        if (p / "pyproject.toml").exists():
+            return p
+    return None
+
+def default_data_dir() -> Path:
+    """
+    Resolve default data_dir as {repository_root}/data/motti,
+    with optional override via MOTTI_DATA_DIR.
+    """
+    env = os.environ.get("MOTTI_DATA_DIR")
+    if env:
+        return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
+    repo = find_repo_root(Path.cwd())
+    base = repo if repo else Path.cwd()
+    return (base / "data" / "motti").resolve()
+
+
+def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
+    """
+    Turn a user-provided path into an absolute Path. If None, use default.
+    """
+    if path_like is None:
+        return default_data_dir()
+    p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    return p.resolve()
+
 
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
-    Dominant species from SoA data (Motti species code).
+    Returns dominant species from Motti species.
+
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
+    If trees are empty fall back to PINE, we need to give valid value for growth.
     """
     if rt is None:
         return TreeSpecies.PINE
@@ -95,9 +138,12 @@ class MottiDLLPredictor:
         if dll is not None:
             self.dll = dll
         else:
-            if data_dir is None:
-                raise ValueError("data_dir must be provided (directory containing the Motti library).")
-            self.dll = Motti4DLL(_resolve_shared_object(data_dir), data_dir=data_dir)
+
+            # Resolve given path or default to {repo_root}/data/motti
+            data_dir_path = resolve_dir_or_file(data_dir)
+
+            so_path = resolve_shared_object(data_dir_path)
+            self.dll = Motti4DLL(so_path, data_dir=str(data_dir_path))
 
     # ---- stand/site properties ----
     @property
@@ -248,7 +294,7 @@ class MottiDLLPredictor:
 
 # -------- DLL path resolver (same behavior as AoS helper) --------
 
-def _resolve_shared_object(p: Union[str, Path]) -> Path:
+def resolve_shared_object(p: Union[str, Path]) -> Path:
     """
     Resolve a Motti shared library inside a directory, or pass through an exact file path.
     Raises ValueError if p is None. Returns a Path (may be a directory if nothing matched).
@@ -304,7 +350,7 @@ def species_to_motti(spe: int) -> int:
 def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
-      - Requires stand.reference_trees_soa
+      - Requires stand.reference_trees
       - Builds DLL input from SoA, runs growth, applies deltas vectorized
       - Prunes trees with stems_per_ha < 1.0 after update
     operation_parameters:
@@ -322,14 +368,11 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     sim_year: int = stand.year or 0
 
     rt = stand.reference_trees
-    if rt.size == 0:
-        return stand, []
 
     # Construct predictor
     if predictor is None:
-        if data_dir is None:
-            raise ModuleNotFoundError("data_dir must be provided (directory containing the Motti library).")
-        pred = MottiDLLPredictor(stand, data_dir= data_dir)
+        resolved_dir = resolve_dir_or_file(data_dir)  # handles None -> default
+        pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
 
