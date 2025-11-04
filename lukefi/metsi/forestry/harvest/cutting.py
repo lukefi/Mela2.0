@@ -24,6 +24,21 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if not isinstance(trees, ReferenceTrees):
         raise MetsiException("cutting requires stand.reference_trees (ReferenceTrees SoA).")
 
+    prereq = operation_parameters.get("prerequisite")
+    if prereq is not None:
+        filled = False
+        # Try (stand, trees) first, then (stand), finally treat as bool
+        try:
+            filled = bool(prereq(stand, trees))
+        except TypeError:
+            try:
+                filled = bool(prereq(stand))
+            except TypeError:
+                filled = bool(prereq)
+        if not filled:
+            # Cutting can not be done
+            return stand, []
+
     ts = operation_parameters.get("tree_selection")
     if not ts or "Target" not in ts or "sets" not in ts:
         raise MetsiException("Missing 'tree_selection' with 'Target' and 'sets'.")
@@ -65,11 +80,14 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         py_sets.append(ss)
 
     # Required/explicit params (no defaults here)
-    freq_var = operation_parameters.get("freq_var")
+    freq_var = operation_parameters.get("freq_var", "stems_per_ha")
     if not freq_var:
         raise MetsiException("Missing 'freq_var' (e.g., 'stems_per_ha').")
-    mode = operation_parameters.get("mode")  # if None, select_units' own default (if any) will apply
-    select_from_all = operation_parameters.get("select_from_all")
+
+    mode = operation_parameters.get("mode")
+    if mode is None:
+        raise MetsiException("Missing 'mode' (e.g., 'odds_units').")
+    select_from_all = operation_parameters.get("select_from_all", False)
     if select_from_all is None:
         raise MetsiException("Missing 'select_from_all' (bool).")
 
@@ -80,8 +98,8 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         target_decl=target_decl,
         sets=py_sets,
         freq_var=freq_var,
-        select_from_all=bool(select_from_all),
-        mode=str(mode),
+        select_from_all=select_from_all,
+        mode=mode,
     )
 
     # Strict checks
