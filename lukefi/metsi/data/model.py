@@ -343,6 +343,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
 
+    time: int = 0
+
     # unique identifier for entity within its domain
     identifier: str = ""
 
