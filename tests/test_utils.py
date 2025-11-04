@@ -100,5 +100,5 @@ def prepare_growth_test_stand():
                 biological_age=1,
                 breast_height_age=0,
                 sapling=True)],
-        year=2025)
+        time=2025)
     return stand

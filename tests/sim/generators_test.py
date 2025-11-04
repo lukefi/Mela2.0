@@ -1,11 +1,12 @@
 import unittest
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
+from lukefi.metsi.domain.conditions import MinimumTimeInterval, TimePoints
+from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.test_utils import DummyUnit, inc, parametrized_treatment
+from tests.toy_model import ToyModel, ToyTransition, simulate, toy_inc
 
 
 class TestGenerators(unittest.TestCase):
@@ -13,53 +14,57 @@ class TestGenerators(unittest.TestCase):
         declaration = {
             "simulation_instructions": [
                 SimulationInstruction(
-                    time_points=[0, 1],
                     events=Sequence([
                         Event(
-                            treatment=inc
+                            treatment=toy_inc
                         ),
                         Event(
-                            treatment=inc
+                            treatment=toy_inc
                         ),
                     ])
                 )
-            ]
+            ],
+            "end_condition": Condition[ToyModel](lambda x: x.time > 1),
+            "transition": ToyTransition()
         }
-        config = SimConfiguration(**declaration)
-        generator = config.full_tree_generators()
-        result = generator.compose_nested()
+        config = SimConfiguration[ToyModel](**declaration)
         payload = SimulationPayload(
-            computational_unit=DummyUnit(0),
+            computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        computation_result = result.evaluate(payload)
-        self.assertEqual(4, computation_result[0].computational_unit.x)
+        result = simulate(payload, config.transition.transition_fn, config.end_condition, config.instructions)
+        self.assertEqual(1, len(result))
+        self.assertEqual(4, result[0].computational_unit.value)
 
     def test_operation_run_constraints_success(self):
         declaration = {
             "simulation_instructions": [
                 SimulationInstruction(
-                    time_points=[1, 3],
+                    # time_points=[1, 3],
                     events=Sequence([
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, inc)
+                                MinimumTimeInterval(2, toy_inc)
                             ],
-                            treatment=inc
+                            treatment=toy_inc
                         )
-                    ])
+                    ]),
+                    conditions=[
+                        TimePoints([1, 3])
+                    ]
                 )
-            ]
+            ],
+            "transition": ToyTransition(),
+            "end_condition": Condition[ToyModel](lambda x: x.time > 3)
         }
         config = SimConfiguration(**declaration)
-        generator = config.full_tree_generators()
-        result = generator.compose_nested()
         payload = SimulationPayload(
-            computational_unit=DummyUnit(0),
+            computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        computation_result = result.evaluate(payload)
-        self.assertEqual(2, computation_result[0].computational_unit.x)
+        computation_result = simulate(payload, config.transition.transition_fn,
+                                      config.end_condition, config.instructions)
+        self.assertEqual(2, computation_result[0].computational_unit.value)
 
     def test_operation_run_constraints_fail(self):
         declaration = {
