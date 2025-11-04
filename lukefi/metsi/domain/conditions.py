@@ -11,7 +11,7 @@ class MinimumTimeInterval[T: ComputationalUnit](Condition[SimulationPayload[T]])
 
 
 def _get_operation_last_run[T: ComputationalUnit](operation_history: list[tuple[int, TreatmentFn[T], dict[str, dict]]],
-                               operation_tag: TreatmentFn[T]) -> Optional[int]:
+                                                  operation_tag: TreatmentFn[T]) -> Optional[int]:
     return next((t for t, o, _ in reversed(operation_history) if o == operation_tag), None)
 
 
@@ -21,3 +21,8 @@ def _check_eligible_to_run[T: ComputationalUnit](
         minimum_time_interval: int) -> bool:
     last_run = _get_operation_last_run(payload.operation_history, treatment)
     return last_run is None or minimum_time_interval <= (payload.computational_unit.time - last_run)
+
+
+class TimePoints[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+    def __init__(self, time_points: list[int]) -> None:
+        super().__init__(lambda x: x.computational_unit.time in time_points)
