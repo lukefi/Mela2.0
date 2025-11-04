@@ -30,7 +30,11 @@ def _simulate[T: ComputationalUnit](branch: SimulationPayload[T],
                                     end_condition: Condition[T],
                                     instructions: list[SimulationInstruction[T]]):
     if not end_condition(branch.computational_unit):
-        branch.computational_unit = transition(branch.computational_unit)
+        # branch.computational_unit = transition(branch.computational_unit)
         for instruction in instructions:
+            for condition in instruction.conditions:
+                if not condition(branch):
+                    continue
             for new_branch in instruction.unwrap(branch):
+                new_branch.computational_unit = transition(new_branch.computational_unit)
                 _simulate(new_branch, transition, end_condition, instructions)
