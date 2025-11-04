@@ -27,6 +27,7 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "sapling": np.bool_,
     "tree_type": np.dtype("U20"),
     "tuhon_ilmiasu": np.dtype("U20"),
+    "basal_area": np.float64
 }
 
 DTYPES_STRATA: dict[str, npt.DTypeLike] = {
@@ -270,6 +271,7 @@ class ReferenceTrees(VectorData):
     tree_type: npt.NDArray[np.str_]
     tuhon_ilmiasu: npt.NDArray[np.str_]
     latvuskerros: npt.NDArray[np.float64]
+    basal_area: npt.NDArray[np.float64]
 
     def __init__(self):
         super().__init__(DTYPES_TREE)
