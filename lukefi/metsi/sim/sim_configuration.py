@@ -30,19 +30,23 @@ class SimConfiguration[T: ComputationalUnit]:
         __init__(**kwargs):
             Initializes the SimConfiguration instance with keyword arguments.
     """
+    instructions: list[SimulationInstruction[T]] = []
     transition: Transition[T]
     end_condition: Condition[T]
-    instructions: list[SimulationInstruction[T]] = []
     collected_data: CollectableDataTypes
 
-    def __init__(self, instructions: list[SimulationInstruction[T]], transition: Transition[T]):
+    def __init__(self,
+                 simulation_instructions: list[SimulationInstruction[T]],
+                 transition: Transition[T],
+                 end_condition: Condition[T]):
         """
         Initializes the core simulation object.
         Args:
             **kwargs: Additional keyword arguments to be passed to the parent class initializer.
         """
         self.transition = transition
-        self.instructions = instructions
+        self.instructions = simulation_instructions
+        self.end_condition = end_condition
         self._get_collected_data_types(self.instructions)
 
     def _get_collected_data_types(self, instructions: list["SimulationInstruction[T]"]):
