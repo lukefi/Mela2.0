@@ -1,10 +1,11 @@
 from typing import Any, Optional
+import numpy as np
 from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.generators import Event
 from lukefi.metsi.domain.forestry_operations.soil_surface_preparation import soil_surface_preparation
-
+from lukefi.metsi.domain.forestry_operations.mark_trees import mark_trees
 class Mounding(Event[ForestStand]):
     """
     Mounding Event using soil surface preparation..
@@ -59,6 +60,60 @@ class Mounding(Event[ForestStand]):
         )
 
 
+
+class MarkRetentionTrees(Event[ForestStand]):
+    """
+    Uses a simple even profile across DBH and sets attributes like:
+            - tree_type="retained"
+            - management_category=2
+    """
+
+    def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
+        params = parameters or {}
+
+        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+            return np.ones(trees.size, dtype=bool)
+
+        profile_x = [0, 1, 2, 3, 4, 5]
+        profile_y = [1, 1, 1, 1, 1, 1]  # even selection over order_var
+
+        tree_selection = {
+            "Target": {
+                "type": "relative",
+                "var":  "stems_per_ha",
+                "amount": 0.05,  # mark 5% overall
+            },
+            "sets": [
+                {
+                    "sfunction": s_all,
+                    "order_var": "breast_height_diameter",
+                    "target_var": "stems_per_ha",
+                    "target_type": "relative",
+                    "target_amount": 1.0,
+                    "profile_x": profile_x,
+                    "profile_y": profile_y,
+                    "profile_xmode": "relative",
+                }
+            ],
+        }
+
+        event_params = {
+            "tree_selection": tree_selection,
+            "freq_var": "stems_per_ha",
+            "select_from_all": True,
+            "mode": "odds_units",
+            "attributes": {"tree_type": "retained", "management_category": 2},
+            "labels": ["retention_marking"],
+        }
+        # allow user overrides
+        merged = event_params | params
+
+
+        super().__init__(treatment=mark_trees, parameters=merged, **kw)
+
+
+
 __all__ = [
-    "Mounding"
+    "Mounding",
+    "MarkRetentionTrees"
 ]
