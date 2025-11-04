@@ -191,8 +191,8 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         super().__init__(treatment=cutting, parameters=event_params, preconditions=preconds, **kw)
 
 
-class Ajourat(Event[ForestStand]):
-    """Classic ajourat preset: 'even' profile as in your earlier R prototype."""
+class Tracks(Event[ForestStand]):
+    """Classic Tracks preset: 'even' profile as in your earlier R prototype."""
 
     def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
         params = parameters or {}
@@ -202,18 +202,18 @@ class Ajourat(Event[ForestStand]):
         def s_all(_stand: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
-        # --- Profile: bias selection toward larger DBH (from above) by giving
+        # --- Profile: even selection toward larger DBH (from above) by giving
         #             higher weights to higher order quantiles.
         profile_x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         profile_y = [0.00, 0.05, 0.10, 0.15, 0.25, 0.40, 0.60, 0.80, 0.90, 1.00, 1.00]
 
         # --- HARD-CODED tree_selection (user should adjust):
-        # Global target: remove 25% of stems_per_ha (relative)
+        # Global target: remove 18% of stems_per_ha (relative)
         tree_selection = {
             "Target": {
                 "type": "relative",         # "relative" | "absolute" | "absolute_remain"
                 "var":  "stems_per_ha",     # frequency variable
-                "amount": 0.25,             # remove 25% overall
+                "amount": 0.18,             # remove 18% overall
             },
             "sets": [
                 {
@@ -244,5 +244,5 @@ class Ajourat(Event[ForestStand]):
 
 __all__ = [
     "Mounding",
-    "Ajourat",
+    "Tracks",
 ]
