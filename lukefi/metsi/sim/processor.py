@@ -28,7 +28,7 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
         raise UserWarning(f"Unable to perform operation {operation_tag}, "
                           f"at time point {time_point}; reason: {e}") from e
 
-    payload.computational_unit.update_aggregates()
+    new_state.update_aggregates()
 
     newpayload: SimulationPayload[T] = SimulationPayload(
         computational_unit=new_state,
