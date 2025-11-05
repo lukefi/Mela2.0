@@ -19,8 +19,6 @@ tree;0-2-23-2-1-17-tree;3;None;5.82;19.73;17.98;None;40.0;46.0;None;0;None;7;0.0
 tree;0-2-23-2-1-18-tree;3;None;3.44;21.52;18.41;None;40.0;46.0;None;0;None;8;0.0;0.0;0.0;None;None;None;False;None;None;None
 tree;0-2-23-2-1-19-tree;3;None;1.59;23.31;18.8;None;40.0;46.0;None;0;None;9;0.0;0.0;0.0;None;None;None;False;None;None;None
 tree;0-2-23-2-1-20-tree;3;None;0.55;25.11;19.14;None;40.0;46.0;None;0;None;10;0.0;0.0;0.0;None;None;None;False;None;None;None
-stratum;0-2-23-2-1-1-stratum;1;0;0.0;24.0;19.0;46.0;52.0;17.0;None;0;0;1;0.0;0.0;0.0;0.0;1;0.0;False;1
-stratum;0-2-23-2-1-3-stratum;3;0;0.0;18.0;17.5;40.0;46.0;1.0;None;0;0;3;0.0;0.0;0.0;0.0;1;0.0;False;1
 stand;0-2-23-3-2;3;2018;0.0;164.2650475;8840354.0;7658345.0;124.0;EPSG:3067;1271.0;1;1;1;3;1;3;1;False;None;None;2018;False;None;5;None;None;None;2011;0;1;3;417;1;0;True;0.0;1.0;3;17.0;52.0
 tree;0-2-23-3-2-1-tree;1;None;6.52;10.11;11.96;None;43.0;52.0;None;0;None;1;0.0;0.0;0.0;None;None;None;False;None;None;None
 tree;0-2-23-3-2-2-tree;1;None;34.45;12.11;13.22;None;43.0;52.0;None;0;None;2;0.0;0.0;0.0;None;None;None;False;None;None;None
@@ -32,5 +30,4 @@ tree;0-2-23-3-2-7-tree;1;None;67.33;22.1;17.09;None;43.0;52.0;None;0;None;7;0.0;
 tree;0-2-23-3-2-8-tree;1;None;39.28;24.1;17.58;None;43.0;52.0;None;0;None;8;0.0;0.0;0.0;None;None;None;False;None;None;None
 tree;0-2-23-3-2-9-tree;1;None;18.05;26.1;18.01;None;43.0;52.0;None;0;None;9;0.0;0.0;0.0;None;None;None;False;None;None;None
 tree;0-2-23-3-2-10-tree;1;None;8.79;28.09;18.39;None;43.0;52.0;None;0;None;10;0.0;0.0;0.0;None;None;None;False;None;None;None
-stratum;0-2-23-3-2-1-stratum;1;0;0.0;20.0;16.5;43.0;52.0;15.0;None;0;0;1;0.0;0.0;0.0;0.0;1;0.0;False;1
 stand;0-3-23-4-1;4;2018;164.2650475;164.2650475;85959511.0;7599843.0;70.0;EPSG:3067;1275.0;1;1;1;2;0;1;1;False;None;None;2018;False;None;1;None;None;None;2017;0;1;2;417;1;0;False;0.0;1.0;4;0.0;0.0
