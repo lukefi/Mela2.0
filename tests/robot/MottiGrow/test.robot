@@ -17,7 +17,7 @@ ${REL_TOL}          1e-4
 
 *** Test Cases ***
 Run Simulation And Compare Output Files
-    [Tags]    simulation
+    [Tags]    simulation    motti
 
     Remove Directory    ${OUTPUT_DIR}    recursive=True
     Create Directory    ${OUTPUT_DIR}
