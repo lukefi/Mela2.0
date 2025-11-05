@@ -58,7 +58,7 @@ def _compare_mixed_segment(a: str, b: str, line_num: int, abs_tol: float, rel_to
                 )
 
 
-def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_tol_str="0.0"):
+def compare_files_with_numeric_in_text(result_path, reference_path, abs_tol_str, rel_tol_str="0.0"):
     """
     NEW keyword: like compare_numeric_files_with_tolerance, but if a column
     isn't a pure float it will compare the text exactly and any numbers inside
@@ -76,12 +76,12 @@ def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_
     except ValueError as e:
         raise AssertionError(f"Invalid tolerance values: abs={abs_tol_str!r}, rel={rel_tol_str!r}") from e
 
-    with open(file1_path, encoding="utf-8") as f1, open(file2_path, encoding="utf-8") as f2:
-        for line_num, (line1, line2) in enumerate(itertools.zip_longest(f1, f2, fillvalue=None), 1):
+    with open(result_path, encoding="utf-8") as res, open(reference_path, encoding="utf-8") as ref:
+        for line_num, (line1, line2) in enumerate(itertools.zip_longest(res, ref, fillvalue=None), 1):
             if line1 is None:
-                raise AssertionError(f"File '{file1_path}' is shorter than reference '{file2_path}'.")
+                raise AssertionError(f"File '{result_path}' is shorter than reference '{reference_path}'.")
             if line2 is None:
-                raise AssertionError(f"File '{file1_path}' is longer than reference '{file2_path}'.")
+                raise AssertionError(f"File '{result_path}' is longer than reference '{reference_path}'.")
 
             vals1 = line1.rstrip("\n").split('\t')
             vals2 = line2.rstrip("\n").split('\t')
@@ -108,7 +108,7 @@ def compare_files_with_numeric_in_text(file1_path, file2_path, abs_tol_str, rel_
                             f"(abs diff {diff}, abs_tol {abs_tol}, rel_tol {rel_tol})."
                         )
 
-    print(f"Files '{file1_path}' and '{file2_path}' match within abs_tol={abs_tol} rel_tol={rel_tol}.")
+    print(f"Files '{result_path}' and '{reference_path}' match within abs_tol={abs_tol} rel_tol={rel_tol}.")
 
 
 def compare_numeric_files_with_tolerance(file1_path, file2_path, tolerance_str):
