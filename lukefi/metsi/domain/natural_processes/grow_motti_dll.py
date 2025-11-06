@@ -219,6 +219,10 @@ class MottiDLLPredictor:
             # nothing to do; fake zeros in the same shape the caller expects
             return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
 
+        if self.mal > 2:
+            # Natural process in MottiSC works only for land types 1 and 2.
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
         spedom = _spedom(self.stand.reference_trees)
@@ -368,6 +372,10 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     sim_year: int = stand.year or 0
 
     rt = stand.reference_trees
+    if rt.size == 0:
+        # Update year but skip rest of process for empty stand
+        stand.year = (stand.year or 0) + step
+        return stand, []
 
     # Construct predictor
     if predictor is None:
