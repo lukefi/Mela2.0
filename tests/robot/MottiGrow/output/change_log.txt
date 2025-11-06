@@ -1,0 +1,11 @@
+Tests motti growth model without other operations than growth.
+Uses SoA data.
+
+When reference files are updated, mark it here with ticket number.
+
+__________________________________________________________________________________________
+
+
+
+03.10.2025	v1.0	Test and initial references created. /Ari-Antti Tervonen
+		

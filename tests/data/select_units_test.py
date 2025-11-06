@@ -153,7 +153,7 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_level(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees]()
-        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.sfunction = lambda _, trees: (trees.breast_height_diameter > 10) & (trees.management_category <= 1)
         set1.order_var = "breast_height_diameter"
         set1.target_var = "stems_per_ha"
         set1.target_type = "relative"
@@ -171,9 +171,9 @@ class TestSelectUnits(unittest.TestCase):
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="level")
         expected = np.array([
-            0.0704782, 1.1533761, 1.7028871, 2.2013436, 2.1217496, 2.4869289, 2.8028201,
-            3.0871221, 3.3488604, 3.5925479, 3.8272099, 4.0438209, 4.2559193, 4.4589921,
-            4.6575523, 4.8515997, 4.0369623, 5.0366216, 5.2216436, 5.4021528,
+            0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
+            0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.3572367,
+            0.8158991, 1.2641372, 1.1356667, 1.6915271, 2.1189170, 2.5358827
         ])
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
 

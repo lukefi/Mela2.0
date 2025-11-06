@@ -83,8 +83,6 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         def forest_categories(state: ForestStand) -> bool:
             stand = state
             trees = stand.reference_trees
-            if trees.size == 0:
-                return False
 
             # stand attributes
             manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1

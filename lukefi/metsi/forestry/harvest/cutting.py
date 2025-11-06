@@ -19,10 +19,11 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     """
     stand = input_
     if stand.reference_trees.size == 0:
-        return stand, []
+        raise MetsiException("Empty stand.reference_trees in cutting.")
+
     trees: ReferenceTrees = stand.reference_trees  # direct access as you prefer
     if not isinstance(trees, ReferenceTrees):
-        raise MetsiException("cutting requires stand.reference_trees (ReferenceTrees SoA).")
+        raise MetsiException("cutting requires stand.reference_trees.")
 
     prereq = operation_parameters.get("prerequisite")
     if prereq is not None:
