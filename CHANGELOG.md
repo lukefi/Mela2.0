@@ -4,19 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-<<<<<<< HEAD
-## [0.1.4] - 2025-11-04
+## [0.1.5] - 2025-11-06
 
 ### Added
 
 - Added regeneration treatment and planting event
-=======
+
 ## [0.1.4] - 2025-11-05
 
 ### Fixed
 
 - `level` mode step calculation fixed for `select_units`
->>>>>>> f2d7310fe25238cc6a074b7aac290b3a218724ed
 
 ## [0.1.3] - 2025-10-31
 
