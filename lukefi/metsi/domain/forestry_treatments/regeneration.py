@@ -9,7 +9,7 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     - No cdata collection by design.
     - Parameters (all via **operation_parameters):
         origin: int                 # e.g. 2 (planted)
-        method: Optional[int]       # accepted, unused (present for parity with R)
+        method: Optional[int]       # accepted, unused
         species: int                # tree species code
         stems_per_ha: float         # total stems/ha to distribute to created trees
         height: float               # initial height (m)

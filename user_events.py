@@ -3,8 +3,8 @@ from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.domain.forestry_operations.soil_surface_preparation import soil_surface_preparation
-from lukefi.metsi.forestry.naturalprocess.regeneration import regeneration
+from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 
 class Mounding(Event[ForestStand]):
     """
@@ -71,17 +71,14 @@ class PlantingPines(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
-        # Defaults aligned with event_planting_example/test_planting
         default_params: dict[str, Any] = {
             "origin": 2,           # planted
-            "method": 2,           # manual (accepted but not used by treatment)
+            "method": 2,
             "species": 1,          # Pine
             "stems_per_ha": 1500.0,
             "height": 0.7,
             "biological_age": 3.0,
             "type": "artificial",
-            # You may also set ntrees (default 10), breast_height_diameter/age if desired
-            # "ntrees": 10,
         }
 
         merged = default_params | (parameters or {})
