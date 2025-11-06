@@ -106,9 +106,6 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         mode=str(mode),
     )
 
-    if np.any(marked_f < 0):
-        raise MetsiException("mark_trees produced negative selections; check tree_selection config.")
-
     if not hasattr(stand.reference_trees, freq_var):
         raise MetsiException(f"Unknown freq_var '{freq_var}' in ReferenceTrees.")
 
