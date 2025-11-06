@@ -209,8 +209,11 @@ def select_units[T, V: VectorData](context: T,
                 units = np.maximum(0.0, y * (data[freq_var] - selected_units))
 
             # special case: select all units from set
-            if (target_type == "relative") and (sets[i_set].target_type == "relative") and (target_amount == 1) and \
-                    (sets[i_set].target_amount == 1):
+            if cur_set_target_var == freq_var:
+                max_avail = np.sum(data[freq_var][cur_set_idx])
+            else:
+                max_avail = np.sum(data[freq_var][cur_set_idx] * data[cur_set_target_var][cur_set_idx])
+            if (max_avail <= cur_set_target) and (max_avail <= (total_target - total_target_selected)):
                 units = np.repeat(0.0, data.size)
                 units[cur_set_idx] = data[freq_var][cur_set_idx]
 
@@ -390,8 +393,8 @@ def _init_search(mode: str,
         a_max = np.max(1 - y)
         a_min = np.min(-1 * y)
         scale = (a_max + a_min) / 2
-        step = abs(scale)
-        if step == 0:
+        step = min(1.0, np.maximum(a_max, -a_min))
+        if step < 0.001:
             step = a_max
         y0 = y
 
