@@ -28,12 +28,12 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     stems_per_ha = float(req(operation_parameters, "stems_per_ha"))
     height = float(req(operation_parameters, "height"))
     biological_age = float(req(operation_parameters, "biological_age"))
+    regen_type = str(req(operation_parameters, "type"))
 
     # ---- optional ----
     breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
     breast_height_age = operation_parameters.get("breast_height_age", None)
     ntrees = operation_parameters.get("ntrees", 10)
-    regen_type = str(operation_parameters.get("type")).lower()
 
     if height <= 0:
         raise MetsiException("Regeneration: Height can not be negative or zero")
