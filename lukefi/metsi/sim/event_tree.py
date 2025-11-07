@@ -45,7 +45,10 @@ class EventTree[T: ComputationalUnit]:
         :param db: optional connection to an initialized database for output
         :return: list of result payloads from this EventTree or as concatenated from its branches
         """
-        current, collected_data = self.processed_treatment(payload)
+        try:
+            current, collected_data = self.processed_treatment(payload)
+        except ConditionFailed:
+            return
         if node_identifier is None:
             node_identifier = [0]
         if db is not None:
@@ -65,12 +68,9 @@ class EventTree[T: ComputationalUnit]:
             return
 
         for i, branch in enumerate(self.branches):
-            try:
-                node_identifier_ = deepcopy(node_identifier)
-                node_identifier_.append(i)
-                yield from branch.evaluate(copy(current), node_identifier_, db)
-            except (ConditionFailed, UserWarning):
-                ...
+            node_identifier_ = deepcopy(node_identifier)
+            node_identifier_.append(i)
+            yield from branch.evaluate(copy(current), node_identifier_, db)
 
     def add_branch(self, et: 'EventTree[T]'):
         self.branches.append(et)
