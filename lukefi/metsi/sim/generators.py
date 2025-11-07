@@ -39,7 +39,7 @@ class Generator(GeneratorBase[T], ABC):
     def __init__(self, children: Sequence_[GeneratorBase]):
         self.children = children
 
-    def compose_nested(self) -> EventTree[T]:
+    def compose_nested(self) -> list[EventTree[T]]:
         """
         Generate a simulation EventTree using the given NestableGenerator.
 
@@ -48,7 +48,7 @@ class Generator(GeneratorBase[T], ABC):
         """
         root: EventTree[T] = EventTree()
         self.unwrap([root])
-        return root
+        return root.branches  # TODO: this is a dirty hack
 
     @override
     def get_types_of_collected_data(self) -> CollectableDataTypes:

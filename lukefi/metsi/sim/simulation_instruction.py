@@ -26,4 +26,5 @@ class SimulationInstruction[T: ComputationalUnit]:
             self.conditions = []
 
     def unwrap(self, payload: SimulationPayload[T]):
-        yield from self.event_generator.compose_nested().evaluate(payload)
+        for root in self.event_generator.compose_nested():
+            yield from root.evaluate(payload)
