@@ -4,6 +4,7 @@ from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from tests.test_utils import DummyUnit
 
 
 class ConditionTest(unittest.TestCase):
@@ -30,25 +31,25 @@ class ConditionTest(unittest.TestCase):
         self.assertFalse(c_or(1, 6))
 
     def test_condition_checking(self):
-        def step(x: int) -> OpTuple[int]:
+        def step(x: DummyUnit) -> OpTuple[DummyUnit]:
             computational_unit = x
-            computational_unit = computational_unit.__add__(1)
+            computational_unit.x += 1
             return computational_unit, []
 
         generator = Alternatives([
             Sequence([
-                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.__le__(2))]),
-                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.__ge__(2))]),
-                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.__eq__(4))]),
+                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.x <= 2)]),
+                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.x >= 2)]),
+                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.x == 4)]),
             ]),
             Sequence([
-                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.__lt__(2))]),
-                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.__ge__(2))]),
-                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.__eq__(3))]),
+                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.x < 2)]),
+                Event(step, preconditions=[Condition(lambda _, x: x.computational_unit.x >= 2)]),
+                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.x == 3)]),
             ]),
             Sequence([
-                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.__eq__(2))]),
-                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.__lt__(5))]),
+                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.x == 2)]),
+                Event(step, postconditions=[Condition(lambda _, x: x.computational_unit.x < 5)]),
             ]),
             Event(step, preconditions=[Condition(lambda _, x: True)]),
             Event(step, preconditions=[Condition(lambda _, x: False)]),
@@ -59,11 +60,11 @@ class ConditionTest(unittest.TestCase):
         root = generator.compose_nested()
         result = root.evaluate(
             SimulationPayload(
-                computational_unit=1,
+                computational_unit=DummyUnit(1),
                 operation_history={}))
 
         self.assertEqual(len(result), 4)
-        self.assertEqual(result[0].computational_unit, 4)
-        self.assertEqual(result[1].computational_unit, 3)
-        self.assertEqual(result[2].computational_unit, 2)
-        self.assertEqual(result[3].computational_unit, 2)
+        self.assertEqual(result[0].computational_unit.x, 4)
+        self.assertEqual(result[1].computational_unit.x, 3)
+        self.assertEqual(result[2].computational_unit.x, 2)
+        self.assertEqual(result[3].computational_unit.x, 2)

@@ -3,6 +3,8 @@ import dataclasses
 import sqlite3
 from typing import Optional, override
 from dataclasses import dataclass
+
+import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
@@ -396,6 +398,9 @@ class ForestStand(Finalizable, ComputationalUnit):
     lake_effect: Optional[float] = None
 
     basal_area: Optional[float] = None
+    stems_per_ha: Optional[float] = None
+    weighted_mean_diameter: Optional[float] = None
+    weighted_mean_height: Optional[float] = None
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -623,6 +628,25 @@ class ForestStand(Finalizable, ComputationalUnit):
                     int(self.tree_strata.number_of_generated_trees[i])
                 )
             )
+
+    def update_aggregates(self):
+        trees = self.reference_trees
+        strata = self.tree_strata
+
+        # ReferenceTrees
+        trees.basal_area = np.pi * (trees.breast_height_diameter / 200) ** 2
+
+        # ForestStand
+        self.stems_per_ha = np.sum(trees.stems_per_ha) + np.sum(strata.stems_per_ha)
+        self.basal_area = np.sum(trees.stems_per_ha *
+                                 trees.basal_area) + np.sum(strata.basal_area)
+        self.weighted_mean_diameter = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.breast_height_diameter) +
+                                        np.sum(strata.basal_area * strata.mean_diameter)) /
+                                       self.basal_area) if (self.basal_area > 0) else None
+
+        self.weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
+                                     np.sum(strata.basal_area * strata.mean_height)) /
+                                     self.basal_area) if (self.basal_area > 0) else None
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:

@@ -8,3 +8,7 @@ class ComputationalUnit(ABC):
     @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
         pass
+
+    @abstractmethod
+    def update_aggregates(self):
+        pass
