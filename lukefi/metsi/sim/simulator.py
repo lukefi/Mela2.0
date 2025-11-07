@@ -25,16 +25,21 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         _simulate(payload, transition.transition_fn, end_condition, instructions)
 
 
-def _simulate[T: ComputationalUnit](branch: SimulationPayload[T],
+def _simulate[T: ComputationalUnit](payload: SimulationPayload[T],
                                     transition: TransitionFn[T],
                                     end_condition: Condition[T],
                                     instructions: list[SimulationInstruction[T]]):
-    if not end_condition(branch.computational_unit):
-        # branch.computational_unit = transition(branch.computational_unit)
+    if not end_condition(payload.computational_unit):
         for instruction in instructions:
+            conditions_true = True
             for condition in instruction.conditions:
-                if not condition(branch):
-                    continue
-            for new_branch in instruction.unwrap(branch):
-                new_branch.computational_unit = transition(new_branch.computational_unit)
-                _simulate(new_branch, transition, end_condition, instructions)
+                if not condition(payload):
+                    conditions_true = False
+                    break
+            if conditions_true:
+                for new_branch in instruction.unwrap(payload):
+                    new_branch.computational_unit = transition(new_branch.computational_unit)
+                    _simulate(new_branch, transition, end_condition, instructions)
+            else:
+                payload.computational_unit = transition(payload.computational_unit)
+                _simulate(payload, transition, end_condition, instructions)
