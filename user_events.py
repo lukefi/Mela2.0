@@ -105,24 +105,8 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 
             return bool(cond_mineral and size_ok and dense_enough)
 
-
-        # ---- selection-set eligibility functions
-        # Prefer spruce on fertile, pine on poorer (species codes 2=spruce, 1=pine per your proto)
-        def _fertility_value(st: ForestStand) -> Optional[int]:
-            v = getattr(st.site_type_category, "value", None)
-            if v is None:
-                return st.site_type_category if isinstance(st.site_type_category, int) else None
-            return int(v)
-
-        def prefer_spruce(stand: ForestStand, trees) -> np.ndarray:
-            fert = _fertility_value(stand) or 0
-            mask = np.zeros(trees.size, dtype=bool)
-            if fert <= 3:  # fertile -> prefer spruce
-                mask |= (trees.species == 2)
-            return mask
-
         def s_conifer_bias(stand: ForestStand, trees) -> np.ndarray:
-            fert = _fertility_value(stand) or 0
+            fert = (stand.site_type_category or 0)
             if fert == 3:
                 # include both spruce (2) and pine (1)
                 return (trees.species == 1) | (trees.species == 2)
@@ -154,7 +138,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
                     "profile_xmode": "relative",
                 },
                 {
-                    "sfunction": prefer_spruce,
+                    "sfunction": s_conifer_bias,
                     "order_var": "breast_height_diameter",
                     "target_var": "stems_per_ha",
                     "target_type": "relative",
@@ -183,53 +167,51 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 class Tracks(Event[ForestStand]):
     """Classic Tracks preset: 'even' profile as in your earlier R prototype."""
 
-    def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
+    def __init__(self, parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
+                 postconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
+                 file_parameters: Optional[dict[str, str]] = None,
+                 **kw) -> None:
         params = parameters or {}
 
-        # --- Eligibility function for this set: here, "all trees are eligible".
-        # If you want to exclude species or DBH ranges, do it here.
         def s_all(_stand: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
-        # --- Profile: even selection toward larger DBH (from above) by giving
-        #             higher weights to higher order quantiles.
         profile_x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         profile_y = [0.00, 0.05, 0.10, 0.15, 0.25, 0.40, 0.60, 0.80, 0.90, 1.00, 1.00]
 
-        # --- HARD-CODED tree_selection (user should adjust):
-        # Global target: remove 18% of stems_per_ha (relative)
         tree_selection = {
-            "Target": {
-                "type": "relative",         # "relative" | "absolute" | "absolute_remain"
-                "var":  "stems_per_ha",     # frequency variable
-                "amount": 0.18,             # remove 18% overall
-            },
-            "sets": [
-                {
-                    "sfunction": s_all,
-                    "order_var": "breast_height_diameter",  # rank by DBH
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 1.0,                   # full share within this set
-                    "profile_x": profile_x,
-                    "profile_y": profile_y,
-                    "profile_xmode": "relative",            # profile defined over 0..10 classes
-                    # "profile_xscale": None,               # optional, leave out unless needed
-                }
-            ]
+            "Target": {"type": "relative", "var": "stems_per_ha", "amount": 0.18},
+            "sets": [{
+                "sfunction": s_all,
+                "order_var": "breast_height_diameter",
+                "target_var": "stems_per_ha",
+                "target_type": "relative",
+                "target_amount": 1.0,
+                "profile_x": profile_x,
+                "profile_y": profile_y,
+                "profile_xmode": "relative",
+            }],
         }
 
-        # Required explicit params for strict cutting()
         event_params = {
             "tree_selection": tree_selection,
             "mode": "odds_units",
-            # Optional bookkeeping (only set if you want them recorded):
-            # "sim_time": 2025,
-            # "cutting_method": "MECHANIZED",
-        }
+        } | params
 
-        # Allow caller to override anything explicitly
-        super().__init__(treatment=cutting, parameters=(event_params | params), **kw)
+        # Default: at least 20y since last cutting; caller can append more via `preconditions=...`
+        default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
+            MinimumTimeInterval(20, cutting)
+        ]
+
+        super().__init__(
+            treatment=cutting,
+            parameters=event_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            **kw
+        )
 
 __all__ = [
     "Mounding",
