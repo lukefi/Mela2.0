@@ -82,7 +82,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             return 1000  # default per the example file
 
         def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]) -> bool:
-            stand = payload.state
+            stand = payload.computational_unit
             stand.update_aggregates()  # use stand aggregates, not manual BA math
 
             manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1
