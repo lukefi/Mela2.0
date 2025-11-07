@@ -25,19 +25,25 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if not isinstance(trees, ReferenceTrees):
         raise MetsiException("cutting requires stand.reference_trees.")
 
-    prereq = operation_parameters.get("prerequisite")
-    if prereq is not None:
-        filled = False
-        # Try (stand, trees) first, then (stand), finally treat as bool
+    precond = operation_parameters.get("precondition", None)
+    if precond is None:
+        precond = operation_parameters.get("prerequisite", None)
+
+    def _eval_one(cond):
         try:
-            filled = bool(prereq(stand, trees))
+            return bool(cond(stand, trees))
         except TypeError:
             try:
-                filled = bool(prereq(stand))
+                return bool(cond(stand))
             except TypeError:
-                filled = bool(prereq)
+                return bool(cond)
+
+    if precond is not None:
+        if isinstance(precond, (list, tuple)):
+            filled = all(_eval_one(c) for c in precond)
+        else:
+            filled = _eval_one(precond)
         if not filled:
-            # Cutting can not be done
             return stand, []
 
     ts = operation_parameters.get("tree_selection")
