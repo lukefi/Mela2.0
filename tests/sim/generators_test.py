@@ -5,7 +5,7 @@ from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.test_utils import inc, parametrized_operation
+from tests.test_utils import DummyUnit, inc, parametrized_treatment
 
 
 class TestGenerators(unittest.TestCase):
@@ -29,11 +29,11 @@ class TestGenerators(unittest.TestCase):
         generator = config.full_tree_generators()
         result = generator.compose_nested()
         payload = SimulationPayload(
-            computational_unit=0,
+            computational_unit=DummyUnit(0),
             operation_history=[]
         )
         computation_result = result.evaluate(payload)
-        self.assertEqual(4, computation_result[0].computational_unit)
+        self.assertEqual(4, computation_result[0].computational_unit.x)
 
     def test_operation_run_constraints_success(self):
         declaration = {
@@ -55,11 +55,11 @@ class TestGenerators(unittest.TestCase):
         generator = config.full_tree_generators()
         result = generator.compose_nested()
         payload = SimulationPayload(
-            computational_unit=0,
+            computational_unit=DummyUnit(0),
             operation_history=[]
         )
         computation_result = result.evaluate(payload)
-        self.assertEqual(2, computation_result[0].computational_unit)
+        self.assertEqual(2, computation_result[0].computational_unit.x)
 
     def test_operation_run_constraints_fail(self):
         declaration = {
@@ -131,9 +131,9 @@ class TestGenerators(unittest.TestCase):
         generator = config.full_tree_generators()
         tree = generator.compose_nested()
 
-        results = tree.evaluate(SimulationPayload(computational_unit=0, operation_history=[]))
+        results = tree.evaluate(SimulationPayload(computational_unit=DummyUnit(0), operation_history=[]))
 
-        self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit, results)))
+        self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit.x, results)))
 
     def test_nested_tree_generators_multiparameter_alternative(self):
         def increment(x, **y):
@@ -183,9 +183,9 @@ class TestGenerators(unittest.TestCase):
         generator = config.full_tree_generators()
         tree = generator.compose_nested()
 
-        results = tree.evaluate(SimulationPayload(computational_unit=0, operation_history=[]))
+        results = tree.evaluate(SimulationPayload(computational_unit=DummyUnit(0), operation_history=[]))
 
-        self.assertListEqual([3, 4, 5], list(map(lambda result: result.computational_unit, results)))
+        self.assertListEqual([3, 4, 5], list(map(lambda result: result.computational_unit.x, results)))
 
     def test_alternatives_embedding_equivalence(self):
         """
@@ -242,15 +242,19 @@ class TestGenerators(unittest.TestCase):
         generators = [config.full_tree_generators() for config in configs]
         trees = [generator.compose_nested() for generator in generators]
 
-        results = (trees[0].evaluate(SimulationPayload(computational_unit=0, operation_history=[])),
-                   trees[1].evaluate(SimulationPayload(computational_unit=0, operation_history=[])))
+        results = (list(map(lambda x: x.computational_unit.x,
+                            trees[0].evaluate(SimulationPayload(computational_unit=DummyUnit(0),
+                                                                operation_history=[])))),
+                   list(map(lambda x: x.computational_unit.x,
+                            trees[1].evaluate(SimulationPayload(computational_unit=DummyUnit(0),
+                                                                operation_history=[])))))
 
         self.assertListEqual(results[0], results[1])
 
     def test_simple_processable_chain_multiparameter_exception(self):
         operation_tags = ['param_oper']
         operation_params = {'param_oper': [{'amplify': True}, {'kissa123': 123}]}
-        operation_lookup = {'param_oper': parametrized_operation}
+        operation_lookup = {'param_oper': parametrized_treatment}
         self.assertRaises(Exception,
                           simple_processable_chain,
                           operation_tags,

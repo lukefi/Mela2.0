@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.metsi.data.enums import internal
 
@@ -8,27 +10,27 @@ class TestForestDataModel(unittest.TestCase):
 
     def test_stratum_to_sapling_reference_tree(self):
         assertion = ReferenceTree(
-            stems_per_ha = 1200,
-            species = internal.TreeSpecies(1),
-            breast_height_diameter = 1.0,
-            height = 2.0,
-            breast_height_age = 10.0,
-            biological_age = 12.0,
-            saw_log_volume_reduction_factor = -1.0,
-            pruning_year = 0,
-            age_when_10cm_diameter_at_breast_height = 0,
-            origin = 1,
-            stand_origin_relative_position = (0.0, 0.0, 0.0),
-            management_category = 1,
-            sapling = True)
+            stems_per_ha=1200,
+            species=internal.TreeSpecies(1),
+            breast_height_diameter=1.0,
+            height=2.0,
+            breast_height_age=10.0,
+            biological_age=12.0,
+            saw_log_volume_reduction_factor=-1.0,
+            pruning_year=0,
+            age_when_10cm_diameter_at_breast_height=0,
+            origin=1,
+            stand_origin_relative_position=(0.0, 0.0, 0.0),
+            management_category=1,
+            sapling=True)
         fixture = TreeStratum(
-            sapling_stems_per_ha = 1200,
-            species = internal.TreeSpecies.PINE,
-            mean_diameter = 1.0,
-            mean_height = 2.0,
-            breast_height_age = 10.0,
-            biological_age = 12.0,
-            origin = 1)
+            sapling_stems_per_ha=1200,
+            species=internal.TreeSpecies.PINE,
+            mean_diameter=1.0,
+            mean_height=2.0,
+            breast_height_age=10.0,
+            biological_age=12.0,
+            origin=1)
         self.assertEqual(fixture.to_sapling_reference_tree().identifier, assertion.identifier)
 
     def test_stratum_has_sapling_stems_per_ha(self):
@@ -85,7 +87,6 @@ class TestForestDataModel(unittest.TestCase):
             fixture.stems_per_ha = i[0]
             self.assertEqual(i[1], fixture.has_stems_per_ha())
 
-
     def test_stratum_has_basal_area(self):
         fixture = TreeStratum()
         assertions = [
@@ -109,7 +110,6 @@ class TestForestDataModel(unittest.TestCase):
         for i in assertions:
             fixture.breast_height_age = i[0]
             self.assertEqual(i[1], fixture.has_breast_height_age())
-
 
     def test_reference_tree_has_biological_age(self):
         fixture = ReferenceTree()
@@ -173,3 +173,21 @@ class TestForestDataModel(unittest.TestCase):
         stand = ForestStand.from_csv_row(row)
 
         self.assertEqual((6834156.23, 429291.91, None, 'EPSG:3067'), stand.geo_location)
+
+    def test_update_aggregates(self):
+        stand = ForestStand()
+        stand.reference_trees.create([{"breast_height_diameter": 12, "stems_per_ha": 5, "height": 13},
+                                     {"breast_height_diameter": 5, "stems_per_ha": 14, "height": 10}])
+        stand.tree_strata.create([{"stems_per_ha": 39.2, "basal_area": 23.4,
+                                 "mean_diameter": 14.9, "mean_height": 5.9},
+                                  {"stems_per_ha": 0.6, "basal_area": 0.12,
+                                   "mean_diameter": 1.3, "mean_height": 2.2}])
+        stand.update_aggregates()
+
+        self.assertTrue(
+            np.all(np.isclose(np.asarray([0.01130973355, 0.00196349540]), stand.reference_trees.basal_area)))
+
+        self.assertAlmostEqual(58.8, stand.stems_per_ha or 0)
+        self.assertAlmostEqual(23.60403760335, stand.basal_area or 0)
+        self.assertAlmostEqual(14.81238229506, stand.weighted_mean_diameter or 0)
+        self.assertAlmostEqual(5.902974074951, stand.weighted_mean_height or 0)

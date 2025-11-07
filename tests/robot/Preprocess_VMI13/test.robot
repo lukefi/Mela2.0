@@ -14,14 +14,14 @@ ${RELATIVE_TOLERANCE}    1e-12
 *** Test Cases ***
 Preprocessed VMI13 Data Exported As CSV Should Match Reference
     Compare Files With Numeric In Text
-    ...    ${REFERENCE_PATH}/preprocessing_result.csv
     ...    ${OUTPUT_PATH}/preprocessing_result.csv
+    ...    ${REFERENCE_PATH}/preprocessing_result.csv
     ...    ${ABSOLUTE_TOLERANCE}
     ...    ${RELATIVE_TOLERANCE}
 
 Preprocessed VMI13 Data Exported As RST Should Match Reference
     Compare Files With Numeric In Text
-    ...    ${REFERENCE_PATH}/preprocessing_result.rst
     ...    ${OUTPUT_PATH}/preprocessing_result.rst
+    ...    ${REFERENCE_PATH}/preprocessing_result.rst
     ...    ${ABSOLUTE_TOLERANCE}
     ...    ${RELATIVE_TOLERANCE}
