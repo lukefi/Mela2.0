@@ -3,21 +3,21 @@ import unittest
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.domain.conditions import _get_operation_last_run
 from lukefi.metsi.sim.operations import prepared_treatment
-from tests.test_utils import DummyUnit, parametrized_treatment
+from tests.toy_model import ToyModel, parametrized_treatment
 
 
 class SimOperationsTest(unittest.TestCase):
     def test_prepared_treatment(self):
         assertions = [
-            ([DummyUnit(10), {}], 10),
-            ([DummyUnit(10), {'amplify': True}], 10000),
-            ([DummyUnit(10), {'amplify': False}], 10)
+            ([ToyModel("", 10), {}], 10),
+            ([ToyModel("", 10), {'amplify': True}], 10000),
+            ([ToyModel("", 10), {'amplify': False}], 10)
         ]
 
         for case in assertions:
             function = prepared_treatment(parametrized_treatment, **case[0][1])
             result = function(case[0][0])
-            self.assertEqual(case[1], result[0].x)
+            self.assertEqual(case[1], result[0].value)
 
     def test_operation_last_run(self):
 

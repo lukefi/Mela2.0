@@ -19,10 +19,11 @@ class ToyModel(ComputationalUnit):
     @override
     def output_to_db(self, db: Connection, node: str):
         pass
-    
+
     @override
     def update_aggregates(self):
         pass
+
 
 class ToyTransition(Transition[ToyModel]):
     def __init__(self, **parameters):
@@ -40,25 +41,31 @@ def toy_inc(x: ToyModel, **operation_params) -> tuple[ToyModel, list[CollectedDa
     return x, []
 
 
-def simulate(unit: SimulationPayload[ToyModel],
+def simulate(payload: SimulationPayload[ToyModel],
              transition: TransitionFn[ToyModel],
              end_condition: Condition[ToyModel],
              instructions: list[SimulationInstruction[ToyModel]]) -> list[SimulationPayload[ToyModel]]:
     retval = []
-    if not end_condition(unit.computational_unit):
+    if not end_condition(payload.computational_unit):
         for instruction in instructions:
             conditions_true = True
             for condition in instruction.conditions:
-                if not condition(unit):
+                if not condition(payload):
                     conditions_true = False
                     break
             if conditions_true:
-                for new_branch in instruction.unwrap(unit):
+                for new_branch in instruction.unwrap(payload):
                     new_branch.computational_unit = transition(new_branch.computational_unit)
                     retval.extend(simulate(new_branch, transition, end_condition, instructions))
             else:
-                unit.computational_unit = transition(unit.computational_unit)
-                retval.extend(simulate(unit, transition, end_condition, instructions))
+                payload.computational_unit = transition(payload.computational_unit)
+                retval.extend(simulate(payload, transition, end_condition, instructions))
     else:
-        retval = [unit]
+        retval = [payload]
     return retval
+
+
+def parametrized_treatment(x: ToyModel, **kwargs) -> tuple[ToyModel, list[CollectedData]]:
+    if kwargs.get('amplify') is True:
+        x.value *= 1000
+    return x, []

@@ -35,7 +35,7 @@ class ConditionTest(unittest.TestCase):
             computational_unit.value += 1
             return computational_unit, []
 
-        generator = Alternatives([
+        generator = Alternatives[ToyModel]([
             Sequence([
                 Event(step, preconditions=[Condition(lambda x: x.computational_unit.value <= 2)]),
                 Event(step, preconditions=[Condition(lambda x: x.computational_unit.value >= 2)]),
@@ -56,10 +56,12 @@ class ConditionTest(unittest.TestCase):
             Event(step, postconditions=[Condition(lambda _: False)]),
         ])
 
-        root = generator.compose_nested()
-        result = list(root.evaluate(SimulationPayload(
-            computational_unit=ToyModel("", 1),
-            operation_history=[])))
+        roots = generator.compose_nested()
+        result: list[SimulationPayload[ToyModel]] = []
+        for root in roots:
+            result.extend(root.evaluate(SimulationPayload(
+                computational_unit=ToyModel("", 1),
+                operation_history=[])))
 
         self.assertEqual(len(list(result)), 4)
         self.assertEqual(result[0].computational_unit.value, 4)
