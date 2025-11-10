@@ -58,7 +58,7 @@ class GrowMotti(Event[ForestStand]):
 
 __all__ = [
     "DoNothing",
-    "GrowMotti",
     "GrowActa",
-    "GrowMetsi"
+    "GrowMetsi",
+    "GrowMotti",
 ]

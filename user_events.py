@@ -6,9 +6,10 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.domain.forestry_operations.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.forestry.harvest.cutting import cutting
-
+from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
+from lukefi.metsi.domain.collected_data import RemovedTrees
 class Mounding(Event[ForestStand]):
     """
     Mounding Event using soil surface preparation..
@@ -121,7 +122,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         profile_y = [0.5, 0.5, 0.5, 0.5, 0.5, 0.4, 0.25, 0.1, 0.05, 0.05, 0.05]
 
         tree_selection = {
-            "Target": {
+            "target": {
                 "type": "absolute_remain",
                 "var":  "stems_per_ha",
                 "amount": _min_number_of_stems_after_thinning(),
@@ -161,7 +162,10 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             Condition(_forest_categories_check),
         ]
 
-        super().__init__(treatment=cutting, parameters=event_params, preconditions=preconds, **kw)
+        super().__init__(treatment=cutting, parameters=event_params,
+                        preconditions=preconds,
+                        collected_data={RemovedTrees},
+                        **kw)
 
 
 class Tracks(Event[ForestStand]):
@@ -177,11 +181,11 @@ class Tracks(Event[ForestStand]):
         def s_all(_stand: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
-        profile_x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        profile_y = [0.00, 0.05, 0.10, 0.15, 0.25, 0.40, 0.60, 0.80, 0.90, 1.00, 1.00]
+        profile_x = [0,1]
+        profile_y = [0.18,0.18]
 
         tree_selection = {
-            "Target": {"type": "relative", "var": "stems_per_ha", "amount": 0.18},
+            "target": {"type": "relative", "var": "stems_per_ha", "amount": 0.18},
             "sets": [{
                 "sfunction": s_all,
                 "order_var": "breast_height_diameter",
@@ -210,11 +214,43 @@ class Tracks(Event[ForestStand]):
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
+            collected_data={RemovedTrees},
             **kw
         )
+
+class PlantingPines(Event[ForestStand]):
+    """
+    Pine planting event that calls regeneration with sensible defaults.
+    Override by passing 'parameters={...}' when constructing, or subclass for species presets.
+    """
+    def __init__(self,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+
+        default_params: dict[str, Any] = {
+            "origin": 2,           # planted
+            "method": 2,
+            "species": 1,          # Pine
+            "stems_per_ha": 1500.0,
+            "height": 0.7,
+            "biological_age": 3.0,
+            "type": "artificial",
+        }
+
+        merged = default_params | (parameters or {})
+        super().__init__(treatment=regeneration,
+                         parameters=merged,
+                         preconditions=preconditions,
+                         postconditions=postconditions,
+                         file_parameters=file_parameters)
+
+
 
 __all__ = [
     "Mounding",
     "Tracks",
     "FirstThinningMineralSoils",
+    "PlantingPines"
 ]
