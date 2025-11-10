@@ -10,10 +10,10 @@ type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 
 
 class Transition[T: ComputationalUnit]:
-    transition_fn: TransitionFn
+    transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
 
-    def __init__(self, transition_fn: TransitionFn, **parameters):
+    def __init__(self, transition_fn: TransitionFn[T], **parameters):
         self.parameters = parameters
         self.transition_fn = partial(transition_fn, **parameters)
 
