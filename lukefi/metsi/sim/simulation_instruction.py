@@ -28,6 +28,6 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-    def unwrap(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]):
+    def unwrap(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection] = None):
         for i, root in enumerate(self.event_generator.compose_nested()):
             yield from root.evaluate(copy(payload), db, i)
