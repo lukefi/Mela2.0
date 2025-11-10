@@ -57,11 +57,9 @@ class GrowMotti(Event[ForestStand]):
                          file_parameters=file_parameters)
 
 
-
-
 __all__ = [
     "DoNothing",
-    "GrowMotti",
     "GrowActa",
-    "GrowMetsi"
+    "GrowMetsi",
+    "GrowMotti",
 ]

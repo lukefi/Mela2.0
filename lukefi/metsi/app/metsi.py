@@ -61,9 +61,11 @@ def main() -> int:
         prepare_target_directory(app_config.target_directory)
         print_logline("Reading input...")
 
-        print_logline("Initializing output database")
-        db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
-        create_database_tables(db)
+        db: sqlite3.Connection | None = None
+        if RunMode.SIMULATE in app_config.run_modes:
+            print_logline("Initializing output database")
+            db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
+            create_database_tables(db)
 
         if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
             # 1) read full stand list
@@ -113,8 +115,9 @@ def main() -> int:
         if RunMode.SIMULATE in cfg.run_modes:
             simulate(cfg, control_structure, current, db)
 
-    db.commit()
-    db.close()
+    if db is not None:
+        db.commit()
+        db.close()
 
     _, dirs, files = next(os.walk(app_config.target_directory))
     if len(dirs) == 0 and len(files) == 0:
