@@ -26,25 +26,23 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         if db is not None:
             payload.node_id.append(0)
             output_node_to_db(db, payload, [])
-        _simulate(payload, transition.transition_fn, end_condition, instructions, db)
+        _simulate_unit(payload, transition.transition_fn, end_condition, instructions, db)
 
 
-def _simulate[T: ComputationalUnit](payload: SimulationPayload[T],
-                                    transition: TransitionFn[T],
-                                    end_condition: Condition[T],
-                                    instructions: list[SimulationInstruction[T]],
-                                    db: Optional[sqlite3.Connection] = None):
+def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
+                                         transition: TransitionFn[T],
+                                         end_condition: Condition[T],
+                                         instructions: list[SimulationInstruction[T]],
+                                         db: Optional[sqlite3.Connection] = None):
     if not end_condition(payload.computational_unit):
+        offset = 0
         for instruction in instructions:
-            conditions_true = True
-            for condition in instruction.conditions:
-                if not condition(payload):
-                    conditions_true = False
-                    break
-            if conditions_true:
-                for new_branch in instruction.unwrap(payload, db):
+            if all(condition(payload) for condition in instruction.conditions):
+                for new_branch in instruction.unwrap(payload, offset, db):
+                    offset += 1
                     new_branch.computational_unit, _ = transition(new_branch.computational_unit)
-                    _simulate(new_branch, transition, end_condition, instructions, db)
+                    _simulate_unit(new_branch, transition, end_condition, instructions, db)
             else:
+                # Conditions failed. Don't kill the branch but carry on with transition.
                 payload.computational_unit, _ = transition(payload.computational_unit)
-                _simulate(payload, transition, end_condition, instructions, db)
+                _simulate_unit(payload, transition, end_condition, instructions, db)
