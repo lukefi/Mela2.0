@@ -1,7 +1,7 @@
 from collections.abc import Generator
 import sqlite3
 from typing import Optional, TYPE_CHECKING
-from copy import copy, deepcopy
+from copy import copy
 
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
