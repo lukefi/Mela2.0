@@ -4,7 +4,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.runners import evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.app.file_io import read_control_module
-from tests.test_utils import collect_results, raises, identity, none
+from tests.test_utils import DummyUnit, collect_results, raises, identity, none
 
 
 class RunnersTest(unittest.TestCase):
@@ -33,7 +33,7 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         depth_payload = SimulationPayload(
-            computational_unit=1,
+            computational_unit=DummyUnit(1),
             operation_history=[]
         )
         generator = config.full_tree_generators()
@@ -49,13 +49,13 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=1,
+            computational_unit=DummyUnit(1),
             operation_history=[]
         )
         generator = config.full_tree_generators()
         root_node = generator.compose_nested()
         results = collect_results(root_node.evaluate(initial))
-        self.assertEqual(5, results[0])
+        self.assertEqual(5, results[0].x)
 
     def test_parameters_propagation(self):
         control_path = str(Path("tests",
@@ -65,13 +65,13 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=1,
+            computational_unit=DummyUnit(1),
             operation_history=[]
         )
         generator = config.full_tree_generators()
         root_node = generator.compose_nested()
         results = collect_results(root_node.evaluate(initial))
-        self.assertEqual(9, results[0])
+        self.assertEqual(9, results[0].x)
 
     def test_parameters_branching(self):
         control_path = str(Path("tests",
@@ -81,12 +81,12 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=1,
+            computational_unit=DummyUnit(1),
             operation_history=[]
         )
         generator = config.full_tree_generators()
         root_node = generator.compose_nested()
-        results = collect_results(root_node.evaluate(initial))
+        results = list(map(lambda x: x.x, collect_results(root_node.evaluate(initial))))
         # do_nothing, do_nothing = 1
         # do_nothing, inc#1      = 2
         # do_nothing, inc#2      = 3

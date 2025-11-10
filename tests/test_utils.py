@@ -1,12 +1,13 @@
 """
 This module contains a collection of util functions and dummy payload functions for test cases
 """
+from sqlite3 import Connection
 import unittest
-from typing import Any, Optional
+from typing import Any
 from collections.abc import Callable
-import numpy as np
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand, ReferenceTree
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -17,6 +18,19 @@ class ConverterTestSuite(unittest.TestCase):
         for case in assertions:
             result = fn(*case[0])
             self.assertEqual(case[1], result)
+
+
+class DummyUnit(ComputationalUnit):
+    x: int
+
+    def __init__(self, x: int):
+        self.x = x
+    
+    def output_to_db(self, db: Connection, node: str):
+        pass
+
+    def update_aggregates(self):
+        pass
 
 
 def raises(x: Any) -> None:
@@ -31,15 +45,17 @@ def none(x: Any) -> None:
     return None
 
 
-def inc(x: int, **operation_params) -> tuple[int, list[CollectedData]]:
+def inc(x: DummyUnit,
+        **operation_params) -> tuple[DummyUnit, list[CollectedData]]:
     incrementation = operation_params.get("incrementation", 1)
-    return x + incrementation, []
+    x.x += incrementation
+    return x, []
 
 
-def parametrized_operation(x: SimulationPayload[int], **kwargs) -> SimulationPayload[int]:
+def parametrized_treatment(x: DummyUnit, **kwargs) -> tuple[DummyUnit, list[CollectedData]]:
     if kwargs.get('amplify') is True:
-        x.computational_unit *= 1000
-    return x
+        x.x *= 1000
+    return x, []
 
 
 def collect_results(payloads: list[SimulationPayload]) -> list:
@@ -50,10 +66,10 @@ def prepare_growth_test_stand():
     stand = ForestStand(
         identifier="123",
         area=20.3,
-        soil_peatland_category=1,
-        site_type_category=1,
+        soil_peatland_category=SoilPeatlandCategory(1),
+        site_type_category=SiteType(1),
         tax_class_reduction=1,
-        land_use_category=1,
+        land_use_category=LandUseCategory(1),
         geo_location=(
             6656996.0,
             310260.0,

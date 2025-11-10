@@ -3,7 +3,8 @@ from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.domain.forestry_operations.soil_surface_preparation import soil_surface_preparation
+from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 
 class Mounding(Event[ForestStand]):
     """
@@ -59,6 +60,37 @@ class Mounding(Event[ForestStand]):
         )
 
 
+class PlantingPines(Event[ForestStand]):
+    """
+    Pine planting event that calls regeneration with sensible defaults.
+    Override by passing 'parameters={...}' when constructing, or subclass for species presets.
+    """
+    def __init__(self,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+
+        default_params: dict[str, Any] = {
+            "origin": 2,           # planted
+            "method": 2,
+            "species": 1,          # Pine
+            "stems_per_ha": 1500.0,
+            "height": 0.7,
+            "biological_age": 3.0,
+            "type": "artificial",
+        }
+
+        merged = default_params | (parameters or {})
+        super().__init__(treatment=regeneration,
+                         parameters=merged,
+                         preconditions=preconditions,
+                         postconditions=postconditions,
+                         file_parameters=file_parameters)
+
+
+
 __all__ = [
-    "Mounding"
+    "Mounding",
+    "PlantingPines"
 ]

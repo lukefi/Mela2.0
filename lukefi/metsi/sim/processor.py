@@ -28,6 +28,8 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
         raise UserWarning(f"Unable to perform operation {operation_tag}, "
                           f"at time point {time_point}; reason: {e}") from e
 
+    new_state.update_aggregates()
+
     newpayload: SimulationPayload[T] = SimulationPayload(
         computational_unit=new_state,
         operation_history=payload.operation_history
@@ -37,6 +39,6 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
         if not condition(time_point, newpayload):
             raise ConditionFailed(f'{operation_tag} aborted - condition "{condition}" failed')
 
-    payload.operation_history.append((time_point, operation_tag, operation_parameters))
+    newpayload.operation_history.append((time_point, operation_tag, operation_parameters))
 
     return newpayload, new_collected_data

@@ -154,6 +154,11 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                 writer = csv.writer(tree_file, delimiter=' ')
                 writer.writerow(["stratum", "lpm", "height", "lkm"])
                 writer.writerows(debug_tree_rows)
+
+    # Delete all strata to avoid duplicate data
+    for stand in stands:
+        stand.tree_strata_pre_vec = []
+
     return stands
 
 
