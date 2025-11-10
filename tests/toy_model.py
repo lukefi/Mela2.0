@@ -47,14 +47,11 @@ def simulate(payload: SimulationPayload[ToyModel],
              instructions: list[SimulationInstruction[ToyModel]]) -> list[SimulationPayload[ToyModel]]:
     retval = []
     if not end_condition(payload.computational_unit):
+        offset = 0
         for instruction in instructions:
-            conditions_true = True
-            for condition in instruction.conditions:
-                if not condition(payload):
-                    conditions_true = False
-                    break
-            if conditions_true:
-                for new_branch in instruction.unwrap(payload):
+            if all(condition(payload) for condition in instruction.conditions):
+                for new_branch in instruction.unwrap(payload, offset):
+                    offset += 1
                     new_branch.computational_unit, _ = transition(new_branch.computational_unit)
                     retval.extend(simulate(new_branch, transition, end_condition, instructions))
             else:
