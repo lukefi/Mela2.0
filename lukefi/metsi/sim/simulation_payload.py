@@ -11,14 +11,23 @@ class SimulationPayload[T: ComputationalUnit]:
     operation calls. """
     computational_unit: T
     operation_history: list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]
+    node_id: list[int]
 
-    def __init__(self, computational_unit: T,
-                 operation_history: Optional[list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]] = None) -> None:
+    def __init__(self,
+                 computational_unit: T,
+                 operation_history: Optional[list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]] = None,
+                 node_id: Optional[list[int]] = None) -> None:
         self.computational_unit = computational_unit
+
         if operation_history is None:
             self.operation_history = []
         else:
             self.operation_history = operation_history
+
+        if node_id is None:
+            self.node_id = []
+        else:
+            self.node_id = node_id
 
     def __copy__(self) -> "SimulationPayload[T]":
         copy_like: T
@@ -29,5 +38,6 @@ class SimulationPayload[T: ComputationalUnit]:
 
         return SimulationPayload(
             computational_unit=copy_like,
-            operation_history=list(self.operation_history)
+            operation_history=list(self.operation_history),
+            node_id=deepcopy(self.node_id)
         )

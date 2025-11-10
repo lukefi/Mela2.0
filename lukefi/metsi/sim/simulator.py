@@ -11,7 +11,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
                                                 units: list[T],
                                                 db: Optional[sqlite3.Connection] = None):
-    simconfig = SimConfiguration[T](**control)
+    simconfig = SimConfiguration[T](control["simulation_instructions"], control["transition"], control["end_condition"])
 
     if db is not None:
         init_collected_data_tables(db, simconfig.collected_data)
@@ -22,13 +22,14 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
     for unit in units:
         payload = SimulationPayload(unit)
-        _simulate(payload, transition.transition_fn, end_condition, instructions)
+        _simulate(payload, transition.transition_fn, end_condition, instructions, db)
 
 
 def _simulate[T: ComputationalUnit](payload: SimulationPayload[T],
                                     transition: TransitionFn[T],
                                     end_condition: Condition[T],
-                                    instructions: list[SimulationInstruction[T]]):
+                                    instructions: list[SimulationInstruction[T]],
+                                    db: Optional[sqlite3.Connection] = None):
     if not end_condition(payload.computational_unit):
         for instruction in instructions:
             conditions_true = True
@@ -37,9 +38,9 @@ def _simulate[T: ComputationalUnit](payload: SimulationPayload[T],
                     conditions_true = False
                     break
             if conditions_true:
-                for new_branch in instruction.unwrap(payload):
-                    new_branch.computational_unit = transition(new_branch.computational_unit)
-                    _simulate(new_branch, transition, end_condition, instructions)
+                for new_branch in instruction.unwrap(payload, db):
+                    new_branch.computational_unit, _ = transition(new_branch.computational_unit)
+                    _simulate(new_branch, transition, end_condition, instructions, db)
             else:
-                payload.computational_unit = transition(payload.computational_unit)
-                _simulate(payload, transition, end_condition, instructions)
+                payload.computational_unit, _ = transition(payload.computational_unit)
+                _simulate(payload, transition, end_condition, instructions, db)

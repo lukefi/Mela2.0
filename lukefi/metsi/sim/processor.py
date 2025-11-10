@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import TYPE_CHECKING
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -31,7 +32,8 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
 
     newpayload: SimulationPayload[T] = SimulationPayload(
         computational_unit=new_state,
-        operation_history=payload.operation_history
+        operation_history=payload.operation_history,
+        node_id=deepcopy(payload.node_id)
     )
 
     for condition in postconditions:

@@ -1,4 +1,7 @@
+from copy import copy
+import sqlite3
 from typing import Optional, TypeVar
+from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
@@ -9,11 +12,11 @@ T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 
 class SimulationInstruction[T: ComputationalUnit]:
-    conditions: list[Condition[SimulationPayload[T]]]
+    conditions: Sequence_[Condition[SimulationPayload[T]]]
     event_generator: Generator[T]
 
     def __init__(self, events: Generator[T] | list[GeneratorBase] | set[GeneratorBase],
-                 conditions: Optional[list[Condition[SimulationPayload[T]]]] = None) -> None:
+                 conditions: Optional[Sequence_[Condition[SimulationPayload[T]]]] = None) -> None:
         if isinstance(events, Generator):
             self.event_generator = events
         elif isinstance(events, list):
@@ -25,6 +28,6 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-    def unwrap(self, payload: SimulationPayload[T]):
-        for root in self.event_generator.compose_nested():
-            yield from root.evaluate(payload)
+    def unwrap(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]):
+        for i, root in enumerate(self.event_generator.compose_nested()):
+            yield from root.evaluate(copy(payload), db, i)

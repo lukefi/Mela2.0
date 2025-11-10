@@ -2,11 +2,11 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 
-type TransitionFn[T: ComputationalUnit] = Callable[[T], T]
+type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 
 
 class Transition[T: ComputationalUnit]:
