@@ -1,7 +1,7 @@
 from sqlite3 import Connection
 from typing import override
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.sim_configuration import Transition, TransitionFn
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
@@ -30,9 +30,9 @@ class ToyTransition(Transition[ToyModel]):
         super().__init__(toy_transition, **parameters)
 
 
-def toy_transition(state: ToyModel) -> ToyModel:
+def toy_transition(state: ToyModel) -> OpTuple[ToyModel]:
     state.time += 1
-    return state
+    return state, []
 
 
 def toy_inc(x: ToyModel, **operation_params) -> tuple[ToyModel, list[CollectedData]]:
@@ -55,10 +55,10 @@ def simulate(payload: SimulationPayload[ToyModel],
                     break
             if conditions_true:
                 for new_branch in instruction.unwrap(payload):
-                    new_branch.computational_unit = transition(new_branch.computational_unit)
+                    new_branch.computational_unit, _ = transition(new_branch.computational_unit)
                     retval.extend(simulate(new_branch, transition, end_condition, instructions))
             else:
-                payload.computational_unit = transition(payload.computational_unit)
+                payload.computational_unit, _ = transition(payload.computational_unit)
                 retval.extend(simulate(payload, transition, end_condition, instructions))
     else:
         retval = [payload]
