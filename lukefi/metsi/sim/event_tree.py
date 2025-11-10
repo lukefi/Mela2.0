@@ -56,7 +56,7 @@ class EventTree[T: ComputationalUnit]:
         current.node_id.append(node)
 
         if db is not None:
-            _output_node_to_db(db, current, collected_data)
+            output_node_to_db(db, current, collected_data)
 
         if isinstance(current.computational_unit, Finalizable):
             current.computational_unit.finalize()
@@ -86,9 +86,9 @@ class EventTree[T: ComputationalUnit]:
         self.branches.append(et)
 
 
-def _output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
-                                             current: SimulationPayload[T],
-                                             collected_data: list[CollectedData]):
+def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
+                                            current: SimulationPayload[T],
+                                            collected_data: list[CollectedData]):
     """
     Writes current simulation state and collected data to database.
 

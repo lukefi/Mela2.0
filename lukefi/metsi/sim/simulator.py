@@ -1,6 +1,7 @@
 import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.event_tree import output_node_to_db
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.sim_configuration import SimConfiguration, TransitionFn
@@ -22,6 +23,9 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
     for unit in units:
         payload = SimulationPayload(unit)
+        if db is not None:
+            payload.node_id.append(0)
+            output_node_to_db(db, payload, [])
         _simulate(payload, transition.transition_fn, end_condition, instructions, db)
 
 
