@@ -14,9 +14,8 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
                                     operation_tag: "TreatmentFn[T]",
                                     preconditions: list[Condition[SimulationPayload[T]]],
                                     postconditions: list[Condition[SimulationPayload[T]]],
-                                    **operation_parameters: dict[str,
-                                                                 dict]) -> tuple[SimulationPayload[T],
-                                                                                 list[CollectedData]]:
+                                    **operation_parameters: dict[str, dict]) -> tuple[SimulationPayload[T],
+                                                                                      list[CollectedData]]:
     """Managed run conditions and history of a simulator operation. Evaluates the operation."""
     for condition in preconditions:
         if not condition(payload):
