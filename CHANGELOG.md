@@ -9,6 +9,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Added cutting treatment #MELA2-104
 
+## [0.2.4] - 2025-11-10
+
+### Changed
+
+- Motti robot test using db files for output and ref
+- Motti wrapper exits for land_use_category 3 or higher as non supported
+- Motti wrapper exits early if trees are not found
+
 ## [0.2.3] - 2025-11-07
 
 ### Added
