@@ -1,12 +1,9 @@
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.domain.events import (
     DoNothing,
-    GrowActa,
-    GrowMetsi,
 )
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence
