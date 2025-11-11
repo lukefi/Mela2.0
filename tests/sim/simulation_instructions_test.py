@@ -5,7 +5,8 @@ from lukefi.metsi.sim.generators import Alternatives, Event
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from tests.toy_model import ToyModel, ToyTransition, simulate, toy_inc
+from lukefi.metsi.sim.simulator import _simulate_unit
+from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
 class SimulationInstructionsTest(unittest.TestCase):
@@ -40,7 +41,7 @@ class SimulationInstructionsTest(unittest.TestCase):
         config = SimConfiguration[ToyModel](**declaration)
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
 
-        results = simulate(payload, config.transition.transition_fn, config.end_condition, config.instructions)
+        results = _simulate_unit(payload, config.transition.transition_fn, config.end_condition, config.instructions)
 
         self.assertEqual(27, len(results))
         self.assertListEqual(

@@ -1,5 +1,4 @@
 import unittest
-from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.domain.conditions import MinimumTimeInterval, TimePoints
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import simple_processable_chain
@@ -7,7 +6,8 @@ from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from tests.toy_model import ToyModel, ToyTransition, parametrized_treatment, simulate, toy_inc
+from lukefi.metsi.sim.simulator import _simulate_unit
+from tests.toy_model import ToyModel, ToyTransition, parametrized_treatment, toy_inc
 
 
 class TestGenerators(unittest.TestCase):
@@ -33,7 +33,7 @@ class TestGenerators(unittest.TestCase):
             computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        result = simulate(payload, config.transition.transition_fn, config.end_condition, config.instructions)
+        result = _simulate_unit(payload, config.transition.transition_fn, config.end_condition, config.instructions)
         self.assertEqual(1, len(result))
         self.assertEqual(4, result[0].computational_unit.value)
 
@@ -62,7 +62,7 @@ class TestGenerators(unittest.TestCase):
             computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        computation_result = simulate(payload, config.transition.transition_fn,
+        computation_result = _simulate_unit(payload, config.transition.transition_fn,
                                       config.end_condition, config.instructions)
         self.assertEqual(2, computation_result[0].computational_unit.value)
 
@@ -93,7 +93,7 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(computational_unit=ToyModel("", 0),
                                     operation_history=[])
-        computation_result = simulate(
+        computation_result = _simulate_unit(
             payload,
             config.transition.transition_fn,
             config.end_condition,
@@ -142,7 +142,7 @@ class TestGenerators(unittest.TestCase):
         }
         config = SimConfiguration(**declaration)
 
-        results = simulate(
+        results = _simulate_unit(
             SimulationPayload(
                 computational_unit=ToyModel(
                     "",
@@ -196,7 +196,7 @@ class TestGenerators(unittest.TestCase):
         }
         config = SimConfiguration(**declaration)
 
-        results = simulate(
+        results = _simulate_unit(
             SimulationPayload(
                 computational_unit=ToyModel("", 0),
                 operation_history=[]),
@@ -267,7 +267,7 @@ class TestGenerators(unittest.TestCase):
             list(
                 map(
                     lambda x: x.computational_unit.value,
-                    simulate(
+                    _simulate_unit(
                         SimulationPayload(
                             computational_unit=ToyModel(
                                 "",
@@ -279,7 +279,7 @@ class TestGenerators(unittest.TestCase):
             list(
                 map(
                     lambda x: x.computational_unit.value,
-                    simulate(
+                    _simulate_unit(
                         SimulationPayload(
                             computational_unit=ToyModel(
                                 "",

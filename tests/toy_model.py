@@ -41,27 +41,6 @@ def toy_inc(x: ToyModel, **operation_params) -> tuple[ToyModel, list[CollectedDa
     return x, []
 
 
-def simulate(payload: SimulationPayload[ToyModel],
-             transition: TransitionFn[ToyModel],
-             end_condition: Condition[ToyModel],
-             instructions: list[SimulationInstruction[ToyModel]]) -> list[SimulationPayload[ToyModel]]:
-    retval = []
-    if not end_condition(payload.computational_unit):
-        offset = 0
-        for instruction in instructions:
-            if all(condition(payload) for condition in instruction.conditions):
-                for new_branch in instruction.unwrap(payload, offset):
-                    offset += 1
-                    new_branch.computational_unit, _ = transition(new_branch.computational_unit)
-                    retval.extend(simulate(new_branch, transition, end_condition, instructions))
-            else:
-                payload.computational_unit, _ = transition(payload.computational_unit)
-                retval.extend(simulate(payload, transition, end_condition, instructions))
-    else:
-        retval = [payload]
-    return retval
-
-
 def parametrized_treatment(x: ToyModel, **kwargs) -> tuple[ToyModel, list[CollectedData]]:
     if kwargs.get('amplify') is True:
         x.value *= 1000

@@ -4,13 +4,14 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.runners import evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.app.file_io import read_control_module
+from lukefi.metsi.sim.simulator import _simulate_unit
 from tests.test_utils import collect_results, raises, identity, none
-from tests.toy_model import ToyModel, simulate
+from tests.toy_model import ToyModel
 
 
 class RunnersTest(unittest.TestCase):
     def test_sequence_success(self):
-        payload = SimulationPayload(computational_unit=1)
+        payload = SimulationPayload(computational_unit=ToyModel("", 1))
         result = evaluate_sequence(
             payload,
             identity,
@@ -19,7 +20,7 @@ class RunnersTest(unittest.TestCase):
         self.assertEqual(None, result)
 
     def test_sequence_failure(self):
-        payload = SimulationPayload(computational_unit=1)
+        payload = SimulationPayload(computational_unit=ToyModel("", 1))
 
         def prepared_function():
             return evaluate_sequence(payload, identity, raises, identity)
@@ -38,7 +39,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results_depth = collect_results(
-            simulate(
+            _simulate_unit(
                 depth_payload,
                 config.transition.transition_fn,
                 config.end_condition,
@@ -57,7 +58,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results = collect_results(
-            simulate(
+            _simulate_unit(
                 initial,
                 config.transition.transition_fn,
                 config.end_condition,
@@ -76,7 +77,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results = collect_results(
-            simulate(
+            _simulate_unit(
                 initial,
                 config.transition.transition_fn,
                 config.end_condition,
@@ -95,7 +96,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results = list(map(lambda x: x.value, collect_results(
-            simulate(initial, config.transition.transition_fn, config.end_condition, config.instructions))))
+            _simulate_unit(initial, config.transition.transition_fn, config.end_condition, config.instructions))))
         # do_nothing, do_nothing = 1
         # do_nothing, inc#1      = 2
         # do_nothing, inc#2      = 3
