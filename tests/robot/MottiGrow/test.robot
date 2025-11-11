@@ -18,17 +18,17 @@ ${TOLERANCE}        1e-5
 
 *** Test Cases ***
 Node Table Should Match Reference
-    [Tags]    simulation
+    [Tags]    simulation    motti
     Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
 
 Stand Table Should Match Reference
-    [Tags]    simulation
+    [Tags]    simulation    motti
     Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Stratum Table Should Match Reference
-    [Tags]    simulation
+    [Tags]    simulation    motti
     Stratum Tables Should Be Equal   ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Tree Table Should Match Reference
-    [Tags]    simulation
+    [Tags]    simulation    motti
     Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
