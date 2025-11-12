@@ -39,11 +39,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results_depth = collect_results(
-            _simulate_unit(
-                depth_payload,
-                config.transition.transition_fn,
-                config.end_condition,
-                config.instructions))
+            _simulate_unit(depth_payload, config))
         self.assertEqual(8, len(results_depth))
 
     def test_no_parameters_propagation(self):
@@ -58,11 +54,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results = collect_results(
-            _simulate_unit(
-                initial,
-                config.transition.transition_fn,
-                config.end_condition,
-                config.instructions))
+            _simulate_unit(initial, config))
         self.assertEqual(5, results[0].value)
 
     def test_parameters_propagation(self):
@@ -77,11 +69,7 @@ class RunnersTest(unittest.TestCase):
             operation_history=[]
         )
         results = collect_results(
-            _simulate_unit(
-                initial,
-                config.transition.transition_fn,
-                config.end_condition,
-                config.instructions))
+            _simulate_unit(initial, config))
         self.assertEqual(9, results[0].value)
 
     def test_parameters_branching(self):
@@ -95,8 +83,7 @@ class RunnersTest(unittest.TestCase):
             computational_unit=ToyModel("", 1),
             operation_history=[]
         )
-        results = list(map(lambda x: x.value, collect_results(
-            _simulate_unit(initial, config.transition.transition_fn, config.end_condition, config.instructions))))
+        results = list(map(lambda x: x.value, collect_results(_simulate_unit(initial, config))))
         # do_nothing, do_nothing = 1
         # do_nothing, inc#1      = 2
         # do_nothing, inc#2      = 3

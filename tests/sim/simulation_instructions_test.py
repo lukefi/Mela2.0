@@ -41,13 +41,15 @@ class SimulationInstructionsTest(unittest.TestCase):
         config = SimConfiguration[ToyModel](**declaration)
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
 
-        results = _simulate_unit(payload, config.transition.transition_fn, config.end_condition, config.instructions)
+        results = _simulate_unit(payload, config)
 
         self.assertEqual(27, len(results))
         self.assertListEqual(
-            [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 0], [0, 1, 1], [0, 1, 2], [0, 2, 0], [0, 2, 1], [0, 2, 2],
-             [1, 0, 0], [1, 0, 1], [1, 0, 2], [1, 1, 0], [1, 1, 1], [1, 1, 2], [1, 2, 0], [1, 2, 1], [1, 2, 2],
-             [2, 0, 0], [2, 0, 1], [2, 0, 2], [2, 1, 0], [2, 1, 1], [2, 1, 2], [2, 2, 0], [2, 2, 1], [2, 2, 2],],
+            [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 2], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 1, 2],
+             [0, 0, 2, 0], [0, 0, 2, 1], [0, 0, 2, 2], [0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 0, 2],
+             [0, 1, 1, 0], [0, 1, 1, 1], [0, 1, 1, 2], [0, 1, 2, 0], [0, 1, 2, 1], [0, 1, 2, 2],
+             [0, 2, 0, 0], [0, 2, 0, 1], [0, 2, 0, 2], [0, 2, 1, 0], [0, 2, 1, 1], [0, 2, 1, 2],
+             [0, 2, 2, 0], [0, 2, 2, 1], [0, 2, 2, 2],],
             [result.node_id for result in results]
         )
         self.assertListEqual(

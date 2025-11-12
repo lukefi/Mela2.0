@@ -33,7 +33,7 @@ class TestGenerators(unittest.TestCase):
             computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        result = _simulate_unit(payload, config.transition.transition_fn, config.end_condition, config.instructions)
+        result = _simulate_unit(payload, config)
         self.assertEqual(1, len(result))
         self.assertEqual(4, result[0].computational_unit.value)
 
@@ -62,8 +62,7 @@ class TestGenerators(unittest.TestCase):
             computational_unit=ToyModel("", 0),
             operation_history=[]
         )
-        computation_result = _simulate_unit(payload, config.transition.transition_fn,
-                                      config.end_condition, config.instructions)
+        computation_result = _simulate_unit(payload, config)
         self.assertEqual(2, computation_result[0].computational_unit.value)
 
     def test_operation_run_constraints_fail(self):
@@ -93,11 +92,7 @@ class TestGenerators(unittest.TestCase):
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(computational_unit=ToyModel("", 0),
                                     operation_history=[])
-        computation_result = _simulate_unit(
-            payload,
-            config.transition.transition_fn,
-            config.end_condition,
-            config.instructions)
+        computation_result = _simulate_unit(payload, config)
 
         self.assertEqual(0, len(computation_result))
 
@@ -148,9 +143,7 @@ class TestGenerators(unittest.TestCase):
                     "",
                     0),
                 operation_history=[]),
-            config.transition.transition_fn,
-            config.end_condition,
-            config.instructions)
+            config)
 
         self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit.value, results)))
 
@@ -200,9 +193,7 @@ class TestGenerators(unittest.TestCase):
             SimulationPayload(
                 computational_unit=ToyModel("", 0),
                 operation_history=[]),
-            config.transition.transition_fn,
-            config.end_condition,
-            config.instructions)
+            config)
 
         self.assertListEqual([3, 4, 5], list(map(lambda result: result.computational_unit.value, results)))
 
@@ -273,9 +264,7 @@ class TestGenerators(unittest.TestCase):
                                 "",
                                 0),
                             operation_history=[]),
-                        configs[0].transition.transition_fn,
-                        configs[0].end_condition,
-                        configs[0].instructions))),
+                        configs[0]))),
             list(
                 map(
                     lambda x: x.computational_unit.value,
@@ -285,9 +274,7 @@ class TestGenerators(unittest.TestCase):
                                 "",
                                 0),
                             operation_history=[]),
-                        configs[1].transition.transition_fn,
-                        configs[1].end_condition,
-                        configs[1].instructions))))
+                        configs[1]))))
 
         self.assertListEqual(results[0], results[1])
 
