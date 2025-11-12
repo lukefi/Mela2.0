@@ -17,6 +17,9 @@ class Transition[T: ComputationalUnit]:
         self.parameters = parameters
         self.transition_fn = partial(transition_fn, **parameters)
 
+    def __call__(self, state: T) -> OpTuple[T]:
+        return self.transition_fn(state)
+
 
 class SimConfiguration[T: ComputationalUnit]:
     """
