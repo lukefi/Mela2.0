@@ -23,14 +23,14 @@ from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
 
-def preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
+def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
     _ = config
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
+def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data)
@@ -39,7 +39,7 @@ def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) ->
         print_logline("Skipping export of preprocessing results.")
 
 
-def simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
+def _simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
     print_logline("Simulating alternatives...")
     simulate_alternatives(control, stands, db)
 
@@ -106,11 +106,11 @@ def main() -> int:
         # feed this sub‐list of stands through the normal run_modes
         current = stands
         if RunMode.PREPROCESS in cfg.run_modes:
-            current = preprocess(cfg, control_structure, current)
+            current = _preprocess(cfg, control_structure, current)
         if RunMode.EXPORT_PREPRO in cfg.run_modes:
-            export_prepro(cfg, control_structure, current)
+            _export_prepro(cfg, control_structure, current)
         if RunMode.SIMULATE in cfg.run_modes:
-            simulate(control_structure, current, db)
+            _simulate(control_structure, current, db)
 
     if db is not None:
         db.commit()
