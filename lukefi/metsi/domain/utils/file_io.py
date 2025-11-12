@@ -1,5 +1,9 @@
 import sqlite3
 
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
+
 
 def create_database_tables(db: sqlite3.Connection):
     cur = db.cursor()
@@ -10,6 +14,7 @@ def create_database_tables(db: sqlite3.Connection):
             stand TEXT,
             done_treatment TEXT,
             treatment_params TEXT,
+            leaf INTEGER(1) DEFAULT(0),
             PRIMARY KEY(identifier, stand))
         """
     )
@@ -146,3 +151,18 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     current.computational_unit.output_to_db(db, node_str)
     for datum in collected_data:
         datum.output_to_db(db, node_str, current.computational_unit.identifier)
+
+
+def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
+    cur = db.cursor()
+    cur.execute(
+        """
+        UPDATE nodes
+        SET leaf = 1
+        WHERE
+            identifier = ? AND
+            stand = ?;
+        """,
+        ("-".join(map(str, leaf_node.node_id)),
+            leaf_node.computational_unit.identifier)
+    )
