@@ -25,7 +25,7 @@ class SimulationPayload[T: ComputationalUnit]:
             self.operation_history = operation_history
 
         if node_id is None:
-            self.node_id = []
+            self.node_id = [0]
         else:
             self.node_id = node_id
 

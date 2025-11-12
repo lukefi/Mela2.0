@@ -24,7 +24,6 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     for unit in units:
         payload = SimulationPayload(unit)
         if db is not None:
-            payload.node_id.append(0)
             output_node_to_db(db, payload, [])
         _simulate_unit(payload, transition.transition_fn, end_condition, instructions, db)
 
