@@ -133,7 +133,7 @@ class Event(EventGeneratorBase[T]):
     def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment())
+            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags)
             parent.add_branch(branch)
             retval.append(branch)
         return retval
