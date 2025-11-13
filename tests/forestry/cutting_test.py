@@ -71,38 +71,6 @@ class CuttingTest(unittest.TestCase):
         expected_after = before * 0.5
         np.testing.assert_allclose(expected_after, updated.reference_trees.stems_per_ha, rtol=0, atol=1e-9)
 
-    def test_prerequisite_blocks_cutting(self):
-        stand = self.make_stand_with_trees()
-        start = stand.reference_trees.stems_per_ha.copy()
-
-        params = {
-            "tree_selection": {
-                "target": {"type": "absolute", "var": "stems_per_ha", "amount": 100.0},
-                "sets": [{
-                    "sfunction": _all_trees,
-                    "order_var": "height",
-                    "target_var": "stems_per_ha",
-                    "target_type": "absolute",
-                    "target_amount": 100.0,
-                    "profile_x": [0.0, 1.0],
-                    "profile_y": [0.5, 0.5],
-                    "profile_xmode": "relative",
-                }]
-            },
-            "mode": "odds_units",
-            "select_from_all": True,
-            "prerequisite": lambda st, tr: False,  # block the operation
-            "cutting_method": 2,
-        }
-
-        updated, _ = cutting(stand, **params)
-        # No change if prerequisite not met
-        np.testing.assert_allclose(start, updated.reference_trees.stems_per_ha)
-
-        # Bookkeeping should also remain untouched
-        self.assertIsNone(updated.cutting_year)
-        self.assertIsNone(updated.method_of_last_cutting)
-
     def test_returns_early_when_no_trees(self):
         stand = ForestStand()
         stand.identifier = "empty-stand"

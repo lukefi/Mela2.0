@@ -26,26 +26,6 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if stand.reference_trees.size == 0:
         return stand, []
 
-    precond = operation_parameters.get("precondition", None)
-    if precond is None:
-        precond = operation_parameters.get("prerequisite", None)
-
-    def _eval_one(cond):
-        try:
-            return bool(cond(stand, trees))
-        except TypeError:
-            try:
-                return bool(cond(stand))
-            except TypeError:
-                return bool(cond)
-
-    if precond is not None:
-        if isinstance(precond, (list, tuple)):
-            filled = all(_eval_one(c) for c in precond)
-        else:
-            filled = _eval_one(precond)
-        if not filled:
-            return stand, []
 
     ts = operation_parameters.get("tree_selection")
     if not ts or "target" not in ts or "sets" not in ts:
@@ -69,6 +49,7 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
 
     required = ("sfunction", "order_var", "target_var", "target_type",
                 "target_amount", "profile_x", "profile_y", "profile_xmode")
+    
     py_sets: list[SelectionSet[ForestStand, ReferenceTrees]] = []
     for i, s in enumerate(sets_in):
         # Checking if item exists

@@ -10,6 +10,30 @@ from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.domain.collected_data import RemovedTrees
+
+def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]) -> bool:
+    stand = payload.computational_unit
+    stand.update_aggregates()  # use stand aggregates, not manual BA math
+
+    manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1
+    soil_cat = stand.soil_peatland_category.value if stand.soil_peatland_category is not None else -1
+    site = stand.site_type_category.value if stand.site_type_category is not None else -1
+    year_drain = stand.drainage_year if stand.drainage_year is not None else -1
+
+    stem_count = float(stand.stems_per_ha or 0.0)
+    dgm = float(stand.weighted_mean_diameter or 0.0)
+    hgm = float(stand.weighted_mean_height or 0.0)
+
+    cond_mineral = (
+        ((0 <= manag_cat < 3) and soil_cat == 1) or
+        ((0 <= manag_cat < 2) and (2 <= soil_cat < 4) and (year_drain <= 1950)) or
+        ((0 <= manag_cat < 2) and soil_cat == 2 and (1 <= site < 4) and (1951 <= year_drain)) or
+        ((2 <= manag_cat < 3) and (2 <= soil_cat < 5))
+    )
+    size_ok = (dgm >= 8) and (hgm >= 13.5)
+    dense_enough = stem_count > 1.5 * 1000
+
+    return bool(cond_mineral and size_ok and dense_enough)
 class Mounding(Event[ForestStand]):
     """
     Mounding Event using soil surface preparation..
@@ -82,30 +106,6 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         def _min_number_of_stems_after_thinning() -> int:
             return 1000  # default per the example file
 
-        def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]) -> bool:
-            stand = payload.computational_unit
-            stand.update_aggregates()  # use stand aggregates, not manual BA math
-
-            manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1
-            soil_cat = stand.soil_peatland_category.value if stand.soil_peatland_category is not None else -1
-            site = stand.site_type_category.value if stand.site_type_category is not None else -1
-            year_drain = stand.drainage_year if stand.drainage_year is not None else -1
-
-            stem_count = float(stand.stems_per_ha or 0.0)
-            dgm = float(stand.weighted_mean_diameter or 0.0)
-            hgm = float(stand.weighted_mean_height or 0.0)
-
-            cond_mineral = (
-                ((0 <= manag_cat < 3) and soil_cat == 1) or
-                ((0 <= manag_cat < 2) and (2 <= soil_cat < 4) and (year_drain <= 1950)) or
-                ((0 <= manag_cat < 2) and soil_cat == 2 and (1 <= site < 4) and (1951 <= year_drain)) or
-                ((2 <= manag_cat < 3) and (2 <= soil_cat < 5))
-            )
-            size_ok = (dgm >= 8) and (hgm >= 13.5)
-            dense_enough = stem_count > 1.5 * 1000
-
-            return bool(cond_mineral and size_ok and dense_enough)
-
         def s_conifer_bias(stand: ForestStand, trees) -> np.ndarray:
             fert = (stand.site_type_category or 0)
             if fert == 3:
@@ -171,7 +171,8 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 class Tracks(Event[ForestStand]):
     """Classic Tracks preset: 'even' profile as in your earlier R prototype."""
 
-    def __init__(self, parameters: Optional[dict[str, Any]] = None,
+    def __init__(self,
+                 parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
                  postconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
@@ -203,9 +204,10 @@ class Tracks(Event[ForestStand]):
             "mode": "odds_units",
         } | params
 
-        # Default: at least 20y since last cutting; caller can append more via `preconditions=...`
+        # Default: at least 20y since last cutting and forest category check
         default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
-            MinimumTimeInterval(20, cutting)
+            MinimumTimeInterval(20, cutting),
+            Condition(_forest_categories_check),
         ]
 
         super().__init__(
