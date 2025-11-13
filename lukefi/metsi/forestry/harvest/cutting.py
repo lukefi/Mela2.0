@@ -49,7 +49,7 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
 
     required = ("sfunction", "order_var", "target_var", "target_type",
                 "target_amount", "profile_x", "profile_y", "profile_xmode")
-    
+
     py_sets: list[SelectionSet[ForestStand, ReferenceTrees]] = []
     for i, s in enumerate(sets_in):
         # Checking if item exists
