@@ -151,7 +151,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
         """,
         (node_str,
          current.computational_unit.identifier,
-         str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
+         str(current.operation_history[-1][1]) if len(current.operation_history) > 0 else "do_nothing",
          str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}",
          str(tags)))
     current.computational_unit.output_to_db(db, node_str)
