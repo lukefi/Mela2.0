@@ -18,7 +18,6 @@ T = TypeVar("T", bound=ComputationalUnit)
 ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
 TreatmentFn = Callable[[T], OpTuple[T]]
-ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
