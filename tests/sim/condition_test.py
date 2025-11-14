@@ -1,7 +1,7 @@
 from typing import Any
 import unittest
 
-from lukefi.metsi.domain.conditions import _get_operation_last_run
+from lukefi.metsi.domain.conditions import _get_tag_last_run, _get_treatment_last_run
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
@@ -86,18 +86,37 @@ class ConditionTest(unittest.TestCase):
             return x, []
 
         operation_history = [
-            (1, operation1, {}),
-            (2, operation2, {}),
-            (3, operation1, {}),
-            (4, operation3, {}),
-            (5, operation1, {}),
-            (6, operation2, {}),
-            (7, operation1, {}),
-            (8, operation3, {}),
-            (9, operation1, {})
+            (1, "operation1", {}, set()),
+            (2, "operation2", {}, set()),
+            (3, "operation1", {}, set()),
+            (4, "operation3", {}, set()),
+            (5, "operation1", {}, set()),
+            (6, "operation2", {}, set()),
+            (7, "operation1", {}, set()),
+            (8, "operation3", {}, set()),
+            (9, "operation1", {}, set())
         ]
 
-        self.assertEqual(_get_operation_last_run(operation_history, operation1), 9)
-        self.assertEqual(_get_operation_last_run(operation_history, operation2), 6)
-        self.assertEqual(_get_operation_last_run(operation_history, operation3), 8)
-        self.assertEqual(_get_operation_last_run(operation_history, operation4), None)
+        self.assertEqual(_get_treatment_last_run(operation_history, operation1), 9)
+        self.assertEqual(_get_treatment_last_run(operation_history, operation2), 6)
+        self.assertEqual(_get_treatment_last_run(operation_history, operation3), 8)
+        self.assertEqual(_get_treatment_last_run(operation_history, operation4), None)
+
+    def test_tag_last_run(self):
+
+        operation_history = [
+            (1, "operation1", {}, {"1"}),
+            (2, "operation2", {}, {"2"}),
+            (3, "operation1", {}, {"1"}),
+            (4, "operation3", {}, {"3"}),
+            (5, "operation1", {}, {"1"}),
+            (6, "operation2", {}, {"2"}),
+            (7, "operation1", {}, {"1"}),
+            (8, "operation3", {}, {"3"}),
+            (9, "operation1", {}, {"1"})
+        ]
+
+        self.assertEqual(_get_tag_last_run(operation_history, "1"), 9)
+        self.assertEqual(_get_tag_last_run(operation_history, "2"), 6)
+        self.assertEqual(_get_tag_last_run(operation_history, "3"), 8)
+        self.assertEqual(_get_tag_last_run(operation_history, "4"), None)

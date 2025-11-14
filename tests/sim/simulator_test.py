@@ -2,7 +2,7 @@ from pathlib import Path
 import unittest
 
 from lukefi.metsi.app.file_io import read_control_module
-from lukefi.metsi.domain.conditions import MinimumTimeInterval, RelativeTimePoints, TimePoints
+from lukefi.metsi.domain.conditions import TimeSinceTreatment, RelativeTimePoints, TimePoints
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
@@ -47,7 +47,7 @@ class SimulatorTest(unittest.TestCase):
                     events=Sequence([
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, toy_inc)
+                                TimeSinceTreatment(2, toy_inc)
                             ],
                             treatment=toy_inc
                         )
@@ -76,13 +76,13 @@ class SimulatorTest(unittest.TestCase):
                     events=Sequence([
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, toy_inc)
+                                TimeSinceTreatment(2, toy_inc)
                             ],
                             treatment=toy_inc
                         ),
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, toy_inc)
+                                TimeSinceTreatment(2, toy_inc)
                             ],
                             treatment=toy_inc
                         )
@@ -106,7 +106,7 @@ class SimulatorTest(unittest.TestCase):
                     events=Sequence([
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(2, toy_inc)
+                                TimeSinceTreatment(2, toy_inc)
                             ],
                             treatment=toy_inc
                         )

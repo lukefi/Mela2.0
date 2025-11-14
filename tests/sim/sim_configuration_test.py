@@ -1,6 +1,6 @@
 import unittest
 
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
+from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
@@ -23,7 +23,7 @@ class SimConfigurationTest(unittest.TestCase):
                     events=[
                         Event(
                             preconditions=[
-                                MinimumTimeInterval(5, fn1)
+                                TimeSinceTreatment(5, fn1)
                             ],
                             treatment=fn1,
                             parameters={
@@ -41,7 +41,7 @@ class SimConfigurationTest(unittest.TestCase):
                         Sequence([
                             Event(
                                 preconditions=[
-                                    MinimumTimeInterval(5, fn1)
+                                    TimeSinceTreatment(5, fn1)
                                 ],
                                 treatment=fn1,
                                 parameters={
