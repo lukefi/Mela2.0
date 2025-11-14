@@ -9,7 +9,7 @@ from lukefi.metsi.data.util.select_units import select_units, SelectionSet, Sele
 
 def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
-    mark_trees treatment:
+    mark_trees treatment (Python equivalent of the R function `ftrt_mark_trees`):
 
     Selects a subset of reference trees based on a selection profile and *marks* them by
     setting given attributes. If only a part of a tree's stems are selected, the function
@@ -23,25 +23,21 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         - Target: {type, var, amount}
         - sets: [ {sfunction, order_var, target_var, target_type, target_amount,
                    profile_x, profile_y, profile_xmode, (optional) profile_xscale}, ... ]
-    freq_var : str
-        Frequency column name in ReferenceTrees (e.g. "stems_per_ha").
     select_from_all : bool
         Whether per-set selections are computed from original amounts (True) or remaining (False).
     mode : str, optional
         Selection mode forwarded to select_units (e.g. "odds_units").
     attributes : dict
         Mapping of ReferenceTrees field names to values to assign to the *marked* stems,
-        e.g. {"tree_type": "retained", "management_category": 2}.
+        e.g. {"tree_type": "SPARE", "management_category": 2}.
 
-    Returns
-    -------
-    (ForestStand, list)
-        Modified stand and empty collected-data list.
+    Notes
+    -----
+    The frequency variable is fixed to 'stems_per_ha' (no configurable freq_var).
     """
     stand = input_
     if stand.reference_trees.size == 0:
         return stand, []
-
 
     ts = operation_parameters.get("tree_selection")
     if not ts or "Target" not in ts or "sets" not in ts:
@@ -65,8 +61,16 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
 
     py_sets: list[SelectionSet[ForestStand, ReferenceTrees]] = []
     for i, s in enumerate(sets_in):
-        for req in ("sfunction", "order_var", "target_var", "target_type", "target_amount",
-                    "profile_x", "profile_y", "profile_xmode"):
+        for req in (
+            "sfunction",
+            "order_var",
+            "target_var",
+            "target_type",
+            "target_amount",
+            "profile_x",
+            "profile_y",
+            "profile_xmode",
+        ):
             if req not in s:
                 raise MetsiException(f"sets[{i}] missing '{req}'.")
         ss = SelectionSet[ForestStand, ReferenceTrees]()
@@ -80,38 +84,35 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         ss.profile_xmode = s["profile_xmode"]
         ss.profile_xscale = s.get("profile_xscale")
         if ss.profile_x.shape != ss.profile_y.shape or ss.profile_x.ndim != 1 or ss.profile_x.size < 2:
-            raise MetsiException(f"sets[{i}]: profile_x/profile_y must be 1D arrays of equal length (>=2).")
+            raise MetsiException(
+                f"sets[{i}]: profile_x/profile_y must be 1D arrays of equal length (>=2)."
+            )
         py_sets.append(ss)
 
-    # Required parameters
-    freq_var = operation_parameters.get("freq_var")
-    if not freq_var:
-        raise MetsiException("Missing 'freq_var' (e.g., 'stems_per_ha').")
-    select_from_all = operation_parameters.get("select_from_all")
-    if select_from_all is None:
-        raise MetsiException("Missing 'select_from_all' (bool).")
-    mode = operation_parameters.get("mode")
+    select_from_all = operation_parameters.get("select_from_all", True)
+
+    mode = operation_parameters.get("mode", "odds_units")
     attributes = operation_parameters.get("attributes")
     if not attributes or not isinstance(attributes, dict):
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
     # Selection amounts for each reference-tree row
+    # freq_var is now hard-coded to 'stems_per_ha'
     marked_f = select_units(
         context=stand,
         data=stand.reference_trees,
         target_decl=target_decl,
         sets=py_sets,
-        freq_var=freq_var,
+        freq_var="stems_per_ha",
         select_from_all=bool(select_from_all),
         mode=str(mode),
     )
 
-    if not hasattr(stand.reference_trees, freq_var):
-        raise MetsiException(f"Unknown freq_var '{freq_var}' in ReferenceTrees.")
+    # Work directly on stand.reference_trees.stems_per_ha
+    if not hasattr(stand.reference_trees, "stems_per_ha"):
+        raise MetsiException("ReferenceTrees is missing 'stems_per_ha' attribute.")
 
-    freq_vec: np.ndarray = getattr(stand.reference_trees, freq_var)
-    if np.any(marked_f > freq_vec):
-        raise MetsiException("mark_trees would mark more stems than available; fix targets/profiles.")
+    freq_vec: np.ndarray = stand.reference_trees.stems_per_ha
 
     # Masks
     all_stems_mask = marked_f == freq_vec
@@ -128,15 +129,16 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         # Reduce original rows by the marked amount
         if not freq_vec.flags.writeable:
             # make a copy if finalized
-            setattr(stand.reference_trees, freq_var, freq_vec.copy())
-            freq_vec = getattr(stand.reference_trees, freq_var)
+            stand.reference_trees.stems_per_ha = freq_vec.copy()
+            freq_vec = stand.reference_trees.stems_per_ha
+
         freq_vec[split_idxs] = freq_vec[split_idxs] - marked_f[split_idxs]
 
         # Create new rows that carry only the marked stems and desired attributes
         new_rows = []
         for idx in split_idxs:
             row = stand.reference_trees.read(idx)
-            row[freq_var] = marked_f[idx]
+            row["stems_per_ha"] = marked_f[idx]
             # apply attributes on the *marked* part
             row.update(attributes)
             new_rows.append(row)

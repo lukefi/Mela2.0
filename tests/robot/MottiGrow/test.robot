@@ -3,52 +3,32 @@ Library           OperatingSystem
 Library           Process
 Library           Collections
 Library           String
-Library           ${CURDIR}/../CustomCompareLibrary.py
+Library           ${CURDIR}/../DatabaseCompareLibrary.py
+Resource          ${CURDIR}/../simulation.resource
+Suite Setup       Run Simulation    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}
 
 *** Variables ***
-${SCRIPT}           -m
-${MODULE}           lukefi.metsi.app.metsi
-${INPUT_JSON}       ${CURDIR}/input/data.xml
-${OUTPUT_DIR}       ${CURDIR}/output/test
+${INPUT_DATA}       ${CURDIR}/input/data.xml
+${OUTPUT_PATH}      ${CURDIR}/output/test
 ${CONTROL_SCRIPT}   ${CURDIR}/input/control_motti_vec_grow.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
-${TOLERANCE}        0.00001  # Set your desired tolerance here
-${REL_TOL}          1e-4
+${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
+${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
+${TOLERANCE}        1e-5
 
 *** Test Cases ***
-Run Simulation And Compare Output Files
+Node Table Should Match Reference
     [Tags]    simulation    motti
+    Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
 
-    Remove Directory    ${OUTPUT_DIR}    recursive=True
-    Create Directory    ${OUTPUT_DIR}
+Stand Table Should Match Reference
+    [Tags]    simulation    motti
+    Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
+Stratum Table Should Match Reference
+    [Tags]    simulation    motti
+    Stratum Tables Should Be Equal   ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
-    ${orig_env}=    Get Environment Variables
-    Set To Dictionary    ${orig_env}    PYTHONPATH=${EXECDIR}
-    ${result}=    Run Process    python
-    ...           ${SCRIPT}
-    ...           ${MODULE}
-    ...           ${INPUT_JSON}
-    ...           ${OUTPUT_DIR}
-    ...           ${CONTROL_SCRIPT}
-    ...           shell=True
-    ...           env=${orig_env}
-
-    Log    STDOUT:\n${result.stdout}
-    Log    STDERR:\n${result.stderr}
-
-    Should Be Equal As Integers    ${result.rc}    0    msg=Python script failed! See STDERR log for details.
-
-    Log To Console    Simulation Succeeded. Verifying output files...
-
-    ${files}=    List Directory Recursively   ${REFERENCE_DIR}
-    FOR    ${file}    IN    @{files}
-        ${test_file}=    Set Variable    ${OUTPUT_DIR}/${file}
-        ${ref_file}=     Set Variable    ${REFERENCE_DIR}/${file}
-        File Should Exist    ${test_file}
-
-        # MODIFIED: Replace the slow keyword with a single call to our fast one.
-        # Robot Framework automatically converts the Python function name
-        # 'compare_numeric_files_with_tolerance' into this keyword name.
-        Compare Files With Numeric In Text    ${test_file}    ${ref_file}    ${TOLERANCE}    ${REL_TOL}
-    END
+Tree Table Should Match Reference
+    [Tags]    simulation    motti
+    Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}

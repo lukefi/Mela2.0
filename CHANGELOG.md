@@ -4,11 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.2.4] - 2025-11-10
+## [0.2.5] - 2025-11-14
 
 ### Added
 
 - Added mark_trees treatment and MarkRetentionTrees event #MELA2-118
+
+## [0.2.4] - 2025-11-10
+
+### Changed
+
+- Motti robot test using db files for output and ref
+- Motti wrapper exits for land_use_category 3 or higher as non supported
+- Motti wrapper exits early if trees are not found
 
 ## [0.2.3] - 2025-11-07
 
