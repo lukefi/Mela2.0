@@ -2,7 +2,7 @@ from typing import Any, Optional
 import numpy as np
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
+from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.condition import Condition
@@ -250,7 +250,7 @@ class Mounding(Event[ForestStand]):
         }
         # Default preconditions: at least 20 years since this treatment last ran
         default_preconds: list[ForestCondition] = [
-            MinimumTimeInterval(20, soil_surface_preparation)
+            TimeSinceTreatment(20, soil_surface_preparation)
         ]
 
         merged_params = defaults | (parameters or {})
@@ -333,7 +333,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 
         # --- Preconditions now include both: 20y spacing AND forest_categories
         preconds: list[Condition[SimulationPayload[ForestStand]]] = [
-            MinimumTimeInterval(20, cutting),
+            TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
@@ -384,7 +384,7 @@ class Tracks(Event[ForestStand]):
 
         # Default: at least 20y since last cutting and forest category check
         default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
-            MinimumTimeInterval(20, cutting),
+            TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
