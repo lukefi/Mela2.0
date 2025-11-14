@@ -5,17 +5,11 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 
 if TYPE_CHECKING:
     from lukefi.metsi.sim.collected_data import CollectedData
-    from lukefi.metsi.sim.generators import TreatmentFn
 
 
 def do_nothing[T: ComputationalUnit](data: T, **kwargs) -> tuple[T, list["CollectedData"]]:
     _ = kwargs
     return data, []
-
-
-def prepared_treatment[T: ComputationalUnit](treatment: "TreatmentFn[T]", **treatment_parameters) -> "TreatmentFn[T]":
-    """prepares a treatment entrypoint function with configuration parameters"""
-    return lambda state: treatment(state, **treatment_parameters)
 
 
 def prepared_operation[T](operation_entrypoint: Callable[[T], T], **operation_parameters) -> Callable[[T], T]:
