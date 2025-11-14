@@ -97,7 +97,6 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
     # Selection amounts for each reference-tree row
-    # freq_var is now hard-coded to 'stems_per_ha'
     marked_f = select_units(
         context=stand,
         data=stand.reference_trees,
