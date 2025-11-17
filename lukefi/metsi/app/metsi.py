@@ -3,6 +3,7 @@ import sys
 import copy
 import sqlite3
 import traceback
+from typing import Optional
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
     slice_stands_by_percentage,
@@ -39,7 +40,7 @@ def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) ->
         print_logline("Skipping export of preprocessing results.")
 
 
-def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: sqlite3.Connection) -> None:
+def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
     print_logline("Simulating alternatives...")
     result = simulate_alternatives(control, stands, db)
     if config.state_output_container is not None or config.derived_data_output_container is not None:

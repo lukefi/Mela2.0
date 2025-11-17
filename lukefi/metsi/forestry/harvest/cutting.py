@@ -106,7 +106,7 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         removed_view = trees[removed_mask]
         # record the removed amounts as stems_per_ha in the collected view
         removed_view.stems_per_ha = removed_f[removed_mask].copy()
-        rt: CollectedData = RemovedTrees()
+        rt = RemovedTrees()
         rt.removed_trees = removed_view
         collected = [rt]
 
