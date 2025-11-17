@@ -60,7 +60,6 @@ jobs:
   
     - name: Run mypy
       run: |
-        sudo apt-get install -y jq
         mypy -p lukefi
 
     - name: Install R dependencies
