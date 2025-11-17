@@ -1,12 +1,13 @@
 from typing import Any, Optional
 import numpy as np
+from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
@@ -19,9 +20,9 @@ def _min_regeneration_diameter(stand: ForestStand) -> float:
 
     if stand.site_type_category in (1, 2):
         return 28.0
-    elif stand.site_type_category == 3:
+    if stand.site_type_category == 3:
         return 26.0
-    elif stand.site_type_category == 4:
+    if stand.site_type_category == 4:
         return 25.0
     # site >= 5 or unknown
     return 22.0
@@ -50,6 +51,7 @@ def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]
     dense_enough = stem_count > 1.5 * 1000
 
     return bool(cond_mineral and size_ok and dense_enough)
+
 
 def _forest_categories_regeneration(_time_point: int, payload: Any) -> bool:
 
@@ -115,42 +117,38 @@ class MarkRetentionTrees(Event[ForestStand]):
             return trees.breast_height_diameter > 15
 
         tree_selection = {
-            "Target": {
-                "type": "absolute",
-                "var": "stems_per_ha",
-                "amount": 10.0,  # 10 stems/ha
-            },
+            "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
             "sets": [
-                {
-                    "sfunction": s_age_gt_60,
-                    "order_var": "breast_height_age",
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 1.0,
-                    "profile_x": [0.0, 1.0],
-                    "profile_y": [0.01, 0.999],
-                    "profile_xmode": "relative",
-                },
-                {
-                    "sfunction": s_other_species,
-                    "order_var": "breast_height_diameter",
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 0.7,
-                    "profile_x": [0.0, 0.5, 1.0],
-                    "profile_y": [0.01, 0.05, 0.999],
-                    "profile_xmode": "relative",
-                },
-                {
-                    "sfunction": s_large_diameter,
-                    "order_var": "breast_height_diameter",
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 0.2,
-                    "profile_x": [0.0, 0.5, 1.0],
-                    "profile_y": [0.01, 0.05, 0.999],
-                    "profile_xmode": "relative",
-                },
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_age_gt_60,
+                    "breast_height_age",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    [0.0, 1.0],
+                    [0.01, 0.999],
+                    "relative"
+                ),
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_other_species,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    0.7,
+                    [0.0, 0.5, 1.0],
+                    [0.01, 0.05, 0.999],
+                    "relative"
+                ),
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_large_diameter,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    0.2,
+                    [0.0, 0.5, 1.0],
+                    [0.01, 0.05, 0.999],
+                    "relative"
+                ),
             ],
         }
 
@@ -180,11 +178,14 @@ class MarkRetentionTrees(Event[ForestStand]):
             postconditions=postconditions,
             file_parameters=file_parameters,
         )
+
+
 class PlantingPines(Event[ForestStand]):
     """
     Pine planting event that calls regeneration with sensible defaults.
     Override by passing 'parameters={...}' when constructing, or subclass for species presets.
     """
+
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
@@ -234,6 +235,7 @@ class Mounding(Event[ForestStand]):
         Optional parameters loaded from files.
 
     """
+
     def __init__(
         self,
         parameters: Optional[dict[str, Any]] = None,
@@ -261,6 +263,7 @@ class Mounding(Event[ForestStand]):
             postconditions=postconditions,
             file_parameters=file_parameters,
         )
+
 
 class FirstThinningMineralSoils(Event[ForestStand]):
     """
@@ -297,32 +300,28 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         profile_y = [0.5, 0.5, 0.5, 0.5, 0.5, 0.4, 0.25, 0.1, 0.05, 0.05, 0.05]
 
         tree_selection = {
-            "target": {
-                "type": "absolute_remain",
-                "var":  "stems_per_ha",
-                "amount": _min_number_of_stems_after_thinning(),
-            },
+            "target": SelectionTarget("absolute_remain", "stems_per_ha", _min_number_of_stems_after_thinning()),
             "sets": [
-                {
-                    "sfunction": s_conifer_bias,
-                    "order_var": "breast_height_diameter",
-                    "target_var": "stems_per_ha",
-                    "target_type": "absolute_remain",
-                    "target_amount": 0.1 * _min_number_of_stems_after_thinning(),
-                    "profile_x": profile_x,
-                    "profile_y": profile_y,
-                    "profile_xmode": "relative",
-                },
-                {
-                    "sfunction": s_conifer_bias,
-                    "order_var": "breast_height_diameter",
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 1.0,
-                    "profile_x": profile_x,
-                    "profile_y": profile_y,
-                    "profile_xmode": "relative",
-                },
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_conifer_bias,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "absolute_remain",
+                    0.1 * _min_number_of_stems_after_thinning(),
+                    profile_x,
+                    profile_y,
+                    "relative"
+                ),
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_conifer_bias,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    profile_x,
+                    profile_y,
+                    "relative",
+                ),
             ],
         }
 
@@ -339,9 +338,9 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         ]
 
         super().__init__(treatment=cutting, parameters=event_params,
-                        preconditions=preconds,
-                        collected_data={RemovedTrees},
-                        **kw)
+                         preconditions=preconds,
+                         collected_data={RemovedTrees},
+                         **kw)
 
 
 class Tracks(Event[ForestStand]):
@@ -358,21 +357,23 @@ class Tracks(Event[ForestStand]):
         def s_all(_stand: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
-        profile_x = [0,1]
-        profile_y = [0.18,0.18]
+        profile_x = [0, 1]
+        profile_y = [0.18, 0.18]
 
         tree_selection = {
-            "target": {"type": "relative", "var": "stems_per_ha", "amount": 0.18},
-            "sets": [{
-                "sfunction": s_all,
-                "order_var": "breast_height_diameter",
-                "target_var": "stems_per_ha",
-                "target_type": "relative",
-                "target_amount": 1.0,
-                "profile_x": profile_x,
-                "profile_y": profile_y,
-                "profile_xmode": "relative",
-            }],
+            "target": SelectionTarget("relative", "stems_per_ha", 0.18),
+            "sets": [
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_all,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    profile_x,
+                    profile_y,
+                    "relative",
+                )
+            ],
         }
 
         event_params = {
@@ -396,35 +397,6 @@ class Tracks(Event[ForestStand]):
             collected_data={RemovedTrees},
             **kw
         )
-
-class PlantingPines(Event[ForestStand]):
-    """
-    Pine planting event that calls regeneration with sensible defaults.
-    Override by passing 'parameters={...}' when constructing, or subclass for species presets.
-    """
-    def __init__(self,
-                 parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
-                 file_parameters: Optional[dict[str, str]] = None) -> None:
-
-        default_params: dict[str, Any] = {
-            "origin": 2,           # planted
-            "method": 2,
-            "species": 1,          # Pine
-            "stems_per_ha": 1500.0,
-            "height": 0.7,
-            "biological_age": 3.0,
-            "type": "artificial",
-        }
-
-        merged = default_params | (parameters or {})
-        super().__init__(treatment=regeneration,
-                         parameters=merged,
-                         preconditions=preconditions,
-                         postconditions=postconditions,
-                         file_parameters=file_parameters)
-
 
 
 __all__ = [
