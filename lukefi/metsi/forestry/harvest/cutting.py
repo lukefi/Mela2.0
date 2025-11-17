@@ -41,6 +41,8 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         if k not in target:
             raise MetsiException(f"tree_selection.Target missing '{k}'.")
 
+    if stand.year is None:
+        raise MetsiException("Stand.year is None!")
 
     # Global target
     target_decl = SelectionTarget()
@@ -93,10 +95,6 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if not trees.stems_per_ha.flags.writeable:
         trees.stems_per_ha = trees.stems_per_ha.copy()
     trees.stems_per_ha -= removed_f
-
-    # Bookkeeping: mark the cutting year from the stand's timestamp if available
-    if stand.year is None:
-        raise MetsiException("Stand.year is None!")
 
     stand.cutting_year = stand.year
     stand.method_of_last_cutting = method
