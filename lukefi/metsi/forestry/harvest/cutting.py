@@ -4,7 +4,6 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
-from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.domain.collected_data import RemovedTrees
 
 def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
@@ -36,46 +35,15 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         raise MetsiException("Required parameter 'cutting_method' is missing!")
 
 
-    target = ts["target"]
-    for k in ("type", "var", "amount"):
-        if k not in target:
-            raise MetsiException(f"tree_selection.Target missing '{k}'.")
+    target: SelectionTarget = ts["target"]
 
     if stand.year is None:
         raise MetsiException("Stand.year is None!")
 
-    # Global target
-    target_decl = SelectionTarget()
-    target_decl.type = target["type"]
-    target_decl.var = target["var"]
-    target_decl.amount = target["amount"]
-
     # Sets
-    sets_in = ts["sets"]
-    if not isinstance(sets_in, (list, tuple)) or len(sets_in) == 0:
+    sets: list[SelectionSet[ForestStand, ReferenceTrees]] = ts["sets"]
+    if len(sets) == 0:
         raise MetsiException("tree_selection.sets must be a non-empty list.")
-
-    required = ("sfunction", "order_var", "target_var", "target_type",
-                "target_amount", "profile_x", "profile_y", "profile_xmode")
-
-    py_sets: list[SelectionSet[ForestStand, ReferenceTrees]] = []
-    for i, s in enumerate(sets_in):
-        # Checking if item exists
-        for name in required:
-            req(s, name)
-        ss = SelectionSet[ForestStand, ReferenceTrees]()
-        ss.sfunction = s["sfunction"]
-        ss.order_var = s["order_var"]
-        ss.target_var = s["target_var"]
-        ss.target_type = s["target_type"]
-        ss.target_amount = s["target_amount"]
-        ss.profile_x = np.asarray(s["profile_x"], dtype=np.float64)
-        ss.profile_y = np.asarray(s["profile_y"], dtype=np.float64)
-        ss.profile_xmode = s["profile_xmode"]
-        ss.profile_xscale = s.get("profile_xscale")
-        if ss.profile_x.shape != ss.profile_y.shape or ss.profile_x.ndim != 1 or ss.profile_x.size < 2:
-            raise MetsiException(f"sets[{i}]: profile_x/profile_y must be 1D arrays of equal length (>=2).")
-        py_sets.append(ss)
 
     mode = operation_parameters.get("mode", "odds_units")
     select_from_all = operation_parameters.get("select_from_all", False)
@@ -84,8 +52,8 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     removed_f = select_units(
         context=stand,
         data=trees,
-        target_decl=target_decl,
-        sets=py_sets,
+        target_decl=target,
+        sets=sets,
         freq_var="stems_per_ha",
         select_from_all=select_from_all,
         mode=mode,
