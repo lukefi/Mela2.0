@@ -14,8 +14,8 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
           Target: {type, var, amount}
           sets: [ {sfunction, order_var, target_var, target_type, target_amount,
                    profile_x, profile_y, profile_xmode, (optional) profile_xscale}, ... ]
+      - Updates required stand.cutting_year and stand.method_of_last_cutting.
       - Applies removals to stand.reference_trees.stems_per_ha.
-      - Updates stand.cutting_year and stand.method_of_last_cutting if provided.
     """
     stand = input_
 
@@ -31,10 +31,16 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if not ts or "target" not in ts or "sets" not in ts:
         raise MetsiException("Missing 'tree_selection' with 'target' and 'sets'.")
 
+    method = operation_parameters.get("cutting_method")
+    if method is None:
+        raise MetsiException("Required parameter 'cutting_method' is missing!")
+
+
     target = ts["target"]
     for k in ("type", "var", "amount"):
         if k not in target:
             raise MetsiException(f"tree_selection.Target missing '{k}'.")
+
 
     # Global target
     target_decl = SelectionTarget()
@@ -89,13 +95,11 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     trees.stems_per_ha -= removed_f
 
     # Bookkeeping: mark the cutting year from the stand's timestamp if available
-    if stand.year is not None:
-        stand.cutting_year = stand.year
+    if stand.year is None:
+        raise MetsiException("Stand.year is None!")
 
-    method = operation_parameters.get("cutting_method")
-    if method is not None:
-        stand.method_of_last_cutting = method
-
+    stand.cutting_year = stand.year
+    stand.method_of_last_cutting = method
 
     # Collected data: Removed trees
     removed_mask = removed_f > 0.0

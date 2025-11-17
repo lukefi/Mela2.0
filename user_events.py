@@ -10,6 +10,7 @@ from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 
 def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]) -> bool:
     stand = payload.computational_unit
@@ -154,6 +155,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         event_params = {
             "tree_selection": tree_selection,
             "mode": "odds_units",
+            "cutting_method": MelaMethodOfTheLastCutting.FIRST_THINNING.value,
         } | params
 
         # --- Preconditions now include both: 20y spacing AND forest_categories
@@ -202,6 +204,7 @@ class Tracks(Event[ForestStand]):
         event_params = {
             "tree_selection": tree_selection,
             "mode": "odds_units",
+            "cutting_method": MelaMethodOfTheLastCutting.FIRST_THINNING.value,
         } | params
 
         # Default: at least 20y since last cutting and forest category check
