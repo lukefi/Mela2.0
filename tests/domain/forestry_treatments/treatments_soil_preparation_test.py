@@ -1,7 +1,8 @@
 import unittest
 
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation_fn
+
 
 class SoilSurfacePreparationTest(unittest.TestCase):
     def test_sets_soil_surface_preparation_year_and_no_cdata(self):
@@ -9,7 +10,7 @@ class SoilSurfacePreparationTest(unittest.TestCase):
         stand.identifier = "stand-SSP"
         stand.year = 2030
 
-        updated, cdata = soil_surface_preparation(stand)
+        updated, cdata = soil_surface_preparation_fn(stand)
         self.assertEqual([], cdata)
         self.assertEqual(2030, updated.soil_surface_preparation_year)
 
