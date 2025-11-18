@@ -5,7 +5,8 @@ from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.sim.treatment import do_nothing
+
 
 class DoNothing(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None,
