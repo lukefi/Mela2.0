@@ -2,6 +2,7 @@ from lukefi.metsi.data.model import ForestStand, ReferenceTree
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.forestry.naturalprocess.grow_acta import grow_diameter_and_height
 from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.treatment import Treatment
 
 
 def split_sapling_trees(trees: list[ReferenceTree]) -> tuple[list[ReferenceTree], list[ReferenceTree]]:
@@ -14,7 +15,7 @@ def split_sapling_trees(trees: list[ReferenceTree]) -> tuple[list[ReferenceTree]
     return saplings, matures
 
 
-def grow_acta(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_acta_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     step = operation_parameters.get('step', 5)
     stand = input_
     if stand.reference_trees.size == 0:
@@ -24,3 +25,6 @@ def grow_acta(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestS
     stems = stand.reference_trees.stems_per_ha
     update_stand_growth(stand, diameters, heights, stems, step)
     return stand, []
+
+
+grow_acta = Treatment(grow_acta_fn, "grow_acta")
