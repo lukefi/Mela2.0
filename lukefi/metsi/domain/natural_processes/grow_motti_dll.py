@@ -368,6 +368,18 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     sim_year: int = stand.year or 0
 
     rt = stand.reference_trees
+    if rt.size == 0:
+        # Update year but skip rest of process for empty stand
+        stand.year = (stand.year or 0) + step
+        return stand, []
+
+    if stand.land_use_category and stand.land_use_category.value >= 3:
+        # No growth, just advance time/ages
+        base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
+        base_h = np.nan_to_num(rt.height, nan=0.0)
+        base_f = np.nan_to_num(rt.stems_per_ha, nan=0.0)
+        update_stand_growth(stand, base_d, base_h, base_f, step)
+        return stand, []
 
     # Construct predictor
     if predictor is None:
