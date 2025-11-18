@@ -5,7 +5,6 @@ from typing import Sequence as Sequence_
 
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
@@ -86,25 +85,29 @@ class Event(GeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     treatment: TreatmentFn[T]
-    parameters: dict[str, Any]
+    static_parameters: dict[str, Any]
+    dynamic_parameters: dict[str, Any] # callables
     file_parameters: dict[str, str]
     preconditions: list[Condition[SimulationPayload[T]]]
     postconditions: list[Condition[SimulationPayload[T]]]
     tags: set[str]
     collected_data: CollectableDataTypes
 
-    def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 file_parameters: Optional[dict[str, str]] = None,
-                 tags: Optional[set[str]] = None,
-                 collected_data: Optional[CollectableDataTypes] = None) -> None:
+    def __init__(
+        self,
+        treatment: TreatmentFn[T],
+        static_parameters: Optional[dict[str, Any]] = None,
+        dynamic_parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+        postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+        tags: Optional[set[str]] = None,
+        collected_data: Optional[CollectableDataTypes] = None,
+    ) -> None:
         self.treatment = treatment
 
-        if parameters is not None:
-            self.parameters = parameters
-        else:
-            self.parameters = {}
+        self.static_parameters = static_parameters or {}
+        self.dynamic_parameters = dynamic_parameters or {}
 
         if file_parameters is not None:
             self.file_parameters = file_parameters
@@ -147,9 +150,17 @@ class Event(GeneratorBase[T]):
     def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
-        treatment = prepared_treatment(self.treatment, **combined_params)
-        return lambda payload: processor(payload, treatment, self.treatment, time_point,
-                                         self.preconditions, self.postconditions, **combined_params)
+
+        return lambda payload: processor(
+            payload,
+            self.treatment,            # unbound treatment
+            self.treatment,            # operation_tag for logging/conditions
+            time_point,
+            self.preconditions,
+            self.postconditions,
+            static_params=combined_params,
+            dynamic_params=self.dynamic_parameters,
+        )
 
     def _check_file_params(self):
         for _, path in self.file_parameters.items():
@@ -157,9 +168,8 @@ class Event(GeneratorBase[T]):
                 raise FileNotFoundError(f"file {path} defined in operation_file_params was not found")
 
     def _merge_params(self) -> dict[str, Any]:
-        common_keys = self.parameters.keys() & self.file_parameters.keys()
+        common_keys = self.static_parameters.keys() & self.file_parameters.keys()
         if common_keys:
             raise MetsiException(
-                f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
-                "in control.py. Please change the name of one of them.")
-        return self.parameters | self.file_parameters  # pipe is the merge operator
+                f"parameter(s) {common_keys} were defined both in 'static_parameters' and 'file_parameters'")
+        return self.static_parameters | self.file_parameters

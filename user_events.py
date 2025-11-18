@@ -82,7 +82,7 @@ class Mounding(Event[ForestStand]):
 
         super().__init__(
             treatment=soil_surface_preparation,
-            parameters=merged_params,
+            static_parameters=merged_params,
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -246,7 +246,7 @@ class PlantingPines(Event[ForestStand]):
 
         merged = default_params | (parameters or {})
         super().__init__(treatment=regeneration,
-                         parameters=merged,
+                         static_parameters=merged,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
