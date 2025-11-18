@@ -22,9 +22,8 @@ def _min_regeneration_diameter(stand: ForestStand) -> float:
     return 22.0
 
 
-def _forest_categories_regeneration(time_point: int, payload: Any) -> bool:
+def _forest_categories_regeneration(_time_point: int, payload: Any) -> bool:
 
-    _ = time_point  # not used
     stand: ForestStand = payload.computational_unit  # SimulationPayload[ForestStand]
 
     # Map R variables to Python model fields
