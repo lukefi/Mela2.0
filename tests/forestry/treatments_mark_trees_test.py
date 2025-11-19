@@ -5,6 +5,8 @@ import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 
 
@@ -83,22 +85,18 @@ class MarkTreesTest(unittest.TestCase):
             return np.ones(trees_.size, dtype=bool)
 
         tree_selection = {
-            "Target": {
-                "type": "absolute",
-                "var": "stems_per_ha",
-                "amount": 10.0,
-            },
+            "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
             "sets": [
-                {
-                    "sfunction": s_all,
-                    "order_var": "breast_height_diameter",
-                    "target_var": "stems_per_ha",
-                    "target_type": "relative",
-                    "target_amount": 1.0,
-                    "profile_x": [0.0, 1.0],
-                    "profile_y": [0.0, 1.0],
-                    "profile_xmode": "relative",
-                }
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_all,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    [0.0, 1.0],
+                    [0.0, 1.0],
+                    "relative",
+                )
             ],
         }
 
