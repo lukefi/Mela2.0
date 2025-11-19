@@ -52,9 +52,11 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     start_idx = int(stand.reference_trees.size)
     new_rows = []
     for i in range(ntrees):
-        identifier = f"{stand.identifier}-{start_idx + i + 1}-tree"
+        global_idx = start_idx + i
+        identifier = f"{stand.identifier}-{global_idx + 1}-tree"
         new_rows.append({
             "identifier": identifier,
+            "tree_number": global_idx,
             "species": species,
             "origin": origin,
             "stems_per_ha": per_tree_stems,

@@ -135,8 +135,14 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
 
         # Create new rows that carry only the marked stems and desired attributes
         new_rows = []
-        for idx in split_idxs:
+        start_idx = int(stand.reference_trees.size)
+
+        for offset, idx in enumerate(split_idxs):
+            global_idx = start_idx + offset
+
             row = stand.reference_trees.read(idx)
+            row["identifier"] = f"{stand.identifier}-{global_idx + 1}-tree"
+            row["tree_number"] = global_idx
             row["stems_per_ha"] = marked_f[idx]
             # apply attributes on the *marked* part
             row.update(attributes)
