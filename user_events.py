@@ -160,7 +160,6 @@ class MarkRetentionTrees(Event[ForestStand]):
                 "tree_type": "SPARE",
                 "management_category": 2,
             },
-            "labels": ["retention_trees"],
         }
 
         merged_params = default_params | params
@@ -177,6 +176,7 @@ class MarkRetentionTrees(Event[ForestStand]):
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"retention_trees"}
         )
 
 
@@ -246,7 +246,6 @@ class Mounding(Event[ForestStand]):
         defaults = {
             "method": "mounding",
             "intensity": 1200.0,
-            "labels": ["mounding"],
         }
         # Default preconditions: at least 20 years since this treatment last ran
         default_preconds: list[ForestCondition] = [
@@ -262,6 +261,7 @@ class Mounding(Event[ForestStand]):
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"mounding"}
         )
 
 
