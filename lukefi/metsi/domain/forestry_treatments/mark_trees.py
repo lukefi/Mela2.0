@@ -40,54 +40,11 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         return stand, []
 
     ts = operation_parameters.get("tree_selection")
-    if not ts or "Target" not in ts or "sets" not in ts:
-        raise MetsiException("Missing 'tree_selection' with 'Target' and 'sets'.")
+    if not ts or "target" not in ts or "sets" not in ts:
+        raise MetsiException("Missing 'tree_selection' with 'target' and 'sets'.")
 
-    target = ts["Target"]
-    for k in ("type", "var", "amount"):
-        if k not in target:
-            raise MetsiException(f"tree_selection.Target missing '{k}'.")
-
-    # Global target
-    target_decl = SelectionTarget()
-    target_decl.type = target["type"]
-    target_decl.var = target["var"]
-    target_decl.amount = target["amount"]
-
-    # Sets
-    sets_in = ts["sets"]
-    if not isinstance(sets_in, (list, tuple)) or len(sets_in) == 0:
-        raise MetsiException("tree_selection.sets must be a non-empty list.")
-
-    py_sets: list[SelectionSet[ForestStand, ReferenceTrees]] = []
-    for i, s in enumerate(sets_in):
-        for req in (
-            "sfunction",
-            "order_var",
-            "target_var",
-            "target_type",
-            "target_amount",
-            "profile_x",
-            "profile_y",
-            "profile_xmode",
-        ):
-            if req not in s:
-                raise MetsiException(f"sets[{i}] missing '{req}'.")
-        ss = SelectionSet[ForestStand, ReferenceTrees]()
-        ss.sfunction = s["sfunction"]
-        ss.order_var = s["order_var"]
-        ss.target_var = s["target_var"]
-        ss.target_type = s["target_type"]
-        ss.target_amount = s["target_amount"]
-        ss.profile_x = np.asarray(s["profile_x"], dtype=np.float64)
-        ss.profile_y = np.asarray(s["profile_y"], dtype=np.float64)
-        ss.profile_xmode = s["profile_xmode"]
-        ss.profile_xscale = s.get("profile_xscale")
-        if ss.profile_x.shape != ss.profile_y.shape or ss.profile_x.ndim != 1 or ss.profile_x.size < 2:
-            raise MetsiException(
-                f"sets[{i}]: profile_x/profile_y must be 1D arrays of equal length (>=2)."
-            )
-        py_sets.append(ss)
+    target = ts["target"]
+    sets = ts["sets"]
 
     select_from_all = operation_parameters.get("select_from_all", True)
 
@@ -100,8 +57,8 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
     marked_f = select_units(
         context=stand,
         data=stand.reference_trees,
-        target_decl=target_decl,
-        sets=py_sets,
+        target_decl=target,
+        sets=sets,
         freq_var="stems_per_ha",
         select_from_all=bool(select_from_all),
         mode=str(mode),
