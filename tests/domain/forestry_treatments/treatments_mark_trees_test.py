@@ -7,7 +7,7 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
+from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees_fn
 
 
 class MarkTreesTest(unittest.TestCase):
@@ -40,7 +40,7 @@ class MarkTreesTest(unittest.TestCase):
         stand = self.make_empty_stand()
         start_size = stand.reference_trees.size
 
-        updated, cdata = mark_trees(stand)
+        updated, cdata = mark_trees_fn(stand)
 
         self.assertIs(updated, stand)
         self.assertEqual(start_size, updated.reference_trees.size)
@@ -52,7 +52,7 @@ class MarkTreesTest(unittest.TestCase):
 
         with self.assertRaises(MetsiException):
             # No tree_selection -> should fail validation
-            mark_trees(
+            mark_trees_fn(
                 stand,
                 select_from_all=True,
                 mode="odds_units",
@@ -110,7 +110,7 @@ class MarkTreesTest(unittest.TestCase):
             },
         }
 
-        updated, cdata = mark_trees(stand, **params)
+        updated, cdata = mark_trees_fn(stand, **params)
 
         # select_units should be called once with our stand and reference_trees
         mock_select_units.assert_called_once()
