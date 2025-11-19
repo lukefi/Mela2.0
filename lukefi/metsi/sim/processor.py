@@ -37,22 +37,22 @@ def _merge_params(base: Any, overlay: Any) -> Any:
     - For everything else: overlay replaces base.
     """
     if isinstance(base, dict) and isinstance(overlay, dict):
-        result = dict(base)
+        result_dict = dict(base)
         for k, v in overlay.items():
-            if k in result:
-                result[k] = _merge_params(result[k], v)
+            if k in result_dict:
+                result_dict[k] = _merge_params(result_dict[k], v)
             else:
-                result[k] = v
-        return result
+                result_dict[k] = v
+        return result_dict
 
     if isinstance(base, list) and isinstance(overlay, list):
-        result = list(base)
+        result_list = list(base)
         for i, v in enumerate(overlay):
-            if i < len(result):
-                result[i] = _merge_params(result[i], v)
+            if i < len(result_list):
+                result_list[i] = _merge_params(result_list[i], v)
             else:
-                result.append(v)
-        return result
+                result_list.append(v)
+        return result_list
 
     # scalar / mismatched types -> overlay replaces base
     return overlay
