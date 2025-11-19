@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData
