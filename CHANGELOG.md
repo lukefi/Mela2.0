@@ -3,17 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [0.2.6] - 2025-11-19
+
+### Added
+
+- Added mark_trees treatment and MarkRetentionTrees event #MELA2-118
+
 ## [0.2.5] - 2025-11-17
 
 ### Added
 
 - Added cutting treatment #MELA2-104
 
-## [0.2.5] - 2025-11-14
-
-### Added
-
-- Added mark_trees treatment and MarkRetentionTrees event #MELA2-118
 
 ## [0.2.4] - 2025-11-10
 

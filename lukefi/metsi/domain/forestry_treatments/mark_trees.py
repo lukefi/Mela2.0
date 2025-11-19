@@ -140,7 +140,7 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         for offset, idx in enumerate(split_idxs):
             global_idx = start_idx + offset
 
-            row = stand.reference_trees.read(idx)
+            row = stand.reference_trees.read(int(idx))
             row["identifier"] = f"{stand.identifier}-{global_idx + 1}-tree"
             row["tree_number"] = global_idx
             row["stems_per_ha"] = marked_f[idx]
