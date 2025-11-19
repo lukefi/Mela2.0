@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.8] - 2025-11-19
+
+### Added
+
+- SelectionTarget and SelectionSet now have `__repr__` and `__str__`
+
+### Changed
+
+- Treatments utilizing select_units now receive their target and set parameters as SelectionTarget and SelectionSet 
+objects
+
 ## [0.2.7] - 2025-11-19
 
 ### Fixed
