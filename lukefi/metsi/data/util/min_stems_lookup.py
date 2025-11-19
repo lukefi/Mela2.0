@@ -1,86 +1,56 @@
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List
+
 import csv
 import json
 
+
 @dataclass
 class MinStemsConfig:
-    mode: str                 # "per_area_files" | "single_file"
-    site_key: str
-    species_key: str
+    """
+    Configuration for the min-stems lookup.
+
+    The config only says:
+      - which columns are used as a key (key_columns)
+      - which column contains the value (value_key)
+
+    The actual CSV file is chosen per event.
+    """
+    key_columns: List[str]
     value_key: str
-    area_key: Optional[str] = None
-    files_by_area: Dict[str, str] | None = None
-    csv: Optional[str] = None
 
-@lru_cache(maxsize=None)
-def _csv_has_multiple_areas(csv_path: str, area_key: str | None) -> bool:
-    """
-    Returns True if the CSV has an area_key column and more than one distinct
-    non-empty value in that column. Otherwise False.
-
-    This lets us automatically decide whether to use area_group in lookups.
-    """
-    if not area_key:
-        return False
-
-    path = Path(csv_path)
-    with path.open("r", encoding="utf8", newline="") as f:
-        reader = csv.DictReader(f)
-        values = set()
-        for row in reader:
-            if area_key in row and row[area_key] != "":
-                values.add(row[area_key])
-                if len(values) > 1:
-                    return True  # early exit: we know it's multi-area
-
-    # 0 or 1 distinct values -> treat as single-area (ignore area in indexing)
-    return False
 
 @lru_cache(maxsize=None)
 def _load_config(config_path: str) -> MinStemsConfig:
     """
     Load and cache JSON configuration that tells how to index the CSV table.
     """
-    path = Path(config_path)
-    with path.open("r", encoding="utf8") as f:
+    cfg_path = Path(config_path).resolve()
+    with cfg_path.open("r", encoding="utf8") as f:
         raw = json.load(f)
 
-    mode = raw.get("mode")
-    files_by_area = raw.get("files_by_area")
-    csv_file = raw.get("csv")
+    key_columns = raw.get("key_columns")
+    if not key_columns or not isinstance(key_columns, list):
+        raise ValueError(
+            f"Min stems config {config_path!r} must define 'key_columns' as a non-empty list."
+        )
 
-    # Auto-deduce mode if not explicitly given
-    if mode is None:
-        if files_by_area:
-            mode = "per_area_files"
-        elif csv_file:
-            mode = "single_file"
-        else:
-            raise ValueError(
-                f"Min stems config {config_path!r} must define either 'files_by_area' or 'csv'."
-            )
+    value_key = raw.get("value_key", "min_stems")
 
     return MinStemsConfig(
-        mode=mode,
-        site_key=raw.get("site_key", "site_group"),
-        species_key=raw.get("species_key", "species_group"),
-        value_key=raw.get("value_key", "min_stems"),
-        area_key=raw.get("area_key"),
-        files_by_area=files_by_area,
-        csv=csv_file,
+        key_columns=[str(k) for k in key_columns],
+        value_key=str(value_key),
     )
 
 
 @lru_cache(maxsize=None)
-def _load_rows(csv_path: str) -> List[Dict[str, Any]]:
+def _load_rows(csv_path: Path) -> List[Dict[str, Any]]:
     """
     Read a CSV into a list of dict rows (cached).
     """
-    path = Path(csv_path)
-    with path.open("r", encoding="utf8", newline="") as f:
+    with csv_path.open("r", encoding="utf8", newline="") as f:
         reader = csv.DictReader(f)
         return list(reader)
 
@@ -94,117 +64,89 @@ def _coerce_int(value: Any, key: str) -> int:
         ) from e
 
 
-def lookup_min_stems(
+def min_stems_lookup(
     config_path: str,
-    *,
-    area_group: int | None,
-    site_group: int,
-    species_group: int,
+    csv_path: str,
+    key_values: Dict[str, Any],
 ) -> int:
     """
-    Main API:
-      - config_path: path to JSON metadata file
-      - area_group, site_group, species_group: 1-based indices
+    Main API for callers (e.g. FirstThinningMineralSoils):
 
-    Raises ValueError if no matching row (or ambiguous rows) are found.
+      - config_path: path to JSON metadata file (absolute or relative)
+      - csv_path:    path to the concrete CSV file for this event
+                     (absolute, or relative to the JSON file directory)
+      - key_values:  mapping from column name -> key value
+                     e.g. {"site_group": 1, "species_group": 2, "dd_group": 3}
+
+    Behaviour:
+
+      - JSON is read once and cached.
+      - Each CSV path is read once and cached.
+      - Raises ValueError if:
+          * required key is missing in key_values,
+          * required column is missing in CSV,
+          * no matching row is found,
+          * more than one matching row is found,
+          * the value column is missing or non-integer.
     """
     cfg = _load_config(config_path)
 
-    if cfg.mode == "per_area_files":
-        if not cfg.files_by_area:
-            raise ValueError(
-                f"Config {config_path!r} in 'per_area_files' mode must define 'files_by_area'."
-            )
+    cfg_path = Path(config_path).resolve()
+    csv_p = Path(csv_path)
 
-        # If only one file is configured, ignore area_group and always use it.
-        if len(cfg.files_by_area) == 1:
-            csv_path = next(iter(cfg.files_by_area.values()))
-        else:
-            if area_group is None:
-                raise ValueError(
-                    f"Config {config_path!r} expects area_group, but none was given."
-                )
-            key = str(area_group)
-            try:
-                csv_path = cfg.files_by_area[key]
-            except KeyError as e:
-                raise ValueError(
-                    f"No CSV file defined for area_group={area_group} in {config_path!r}."
-                ) from e
+    # If CSV path is relative, resolve it relative to the config file location
+    if not csv_p.is_absolute():
+        csv_p = (cfg_path.parent / csv_p).resolve()
 
-        rows = _load_rows(csv_path)
-        return _lookup_in_rows(
-            rows,
-            cfg,
-            area_group=None,   # encoded by file choice already
-            site_group=site_group,
-            species_group=species_group,
+    rows = _load_rows(csv_p)
+
+    missing_keys = [k for k in cfg.key_columns if k not in key_values]
+    if missing_keys:
+        raise ValueError(
+            f"Missing key value(s) {missing_keys} for min stems lookup; "
+            f"required keys are {cfg.key_columns}."
         )
 
-    if cfg.mode == "single_file":
-        if not cfg.csv:
-            raise ValueError(
-                f"Config {config_path!r} in 'single_file' mode must define 'csv'."
-            )
-        rows = _load_rows(cfg.csv)
-        return _lookup_in_rows(
-            rows,
-            cfg,
-            area_group=area_group,
-            site_group=site_group,
-            species_group=species_group,
-        )
-
-    raise ValueError(
-        f"Unsupported min stems config mode {cfg.mode!r} in {config_path!r}."
-    )
-
-
-def _lookup_in_rows(
-    rows: Iterable[Dict[str, Any]],
-    cfg: MinStemsConfig,
-    *,
-    area_group: int | None,
-    site_group: int,
-    species_group: int,
-) -> int:
-    """
-    Filter CSV rows by (area_group?, site_group, species_group) and return min_stems.
-    """
     candidates: List[Dict[str, Any]] = []
 
     for row in rows:
         try:
-            row_site = _coerce_int(row[cfg.site_key], cfg.site_key)
-            row_species = _coerce_int(row[cfg.species_key], cfg.species_key)
-        except KeyError as e:
-            raise ValueError(
-                f"Missing '{e.args[0]}' column in min stems CSV; expected at least "
-                f"{cfg.site_key!r}, {cfg.species_key!r} and {cfg.value_key!r}."
-            ) from e
+            # Check all key columns match
+            match = True
+            for col in cfg.key_columns:
+                if col not in row:
+                    raise ValueError(
+                        f"CSV {csv_p} is missing required key column {col!r} "
+                        f"defined in config {config_path!r}."
+                    )
 
-        if cfg.area_key and area_group is not None:
-            try:
-                row_area = _coerce_int(row[cfg.area_key], cfg.area_key)
-            except KeyError as e:
-                raise ValueError(
-                    f"Config requires area_key={cfg.area_key!r} but CSV has no such column."
-                ) from e
-            if row_area != area_group:
+                row_val = _coerce_int(row[col], col)
+                key_val = _coerce_int(key_values[col], col)
+
+                if row_val != key_val:
+                    match = False
+                    break
+
+            if not match:
                 continue
 
-        if row_site == site_group and row_species == species_group:
             candidates.append(row)
+
+        except KeyError as e:
+            raise ValueError(
+                f"CSV {csv_p} is missing column {e.args[0]!r}."
+            ) from e
 
     if not candidates:
         raise ValueError(
-            "No matching row in min stems CSV for "
-            f"area_group={area_group}, site_group={site_group}, species_group={species_group}."
+            f"No matching row in min stems CSV {csv_p} for keys: "
+            + ", ".join(f"{k}={key_values.get(k)!r}" for k in cfg.key_columns)
         )
+
     if len(candidates) > 1:
         raise ValueError(
-            "Ambiguous min stems rows in CSV for "
-            f"area_group={area_group}, site_group={site_group}, species_group={species_group}."
+            f"Ambiguous rows in min stems CSV {csv_p} for keys: "
+            + ", ".join(f"{k}={key_values.get(k)!r}" for k in cfg.key_columns)
         )
 
     row = candidates[0]
@@ -212,7 +154,7 @@ def _lookup_in_rows(
         value = row[cfg.value_key]
     except KeyError as e:
         raise ValueError(
-            f"Min stems CSV missing value column {cfg.value_key!r}"
+            f"Min stems CSV {csv_p} is missing value column {cfg.value_key!r}."
         ) from e
 
     return _coerce_int(value, cfg.value_key)

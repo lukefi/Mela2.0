@@ -161,13 +161,13 @@ class TestGenerators(unittest.TestCase):
                             Alternatives([
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 2
                                     }
                                 ),
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 3
                                     }
                                 )

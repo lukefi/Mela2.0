@@ -8,7 +8,7 @@ control_structure = {
         SimulationInstruction(
             time_points=[1, 2, 3, 4],
             events=Sequence([
-                Event(inc, parameters={"incrementation": 2})
+                Event(inc, static_parameters={"incrementation": 2})
             ])
         )
     ]

@@ -12,8 +12,8 @@ control_structure = {
                 Sequence([Event(do_nothing)]),
                 Alternatives([
                     Event(do_nothing),
-                    Event(inc, parameters={"incrementation": 1}),
-                    Event(inc, parameters={"incrementation": 2})
+                    Event(inc, static_parameters={"incrementation": 1}),
+                    Event(inc, static_parameters={"incrementation": 2})
                 ])
             ])
         )

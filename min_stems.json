@@ -1,0 +1,8 @@
+{
+  "key_columns": [
+    "site_group",
+    "species_group",
+    "dd_group"
+  ],
+  "value_key": "min_stems"
+}

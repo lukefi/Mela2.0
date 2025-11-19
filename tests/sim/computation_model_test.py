@@ -53,7 +53,7 @@ class ComputationModelTest(unittest.TestCase):
                                 MinimumTimeInterval(5, fn1)
                             ],
                             treatment=fn1,
-                            parameters={
+                            static_parameters={
                                 'param1': 1
                             }
                         ),
@@ -71,7 +71,7 @@ class ComputationModelTest(unittest.TestCase):
                                     MinimumTimeInterval(5, fn1)
                                 ],
                                 treatment=fn1,
-                                parameters={
+                                static_parameters={
                                     'param1': 1
                                 }
                             ),
