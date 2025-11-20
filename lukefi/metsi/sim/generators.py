@@ -41,10 +41,10 @@ class Generator(GeneratorBase[T], ABC):
 
     def compose_nested(self) -> list[EventTree[T]]:
         """
-        Generate a simulation EventTree using the given NestableGenerator.
+        Generate a list of partial EventTrees representing a single SimulationInstruction from the nested children
+        generators and Events.
 
-        :param nestable_generator: NestableGenerator tree for generating a EventTree.
-        :return: The root node of the generated EventTree
+        :return: list of (local) root nodes of the generated partial EventTrees
         """
         root: EventTree[T] = EventTree()
         self.unwrap([root])
