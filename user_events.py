@@ -28,7 +28,7 @@ def _min_regeneration_diameter(stand: ForestStand) -> float:
     return 22.0
 
 
-def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]) -> bool:
+def _forest_categories_check(payload: SimulationPayload[ForestStand]) -> bool:
     stand = payload.computational_unit
     stand.update_aggregates()  # use stand aggregates, not manual BA math
 
@@ -53,7 +53,7 @@ def _forest_categories_check(_time: int, payload: SimulationPayload[ForestStand]
     return bool(cond_mineral and size_ok and dense_enough)
 
 
-def _forest_categories_regeneration(_time_point: int, payload: Any) -> bool:
+def _forest_categories_regeneration(payload: Any) -> bool:
 
     stand: ForestStand = payload.computational_unit  # SimulationPayload[ForestStand]
 
