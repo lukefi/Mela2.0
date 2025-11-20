@@ -2,10 +2,7 @@ from sqlite3 import Connection
 from typing import override
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.sim_configuration import Transition, TransitionFn
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.sim.sim_configuration import Transition
 
 
 class ToyModel(ComputationalUnit):
