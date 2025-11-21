@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Sequence
 import numpy as np
 import numpy.typing as npt
 
@@ -15,13 +15,68 @@ class SelectionSet[T, V: VectorData]:
     profile_x: npt.NDArray[np.float64]
     profile_y: npt.NDArray[np.float64]
     profile_xmode: str
-    profile_xscale: Optional[str]
+    profile_xscale: Optional[str] = None
+
+    def __init__(self,
+                 sfunction: Callable[[T, V], npt.NDArray[np.bool_]],
+                 order_var: str,
+                 target_var: str,
+                 target_type: str,
+                 target_amount: float,
+                 profile_x: npt.NDArray[np.float64] | Sequence[int | float],
+                 profile_y: npt.NDArray[np.float64] | Sequence[int | float],
+                 profile_xmode: str,
+                 profile_xscale: Optional[str] = None):
+        self.sfunction = sfunction
+        self.order_var = order_var
+        self.target_var = target_var
+        self.target_type = target_type
+        self.target_amount = target_amount
+        self.profile_x = profile_x if isinstance(profile_x, np.ndarray) else np.asarray(profile_x)
+        self.profile_y = profile_y if isinstance(profile_y, np.ndarray) else np.asarray(profile_y)
+        self.profile_xmode = profile_xmode
+        self.profile_xscale = profile_xscale
+
+    def __repr__(self) -> str:
+        return str({"sfunction": self.sfunction.__name__} |
+                   {key: value for key,
+                    value in self.__dict__.items() if key in ["order_var",
+                                                              "target_var",
+                                                              "target_type",
+                                                              "target_amount",
+                                                              "profile_x",
+                                                              "profile_y",
+                                                              "profile_xmode",
+                                                              "profile_xscale"]})
+
+    def __str__(self) -> str:
+        return str({key: value for key,
+                    value in self.__dict__.items() if key in ["sfunction",
+                                                              "order_var",
+                                                              "target_var",
+                                                              "target_type",
+                                                              "target_amount",
+                                                              "profile_x",
+                                                              "profile_y",
+                                                              "profile_xmode",
+                                                              "profile_xscale"]})
 
 
 class SelectionTarget:
     type: str
     var: str
     amount: float
+
+    def __init__(self, type_: str, var: str, amount: float):
+        self.type = type_
+        self.var = var
+        self.amount = amount
+
+    def __repr__(self) -> str:
+        return str({key: self.__dict__[key] for key in ["type", "var", "amount"]})
+
+    def __str__(self) -> str:
+        return str({key: self.__dict__[key] for key in ["type", "var", "amount"]})
 
 
 def select_units[T, V: VectorData](context: T,
@@ -92,7 +147,7 @@ def select_units[T, V: VectorData](context: T,
                             initial number of amounts of each data point. Otherwise number of selected amounts is
                             computed as a proportion of what is left after selections from previous selection sets.
         mode:               Selection mode to use
-    
+
     Returns:
         npt.NDArray[np.float64]: Amount of the selected unit for each element in data
     """

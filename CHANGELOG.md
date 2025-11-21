@@ -3,11 +3,36 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [0.2.8] - 2025-11-19
+
+### Added
+
+- SelectionTarget and SelectionSet now have `__repr__` and `__str__`
+
+### Changed
+
+- Treatments utilizing select_units now receive their target and set parameters as SelectionTarget and SelectionSet 
+objects
+
+## [0.2.7] - 2025-11-19
+
+### Fixed
+
+- Minor typing fixes
+
+## [0.2.6] - 2025-11-19
+
+### Added
+
+- Added mark_trees treatment and MarkRetentionTrees event #MELA2-118
+
 ## [0.2.5] - 2025-11-17
 
 ### Added
 
 - Added cutting treatment #MELA2-104
+
 
 ## [0.2.4] - 2025-11-10
 

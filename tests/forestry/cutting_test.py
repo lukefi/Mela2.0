@@ -3,9 +3,11 @@ from typing import cast
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.collected_data import RemovedTrees
+
 
 def _all_trees(_stand: ForestStand, data: ReferenceTrees) -> np.ndarray:
     # selection function that includes every tree
@@ -39,17 +41,19 @@ class CuttingTest(unittest.TestCase):
         total = np.sum(stand.reference_trees.stems_per_ha)
         params = {
             "tree_selection": {
-                "target": {"type": "absolute", "var": "stems_per_ha", "amount": 0.5 * total},
-                "sets": [{
-                    "sfunction": _all_trees,
-                    "order_var": "height",
-                    "target_var": "stems_per_ha",
-                    "target_type": "absolute",
-                    "target_amount": 0.5 * total,
-                    "profile_x": [0.0, 1.0],
-                    "profile_y": [0.5, 0.5],
-                    "profile_xmode": "relative",
-                }]
+                "target": SelectionTarget("absolute", "stems_per_ha", 0.5 * total),
+                "sets": [
+                    SelectionSet[ForestStand, ReferenceTrees](
+                        _all_trees,
+                        "height",
+                        "stems_per_ha",
+                        "absolute",
+                        0.5 * total,
+                        [0.0, 1.0],
+                        [0.5, 0.5],
+                        "relative",
+                    )
+                ]
             },
             "mode": "odds_units",
             "select_from_all": True,
@@ -82,7 +86,7 @@ class CuttingTest(unittest.TestCase):
         # With no trees, cutting should return early regardless of sets content
         updated, cdata = cutting(
             stand,
-            tree_selection={"target": {"type": "absolute", "var": "stems_per_ha", "amount": 10.0}, "sets": []},
+            tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0), "sets": []},
             mode="odds_units",
             select_from_all=True,
         )
@@ -101,24 +105,27 @@ class CuttingTest(unittest.TestCase):
 
         # Empty sets
         with self.assertRaises(MetsiException):
-            cutting(stand, tree_selection={"target": {"type": "absolute", "var": "stems_per_ha", "amount": 10.0},
+            cutting(stand, tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0),
                                            "sets": []},
                     mode="odds_units", select_from_all=True)
 
         # Mismatched profile shapes
         bad = {
             "tree_selection": {
-                "target": {"type": "absolute", "var": "stems_per_ha", "amount": 10.0},
-                "sets": [{
-                    "sfunction": _all_trees,
-                    "order_var": "height",
-                    "target_var": "stems_per_ha",
-                    "target_type": "absolute",
-                    "target_amount": 10.0,
-                    "profile_x": [0.0, 1.0, 2.0],
-                    "profile_y": [0.5, 0.5],  # length mismatch
-                    "profile_xmode": "relative",
-                }]
+                "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
+                "sets": [
+                    SelectionSet[ForestStand, ReferenceTrees](
+                        _all_trees,
+                        "height",
+                        "stems_per_ha",
+                        "absolute",
+                        10.0,
+                        [0.0, 1.0, 2.0],
+                        [0.5, 0.5],  # length mismatch
+                        "relative",
+                    )
+
+                ]
             },
             "mode": "odds_units",
             "select_from_all": True,

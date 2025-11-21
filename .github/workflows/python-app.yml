@@ -60,8 +60,7 @@ jobs:
   
     - name: Run mypy
       run: |
-        sudo apt-get install -y jq
-        mypy -p lukefi --output=json | jq -r '"::\(.severity) title=Mypy issue,file=\(.file),line=\(.line),col=\(.column)::\(.message)"'
+        mypy -p lukefi
 
     - name: Install R dependencies
       uses: r-lib/actions/setup-r-dependencies@v2
