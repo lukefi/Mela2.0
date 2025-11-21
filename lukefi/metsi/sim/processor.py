@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, TypeVar
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -10,23 +11,6 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound=ComputationalUnit)
 
-def _resolve_dynamic_tree(obj: Any, stand: T) -> Any:
-    """
-    Recursively resolve a tree of dynamic parameters.
-
-    - If value is callable: call it with `stand` and use the result.
-    - If dict/list/tuple: recurse into children.
-    - Otherwise: return value as-is.
-    """
-    if callable(obj):
-        return obj(stand)
-    if isinstance(obj, dict):
-        return {k: _resolve_dynamic_tree(v, stand) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [_resolve_dynamic_tree(v, stand) for v in obj]
-    if isinstance(obj, tuple):
-        return tuple(_resolve_dynamic_tree(v, stand) for v in obj)
-    return obj
 
 def _merge_params(base: Any, overlay: Any) -> Any:
     """
@@ -57,26 +41,48 @@ def _merge_params(base: Any, overlay: Any) -> Any:
     # scalar / mismatched types -> overlay replaces base
     return overlay
 
-def processor(payload: SimulationPayload[T],
-                                    operation: "TreatmentFn[T]",
-                                    operation_tag: "TreatmentFn[T]",
-                                    time_point: int,
-                                    preconditions: list[Condition[SimulationPayload[T]]],
-                                    postconditions: list[Condition[SimulationPayload[T]]],
-                                    *,
-                                    static_params: dict[str, Any] | None = None,
-                                    dynamic_params: dict[str, Any] | None = None,
-                                ) -> tuple[SimulationPayload[T], list[CollectedData]]:
-    """Managed run conditions and history of a simulator operation. Evaluates the operation."""
+
+def processor(
+    payload: SimulationPayload[T],
+    operation: "TreatmentFn[T]",
+    operation_tag: "TreatmentFn[T]",
+    time_point: int,
+    preconditions: list[Condition[SimulationPayload[T]]],
+    postconditions: list[Condition[SimulationPayload[T]]],
+    *,
+    static_params: dict[str, Any] | None = None,
+    dynamic_params: dict[str, Callable[[T], Any]] | None = None,
+) -> tuple[SimulationPayload[T], list[CollectedData]]:
+    """
+    Managed run conditions and history of a simulator operation.
+
+    - static_params: plain, stand-independent parameters.
+    - dynamic_params: mapping name -> fn(stand) returning the full
+      value for that parameter (can be nested dict/list/…).
+    """
+    # --- Preconditions ---
     for condition in preconditions:
         if not condition(time_point, payload):
             raise ConditionFailed(f'{operation_tag} aborted - condition "{condition}" failed')
 
+    # Make sure aggregates are up-to-date before computing dynamic params
     payload.computational_unit.update_aggregates()
     final_params: dict[str, Any] = dict(static_params or {})
 
+    # --- Resolve dynamic parameters (flat dict[str, Callable[[T], Any]]) ---
     if dynamic_params:
-        resolved_dynamic = _resolve_dynamic_tree(dynamic_params, payload.computational_unit)
+        stand = payload.computational_unit
+        resolved_dynamic: dict[str, Any] = {}
+        for name, param_fn in dynamic_params.items():
+            if not callable(param_fn):
+                # Config error: we *expect* all dynamic params to be callables now
+                raise TypeError(
+                    f"Dynamic parameter {name!r} is not callable; "
+                    "expected Callable[[T], Any]."
+                )
+            resolved_dynamic[name] = param_fn(stand)
+
+        # Deep-merge static + resolved dynamic
         final_params = _merge_params(final_params, resolved_dynamic)
 
     bound_operation = prepared_treatment(operation, **final_params)
@@ -93,9 +99,10 @@ def processor(payload: SimulationPayload[T],
 
     newpayload: SimulationPayload[T] = SimulationPayload(
         computational_unit=new_state,
-        operation_history=payload.operation_history
+        operation_history=payload.operation_history,
     )
 
+    # --- Postconditions ---
     for condition in postconditions:
         if not condition(time_point, newpayload):
             raise ConditionFailed(f'{operation_tag} aborted - condition "{condition}" failed')

@@ -86,7 +86,7 @@ class Event(GeneratorBase[T]):
     simulation state."""
     treatment: TreatmentFn[T]
     static_parameters: dict[str, Any]
-    dynamic_parameters: dict[str, Any] # callables
+    dynamic_parameters: dict[str, Callable[[T], Any]]
     file_parameters: dict[str, str]
     preconditions: list[Condition[SimulationPayload[T]]]
     postconditions: list[Condition[SimulationPayload[T]]]
@@ -97,7 +97,7 @@ class Event(GeneratorBase[T]):
         self,
         treatment: TreatmentFn[T],
         static_parameters: Optional[dict[str, Any]] = None,
-        dynamic_parameters: Optional[dict[str, Any]] = None,
+        dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
         preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
         postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
         file_parameters: Optional[dict[str, str]] = None,
