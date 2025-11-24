@@ -62,24 +62,14 @@ class EventTree[T: ComputationalUnit]:
             current.computational_unit.finalize()
 
         if len(self.branches) == 0:
-            # current.node_id = deepcopy(current.node_id)
-            # current.node_id.append(0)
             yield current
             return
 
         if len(self.branches) == 1:
-            # node_identifier_ = deepcopy(node_identifier)
-            # node_identifier_.append(0)
-            # current.node_id = deepcopy(current.node_id)
-            # current.node_id.append(0)
             yield from self.branches[0].evaluate(current, db)
             return
 
         for i, branch in enumerate(self.branches):
-            # node_identifier_ = deepcopy(node_identifier)
-            # node_identifier_.append(i)
-            # current.node_id = deepcopy(current.node_id)
-            # current.node_id.append(i)
             yield from branch.evaluate(copy(current), db, i)
 
     def add_branch(self, et: 'EventTree[T]'):
