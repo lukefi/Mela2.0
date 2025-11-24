@@ -5,14 +5,14 @@ from copy import copy
 
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 if TYPE_CHECKING:
+    from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
     from lukefi.metsi.sim.generators import ProcessedTreatment
 
 
-def identity[T](x: T) -> tuple[T, list[CollectedData]]:
+def identity[T](x: T) -> "OpTuple[T]":
     return x, []
 
 
@@ -88,7 +88,7 @@ class EventTree[T: ComputationalUnit]:
 
 def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                             current: SimulationPayload[T],
-                                            collected_data: list[CollectedData]):
+                                            collected_data: list["CollectedData"]):
     """
     Writes current simulation state and collected data to database.
 
