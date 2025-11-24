@@ -5,7 +5,7 @@ from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, GeneratorBase, Generator, Sequence
+from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
@@ -13,11 +13,11 @@ T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 class SimulationInstruction[T: ComputationalUnit]:
     conditions: Sequence_[Condition[SimulationPayload[T]]]
-    event_generator: Generator[T]
+    event_generator: EventGenerator[T]
 
-    def __init__(self, events: Generator[T] | list[GeneratorBase] | set[GeneratorBase],
+    def __init__(self, events: EventGenerator[T] | list[EventGeneratorBase] | set[EventGeneratorBase],
                  conditions: Optional[Sequence_[Condition[SimulationPayload[T]]]] = None) -> None:
-        if isinstance(events, Generator):
+        if isinstance(events, EventGenerator):
             self.event_generator = events
         elif isinstance(events, list):
             self.event_generator = Sequence(events)

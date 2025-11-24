@@ -21,7 +21,7 @@ TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
-class GeneratorBase(ABC, Generic[T]):
+class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
     def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
@@ -32,11 +32,11 @@ class GeneratorBase(ABC, Generic[T]):
         pass
 
 
-class Generator(GeneratorBase[T], ABC):
+class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
-    children: Sequence_[GeneratorBase]
+    children: Sequence_[EventGeneratorBase]
 
-    def __init__(self, children: Sequence_[GeneratorBase]):
+    def __init__(self, children: Sequence_[EventGeneratorBase]):
         self.children = children
 
     def compose_nested(self) -> list[EventTree[T]]:
@@ -58,7 +58,7 @@ class Generator(GeneratorBase[T], ABC):
         return retval
 
 
-class Sequence(Generator[T]):
+class Sequence(EventGenerator[T]):
     """Generator for sequential events."""
 
     @override
@@ -69,7 +69,7 @@ class Sequence(Generator[T]):
         return current
 
 
-class Alternatives(Generator[T]):
+class Alternatives(EventGenerator[T]):
     """Generator for branching events"""
 
     @override
@@ -80,7 +80,7 @@ class Alternatives(Generator[T]):
         return retval
 
 
-class Event(GeneratorBase[T]):
+class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     treatment: TreatmentFn[T]
