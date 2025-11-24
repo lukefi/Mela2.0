@@ -318,7 +318,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         profile_x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         profile_y = [0.5, 0.5, 0.5, 0.5, 0.5, 0.4, 0.25, 0.1, 0.05, 0.05, 0.05]
 
-        # --- FULLY dynamic tree_selection built per-stand
+        # --- dynamic tree_selection built per-stand
 
         def _tree_selection(stand: ForestStand) -> dict[str, Any]:
             """Build the tree_selection dict using stand-specific min_stems."""
@@ -350,18 +350,18 @@ class FirstThinningMineralSoils(Event[ForestStand]):
                 ],
             }
 
-        # Static params: everything that does *not* depend on stand
+        # Static params, which can be precalculated
         static_params = {
             "mode": "odds_units",
             "cutting_method": MelaMethodOfTheLastCutting.FIRST_THINNING.value,
-        } | params  # allow user overrides
+        } | params
 
-        # Dynamic params: things that *do* depend on stand
+        # Dynamic params: things that depend on stand state
         dynamic_params = {
             "tree_selection": _tree_selection,
         }
 
-        # --- Preconditions (unchanged)
+        # --- Preconditions
         preconds: list[Condition[SimulationPayload[ForestStand]]] = [
             MinimumTimeInterval(20, cutting),
             Condition(_forest_categories_check),

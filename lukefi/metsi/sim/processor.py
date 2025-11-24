@@ -75,7 +75,7 @@ def processor(
         resolved_dynamic: dict[str, Any] = {}
         for name, param_fn in dynamic_params.items():
             if not callable(param_fn):
-                # Config error: we *expect* all dynamic params to be callables now
+                # dynamic params should be callables
                 raise TypeError(
                     f"Dynamic parameter {name!r} is not callable; "
                     "expected Callable[[T], Any]."
