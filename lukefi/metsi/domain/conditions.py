@@ -26,3 +26,8 @@ def _check_eligible_to_run[T: ComputationalUnit](
 class TimePoints[T: ComputationalUnit](Condition[SimulationPayload[T]]):
     def __init__(self, time_points: list[int]) -> None:
         super().__init__(lambda x: x.computational_unit.time in time_points)
+
+
+class RelativeTimePoints[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+    def __init__(self, relative_time_points: list[int]) -> None:
+        super().__init__(lambda x: x.computational_unit.relative_time in relative_time_points)
