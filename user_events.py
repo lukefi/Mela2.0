@@ -14,7 +14,7 @@ from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soi
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
-from lukefi.metsi.data.util.lookup_table import LookupTable, KeySpec
+from lukefi.metsi.domain.domain_tables import min_stems_table
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -251,57 +251,10 @@ class FirstThinningMineralSoils(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
         params = parameters or {}
 
-        default_csv_path = "min_stems.csv"
-        min_stems_csv_path: str = params.get("min_stems_csv", default_csv_path)
-
-        # --- mapping helpers (same as before)
-
-        def dd_group_for(degree_days: int) -> int:
-            # Example: real logic later; dummy now
-            # 0–1200 -> 1, 1201–1400 -> 2, etc.
-            if degree_days < 1200:
-                return 1
-            elif degree_days < 1400:
-                return 2
-            else:
-                return 3
-
-        def site_group_for(site_type_category: int | Any) -> int:
-            # If it's an Enum, normalize to its .value; otherwise assume int-ish
-            v = getattr(site_type_category, "value", site_type_category)
-            if v is None:
-                return 1
-            if 1 <= v <= 2:
-                return 1
-            if v == 3:
-                return 2
-            if v == 4:
-                return 3
-            if 5 <= v <= 8:
-                return 4
-            raise ValueError(f"Unsupported site_type_category={v!r}; expected 1..8.")
-
-        def species_group_for(_stand: ForestStand) -> int:
-            # TODO: real dominant species logic.
-            return 1  # pine
-
-        min_stems_table = LookupTable[ForestStand](
-            csv_path=min_stems_csv_path,
-            key_columns=[
-                "degree_days",        # must exist on ForestStand
-                "site_type_category",  # must exist on ForestStand
-            ],
-            value_column="min_stems",
-            transforms={
-                "degree_days": dd_group_for,       # degree_days -> dd_group
-                "site_type_category": site_group_for,  # site_type_category -> site_group
-                "species": species_group_for
-            },
-            value_cast=int,  # default; explicit here for clarity
-        )
+        min_stems = min_stems_table("min_stems.csv")
 
         def _min_number_of_stems_after_thinning(stand: ForestStand) -> int:
-            return min_stems_table(stand)
+            return min_stems(stand)
 
         def _first_set_target_amount(stand: ForestStand) -> float:
             return 0.1 * _min_number_of_stems_after_thinning(stand)
