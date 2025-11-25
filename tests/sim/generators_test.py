@@ -1,5 +1,5 @@
 import unittest
-from lukefi.metsi.domain.conditions import MinimumTimeInterval, TimePoints
+from lukefi.metsi.domain.conditions import MinimumTimeInterval, RelativeTimePoints, TimePoints
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
@@ -95,6 +95,34 @@ class TestGenerators(unittest.TestCase):
         computation_result = _simulate_unit(payload, config)
 
         self.assertEqual(0, len(computation_result))
+
+    def test_relative_time_points(self):
+        declaration = {
+            "simulation_instructions": [
+                SimulationInstruction(
+                    events=Sequence([
+                        Event(
+                            preconditions=[
+                                MinimumTimeInterval(2, toy_inc)
+                            ],
+                            treatment=toy_inc
+                        )
+                    ]),
+                    conditions=[
+                        RelativeTimePoints([1, 3])
+                    ]
+                )
+            ],
+            "transition": ToyTransition(),
+            "end_condition": Condition[ToyModel](lambda x: x.relative_time > 5)
+        }
+        config = SimConfiguration(**declaration)
+        payload = SimulationPayload(
+            computational_unit=ToyModel("", 0, time=200),
+            operation_history=[]
+        )
+        computation_result = _simulate_unit(payload, config)
+        self.assertEqual(2, computation_result[0].computational_unit.value)
 
     def test_nested_tree_generators(self):
         """Create a nested generators event tree. Use simple incrementation operation with starting value 0. Sequences
