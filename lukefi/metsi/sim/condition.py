@@ -3,7 +3,7 @@ from typing import TypeVar
 
 
 T = TypeVar("T")
-Predicate = Callable[[int, T], bool]
+Predicate = Callable[[T], bool]
 
 
 class Condition[T]:
@@ -12,11 +12,11 @@ class Condition[T]:
     def __init__(self, predicate: Predicate[T]) -> None:
         self.predicate = predicate
 
-    def __call__(self, time_point: int, subject: T) -> bool:
-        return self.predicate(time_point, subject)
+    def __call__(self, subject: T) -> bool:
+        return self.predicate(subject)
 
     def __and__(self, other: "Condition[T]") -> "Condition[T]":
-        return Condition(lambda t, x: self.predicate(t, x) and other.predicate(t, x))
+        return Condition(lambda x: self.predicate(x) and other.predicate(x))
 
     def __or__(self, other: "Condition[T]") -> "Condition[T]":
-        return Condition(lambda t, x: self.predicate(t, x) or other.predicate(t, x))
+        return Condition(lambda x: self.predicate(x) or other.predicate(x))

@@ -4,12 +4,14 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.runners import evaluate_sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.app.file_io import read_control_module
-from tests.test_utils import DummyUnit, collect_results, raises, identity, none
+from lukefi.metsi.sim.simulator import _simulate_unit
+from tests.test_utils import collect_results, raises, identity, none
+from tests.toy_model import ToyModel
 
 
 class RunnersTest(unittest.TestCase):
     def test_sequence_success(self):
-        payload = SimulationPayload(computational_unit=1)
+        payload = SimulationPayload(computational_unit=ToyModel("", 1))
         result = evaluate_sequence(
             payload,
             identity,
@@ -18,7 +20,7 @@ class RunnersTest(unittest.TestCase):
         self.assertEqual(None, result)
 
     def test_sequence_failure(self):
-        payload = SimulationPayload(computational_unit=1)
+        payload = SimulationPayload(computational_unit=ToyModel("", 1))
 
         def prepared_function():
             return evaluate_sequence(payload, identity, raises, identity)
@@ -33,12 +35,11 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         depth_payload = SimulationPayload(
-            computational_unit=DummyUnit(1),
+            computational_unit=ToyModel("", 1),
             operation_history=[]
         )
-        generator = config.full_tree_generators()
-        root_node = generator.compose_nested()
-        results_depth = collect_results(root_node.evaluate(depth_payload))
+        results_depth = collect_results(
+            _simulate_unit(depth_payload, config))
         self.assertEqual(8, len(results_depth))
 
     def test_no_parameters_propagation(self):
@@ -49,13 +50,12 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=DummyUnit(1),
+            computational_unit=ToyModel("", 1),
             operation_history=[]
         )
-        generator = config.full_tree_generators()
-        root_node = generator.compose_nested()
-        results = collect_results(root_node.evaluate(initial))
-        self.assertEqual(5, results[0].x)
+        results = collect_results(
+            _simulate_unit(initial, config))
+        self.assertEqual(5, results[0].value)
 
     def test_parameters_propagation(self):
         control_path = str(Path("tests",
@@ -65,13 +65,12 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=DummyUnit(1),
+            computational_unit=ToyModel("", 1),
             operation_history=[]
         )
-        generator = config.full_tree_generators()
-        root_node = generator.compose_nested()
-        results = collect_results(root_node.evaluate(initial))
-        self.assertEqual(9, results[0].x)
+        results = collect_results(
+            _simulate_unit(initial, config))
+        self.assertEqual(9, results[0].value)
 
     def test_parameters_branching(self):
         control_path = str(Path("tests",
@@ -81,12 +80,10 @@ class RunnersTest(unittest.TestCase):
         declaration = read_control_module(control_path)
         config = SimConfiguration(**declaration)
         initial = SimulationPayload(
-            computational_unit=DummyUnit(1),
+            computational_unit=ToyModel("", 1),
             operation_history=[]
         )
-        generator = config.full_tree_generators()
-        root_node = generator.compose_nested()
-        results = list(map(lambda x: x.x, collect_results(root_node.evaluate(initial))))
+        results = list(map(lambda x: x.value, collect_results(_simulate_unit(initial, config))))
         # do_nothing, do_nothing = 1
         # do_nothing, inc#1      = 2
         # do_nothing, inc#2      = 3

@@ -1,23 +1,23 @@
-from copy import deepcopy
+from copy import copy
+import sqlite3
 from typing import Optional, TypeVar
+from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, GeneratorBase, Generator, Sequence
+from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 
 class SimulationInstruction[T: ComputationalUnit]:
-    time_points: list[int]
-    conditions: list[Condition[SimulationPayload[T]]]
-    event_generator: Generator[T]
+    conditions: Sequence_[Condition[SimulationPayload[T]]]
+    event_generator: EventGenerator[T]
 
-    def __init__(self, time_points: list[int], events: Generator[T] | list[GeneratorBase] | set[GeneratorBase],
-                 conditions: Optional[list[Condition[SimulationPayload[T]]]] = None) -> None:
-        self.time_points = time_points
-        if isinstance(events, Generator):
+    def __init__(self, events: EventGenerator[T] | list[EventGeneratorBase] | set[EventGeneratorBase],
+                 conditions: Optional[Sequence_[Condition[SimulationPayload[T]]]] = None) -> None:
+        if isinstance(events, EventGenerator):
             self.event_generator = events
         elif isinstance(events, list):
             self.event_generator = Sequence(events)
@@ -28,20 +28,6 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-
-def generator_declarations_for_time_point(
-        simulation_instructions: list[SimulationInstruction[T]], time: int) -> list[Generator[T]]:
-    """
-    From events declarations, find the EventTree generators declared for the given time point.
-
-    :param events: list of DeclaredEvents objects for generator declarations and time points
-    :param time: point of simulation time for selecting matching generators
-    :return: list of generator declarations for the desired point of time
-    """
-    generator_declarations: list[Generator[T]] = []
-    for instruction in simulation_instructions:
-        if time in instruction.time_points:
-            generator_copy = deepcopy(instruction.event_generator)
-            generator_copy.time_point = time
-            generator_declarations.append(generator_copy)
-    return generator_declarations
+    def unwrap(self, payload: SimulationPayload[T], offset: int, db: Optional[sqlite3.Connection] = None):
+        for i, root in enumerate(self.event_generator.compose_nested()):
+            yield from root.evaluate(copy(payload), db, i + offset)

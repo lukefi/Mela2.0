@@ -16,22 +16,21 @@ from lukefi.metsi.app.file_io import (
     init_sqlite_database,
     prepare_target_directory,
     read_stands_from_file,
-    read_control_module,
-    write_full_simulation_result_dirtree)
+    read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
 
-def preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
+def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
     _ = config
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
+def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data)
@@ -40,12 +39,9 @@ def export_prepro(config: MetsiConfiguration, control: dict, data: StandList) ->
         print_logline("Skipping export of preprocessing results.")
 
 
-def simulate(config: MetsiConfiguration, control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
+def _simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
     print_logline("Simulating alternatives...")
-    result = simulate_alternatives(control, stands, db)
-    if config.state_output_container is not None or config.derived_data_output_container is not None:
-        print_logline(f"Writing simulation results to '{config.target_directory}'")
-        write_full_simulation_result_dirtree(result, config)
+    simulate_alternatives(control, stands, db)
 
 
 def main() -> int:
@@ -110,11 +106,11 @@ def main() -> int:
         # feed this sub‐list of stands through the normal run_modes
         current = stands
         if RunMode.PREPROCESS in cfg.run_modes:
-            current = preprocess(cfg, control_structure, current)
+            current = _preprocess(cfg, control_structure, current)
         if RunMode.EXPORT_PREPRO in cfg.run_modes:
-            export_prepro(cfg, control_structure, current)
+            _export_prepro(cfg, control_structure, current)
         if RunMode.SIMULATE in cfg.run_modes:
-            simulate(cfg, control_structure, current, db)
+            _simulate(control_structure, current, db)
 
     if db is not None:
         db.commit()

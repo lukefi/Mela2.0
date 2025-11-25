@@ -20,10 +20,10 @@ TreatmentFn = Callable[[T], OpTuple[T]]
 ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
-class GeneratorBase(ABC, Generic[T]):
+class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
     @abstractmethod
-    def unwrap(self, parents: list[EventTree[T]], time_point: int) -> list[EventTree[T]]:
+    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
         pass
 
     @abstractmethod
@@ -31,25 +31,23 @@ class GeneratorBase(ABC, Generic[T]):
         pass
 
 
-class Generator(GeneratorBase[T], ABC):
+class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
-    children: Sequence_[GeneratorBase]
-    time_point: Optional[int]
+    children: Sequence_[EventGeneratorBase]
 
-    def __init__(self, children: Sequence_[GeneratorBase], time_point: Optional[int] = None):
+    def __init__(self, children: Sequence_[EventGeneratorBase]):
         self.children = children
-        self.time_point = time_point
 
-    def compose_nested(self) -> EventTree[T]:
+    def compose_nested(self) -> list[EventTree[T]]:
         """
-        Generate a simulation EventTree using the given NestableGenerator.
+        Generate a list of partial EventTrees representing a single SimulationInstruction from the nested children
+        generators and Events.
 
-        :param nestable_generator: NestableGenerator tree for generating a EventTree.
-        :return: The root node of the generated EventTree
+        :return: list of (local) root nodes of the generated partial EventTrees
         """
         root: EventTree[T] = EventTree()
-        self.unwrap([root], 0)
-        return root
+        self.unwrap([root])
+        return root.branches  # TODO: this is a dirty hack
 
     @override
     def get_types_of_collected_data(self) -> CollectableDataTypes:
@@ -59,29 +57,29 @@ class Generator(GeneratorBase[T], ABC):
         return retval
 
 
-class Sequence(Generator[T]):
+class Sequence(EventGenerator[T]):
     """Generator for sequential events."""
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         current = parents
         for child in self.children:
-            current = child.unwrap(current, self.time_point or time_point)
+            current = child.unwrap(current)
         return current
 
 
-class Alternatives(Generator[T]):
+class Alternatives(EventGenerator[T]):
     """Generator for branching events"""
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for child in self.children:
-            retval.extend(child.unwrap(parents, self.time_point or time_point))
+            retval.extend(child.unwrap(parents))
         return retval
 
 
-class Event(GeneratorBase[T]):
+class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     treatment: TreatmentFn[T]
@@ -135,10 +133,10 @@ class Event(GeneratorBase[T]):
             self.collected_data = set()
 
     @override
-    def unwrap(self, parents: list[EventTree], time_point: int) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment(time_point))
+            branch = EventTree(self._prepare_paremeterized_treatment())
             parent.add_branch(branch)
             retval.append(branch)
         return retval
@@ -147,7 +145,7 @@ class Event(GeneratorBase[T]):
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
         return self.collected_data
 
-    def _prepare_paremeterized_treatment(self, time_point) -> ProcessedTreatment[T]:
+    def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
 
@@ -155,7 +153,6 @@ class Event(GeneratorBase[T]):
             payload,
             self.treatment,            # unbound treatment
             self.treatment,            # operation_tag for logging/conditions
-            time_point,
             self.preconditions,
             self.postconditions,
             static_params=combined_params,

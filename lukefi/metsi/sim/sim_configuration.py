@@ -1,11 +1,27 @@
-from types import SimpleNamespace
+from collections.abc import Callable
+from functools import partial
+from typing import Any
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction, generator_declarations_for_time_point
-from lukefi.metsi.sim.generators import Generator, Sequence
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
+from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+
+type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 
 
-class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
+class Transition[T: ComputationalUnit]:
+    transition_fn: TransitionFn[T]
+    parameters: dict[str, Any]
+
+    def __init__(self, transition_fn: TransitionFn[T], **parameters):
+        self.parameters = parameters
+        self.transition_fn = partial(transition_fn, **parameters)
+
+    def __call__(self, state: T) -> OpTuple[T]:
+        return self.transition_fn(state)
+
+
+class SimConfiguration[T: ComputationalUnit]:
     """
     A class to manage simulation configuration, including treatments, generators,
     events, and time points.
@@ -18,38 +34,26 @@ class SimConfiguration[T: ComputationalUnit](SimpleNamespace):
             Initializes the SimConfiguration instance with keyword arguments.
     """
     instructions: list[SimulationInstruction[T]] = []
-    time_points: list[int] = []
+    transition: Transition[T]
+    end_condition: Condition[T]
     collected_data: CollectableDataTypes
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+                 simulation_instructions: list[SimulationInstruction[T]],
+                 transition: Transition[T],
+                 end_condition: Condition[T]):
         """
         Initializes the core simulation object.
         Args:
             **kwargs: Additional keyword arguments to be passed to the parent class initializer.
         """
-        super().__init__(**kwargs)
-        self._populate_simulation_instructions(self.simulation_instructions)
+        self.transition = transition
+        self.instructions = simulation_instructions
+        self.end_condition = end_condition
+        self._get_collected_data_types(self.instructions)
 
-    def _populate_simulation_instructions(self, instructions: list["SimulationInstruction[T]"]):
-        time_points = set()
+    def _get_collected_data_types(self, instructions: list["SimulationInstruction[T]"]):
         collected_data = set()
-        self.instructions = instructions
         for instruction in instructions:
             collected_data.update(instruction.event_generator.get_types_of_collected_data())
-            source_time_points = instruction.time_points
-            time_points.update(source_time_points)
-        self.time_points = sorted(time_points)
         self.collected_data = collected_data
-
-    def full_tree_generators(self) -> Generator[T]:
-        """
-        Create a Generator describing a single simulator run.
-
-        :return: a list of prepared generator functions
-        """
-        wrapper = []
-        for time_point in self.time_points:
-            generator_declarations = generator_declarations_for_time_point(self.instructions, time_point)
-            time_point_wrapper_declaration: Sequence[T] = Sequence(generator_declarations, time_point)
-            wrapper.append(time_point_wrapper_declaration)
-        return Sequence(wrapper, 0)

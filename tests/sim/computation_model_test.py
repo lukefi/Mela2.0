@@ -2,20 +2,22 @@ import unittest
 
 from lukefi.metsi.domain.conditions import MinimumTimeInterval
 from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.operations import prepared_treatment
+from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
+from tests.toy_model import ToyModel, ToyTransition
 
 
-def prep_inc(x: SimulationPayload[int]) -> tuple[SimulationPayload[int], list[CollectedData]]:
-    x.computational_unit += 1
+def prep_inc(x: SimulationPayload[ToyModel]) -> tuple[SimulationPayload[ToyModel], list[CollectedData]]:
+    x.computational_unit.value += 1
     return x, []
 
+
 class ComputationModelTest(unittest.TestCase):
-    
+
     root = EventTree(prep_inc)
     root.branches = [
         EventTree(prep_inc),
@@ -33,8 +35,8 @@ class ComputationModelTest(unittest.TestCase):
     ]
 
     def test_evaluator(self):
-        results = self.root.evaluate(SimulationPayload(computational_unit=0, operation_history={}))
-        self.assertListEqual([3, 3, 3, 3], [result.computational_unit for result in results])
+        results = self.root.evaluate(SimulationPayload(computational_unit=ToyModel("test", 0), operation_history={}))
+        self.assertListEqual([3, 3, 3, 3], [result.computational_unit.value for result in results])
 
     def test_sim_configuration(self):
         def fn1(x):
@@ -46,7 +48,7 @@ class ComputationModelTest(unittest.TestCase):
         config = {
             'simulation_instructions': [
                 SimulationInstruction(
-                    time_points=[1, 2, 3],
+                    # time_points=[1, 2, 3],
                     events=[
                         Event(
                             preconditions=[
@@ -63,7 +65,7 @@ class ComputationModelTest(unittest.TestCase):
                     ]
                 ),
                 SimulationInstruction(
-                    time_points=[3, 4, 5],
+                    # time_points=[3, 4, 5],
                     events=[
                         Sequence([
                             Event(
@@ -80,9 +82,10 @@ class ComputationModelTest(unittest.TestCase):
                             )
                         ])
                     ]
-                )
-            ]
+                ),
+            ],
+            "transition": ToyTransition(),
+            "end_condition": Condition[ToyModel](lambda x: x.time > 5)
         }
         result = SimConfiguration(**config)
-        self.assertListEqual([1, 2, 3, 4, 5], result.time_points)
         self.assertEqual(2, len(result.instructions))

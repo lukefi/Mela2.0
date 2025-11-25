@@ -42,7 +42,7 @@ def make_stand(trees):
     verl_val = list(gm.TaxClass)[0].value
     verlt_val = list(gm.TaxClassReduction)[0].value
     return ForestStand(
-        year=2000,
+        time=2000,
         geo_location=(62.0, 25.0, 150.0, None),  # (Y, X, Z)
         degree_days=1100.0,
         sea_effect=0.0,

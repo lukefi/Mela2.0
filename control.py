@@ -1,11 +1,13 @@
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vectorize import vectorize
+from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.domain.events import (
     DoNothing,
-    GrowActa,
-    GrowMetsi,
 )
-from lukefi.metsi.sim.generators import Alternatives
+from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.generators import Alternatives, Sequence
+from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
 
@@ -45,16 +47,19 @@ control_structure = {
     },
     "simulation_instructions": [
         SimulationInstruction(
-            time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
             events=[
                 Alternatives([
-                    GrowActa(),
-                    GrowMetsi(),
-                    DoNothing()
-                ]),
+                    DoNothing(parameters={"n": 1}),
+                    Sequence([
+                        DoNothing(parameters={"n": 2}),
+                        DoNothing(parameters={"n": 3})
+                    ])
+                ])
             ]
         )
     ],
+    "transition": Transition(grow_acta),
+    "end_condition": Condition[ForestStand](lambda x: x.year >= 2050),
     "post_processing": {
         "operation_params": {
             do_nothing: [
