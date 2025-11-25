@@ -204,6 +204,7 @@ class VMI12Builder(VMIBuilder):
         # Fixed conversions
         result = super().convert_stand_entry(indices, data_row, stand_id)
         result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
+        result.start_year = result.year
         area_ha = vmi_util.determine_vmi12_area_ha(
             int(data_row[indices["lohkomuoto"]]),
             int(data_row[indices["county"]]))
@@ -310,6 +311,7 @@ class VMI13Builder(VMIBuilder):
         # Fixed conversions
         result = super().convert_stand_entry(indices, data_row, stand_id)
         result.year = vmi_util.parse_vmi13_date(data_row[indices["date"]]).year
+        result.start_year = result.year
         area_ha = vmi_util.determine_vmi13_area_ha(
             int(data_row[indices["county"]]),
             int(data_row[indices["lohkomuoto"]]),
@@ -477,6 +479,7 @@ class XMLBuilder(ForestCentreBuilder):
         stand = ForestStand()
         stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(stand_basic_data.StandBasicDataDate)  # RST record 2
+        stand.start_year = stand.year
         stand.set_area(util.parse_type(stand_basic_data.Area, float))  # RST record 3 and 4
         (latitude, longitude, crs) = smk_util.parse_coordinates(entry)
         stand.geo_location = (latitude, longitude, None, crs)  # RST record 5,6,8
@@ -556,6 +559,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stand = ForestStand()
         stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(entry.date)  # RST record 2
+        stand.start_year = stand.year
         stand.set_area(entry.area - entry.areadecrease)  # RST record 3 and 4
         # RST records 5, 6 and 8
         (latitude, longitude) = entry.centroid.get('centroid')

@@ -352,6 +352,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     # default to management unit id unless overriden
     stand_id: Optional[int] = management_unit_id
 
+    start_year: Optional[int] = None
     area: float = 0.0
     # default to area_ha, unless overridden
     area_weight: float = area
@@ -456,6 +457,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     def from_row(self, row):
         self.management_unit_id = conv(row[0], int)
         self.year = conv(row[1], int)
+        self.start_year = self.year
         self.area = conv(row[2], float) or 0.0
         self.area_weight = conv(row[3], float) or 0.0
         self.geo_location = (
