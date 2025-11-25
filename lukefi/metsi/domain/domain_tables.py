@@ -8,10 +8,9 @@ def dd_group_for(degree_days: int) -> int:
     # 0–1200 -> 1, 1201–1400 -> 2, etc.
     if degree_days < 1200:
         return 1
-    elif degree_days < 1400:
+    if degree_days < 1400:
         return 2
-    else:
-        return 3
+    return 3
 
 
 def site_group_for(site_type_category: int | Any) -> int:
