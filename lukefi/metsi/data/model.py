@@ -344,6 +344,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
 
     time: int = 0
+    start_time: int = 0
 
     # unique identifier for entity within its domain
     identifier: str = ""
@@ -352,7 +353,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     # default to management unit id unless overriden
     stand_id: Optional[int] = management_unit_id
 
-    start_year: Optional[int] = None
     area: float = 0.0
     # default to area_ha, unless overridden
     area_weight: float = area
@@ -417,6 +417,18 @@ class ForestStand(Finalizable, ComputationalUnit):
     @year.setter
     def year(self, value):
         self.time = value
+
+    @property
+    def start_year(self):
+        return self.start_time
+
+    @start_year.setter
+    def start_year(self, value):
+        self.start_time = value
+
+    @property
+    def relative_year(self):
+        return self.relative_time
 
     def set_identifiers(self, stand_id: Optional[int], management_unit_id: Optional[int] = None):
         self.stand_id = stand_id
