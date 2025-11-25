@@ -14,7 +14,7 @@ from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soi
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
-from lukefi.metsi.data.util.min_stems_lookup import min_stems_lookup
+from lukefi.metsi.data.util.lookup_table import LookupTable, KeySpec
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -251,23 +251,26 @@ class FirstThinningMineralSoils(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
         params = parameters or {}
 
-        # --- Paths to config & CSV
-        default_config_path = "min_stems.json"
         default_csv_path = "min_stems.csv"
-
-        min_stems_config_path: str = params.get("min_stems_config", default_config_path)
         min_stems_csv_path: str = params.get("min_stems_csv", default_csv_path)
 
-        # --- mapping helpers
+        # --- mapping helpers (same as before)
 
-        def _dummy_dd_group_for(_stand: ForestStand) -> int:
-            # TODO: real lämpösumma → dd_group mapping.
-            return 1
+        def dd_group_for(degree_days: int) -> int:
+            # Example: real logic later; dummy now
+            # 0–1200 -> 1, 1201–1400 -> 2, etc.
+            if degree_days < 1200:
+                return 1
+            elif degree_days < 1400:
+                return 2
+            else:
+                return 3
 
-        def _site_group_for(stand: ForestStand) -> int:
-            v = getattr(stand.site_type_category, "value", None)
+        def site_group_for(site_type_category: int | Any) -> int:
+            # If it's an Enum, normalize to its .value; otherwise assume int-ish
+            v = getattr(site_type_category, "value", site_type_category)
             if v is None:
-                return 1  # dummy
+                return 1
             if 1 <= v <= 2:
                 return 1
             if v == 3:
@@ -276,30 +279,29 @@ class FirstThinningMineralSoils(Event[ForestStand]):
                 return 3
             if 5 <= v <= 8:
                 return 4
-            raise ValueError(f"Unsupported site_type_category.value={v}; expected 1..8.")
+            raise ValueError(f"Unsupported site_type_category={v!r}; expected 1..8.")
 
-        def _dominant_species_index(_stand: ForestStand) -> int:
+        def species_group_for(_stand: ForestStand) -> int:
             # TODO: real dominant species logic.
             return 1  # pine
 
+        min_stems_table = LookupTable[ForestStand](
+            csv_path=min_stems_csv_path,
+            key_columns=[
+                "degree_days",        # must exist on ForestStand
+                "site_type_category",  # must exist on ForestStand
+            ],
+            value_column="min_stems",
+            transforms={
+                "degree_days": dd_group_for,       # degree_days -> dd_group
+                "site_type_category": site_group_for,  # site_type_category -> site_group
+                "species": species_group_for
+            },
+            value_cast=int,  # default; explicit here for clarity
+        )
+
         def _min_number_of_stems_after_thinning(stand: ForestStand) -> int:
-            stand.update_aggregates()
-
-            site_g = _site_group_for(stand)
-            spe_g = _dominant_species_index(stand)
-            dd_g = _dummy_dd_group_for(stand)
-
-            key_values = {
-                "site_group": site_g,
-                "species_group": spe_g,
-                "dd_group": dd_g,
-            }
-
-            return min_stems_lookup(
-                min_stems_config_path,
-                min_stems_csv_path,
-                key_values,
-            )
+            return min_stems_table(stand)
 
         def _first_set_target_amount(stand: ForestStand) -> float:
             return 0.1 * _min_number_of_stems_after_thinning(stand)
@@ -321,9 +323,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         # --- dynamic tree_selection built per-stand
 
         def _tree_selection(stand: ForestStand) -> dict[str, Any]:
-            """Build the tree_selection dict using stand-specific min_stems."""
             min_stems = _min_number_of_stems_after_thinning(stand)
-
             return {
                 "target": SelectionTarget("absolute_remain", "stems_per_ha", min_stems),
                 "sets": [
@@ -350,18 +350,17 @@ class FirstThinningMineralSoils(Event[ForestStand]):
                 ],
             }
 
-        # Static params, which can be precalculated
         static_params = {
             "mode": "odds_units",
             "cutting_method": MelaMethodOfTheLastCutting.FIRST_THINNING.value,
         } | params
 
-        # Dynamic params: things that depend on stand state
         dynamic_params = {
             "tree_selection": _tree_selection,
+            # scalar exposed separately:
+            # "min_stems_after_thinning": min_stems_table,
         }
 
-        # --- Preconditions
         preconds: list[Condition[SimulationPayload[ForestStand]]] = [
             MinimumTimeInterval(20, cutting),
             Condition(_forest_categories_check),
