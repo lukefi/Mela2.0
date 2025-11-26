@@ -3,6 +3,7 @@ from parameterized import parameterized
 from lukefi.mela2.forestry import forestry_utils as futil
 from lukefi.mela2.data.model import ReferenceTree, TreeStratum
 from lukefi.mela2.data.enums.internal import TreeSpecies, Storey
+import lukefi.mela2.forestry.forestry_utils
 
 
 def strata_fixture() -> list[TreeStratum]:
