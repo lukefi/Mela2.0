@@ -5,8 +5,8 @@ from xml.etree.ElementTree import Element
 
 import geopandas
 from shapely.geometry import Polygon, Point
-from lukefi.metsi.data.formats import util
-from lukefi.metsi.data.model import TreeStratum
+from lukefi.mela2.data.formats import util
+from lukefi.mela2.data.model import TreeStratum
 
 NS = {
     "schema_location": "http://standardit.tapio.fi/schemas/forestData ForestData.xsd",

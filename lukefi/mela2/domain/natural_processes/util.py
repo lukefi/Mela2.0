@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
 
 
 def update_stand_growth(stand: ForestStand,

@@ -1,10 +1,10 @@
 """ Operations related for manipulating the exporting related formats.
 NOTE: Only for pipeline component 'export_prepro' """
 
-from lukefi.metsi.data.model import ReferenceTree
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.data.conversion.internal2mela import mela_stand
-from lukefi.metsi.app.utils import ConfigurationException
+from lukefi.mela2.data.model import ReferenceTree
+from lukefi.mela2.domain.forestry_types import StandList
+from lukefi.mela2.data.conversion.internal2mela import mela_stand
+from lukefi.mela2.app.utils import ConfigurationException
 
 
 def _recreate_stand_indices(stands: StandList) -> StandList:

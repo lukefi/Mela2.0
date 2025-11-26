@@ -1,6 +1,6 @@
 from typing import Optional
 
-from lukefi.metsi.data.enums.vmi import (
+from lukefi.mela2.data.enums.vmi import (
     VmiSiteType,
     VmiOwnerCategory,
     VmiSoilPeatlandCategory,
@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiLandUseCategory,
     VmiDrainageCategory, VmiStratumRank, VmiTreeStorey,
 )
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.data.enums.internal import (
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,

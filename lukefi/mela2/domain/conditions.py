@@ -1,8 +1,8 @@
 from typing import Optional
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import TreatmentFn
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.generators import TreatmentFn
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 
 class MinimumTimeInterval[T: ComputationalUnit](Condition[SimulationPayload[T]]):

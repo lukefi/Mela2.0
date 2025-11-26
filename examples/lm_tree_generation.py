@@ -1,5 +1,5 @@
-from lukefi.metsi.domain.pre_ops import *
-from lukefi.metsi.sim.generators import *
+from lukefi.mela2.domain.pre_ops import *
+from lukefi.mela2.sim.generators import *
 
 control_structure = {
     "app_configuration": {

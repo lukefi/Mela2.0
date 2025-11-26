@@ -1,5 +1,5 @@
 from typing import Callable
-from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.mela2.domain.forestry_types import StandList
 
 VERBS: set[str] = {"select", "remove"}
 OBJECTS: set[str] = {"stands", "trees", "strata"}

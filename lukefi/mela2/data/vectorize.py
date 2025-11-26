@@ -1,7 +1,7 @@
 from typing import Any
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.mela2.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.domain.forestry_types import StandList
 
 
 CONTAINERS = {

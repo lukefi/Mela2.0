@@ -1,8 +1,8 @@
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.model import TreeSpecies
-from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.mela2.data.model import TreeSpecies
+from lukefi.mela2.data.vector_model import ReferenceTrees
 
 
 def yearly_diameter_growth_by_species(

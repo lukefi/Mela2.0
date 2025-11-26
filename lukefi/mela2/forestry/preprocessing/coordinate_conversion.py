@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from enum import Enum
 from typing import Optional
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.app.utils import MetsiException
 
 
 def load_library(path):
@@ -15,7 +15,7 @@ def load_library(path):
 
 # Defining and initialize the external library
 LIB_NAME = 'ykjtm35.dll' if sys.platform == "win32" else 'ykjtm35.so'
-DLL_PATH = Path('lukefi', 'metsi', 'forestry', 'c', 'lib', LIB_NAME)
+DLL_PATH = Path('lukefi', 'mela2', 'forestry', 'c', 'lib', LIB_NAME)
 
 try:
     DLL = load_library(DLL_PATH)

@@ -1,6 +1,6 @@
 """ Module contains forestry domain spesific model functions """
 from typing import Optional
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.enums.internal import TreeSpecies
 
 
 NASLUND_PINE_OR_OTHER_CONIFEROUS = [

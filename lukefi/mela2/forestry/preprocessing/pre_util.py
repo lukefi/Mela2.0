@@ -1,5 +1,5 @@
 """ Module contains basic, domain and state spesific utility functions used in preprocessing operations"""
-from lukefi.metsi.data.model import TreeStratum
+from lukefi.mela2.data.model import TreeStratum
 
 
 # ---- state utils ----

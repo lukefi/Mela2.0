@@ -10,19 +10,19 @@
 from typing import Sequence
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.enums.internal import (
     TreeSpecies,
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES,
 )
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.domain.natural_processes.util import update_stand_growth
+from lukefi.mela2.sim.collected_data import OpTuple
 
 # Lower-level MetsiGrow types
-from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
+from lukefi.mela2.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Predict,
     Species,
     LandUseCategoryVMI,

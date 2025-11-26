@@ -4,23 +4,23 @@ import copy
 import sqlite3
 import traceback
 from typing import Optional
-from lukefi.metsi.app.preprocessor import (
+from lukefi.mela2.app.preprocessor import (
     preprocess_stands,
     slice_stands_by_percentage,
     slice_stands_by_size
 )
-from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.app.export import export_preprocessed
-from lukefi.metsi.app.file_io import (
+from lukefi.mela2.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
+from lukefi.mela2.domain.forestry_types import StandList
+from lukefi.mela2.app.export import export_preprocessed
+from lukefi.mela2.app.file_io import (
     init_sqlite_database,
     prepare_target_directory,
     read_stands_from_file,
     read_control_module)
-from lukefi.metsi.domain.utils.file_io import create_database_tables
-from lukefi.metsi.sim.simulator import simulate_alternatives
-from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.domain.utils.file_io import create_database_tables
+from lukefi.mela2.sim.simulator import simulate_alternatives
+from lukefi.mela2.app.console_logging import print_logline
+from lukefi.mela2.app.utils import MetsiException
 
 
 def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:

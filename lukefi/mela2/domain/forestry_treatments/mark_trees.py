@@ -1,9 +1,9 @@
 
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.util.select_units import select_units
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.sim.collected_data import OpTuple
+from lukefi.mela2.data.util.select_units import select_units
 
 
 def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:

@@ -1,11 +1,11 @@
 from typing import Any, Optional
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
-from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll
-from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.operations import do_nothing
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.domain.forestry_types import ForestCondition
+from lukefi.mela2.domain.natural_processes.grow_acta import grow_acta
+from lukefi.mela2.domain.natural_processes.grow_metsi import grow_metsi
+from lukefi.mela2.domain.natural_processes.grow_motti_dll import grow_motti_dll
+from lukefi.mela2.sim.generators import Event
+from lukefi.mela2.sim.operations import do_nothing
 
 class DoNothing(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None,

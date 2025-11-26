@@ -4,10 +4,10 @@ from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import Storey
-from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int
-from lukefi.metsi.data.formats.vmi_const import vmi12_county_areas
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.data.enums.internal import Storey
+from lukefi.mela2.data.formats.util import get_or_default, parse_float, parse_int
+from lukefi.mela2.data.formats.vmi_const import vmi12_county_areas
+from lukefi.mela2.app.utils import MetsiException
 
 
 def determine_area_factors(small_tree_sourcevalue: str, big_tree_sourcevalue: str) -> tuple[float, float]:

@@ -8,19 +8,19 @@ import sqlite3
 from typing import Any, Optional
 import numpy as np
 import jsonpickle
-from lukefi.metsi.data.formats.forest_builder import VMI13Builder, VMI12Builder, XMLBuilder, GeoPackageBuilder
-from lukefi.metsi.data.formats.io_utils import (
+from lukefi.mela2.data.formats.forest_builder import VMI13Builder, VMI12Builder, XMLBuilder, GeoPackageBuilder
+from lukefi.mela2.data.formats.io_utils import (
     stands_to_csv_content,
     csv_content_to_stands,
     stands_to_rst_content,
     mela_par_file_content)
-from lukefi.metsi.app.app_io import MetsiConfiguration
-from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.domain.forestry_types import SimResults
-from lukefi.metsi.domain.forestry_types import StandList, ForestStand
-from lukefi.metsi.data.formats.declarative_conversion import Conversion
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.mela2.app.app_io import MetsiConfiguration
+from lukefi.mela2.app.app_types import ExportableContainer
+from lukefi.mela2.domain.forestry_types import SimResults
+from lukefi.mela2.domain.forestry_types import StandList, ForestStand
+from lukefi.mela2.data.formats.declarative_conversion import Conversion
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.sim.collected_data import CollectedData
 
 StandReader = Callable[[str | Path], StandList]
 StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]

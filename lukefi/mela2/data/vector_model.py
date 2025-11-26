@@ -3,7 +3,7 @@ from typing import Any, Optional, overload
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.app.utils import MetsiException
 
 DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "identifier": np.dtype("U20"),

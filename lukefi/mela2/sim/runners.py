@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from typing import TypeVar
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.mela2.data.computational_unit import ComputationalUnit
 
 
 T = TypeVar("T", bound=ComputationalUnit)

@@ -1,6 +1,6 @@
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.sim.operations import simple_processable_chain
-from lukefi.metsi.sim.runners import evaluate_sequence
+from lukefi.mela2.domain.forestry_types import StandList
+from lukefi.mela2.sim.operations import simple_processable_chain
+from lukefi.mela2.sim.runners import evaluate_sequence
 
 
 def preprocess_stands(stands: StandList, simulation_declaration: dict) -> StandList:

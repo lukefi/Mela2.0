@@ -1,4 +1,4 @@
-from lukefi.metsi.domain.exp_ops import *
+from lukefi.mela2.domain.exp_ops import *
 
 default = {}  # Empty dict declares a default output content
 

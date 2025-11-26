@@ -1,12 +1,12 @@
 import copy
 from typing import Any, Callable, Optional
 
-from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.app.file_io import write_stands_to_file, determine_file_path
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.sim.operations import simple_processable_chain
-from lukefi.metsi.sim.runners import evaluate_sequence
+from lukefi.mela2.app.app_types import ExportableContainer
+from lukefi.mela2.app.console_logging import print_logline
+from lukefi.mela2.app.file_io import write_stands_to_file, determine_file_path
+from lukefi.mela2.domain.forestry_types import StandList
+from lukefi.mela2.sim.operations import simple_processable_chain
+from lukefi.mela2.sim.runners import evaluate_sequence
 
 
 def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList) -> None:

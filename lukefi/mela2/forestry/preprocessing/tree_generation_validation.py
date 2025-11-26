@@ -1,5 +1,5 @@
-from lukefi.metsi.data.model import TreeStratum, ReferenceTree
-from lukefi.metsi.forestry.forestry_utils import calculate_basal_area
+from lukefi.mela2.data.model import TreeStratum, ReferenceTree
+from lukefi.mela2.forestry.forestry_utils import calculate_basal_area
 
 
 def weighted_mean(values: list[float], weights: list[float]) -> float:

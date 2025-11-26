@@ -1,8 +1,8 @@
-from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_vectorized
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Sequence, Event
+from lukefi.mela2.data.vectorize import vectorize
+from lukefi.mela2.domain.natural_processes.grow_acta import grow_acta_vectorized
+from lukefi.mela2.domain.pre_ops import generate_reference_trees, preproc_filter
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.sim.generators import Sequence, Event
 
 
 control_structure = {

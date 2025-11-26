@@ -1,10 +1,10 @@
 """ Module contains tree generation logic that uses distribution based tree generation models
 (see. distributions module) """
 from enum import Enum
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.forestry.preprocessing import distributions
-from lukefi.metsi.forestry.preprocessing.naslund import naslund_height, naslund_correction
-from lukefi.metsi.forestry.preprocessing.tree_generation_lm import tree_generation_lm
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.forestry.preprocessing import distributions
+from lukefi.mela2.forestry.preprocessing.naslund import naslund_height, naslund_correction
+from lukefi.mela2.forestry.preprocessing.tree_generation_lm import tree_generation_lm
 
 
 class TreeStrategy(Enum):
