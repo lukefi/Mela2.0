@@ -44,16 +44,16 @@ tests = [
 ]
 
 [project.scripts]
-mela2 = "lukefi.metsi.app.metsi:main"
+mela2 = "lukefi.mela2.app.mela2:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
 
 [tool.setuptools.package-data]
-"lukefi.metsi.forestry.lua" = ["*"]
-"lukefi.metsi.forestry.r" = ["*"]
+"lukefi.mela2.forestry.lua" = ["*"]
+"lukefi.mela2.forestry.r" = ["*"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore::pytest.PytestCollectionWarning:.*metsi.tests.app.file_io_test",
+    "ignore::pytest.PytestCollectionWarning:.*mela2.tests.app.file_io_test",
 ]
