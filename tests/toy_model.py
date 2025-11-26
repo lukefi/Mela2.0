@@ -1,8 +1,8 @@
 from sqlite3 import Connection
 from typing import override
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.collected_data import CollectedData, OpTuple
+from lukefi.mela2.sim.sim_configuration import Transition
 
 
 class ToyModel(ComputationalUnit):

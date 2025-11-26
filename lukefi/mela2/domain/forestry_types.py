@@ -1,6 +1,6 @@
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 StandList = list[ForestStand]
 ForestOpPayload = SimulationPayload[ForestStand]

@@ -1,7 +1,7 @@
 """ Tests suites for forestryfunctions.preprocessing.* modules """
 import unittest
-from lukefi.metsi.data.model import TreeStratum
-from lukefi.metsi.forestry.preprocessing import pre_util
+from lukefi.mela2.data.model import TreeStratum
+from lukefi.mela2.forestry.preprocessing import pre_util
 
 
 class TestPreprocessingUtils(unittest.TestCase):

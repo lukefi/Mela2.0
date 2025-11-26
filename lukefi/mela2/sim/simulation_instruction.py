@@ -3,10 +3,10 @@ import sqlite3
 from typing import Optional, TypeVar
 from typing import Sequence as Sequence_
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 

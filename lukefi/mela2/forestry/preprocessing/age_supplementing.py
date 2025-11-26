@@ -1,5 +1,5 @@
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.forestry.forestry_utils import find_matching_stratum_by_diameter
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.forestry.forestry_utils import find_matching_stratum_by_diameter
 
 STRATUM_SUPPLEMENT = 1
 INITIAL_TREE_SUPPLEMENT = 2

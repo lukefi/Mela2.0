@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, Any, Callable
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.computational_unit import ComputationalUnit
 
 if TYPE_CHECKING:
-    from lukefi.metsi.sim.collected_data import CollectedData
-    from lukefi.metsi.sim.generators import TreatmentFn
+    from lukefi.mela2.sim.collected_data import CollectedData
+    from lukefi.mela2.sim.generators import TreatmentFn
 
 
 def do_nothing[T: ComputationalUnit](data: T, **kwargs) -> tuple[T, list["CollectedData"]]:

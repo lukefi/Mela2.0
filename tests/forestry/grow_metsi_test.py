@@ -3,12 +3,12 @@ from typing import cast
 from types import SimpleNamespace
 from unittest.mock import patch
 import numpy as np
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.sim.collected_data import CollectedData
 import lukefi.metsi.domain.natural_processes.grow_metsi as gm
 import lukefi.metsi.domain.natural_processes.grow_metsi as gmv
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.enums.internal import (LandUseCategory,
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.enums.internal import (LandUseCategory,
                                               SiteType,
                                               SoilPeatlandCategory
                                               )

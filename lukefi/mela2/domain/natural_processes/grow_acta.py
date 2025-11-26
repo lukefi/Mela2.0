@@ -1,7 +1,7 @@
-from lukefi.metsi.data.model import ForestStand, ReferenceTree
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth
-from lukefi.metsi.forestry.naturalprocess.grow_acta import grow_diameter_and_height
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.mela2.data.model import ForestStand, ReferenceTree
+from lukefi.mela2.domain.natural_processes.util import update_stand_growth
+from lukefi.mela2.forestry.naturalprocess.grow_acta import grow_diameter_and_height
+from lukefi.mela2.sim.collected_data import OpTuple
 
 
 def split_sapling_trees(trees: list[ReferenceTree]) -> tuple[list[ReferenceTree], list[ReferenceTree]]:

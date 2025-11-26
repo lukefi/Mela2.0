@@ -2,16 +2,16 @@ from itertools import chain
 from typing import Any, Optional
 from collections.abc import Callable
 
-from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.data.formats.util import parse_float
-from lukefi.metsi.data.model import (
+from lukefi.mela2.app.app_types import ExportableContainer
+from lukefi.mela2.data.formats.util import parse_float
+from lukefi.mela2.data.model import (
     ForestStand,
     ReferenceTree,
     TreeStratum,
     stand_as_internal_csv_row,
     stand_as_rst_row)
-from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb_meta
-from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.mela2.data.formats.rst_const import MSBInitialDataRecordConst as msb_meta
+from lukefi.mela2.domain.forestry_types import StandList
 
 
 def rst_float(source: str | int | float | None) -> str:

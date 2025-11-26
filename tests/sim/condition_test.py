@@ -1,9 +1,9 @@
 import unittest
 
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.sim.collected_data import OpTuple
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.generators import Alternatives, Sequence, Event
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 from tests.toy_model import ToyModel
 
 

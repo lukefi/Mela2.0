@@ -1,8 +1,8 @@
 import argparse
 from types import SimpleNamespace
 from typing import Optional
-from lukefi.metsi.app.utils import ConfigurationException
-from lukefi.metsi.app.metsi_enum import (
+from lukefi.mela2.app.utils import ConfigurationException
+from lukefi.mela2.app.metsi_enum import (
     IntConfigEnum,
     RunMode,
     StateFormat,

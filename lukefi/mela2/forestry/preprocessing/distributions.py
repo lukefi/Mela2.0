@@ -8,7 +8,7 @@
 """
 import math
 from typing import Optional
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
 
 
 # ---- Weibull distribution model ----

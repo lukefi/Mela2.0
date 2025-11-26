@@ -1,8 +1,8 @@
 import sqlite3
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.collected_data import CollectedData
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 
 def create_database_tables(db: sqlite3.Connection):

@@ -1,7 +1,7 @@
-from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.pre_ops import generate_reference_trees
-from lukefi.metsi.domain.events import GrowMetsi
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.data.vectorize import vectorize
+from lukefi.mela2.domain.pre_ops import generate_reference_trees
+from lukefi.mela2.domain.events import GrowMetsi
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
 
 from user_events import Mounding
 

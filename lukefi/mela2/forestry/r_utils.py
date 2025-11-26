@@ -3,8 +3,8 @@ from typing import Any
 
 from rpy2 import robjects
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ForestStand
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.model import ForestStand
 
 
 initialised = False  # pylint: disable=invalid-name # Pylint thinks all module scope variables are constants

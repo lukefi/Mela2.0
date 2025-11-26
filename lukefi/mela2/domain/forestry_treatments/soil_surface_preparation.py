@@ -1,6 +1,6 @@
 from typing import Optional
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.sim.collected_data import OpTuple
 
 def soil_surface_preparation(
     op: ForestStand,

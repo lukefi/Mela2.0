@@ -1,18 +1,18 @@
 import traceback
 from typing import Any, Callable
-from lukefi.metsi.data.model import ReferenceTree
-from lukefi.metsi.data.enums.internal import LandUseCategory
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.domain.utils.filter import applyfilter
-from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
-from lukefi.metsi.forestry.preprocessing import tree_generation, pre_util
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
-from lukefi.metsi.forestry.preprocessing.age_supplementing import supplement_age_for_reference_trees
-from lukefi.metsi.forestry.preprocessing.naslund import naslund_height
-from lukefi.metsi.forestry.preprocessing.tree_generation_validation import create_stratum_tree_comparison_set, \
+from lukefi.mela2.data.model import ReferenceTree
+from lukefi.mela2.data.enums.internal import LandUseCategory
+from lukefi.mela2.domain.forestry_types import StandList
+from lukefi.mela2.domain.utils.filter import applyfilter
+from lukefi.mela2.forestry.forestry_utils import find_matching_storey_stratum_for_tree
+from lukefi.mela2.forestry.preprocessing import tree_generation, pre_util
+from lukefi.mela2.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
+from lukefi.mela2.forestry.preprocessing.age_supplementing import supplement_age_for_reference_trees
+from lukefi.mela2.forestry.preprocessing.naslund import naslund_height
+from lukefi.mela2.forestry.preprocessing.tree_generation_validation import create_stratum_tree_comparison_set, \
     debug_output_row_from_comparison_set, debug_output_header_row
-from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.data.vectorize import vectorize
+from lukefi.mela2.app.utils import MetsiException
 
 
 def preproc_filter(stands: StandList, **operation_params) -> StandList:
@@ -31,9 +31,9 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     """
 
     # Lazy import of optional MetsiGrow functions.
-    from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.lasum import ilmanor  # pylint: disable=import-outside-toplevel
-    from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.coord import etrs_tm35_to_ykj as conv  # pylint: disable=import-outside-toplevel
-    from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.kor import xkor  # pylint: disable=import-outside-toplevel
+    from lukefi.mela2.forestry.naturalprocess.MetsiGrow.metsi_grow.lasum import ilmanor  # pylint: disable=import-outside-toplevel
+    from lukefi.mela2.forestry.naturalprocess.MetsiGrow.metsi_grow.coord import etrs_tm35_to_ykj as conv  # pylint: disable=import-outside-toplevel
+    from lukefi.mela2.forestry.naturalprocess.MetsiGrow.metsi_grow.kor import xkor  # pylint: disable=import-outside-toplevel
 
     _ = operation_params
 

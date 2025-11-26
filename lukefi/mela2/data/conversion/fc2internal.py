@@ -1,6 +1,6 @@
 from typing import Optional, Callable
 from enum import IntEnum
-from lukefi.metsi.data.enums.forest_centre import (
+from lukefi.mela2.data.enums.forest_centre import (
     ForestCentreSiteType,
     ForestCentreOwnerCategory,
     ForestCentreSoilPeatlandCategory,
@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.forest_centre import (
     ForestCentreLandUseCategory,
     ForestCentreDrainageCategory, ForestCentreStratumStorey
 )
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.data.enums.internal import (
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,

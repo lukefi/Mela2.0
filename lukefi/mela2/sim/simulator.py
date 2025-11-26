@@ -1,10 +1,10 @@
 import sqlite3
 from typing import Any, Optional
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
-from lukefi.metsi.sim.collected_data import init_collected_data_tables
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.domain.utils.file_io import output_node_to_db, update_leaf_node
+from lukefi.mela2.sim.collected_data import init_collected_data_tables
+from lukefi.mela2.sim.sim_configuration import SimConfiguration
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],

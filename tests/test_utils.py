@@ -5,10 +5,10 @@ import unittest
 from typing import Any
 from collections.abc import Callable
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
-from lukefi.metsi.data.model import ForestStand, ReferenceTree
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
+from lukefi.mela2.data.model import ForestStand, ReferenceTree
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 
 
 class ConverterTestSuite(unittest.TestCase):

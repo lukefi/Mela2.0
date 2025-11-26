@@ -1,10 +1,10 @@
 import unittest
 from pathlib import Path
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.app.file_io import read_control_module
-from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.sim.runners import evaluate_sequence
+from lukefi.mela2.sim.sim_configuration import SimConfiguration
+from lukefi.mela2.app.file_io import read_control_module
+from lukefi.mela2.sim.simulator import _simulate_unit
 from tests.test_utils import collect_results, raises, identity, none
 from tests.toy_model import ToyModel
 

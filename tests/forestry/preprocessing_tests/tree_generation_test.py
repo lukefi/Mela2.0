@@ -1,9 +1,9 @@
 """ Tests suites for forestryfunctions.preprocessing.* modules """
 import unittest
 from collections import namedtuple
-from lukefi.metsi.data.model import TreeStratum, ReferenceTree, ForestStand
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.forestry.preprocessing import tree_generation
+from lukefi.mela2.data.model import TreeStratum, ReferenceTree, ForestStand
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.forestry.preprocessing import tree_generation
 
 
 class TestTreeGeneration(unittest.TestCase):

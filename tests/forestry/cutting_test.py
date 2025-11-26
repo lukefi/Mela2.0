@@ -1,12 +1,12 @@
 import unittest
 from typing import cast
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.harvest.cutting import cutting
-from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.forestry.harvest.cutting import cutting
+from lukefi.mela2.domain.collected_data import RemovedTrees
 
 
 def _all_trees(_stand: ForestStand, data: ReferenceTrees) -> np.ndarray:

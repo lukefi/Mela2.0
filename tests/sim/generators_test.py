@@ -1,12 +1,12 @@
 import unittest
-from lukefi.metsi.domain.conditions import MinimumTimeInterval, RelativeTimePoints, TimePoints
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.operations import simple_processable_chain
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.mela2.domain.conditions import MinimumTimeInterval, RelativeTimePoints, TimePoints
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.operations import simple_processable_chain
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.sim.generators import Alternatives, Sequence, Event
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.sim.sim_configuration import SimConfiguration
+from lukefi.mela2.sim.simulator import _simulate_unit
 from tests.toy_model import ToyModel, ToyTransition, parametrized_treatment, toy_inc
 
 

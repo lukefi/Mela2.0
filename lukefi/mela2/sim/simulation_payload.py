@@ -1,9 +1,9 @@
 from copy import deepcopy
 from typing import TYPE_CHECKING, Optional
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.finalizable import Finalizable
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.finalizable import Finalizable
 if TYPE_CHECKING:
-    from lukefi.metsi.sim.generators import TreatmentFn
+    from lukefi.mela2.sim.generators import TreatmentFn
 
 
 class SimulationPayload[T: ComputationalUnit]:

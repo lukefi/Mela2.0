@@ -1,8 +1,8 @@
 import sqlite3
 from typing import override
 
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.sim.collected_data import CollectedData
 
 
 class RemovedTrees(CollectedData):

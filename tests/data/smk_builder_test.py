@@ -1,9 +1,9 @@
 import unittest
 import os
 from functools import reduce
-from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
-from lukefi.metsi.data.enums.internal import *
-from lukefi.metsi.app.metsi_enum import StrataOrigin
+from lukefi.mela2.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
+from lukefi.mela2.data.enums.internal import *
+from lukefi.mela2.app.metsi_enum import StrataOrigin
 
 builder_flags = {
     'strata_origin': StrataOrigin.INVENTORY

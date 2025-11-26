@@ -3,9 +3,9 @@ import unittest
 
 import numpy as np
 
-from lukefi.metsi.data.vectorize import ReferenceTrees, TreeStrata, vectorize
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
+from lukefi.mela2.data.vectorize import ReferenceTrees, TreeStrata, vectorize
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.model import ForestStand, ReferenceTree, TreeStratum
 
 
 class TestVectorize(unittest.TestCase):

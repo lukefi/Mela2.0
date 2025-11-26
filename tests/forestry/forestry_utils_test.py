@@ -1,8 +1,8 @@
 import unittest
 from parameterized import parameterized
-from lukefi.metsi.forestry import forestry_utils as futil
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.data.enums.internal import TreeSpecies, Storey
+from lukefi.mela2.forestry import forestry_utils as futil
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.data.enums.internal import TreeSpecies, Storey
 import lukefi.metsi.forestry.forestry_utils
 
 

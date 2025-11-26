@@ -1,10 +1,10 @@
 
 import unittest
 import lukefi.metsi.domain.pre_ops as preprocessing
-from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import CRS
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand, ReferenceTree, TreeStratum
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.forestry.preprocessing.coordinate_conversion import CRS
+from lukefi.mela2.app.utils import MetsiException
 
 
 def generate_stand_with_saplings(sapling_tree_count, reference_tree_count):

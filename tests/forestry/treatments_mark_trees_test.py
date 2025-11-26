@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.domain.forestry_treatments.mark_trees import mark_trees
 
 
 class MarkTreesTest(unittest.TestCase):

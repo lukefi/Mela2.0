@@ -1,13 +1,13 @@
 import unittest
 
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
-from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Sequence, Event
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.event_tree import EventTree
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
+from lukefi.mela2.domain.conditions import MinimumTimeInterval
+from lukefi.mela2.sim.collected_data import CollectedData
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.sim.generators import Sequence, Event
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.sim.event_tree import EventTree
+from lukefi.mela2.sim.sim_configuration import SimConfiguration
 from tests.toy_model import ToyModel, ToyTransition
 
 

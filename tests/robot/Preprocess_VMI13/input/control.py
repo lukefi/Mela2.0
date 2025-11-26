@@ -1,5 +1,5 @@
-from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
+from lukefi.mela2.data.vectorize import vectorize
+from lukefi.mela2.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 
 
 control_structure = {

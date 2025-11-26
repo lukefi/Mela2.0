@@ -1,7 +1,7 @@
 """ This declaration is used to define the output content of the preprocessing results """
 from examples.declarations.export_prepro import default_csv
-from lukefi.metsi.domain.pre_ops import *
-from lukefi.metsi.sim.generators import *
+from lukefi.mela2.domain.pre_ops import *
+from lukefi.mela2.sim.generators import *
 
 
 control_structure = {

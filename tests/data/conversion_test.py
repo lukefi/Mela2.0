@@ -1,5 +1,5 @@
-from lukefi.metsi.data.formats import vmi_util
-from lukefi.metsi.data.formats.vmi_const import *
+from lukefi.mela2.data.formats import vmi_util
+from lukefi.mela2.data.formats.vmi_const import *
 from tests.data import test_util
 
 

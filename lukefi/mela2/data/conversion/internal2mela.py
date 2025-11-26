@@ -1,6 +1,6 @@
 from copy import copy
-from lukefi.metsi.data.model import ForestStand, ReferenceTree
-from lukefi.metsi.data.enums.mela import (
+from lukefi.mela2.data.model import ForestStand, ReferenceTree
+from lukefi.mela2.data.enums.mela import (
     MelaOwnerCategory,
     MelaSiteTypeCategory,
     MelaSoilAndPeatlandCategory,
@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.mela import (
     MelaLandUseCategory,
     MelaDrainageCategory
 )
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.data.enums.internal import (
     SiteType,
     SoilPeatlandCategory,
     TreeSpecies,
@@ -16,8 +16,8 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     DrainageCategory
 )
-from lukefi.metsi.data.conversion.util import apply_mappers
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.data.conversion.util import apply_mappers
+from lukefi.mela2.app.utils import MetsiException
 
 
 species_map = {

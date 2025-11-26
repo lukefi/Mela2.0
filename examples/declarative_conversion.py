@@ -2,8 +2,8 @@
 
 from random import random
 from examples.declarations.export_prepro import mela
-from lukefi.metsi.data.formats.declarative_conversion import Conversion
-from lukefi.metsi.data.model import ForestStand, TreeStratum
+from lukefi.mela2.data.formats.declarative_conversion import Conversion
+from lukefi.mela2.data.model import ForestStand, TreeStratum
 
 
 def sum3(x, y, z) -> float:

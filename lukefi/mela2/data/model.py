@@ -5,13 +5,13 @@ from typing import Optional, override
 from dataclasses import dataclass
 
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
                                               TreeSpecies, DrainageCategory, Storey)
-from lukefi.metsi.data.formats.util import convert_str_to_type as conv
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.sim.finalizable import Finalizable
+from lukefi.mela2.data.formats.util import convert_str_to_type as conv
+from lukefi.mela2.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.mela2.sim.finalizable import Finalizable
 
 # NOTE:
 # * the deepcopy methods here are roughly equivalent to

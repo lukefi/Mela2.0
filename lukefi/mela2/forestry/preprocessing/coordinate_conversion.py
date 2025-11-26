@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from enum import Enum
 from typing import Optional
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.mela2.app.utils import MetsiException
 
 
 def load_library(path):

@@ -1,8 +1,8 @@
 import math
 from collections.abc import Callable, Iterable
 from typing import Optional
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
 
 
 def calculate_basal_area(tree: ReferenceTree) -> float:

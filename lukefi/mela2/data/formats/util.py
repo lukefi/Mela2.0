@@ -1,6 +1,6 @@
 from enum import IntEnum
 from typing import Optional, Any, Union
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.data.enums.internal import (
     DrainageCategory, LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory)
 
 

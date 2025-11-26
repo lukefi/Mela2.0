@@ -1,12 +1,12 @@
 from copy import deepcopy
 from typing import TYPE_CHECKING
-from lukefi.metsi.app.utils import ConditionFailed
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.app.utils import ConditionFailed
+from lukefi.mela2.data.computational_unit import ComputationalUnit
+from lukefi.mela2.sim.collected_data import CollectedData
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
 if TYPE_CHECKING:
-    from lukefi.metsi.sim.generators import TreatmentFn
+    from lukefi.mela2.sim.generators import TreatmentFn
 
 
 def processor[T: ComputationalUnit](payload: SimulationPayload[T],

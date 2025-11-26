@@ -4,9 +4,9 @@ from typing import overload
 import xml.etree.ElementTree as ET
 from pandas import DataFrame, Series
 
-from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.enums.internal import OwnerCategory
-from lukefi.metsi.data.formats.vmi_const import (
+from lukefi.mela2.app.console_logging import print_logline
+from lukefi.mela2.data.enums.internal import OwnerCategory
+from lukefi.mela2.data.formats.vmi_const import (
     VMI12_STAND_INDICES,
     VMI12_STRATUM_INDICES,
     VMI12_TREE_INDICES,
@@ -14,11 +14,11 @@ from lukefi.metsi.data.formats.vmi_const import (
     VMI13_STRATUM_INDICES,
     VMI13_TREE_INDICES
 )
-from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
-from lukefi.metsi.data.conversion import vmi2internal, fc2internal
-from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
-from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
-from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.mela2.data.model import ForestStand, ReferenceTree, TreeStratum
+from lukefi.mela2.data.conversion import vmi2internal, fc2internal
+from lukefi.mela2.data.formats import smk_util, util, vmi_util, gpkg_util
+from lukefi.mela2.data.formats.declarative_conversion import ConversionMapper
+from lukefi.mela2.domain.forestry_types import StandList
 
 
 class ForestBuilder(ABC):

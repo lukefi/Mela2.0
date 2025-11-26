@@ -1,10 +1,10 @@
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
-from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
-from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.sim.collected_data import OpTuple, CollectedData
+from lukefi.mela2.data.util.select_units import select_units, SelectionSet, SelectionTarget
+from lukefi.mela2.domain.collected_data import RemovedTrees
 
 def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """

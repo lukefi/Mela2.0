@@ -1,5 +1,5 @@
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.forestry.preprocessing import naslund
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.forestry.preprocessing import naslund
 from tests.forestry import test_util
 
 

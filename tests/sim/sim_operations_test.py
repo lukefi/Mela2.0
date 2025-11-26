@@ -1,8 +1,8 @@
 from typing import Any
 import unittest
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.domain.conditions import _get_operation_last_run
-from lukefi.metsi.sim.operations import prepared_treatment
+from lukefi.mela2.sim.collected_data import OpTuple
+from lukefi.mela2.domain.conditions import _get_operation_last_run
+from lukefi.mela2.sim.operations import prepared_treatment
 from tests.toy_model import ToyModel, parametrized_treatment
 
 
