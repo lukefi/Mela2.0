@@ -44,7 +44,7 @@ tests = [
 ]
 
 [project.scripts]
-mela2 = "lukefi.mela2.app.metsi:main"
+mela2 = "lukefi.mela2.app.mela2:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
