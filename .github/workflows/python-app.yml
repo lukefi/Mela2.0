@@ -69,7 +69,7 @@ jobs:
 
     - name: Compile shared libraries
       run: |
-        make -C lukefi/metsi/forestry/c
+        make -C lukefi/mela2/forestry/c
 
     - name: Test with pytest
       run: |
@@ -145,7 +145,7 @@ jobs:
 
     - name: Clean up
       run: |
-        make -C lukefi/metsi/forestry/c clean
+        make -C lukefi/mela2/forestry/c clean
         rm -rf ./data/motti || true
 
   
