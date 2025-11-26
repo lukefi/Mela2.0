@@ -15,7 +15,7 @@ def load_library(path):
 
 # Defining and initialize the external library
 LIB_NAME = 'ykjtm35.dll' if sys.platform == "win32" else 'ykjtm35.so'
-DLL_PATH = Path('lukefi', 'metsi', 'forestry', 'c', 'lib', LIB_NAME)
+DLL_PATH = Path('lukefi', 'mela2', 'forestry', 'c', 'lib', LIB_NAME)
 
 try:
     DLL = load_library(DLL_PATH)
