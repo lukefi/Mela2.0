@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.vector_model import VectorData
+from lukefi.mela2.data.vector_model import VectorData
 
 DUMMY_DTYPES: dict[str, npt.DTypeLike] = {
     "x": np.int32,

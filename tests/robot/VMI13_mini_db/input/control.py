@@ -1,13 +1,13 @@
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.domain.events import GrowActa, GrowMetsi
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_configuration import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.vectorize import vectorize
+from lukefi.mela2.domain.conditions import TimePoints
+from lukefi.mela2.domain.events import GrowActa, GrowMetsi
+from lukefi.mela2.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.generators import Alternatives
+from lukefi.mela2.sim.operations import do_nothing
+from lukefi.mela2.sim.sim_configuration import Transition
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
 
 
 control_structure = {

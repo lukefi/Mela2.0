@@ -1,5 +1,5 @@
 import unittest
-from lukefi.metsi.data.formats.declarative_conversion import Conversion, ConversionMapper
+from lukefi.mela2.data.formats.declarative_conversion import Conversion, ConversionMapper
 from random import random
 
 class A():

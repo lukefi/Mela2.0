@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from geopandas import GeoDataFrame
 from shapely import Polygon
-from lukefi.metsi.data.formats import gpkg_util
+from lukefi.mela2.data.formats import gpkg_util
 from tests.data import test_util
 
 

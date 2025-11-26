@@ -1,7 +1,7 @@
 import unittest
 
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 
 class SoilSurfacePreparationTest(unittest.TestCase):
     def test_sets_soil_surface_preparation_year_and_no_cdata(self):

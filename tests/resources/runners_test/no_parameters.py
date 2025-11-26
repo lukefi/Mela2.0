@@ -1,7 +1,7 @@
-from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Sequence, Event
+from lukefi.mela2.domain.conditions import TimePoints
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.sim.generators import Sequence, Event
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 

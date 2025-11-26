@@ -1,9 +1,9 @@
 import unittest
 
 import numpy as np
-from lukefi.metsi.data.model import ReferenceTree
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.naturalprocess import grow_acta
+from lukefi.mela2.data.model import ReferenceTree
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.forestry.naturalprocess import grow_acta
 
 
 class GrowActaTest(unittest.TestCase):

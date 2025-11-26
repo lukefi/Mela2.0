@@ -1,9 +1,9 @@
 import unittest
 from statistics import mean
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import TreeStratum, ReferenceTree
-from lukefi.metsi.forestry.preprocessing.tree_generation_lm import tree_generation_lm
+from lukefi.mela2.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.model import TreeStratum, ReferenceTree
+from lukefi.mela2.forestry.preprocessing.tree_generation_lm import tree_generation_lm
 
 
 class TestLmTreeGeneration(unittest.TestCase):

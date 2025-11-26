@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.domain.forestry_treatments.mark_trees import mark_trees
 
 
 class MarkTreesTest(unittest.TestCase):
@@ -59,7 +59,7 @@ class MarkTreesTest(unittest.TestCase):
                 attributes={"tree_type": "SPARE", "management_category": 2},
             )
 
-    @patch("lukefi.metsi.domain.forestry_treatments.mark_trees.select_units")
+    @patch("lukefi.mela2.domain.forestry_treatments.mark_trees.select_units")
     def test_full_and_partial_marking_and_splitting(self, mock_select_units):
         """
         Verify that:

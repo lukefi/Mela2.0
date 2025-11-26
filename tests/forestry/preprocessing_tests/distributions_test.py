@@ -1,5 +1,5 @@
-from lukefi.metsi.data.model import TreeStratum, ReferenceTree
-from lukefi.metsi.forestry.preprocessing import distributions
+from lukefi.mela2.data.model import TreeStratum, ReferenceTree
+from lukefi.mela2.forestry.preprocessing import distributions
 from tests.forestry import test_util
 
 

@@ -3,12 +3,12 @@ import unittest
 from io import StringIO
 
 import numpy as np
-from lukefi.metsi.data.formats.io_utils import *
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.data.vectorize import vectorize
+from lukefi.mela2.data.formats.io_utils import *
+from lukefi.mela2.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.mela2.data.vectorize import vectorize
 from tests.data.test_util import ConverterTestSuite, ForestBuilderTestBench
-from lukefi.metsi.data.formats.io_utils import c_var_rst_row
-from lukefi.metsi.data.model import ForestStand
+from lukefi.mela2.data.formats.io_utils import c_var_rst_row
+from lukefi.mela2.data.model import ForestStand
 
 vmi13_builder = ForestBuilderTestBench.vmi13_builder()
 

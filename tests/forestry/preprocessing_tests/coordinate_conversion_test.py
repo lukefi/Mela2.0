@@ -1,8 +1,8 @@
 import unittest
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import \
+from lukefi.mela2.app.utils import MetsiException
+from lukefi.mela2.forestry.preprocessing.coordinate_conversion import \
     CRS, convert_location_to_ykj, _erts_tm35_to_ykj
-from lukefi.metsi.data.model import ForestStand
+from lukefi.mela2.data.model import ForestStand
 
 class TestCoordinateConversion(unittest.TestCase):
     def test_coordinate_conversion(self):

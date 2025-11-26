@@ -1,9 +1,9 @@
 import unittest
 from parameterized import parameterized
-from lukefi.metsi.forestry import forestry_utils as futil
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.data.enums.internal import TreeSpecies, Storey
-import lukefi.metsi.forestry.forestry_utils
+from lukefi.mela2.forestry import forestry_utils as futil
+from lukefi.mela2.data.model import ReferenceTree, TreeStratum
+from lukefi.mela2.data.enums.internal import TreeSpecies, Storey
+import lukefi.mela2.forestry.forestry_utils
 
 
 def strata_fixture() -> list[TreeStratum]:
@@ -44,7 +44,7 @@ class ForestryUtilsTest(unittest.TestCase):
         ]
 
         for i in assertions:
-            result = round(lukefi.metsi.forestry.forestry_utils.generate_diameter_threshold(i[0][0], i[0][1]), 5)
+            result = round(lukefi.mela2.forestry.forestry_utils.generate_diameter_threshold(i[0][0], i[0][1]), 5)
             self.assertEqual(result, i[1])
 
     def test_override_from_diameter(self):
@@ -59,7 +59,7 @@ class ForestryUtilsTest(unittest.TestCase):
         for i in assertions:
             reference_tree = ReferenceTree()
             reference_tree.breast_height_diameter = i[0]
-            result = lukefi.metsi.forestry.forestry_utils.override_from_diameter(
+            result = lukefi.mela2.forestry.forestry_utils.override_from_diameter(
                 initial_stratum, current_stratum, reference_tree)
             self.assertEqual(i[1], result)
 
@@ -69,25 +69,25 @@ class ForestryUtilsTest(unittest.TestCase):
         reference_tree.breast_height_diameter = 13.0
 
         strata = [stratum for stratum in strata_fixture() if stratum.species == TreeSpecies.SPRUCE]
-        result = lukefi.metsi.forestry.forestry_utils.find_matching_stratum_by_diameter(reference_tree, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_matching_stratum_by_diameter(reference_tree, strata)
         self.assertEqual(strata[0], result)
 
     def test_find_strata_for_black_spruce(self):
         strata = strata_fixture()
-        result = lukefi.metsi.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.BLACK_SPRUCE, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.BLACK_SPRUCE, strata)
         self.assertEqual(4, len(result))
         for stratum in result:
             self.assertTrue(stratum.species.is_coniferous())
 
     def test_find_strata_for_silver_birch(self):
         strata = strata_fixture()
-        result = lukefi.metsi.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.SILVER_BIRCH, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.SILVER_BIRCH, strata)
         self.assertEqual(1, len(result))
         self.assertEqual(TreeSpecies.DOWNY_BIRCH, result[0].species)
 
     def test_find_strata_for_bay_willow(self):
         strata = strata_fixture()
-        result = lukefi.metsi.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.BAY_WILLOW, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_strata_by_similar_species(TreeSpecies.BAY_WILLOW, strata)
         self.assertEqual(3, len(result))
         for stratum in result:
             self.assertTrue(stratum.species.is_deciduous())
@@ -105,7 +105,7 @@ class ForestryUtilsTest(unittest.TestCase):
         reference_tree.breast_height_diameter = diameter
 
         strata = strata_fixture()
-        result = lukefi.metsi.forestry.forestry_utils.find_matching_storey_stratum_for_tree(reference_tree, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_matching_storey_stratum_for_tree(reference_tree, strata)
         self.assertEqual(strata[expected_stratum_index], result)
 
     @parameterized.expand([
@@ -123,7 +123,7 @@ class ForestryUtilsTest(unittest.TestCase):
         reference_tree.breast_height_diameter = diameter
 
         strata = strata_fixture()
-        result = lukefi.metsi.forestry.forestry_utils.find_matching_storey_stratum_for_tree(reference_tree, strata)
+        result = lukefi.mela2.forestry.forestry_utils.find_matching_storey_stratum_for_tree(reference_tree, strata)
         if expected_stratum_index is not None:
             self.assertEqual(strata[expected_stratum_index], result)
         else:

@@ -1,5 +1,5 @@
 from tests.data import test_util
-from lukefi.metsi.data.formats.util import parse_int, parse_float, get_or_default, parse_type
+from lukefi.mela2.data.formats.util import parse_int, parse_float, get_or_default, parse_type
 
 
 class TestOptionUtil(test_util.ConverterTestSuite):

@@ -1,15 +1,15 @@
 import unittest
 import numpy as np
 import pandas as pd
-from lukefi.metsi.data.enums.internal import (
+from lukefi.mela2.data.enums.internal import (
     DrainageCategory,
     LandUseCategory,
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory)
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
-from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.data.util.select_units import SelectionSet, SelectionTarget, select_units
+from lukefi.mela2.data.vector_model import ReferenceTrees
 
 
 class TestSelectUnits(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
-from lukefi.metsi.app.utils import ConfigurationException
-from lukefi.metsi.app.app_io import (
+from lukefi.mela2.app.utils import ConfigurationException
+from lukefi.mela2.app.app_io import (
     MetsiConfiguration, RunMode,
     StateFormat, StateOutputFormat,
     parse_cli_arguments, generate_application_configuration

@@ -1,7 +1,7 @@
 from parameterized import parameterized
 import unittest
-from lukefi.metsi.data.enums.internal import SiteType
-from lukefi.metsi.data.conversion import vmi2internal, fc2internal
+from lukefi.mela2.data.enums.internal import SiteType
+from lukefi.mela2.data.conversion import vmi2internal, fc2internal
 
 
 class TestConversion(unittest.TestCase):

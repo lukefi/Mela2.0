@@ -2,9 +2,9 @@ import datetime
 import xml.etree.ElementTree as ET
 
 from types import SimpleNamespace
-from lukefi.metsi.data.formats import smk_util
+from lukefi.mela2.data.formats import smk_util
 from tests.data import test_util
-from lukefi.metsi.data.model import TreeStratum
+from lukefi.mela2.data.model import TreeStratum
 
 def generate_test_data(stand_data_element='', point_element='', polygon_element='', tree_stand_element='', operations_element='') -> ET.Element:
     """ Generates test data for smk xml test suites

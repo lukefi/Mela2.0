@@ -1,6 +1,6 @@
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.mela2.data.enums.internal import TreeSpecies
 from tests.data import test_util
-from lukefi.metsi.data.conversion import vmi2internal, fc2internal
+from lukefi.mela2.data.conversion import vmi2internal, fc2internal
 
 
 class TestConversion(test_util.ConverterTestSuite):

@@ -1,7 +1,7 @@
 import unittest
 from parameterized import parameterized
-from lukefi.metsi.data.enums.internal import DrainageCategory
-from lukefi.metsi.data.conversion import vmi2internal, fc2internal
+from lukefi.mela2.data.enums.internal import DrainageCategory
+from lukefi.mela2.data.conversion import vmi2internal, fc2internal
 
 
 class TestConversion(unittest.TestCase):

@@ -1,19 +1,19 @@
 from typing import Any, Optional
 import numpy as np
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
-from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
-from lukefi.metsi.forestry.harvest.cutting import cutting
-from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
-from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
-from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
+from lukefi.mela2.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.mela2.data.vector_model import ReferenceTrees
+from lukefi.mela2.domain.conditions import MinimumTimeInterval
+from lukefi.mela2.data.model import ForestStand
+from lukefi.mela2.domain.forestry_types import ForestCondition
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_payload import SimulationPayload
+from lukefi.mela2.sim.generators import Event
+from lukefi.mela2.domain.forestry_treatments.mark_trees import mark_trees
+from lukefi.mela2.forestry.harvest.cutting import cutting
+from lukefi.mela2.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
+from lukefi.mela2.domain.forestry_treatments.regeneration import regeneration
+from lukefi.mela2.domain.collected_data import RemovedTrees
+from lukefi.mela2.data.enums.mela import MelaMethodOfTheLastCutting
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:

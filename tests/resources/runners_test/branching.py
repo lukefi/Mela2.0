@@ -1,8 +1,8 @@
-from lukefi.metsi.domain.conditions import MinimumTimeInterval, TimePoints
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.operations import do_nothing
+from lukefi.mela2.domain.conditions import MinimumTimeInterval, TimePoints
+from lukefi.mela2.sim.condition import Condition
+from lukefi.mela2.sim.simulation_instruction import SimulationInstruction
+from lukefi.mela2.sim.generators import Alternatives, Sequence, Event
+from lukefi.mela2.sim.operations import do_nothing
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
