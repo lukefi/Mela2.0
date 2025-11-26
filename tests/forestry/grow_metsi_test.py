@@ -5,8 +5,8 @@ from unittest.mock import patch
 import numpy as np
 from lukefi.mela2.data.vector_model import ReferenceTrees
 from lukefi.mela2.sim.collected_data import CollectedData
-import lukefi.metsi.domain.natural_processes.grow_metsi as gm
-import lukefi.metsi.domain.natural_processes.grow_metsi as gmv
+import lukefi.mela2.domain.natural_processes.grow_metsi as gm
+import lukefi.mela2.domain.natural_processes.grow_metsi as gmv
 from lukefi.mela2.data.model import ForestStand
 from lukefi.mela2.data.enums.internal import (LandUseCategory,
                                               SiteType,

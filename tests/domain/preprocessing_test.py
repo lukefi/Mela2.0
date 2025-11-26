@@ -1,6 +1,6 @@
 
 import unittest
-import lukefi.metsi.domain.pre_ops as preprocessing
+import lukefi.mela2.domain.pre_ops as preprocessing
 from lukefi.mela2.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.mela2.data.enums.internal import TreeSpecies
 from lukefi.mela2.forestry.preprocessing.coordinate_conversion import CRS

@@ -4,7 +4,7 @@ from lukefi.mela2.data.enums.internal import TreeSpecies
 from lukefi.mela2.data.model import ForestStand, ReferenceTree
 try:
     unrunnable = False
-    import lukefi.metsi.forestry.r_utils as r_utils
+    import lukefi.mela2.forestry.r_utils as r_utils
 except ImportError:
     unrunnable = True
 

@@ -8,7 +8,7 @@ import numpy as np
 from lukefi.mela2.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
 
-import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
+import lukefi.mela2.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.mela2.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 
 

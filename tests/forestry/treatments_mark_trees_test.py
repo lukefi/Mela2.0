@@ -59,7 +59,7 @@ class MarkTreesTest(unittest.TestCase):
                 attributes={"tree_type": "SPARE", "management_category": 2},
             )
 
-    @patch("lukefi.metsi.domain.forestry_treatments.mark_trees.select_units")
+    @patch("lukefi.mela2.domain.forestry_treatments.mark_trees.select_units")
     def test_full_and_partial_marking_and_splitting(self, mock_select_units):
         """
         Verify that:
