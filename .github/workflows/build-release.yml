@@ -22,13 +22,13 @@ jobs:
       - name: Build .dll in c_extensions using Makefile
         shell: msys2 {0}
         run: |
-          cd lukefi/metsi/forestry/c
+          cd lukefi/mela2/forestry/c
           make
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            lukefi/metsi/forestry/c/lib/ykjtm35.dll
+            lukefi/mela2/forestry/c/lib/ykjtm35.dll
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
