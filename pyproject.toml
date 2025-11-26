@@ -44,7 +44,7 @@ tests = [
 ]
 
 [project.scripts]
-mela2 = "lukefi.metsi.app.metsi:main"
+mela2 = "lukefi.mela2.app.metsi:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
@@ -55,5 +55,5 @@ lukefi = "lukefi"
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore::pytest.PytestCollectionWarning:.*metsi.tests.app.file_io_test",
+    "ignore::pytest.PytestCollectionWarning:.*mela2.tests.app.file_io_test",
 ]
