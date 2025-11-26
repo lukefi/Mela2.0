@@ -1,4 +1,4 @@
 [run]
 omit =
     tests/*
-    lukefi/metsi/forestry/naturalprocess/MetsiGrow/*
+    lukefi/mela2/forestry/naturalprocess/MetsiGrow/*
