@@ -3,13 +3,13 @@ Library    OperatingSystem
 Library    Process
 
 *** Test Cases ***
-Metsi Command With Help Option Should Complete Successfully
+mela2 Command With Help Option Should Complete Successfully
     [Tags]         smoke
     
     ${env} =       Get Environment Variables
     ${result} =    Run Process    python
     ...            -m
-    ...            lukefi.metsi.app.metsi
+    ...            lukefi.mela2.app.mela2
     ...            -h
     ...            shell=True
 

@@ -15,7 +15,7 @@ Run Simulation
     Set To Dictionary    ${orig_env}    PYTHONPATH=${EXECDIR}
     ${result}=    Run Process    python
     ...           -m
-    ...           lukefi.metsi.app.metsi
+    ...           lukefi.mela2.app.mela2
     ...           ${input_path}
     ...           ${output_path}
     ...           ${control_path}
