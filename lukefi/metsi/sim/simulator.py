@@ -26,9 +26,9 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
 def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          config: SimConfiguration[T],
-                                         db: Optional[sqlite3.Connection] = None,
-                                         offset: int = 0) -> list[SimulationPayload[T]]:
+                                         db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
     retval = []
+    offset = 0
     all_instructions_failed = True
     if not config.end_condition(payload.computational_unit):
         for instruction in config.instructions:
@@ -41,7 +41,7 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
             payload.computational_unit, _ = config.transition(payload.computational_unit)
-            retval.extend(_simulate_unit(payload, config, db, offset))
+            retval.extend(_simulate_unit(payload, config, db))
     else:
         # End condition met, update `leaf` column
         if db is not None:
