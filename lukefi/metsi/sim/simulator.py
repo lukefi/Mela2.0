@@ -1,4 +1,3 @@
-from copy import copy
 import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
