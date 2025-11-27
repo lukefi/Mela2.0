@@ -1,5 +1,9 @@
 import sqlite3
 
+from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
+
 
 def create_database_tables(db: sqlite3.Connection):
     cur = db.cursor()
@@ -10,6 +14,7 @@ def create_database_tables(db: sqlite3.Connection):
             stand TEXT,
             done_treatment TEXT,
             treatment_params TEXT,
+            leaf INTEGER(1) DEFAULT(0),
             PRIMARY KEY(identifier, stand))
         """
     )
@@ -117,4 +122,47 @@ def create_database_tables(db: sqlite3.Connection):
             PRIMARY KEY (node, identifier),
             FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))
         """
+    )
+
+
+def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
+                                            current: SimulationPayload[T],
+                                            collected_data: list[CollectedData]):
+    """
+    Writes current simulation state and collected data to database.
+
+    :param db: Connection to an initialized database
+    :param node: List of integers describing the position of the current node in the simulation tree
+    :param current: The current simulation payload (e.g. state and treatment history)
+    :param collected_data: List of data collected by the treament performed in the current node
+    """
+    node_str = "-".join(map(str, current.node_id))
+    cur = db.cursor()
+    cur.execute(
+        """
+        INSERT INTO nodes (identifier, stand, done_treatment, treatment_params)
+        VALUES
+            (?, ?, ?, ?)
+        """,
+        (node_str,
+         current.computational_unit.identifier,
+         str(current.operation_history[-1][1].__name__) if len(current.operation_history) > 0 else "do_nothing",
+         str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"))
+    current.computational_unit.output_to_db(db, node_str)
+    for datum in collected_data:
+        datum.output_to_db(db, node_str, current.computational_unit.identifier)
+
+
+def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
+    cur = db.cursor()
+    cur.execute(
+        """
+        UPDATE nodes
+        SET leaf = 1
+        WHERE
+            identifier = ? AND
+            stand = ?;
+        """,
+        ("-".join(map(str, leaf_node.node_id)),
+            leaf_node.computational_unit.identifier)
     )

@@ -12,6 +12,7 @@ class ToyModel(ComputationalUnit):
         self.identifier = identifier
         self.value = value
         self.time = time
+        self.start_time = time
 
     @override
     def output_to_db(self, db: Connection, node: str):

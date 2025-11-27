@@ -1,7 +1,7 @@
 import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.event_tree import output_node_to_db
+from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -18,6 +18,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     for unit in units:
         payload = SimulationPayload(unit)
         if db is not None:
+            # Write initial state to database
             output_node_to_db(db, payload, [])
         _simulate_unit(payload, simconfig, db)
 
@@ -39,5 +40,9 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                 payload.computational_unit, _ = config.transition(payload.computational_unit)
                 retval.extend(_simulate_unit(payload, config, db))
     else:
+        # End condition met, update `leaf` column
+        if db is not None:
+            update_leaf_node(db, payload)
         retval = [payload]
+
     return retval
