@@ -375,6 +375,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     natural_regeneration_feasibility: Optional[bool] = None
     regeneration_area_cleaning_year: Optional[int] = None
     development_class: Optional[int] = None
+    main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
     pruning_year: Optional[int] = None
