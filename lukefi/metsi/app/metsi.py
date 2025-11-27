@@ -6,8 +6,8 @@ import traceback
 from typing import Optional
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
-    slice_stands_by_percentage,
-    slice_stands_by_size
+    slice_list_by_percentage,
+    slice_list_by_size
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
 from lukefi.metsi.domain.forestry_types import StandList
@@ -72,9 +72,9 @@ def main() -> int:
             pct = control_structure.get('slice_percentage')
             sz = control_structure.get('slice_size')
             if pct is not None:
-                stand_sublists = slice_stands_by_percentage(full_stands, pct)
+                stand_sublists = slice_list_by_percentage(full_stands, pct)
             elif sz is not None:
-                stand_sublists = slice_stands_by_size(full_stands, sz)
+                stand_sublists = slice_list_by_size(full_stands, sz)
             else:
                 stand_sublists = [full_stands]
 
