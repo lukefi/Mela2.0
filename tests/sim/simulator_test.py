@@ -1,16 +1,19 @@
+from pathlib import Path
 import unittest
+
+from lukefi.metsi.app.file_io import read_control_module
 from lukefi.metsi.domain.conditions import MinimumTimeInterval, RelativeTimePoints, TimePoints
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.operations import simple_processable_chain
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
-from tests.toy_model import ToyModel, ToyTransition, parametrized_treatment, toy_inc
+from tests.test_utils import collect_results
+from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
-class TestGenerators(unittest.TestCase):
+class SimulatorTest(unittest.TestCase):
     def test_simulation_instructions_declaration(self):
         declaration = {
             "simulation_instructions": [
@@ -306,10 +309,117 @@ class TestGenerators(unittest.TestCase):
 
         self.assertListEqual(results[0], results[1])
 
-    def test_simple_processable_chain_multiparameter_exception(self):
-        operation_tags = [parametrized_treatment]
-        operation_params = {parametrized_treatment: [{'amplify': True}, {'kissa123': 123}]}
-        self.assertRaises(Exception,
-                          simple_processable_chain,
-                          operation_tags,
-                          operation_params)
+    def test_full_formation_evaluation_strategies_by_comparison(self):
+        control_path = str(Path("tests",
+                                "resources",
+                                "runners_test",
+                                "branching.py").resolve())
+        declaration = read_control_module(control_path)
+        config = SimConfiguration(**declaration)
+        depth_payload = SimulationPayload(
+            computational_unit=ToyModel("", 1),
+            operation_history=[]
+        )
+        results_depth = collect_results(
+            _simulate_unit(depth_payload, config))
+        self.assertEqual(8, len(results_depth))
+
+    def test_no_parameters_propagation(self):
+        control_path = str(Path("tests",
+                                "resources",
+                                "runners_test",
+                                "no_parameters.py").resolve())
+        declaration = read_control_module(control_path)
+        config = SimConfiguration(**declaration)
+        initial = SimulationPayload(
+            computational_unit=ToyModel("", 1),
+            operation_history=[]
+        )
+        results = collect_results(
+            _simulate_unit(initial, config))
+        self.assertEqual(5, results[0].value)
+
+    def test_parameters_propagation(self):
+        control_path = str(Path("tests",
+                                "resources",
+                                "runners_test",
+                                "parameters.py").resolve())
+        declaration = read_control_module(control_path)
+        config = SimConfiguration(**declaration)
+        initial = SimulationPayload(
+            computational_unit=ToyModel("", 1),
+            operation_history=[]
+        )
+        results = collect_results(
+            _simulate_unit(initial, config))
+        self.assertEqual(9, results[0].value)
+
+    def test_parameters_branching(self):
+        control_path = str(Path("tests",
+                                "resources",
+                                "runners_test",
+                                "parameters_branching.py").resolve())
+        declaration = read_control_module(control_path)
+        config = SimConfiguration(**declaration)
+        initial = SimulationPayload(
+            computational_unit=ToyModel("", 1),
+            operation_history=[]
+        )
+        results = list(map(lambda x: x.value, collect_results(_simulate_unit(initial, config))))
+        # do_nothing, do_nothing = 1
+        # do_nothing, inc#1      = 2
+        # do_nothing, inc#2      = 3
+        # inc#1, do_nothing      = 2
+        # inc#1, inc#1           = 3
+        # inc#1, inc#2           = 4
+        # inc#2, do_nothing      = 3
+        # inc#2, inc#1           = 4
+        # inc#2, inc#2           = 5
+        expected = [1, 2, 3, 2, 3, 4, 3, 4, 5]
+        self.assertEqual(expected, results)
+
+    def test_multiple_instructions(self):
+        declaration = {
+            "simulation_instructions": [
+                SimulationInstruction(
+                    events=[
+                        Event(toy_inc, parameters={
+                            "incrementation": 1
+                        })
+                    ]
+                ),
+                SimulationInstruction(
+                    events=[
+                        Alternatives([
+                            Event(toy_inc, parameters={
+                                "incrementation": 2
+                            }),
+                            Event(toy_inc, parameters={
+                                "incrementation": 3
+                            }),
+                        ])
+                    ]
+                )
+            ],
+            "transition": ToyTransition(),
+            "end_condition": Condition[ToyModel](lambda x: x.time >= 3)
+        }
+
+        config = SimConfiguration[ToyModel](**declaration)
+        payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
+
+        results = _simulate_unit(payload, config)
+
+        self.assertEqual(27, len(results))
+        self.assertListEqual(
+            [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 2], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 1, 2],
+             [0, 0, 2, 0], [0, 0, 2, 1], [0, 0, 2, 2], [0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 0, 2],
+             [0, 1, 1, 0], [0, 1, 1, 1], [0, 1, 1, 2], [0, 1, 2, 0], [0, 1, 2, 1], [0, 1, 2, 2],
+             [0, 2, 0, 0], [0, 2, 0, 1], [0, 2, 0, 2], [0, 2, 1, 0], [0, 2, 1, 1], [0, 2, 1, 2],
+             [0, 2, 2, 0], [0, 2, 2, 1], [0, 2, 2, 2],],
+            [result.node_id for result in results]
+        )
+        self.assertListEqual(
+            [3, 4, 5, 4, 5, 6, 5, 6, 7, 4, 5, 6, 5, 6, 7, 6, 7, 8, 5, 6, 7, 6, 7, 8, 7, 8, 9],
+            [result.computational_unit.value for result in results]
+        )

@@ -1,5 +1,7 @@
+from typing import Any
 import unittest
 
+from lukefi.metsi.domain.conditions import _get_operation_last_run
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
@@ -68,3 +70,34 @@ class ConditionTest(unittest.TestCase):
         self.assertEqual(result[1].computational_unit.value, 3)
         self.assertEqual(result[2].computational_unit.value, 2)
         self.assertEqual(result[3].computational_unit.value, 2)
+
+    def test_operation_last_run(self):
+
+        def operation1(x: Any) -> OpTuple:
+            return x, []
+
+        def operation2(x: Any) -> OpTuple:
+            return x, []
+
+        def operation3(x: Any) -> OpTuple:
+            return x, []
+
+        def operation4(x: Any) -> OpTuple:
+            return x, []
+
+        operation_history = [
+            (1, operation1, {}),
+            (2, operation2, {}),
+            (3, operation1, {}),
+            (4, operation3, {}),
+            (5, operation1, {}),
+            (6, operation2, {}),
+            (7, operation1, {}),
+            (8, operation3, {}),
+            (9, operation1, {})
+        ]
+
+        self.assertEqual(_get_operation_last_run(operation_history, operation1), 9)
+        self.assertEqual(_get_operation_last_run(operation_history, operation2), 6)
+        self.assertEqual(_get_operation_last_run(operation_history, operation3), 8)
+        self.assertEqual(_get_operation_last_run(operation_history, operation4), None)
