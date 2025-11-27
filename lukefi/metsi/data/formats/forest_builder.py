@@ -87,6 +87,8 @@ class VMIBuilder(ForestBuilder):
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
         result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
         result.drainage_feasibility = vmi_util.determine_drainage_feasibility(data_row[indices["ojitus_tarve"]])
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.forest_management_category = vmi_util.determine_forest_management_category(
