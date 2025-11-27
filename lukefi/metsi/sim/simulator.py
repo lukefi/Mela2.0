@@ -29,16 +29,16 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          db: Optional[sqlite3.Connection] = None,
                                          offset: int = 0) -> list[SimulationPayload[T]]:
     retval = []
-    all_conditions_failed = True
+    all_instructions_failed = True
     if not config.end_condition(payload.computational_unit):
         for instruction in config.instructions:
             if all(condition(payload) for condition in instruction.conditions):
-                all_conditions_failed = False
+                all_instructions_failed = False
                 for new_branch in instruction.unwrap(payload, offset, db):
                     offset += 1
                     new_branch.computational_unit, _ = config.transition(new_branch.computational_unit)
                     retval.extend(_simulate_unit(new_branch, config, db))
-        if all_conditions_failed:
+        if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
             payload.computational_unit, _ = config.transition(payload.computational_unit)
             retval.extend(_simulate_unit(payload, config, db, offset))
