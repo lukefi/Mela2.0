@@ -6,18 +6,17 @@ from typing import Sequence as Sequence_
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.processor import processor
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.treatment import PreparedTreatment, TreatmentFn
 
 T = TypeVar("T", bound=ComputationalUnit)
 
 ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
-TreatmentFn = Callable[[T], OpTuple[T]]
-ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
@@ -91,20 +90,21 @@ class Event(EventGeneratorBase[T]):
     tags: set[str]
     collected_data: CollectableDataTypes
 
-    def __init__(
-        self,
-        treatment: TreatmentFn[T],
-        static_parameters: Optional[dict[str, Any]] = None,
-        dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
-        preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-        postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-        file_parameters: Optional[dict[str, str]] = None,
-        tags: Optional[set[str]] = None,
-        collected_data: Optional[CollectableDataTypes] = None,
-    ) -> None:
+    def __init__(self, treatment: TreatmentFn[T],
+                 static_parameters: Optional[dict[str, Any]] = None,
+                 dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
+                 preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+                 postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+                 file_parameters: Optional[dict[str, str]] = None,
+                 tags: Optional[set[str]] = None,
+                 collected_data: Optional[CollectableDataTypes] = None) -> None:
         self.treatment = treatment
 
-        self.static_parameters = static_parameters or {}
+        if static_parameters is not None:
+            self.static_parameters = static_parameters
+        else:
+            self.static_parameters = {}
+
         self.dynamic_parameters = dynamic_parameters or {}
 
         if file_parameters is not None:
@@ -136,7 +136,7 @@ class Event(EventGeneratorBase[T]):
     def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment())
+            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags)
             parent.add_branch(branch)
             retval.append(branch)
         return retval
@@ -147,17 +147,33 @@ class Event(EventGeneratorBase[T]):
 
     def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
-        combined_params = self._merge_params()
+        base_params = dict(self._merge_params())  # static + file
 
-        return lambda payload: processor(
-            payload,
-            self.treatment,            # unbound treatment
-            self.treatment,            # operation_tag for logging/conditions
-            self.preconditions,
-            self.postconditions,
-            static_params=combined_params,
-            dynamic_params=self.dynamic_parameters,
-        )
+        def _processed(payload: SimulationPayload[T]):
+            stand = payload.computational_unit
+
+            # Evaluate dynamic_parameters: name -> fn(stand)
+            resolved_dynamic: dict[str, Any] = {
+                name: fn(stand) for name, fn in self.dynamic_parameters.items()
+            }
+
+            # Static / file params overridden by dynamic ones if same key
+            combined_params = {**base_params, **resolved_dynamic}
+
+            # Prepare treatment with *this* call's parameters
+            treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
+
+            # Pass combined params to processor so they end up in operation_history
+            return processor(
+                payload,
+                treatment,
+                treatment.name,
+                self.preconditions,
+                self.postconditions,
+                **combined_params,
+            )
+
+        return _processed
 
     def _check_file_params(self):
         for _, path in self.file_parameters.items():
@@ -168,5 +184,6 @@ class Event(EventGeneratorBase[T]):
         common_keys = self.static_parameters.keys() & self.file_parameters.keys()
         if common_keys:
             raise MetsiException(
-                f"parameter(s) {common_keys} were defined both in 'static_parameters' and 'file_parameters'")
-        return self.static_parameters | self.file_parameters
+                f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
+                "in control.py. Please change the name of one of them.")
+        return self.static_parameters | self.file_parameters  # pipe is the merge operator

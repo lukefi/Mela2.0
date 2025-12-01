@@ -4,11 +4,10 @@ import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
-from lukefi.metsi.sim.collected_data import CollectedData
 from tests.test_utils import prepare_growth_test_stand
 
 
-class GrowthOperationsTest(unittest.TestCase):
+class GrowActaTest(unittest.TestCase):
 
     def assert_domain_sensibility(self, stand):
         """

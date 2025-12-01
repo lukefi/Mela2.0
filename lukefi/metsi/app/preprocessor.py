@@ -11,7 +11,7 @@ def preprocess_stands(stands: StandList, simulation_declaration: dict) -> StandL
     return stands
 
 
-def slice_stands_by_percentage(stands: StandList, percent: float) -> list[StandList]:
+def slice_list_by_percentage[T](stands: list[T], percent: float) -> list[list[T]]:
     """Split `stands` into batches each containing approx `percent%` of the total."""
     total = len(stands)
     # at least one stand per batch
@@ -22,7 +22,7 @@ def slice_stands_by_percentage(stands: StandList, percent: float) -> list[StandL
     ]
 
 
-def slice_stands_by_size(stands: StandList, size: int) -> list[StandList]:
+def slice_list_by_size[T](stands: list[T], size: int) -> list[list[T]]:
     """Split `stands` into batches of up to `size` stands each."""
     total = len(stands)
     return [

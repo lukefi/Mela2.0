@@ -2,11 +2,8 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
-from lukefi.metsi.domain.events import (
-    DoNothing,
-)
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Sequence
+from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
@@ -49,10 +46,10 @@ control_structure = {
         SimulationInstruction(
             events=[
                 Alternatives([
-                    DoNothing(parameters={"n": 1}),
+                    Event(treatment=do_nothing, parameters={"n": 1}, tags={"nothing", "first_type"}),
                     Sequence([
-                        DoNothing(parameters={"n": 2}),
-                        DoNothing(parameters={"n": 3})
+                        Event(treatment=do_nothing, parameters={"n": 2}, tags={"nothing", "second_type"}),
+                        Event(treatment=do_nothing, parameters={"n": 3}, tags={"nothing", "third_type"})
                     ])
                 ])
             ]

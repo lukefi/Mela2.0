@@ -1,10 +1,9 @@
-from copy import copy
-import sqlite3
 from typing import Optional, TypeVar
 from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
@@ -28,6 +27,5 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-    def unwrap(self, payload: SimulationPayload[T], offset: int, db: Optional[sqlite3.Connection] = None):
-        for i, root in enumerate(self.event_generator.compose_nested()):
-            yield from root.evaluate(copy(payload), db, i + offset)
+    def unwrap(self) -> list[EventTree[T]]:
+        return self.event_generator.compose_nested()
