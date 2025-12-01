@@ -18,7 +18,20 @@ from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.metsi.data.conversion import vmi2internal, fc2internal
 from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
+
+
+def _append_dataclass_to_attr_dict(obj, attr_dict: dict[str, list]):
+    """
+    Take a dataclass-like object (ReferenceTree / TreeStratum) and append its fields
+    into an attribute dictionary suitable for VectorData.vectorize().
+    """
+    for key, value in obj.__dict__.items():
+        # We never store a back-reference to the stand in SoA
+        if key == "stand":
+            continue
+        attr_dict.setdefault(key, []).append(value)
 
 
 class ForestBuilder(ABC):
@@ -261,31 +274,49 @@ class VMI12Builder(VMIBuilder):
         return int(row[13])
 
     def build(self) -> StandList:
-        """Populate a list of ForestStand with associated ReferenceTree and TreeStratum entries.
-        Using constructor initialized instance variables as source.
-
-        Returns:
-        StandList:populated and parsed VMI12 forest stands with reference trees and tree strata
+        """
+        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata
+        **directly in SoA form** (no *_pre_vec AoS lists).
         """
         result: dict[str, ForestStand] = {}
+        # Per-stand attribute dicts for vectorization
+        strata_attrs: dict[str, dict[str, list]] = {}
+        tree_attrs: dict[str, dict[str, list]] = {}
+
+        # Build stands
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI12_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
-        if self.builder_flags['strata']:
-            for i, row in enumerate(self.tree_strata):
+
+        # Strata → TreeStrata SoA
+        if self.builder_flags.get('strata', True):
+            for row in self.tree_strata:
                 stratum = self.convert_stratum_entry(VMI12_STRATUM_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
                 stand = result[stand_id]
-                stratum.stand = stand
-                stand.tree_strata_pre_vec.append(stratum)
+                stratum.stand = stand  # only for conversion logic; not stored in SoA
 
-        if self.builder_flags['measured_trees']:
-            for i, row in enumerate(self.reference_trees):
+                attr_dict = strata_attrs.setdefault(stand_id, {})
+                _append_dataclass_to_attr_dict(stratum, attr_dict)
+
+        # Trees → ReferenceTrees SoA
+        if self.builder_flags.get('measured_trees', True):
+            for row in self.reference_trees:
                 tree = self.convert_tree_entry(VMI12_TREE_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
                 stand = result[stand_id]
                 tree.stand = stand
-                stand.reference_trees_pre_vec.append(tree)
+
+                attr_dict = tree_attrs.setdefault(stand_id, {})
+                _append_dataclass_to_attr_dict(tree, attr_dict)
+
+        # Attach SoA containers to stands
+        for stand_id, stand in result.items():
+            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
+            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
+
+            stand.tree_strata_pre_vec.clear()
+            stand.reference_trees_pre_vec.clear()
 
         return list(result.values())
 
@@ -368,32 +399,49 @@ class VMI13Builder(VMIBuilder):
         return result
 
     def build(self) -> StandList:
-        """Populate a list of ForestStand with associated ReferenceTree and TreeStratum entries.
-        Using constructor initialized instance variables as source.
-
-        Returns:
-        StandList:populated and parsed VMI13 forest stands with reference trees and tree strata
+        """
+        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata
+        **directly in SoA form** (no *_pre_vec AoS lists).
         """
         result: dict[str, ForestStand] = {}
+        # Per-stand attribute dicts for vectorization
+        strata_attrs: dict[str, dict[str, list]] = {}
+        tree_attrs: dict[str, dict[str, list]] = {}
+
+        # Build stands
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI13_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
 
-        if self.builder_flags['strata']:
-            for i, row in enumerate(self.tree_strata):
+        # Strata → TreeStrata SoA
+        if self.builder_flags.get('strata', True):
+            for row in self.tree_strata:
                 stratum = self.convert_stratum_entry(VMI13_STRATUM_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 stand = result[stand_id]
-                stratum.stand = stand
-                stand.tree_strata_pre_vec.append(stratum)
+                stratum.stand = stand  # only for conversion logic; not stored in SoA
 
-        if self.builder_flags['measured_trees']:
-            for i, row in enumerate(self.reference_trees):
+                attr_dict = strata_attrs.setdefault(stand_id, {})
+                _append_dataclass_to_attr_dict(stratum, attr_dict)
+
+        # Trees → ReferenceTrees SoA
+        if self.builder_flags.get('measured_trees', True):
+            for row in self.reference_trees:
                 tree = self.convert_tree_entry(VMI13_TREE_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 stand = result[stand_id]
                 tree.stand = stand
-                stand.reference_trees_pre_vec.append(tree)
+
+                attr_dict = tree_attrs.setdefault(stand_id, {})
+                _append_dataclass_to_attr_dict(tree, attr_dict)
+
+        # Attach SoA containers to stands
+        for stand_id, stand in result.items():
+            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
+            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
+
+            stand.tree_strata_pre_vec.clear()
+            stand.reference_trees_pre_vec.clear()
 
         return list(result.values())
 
@@ -526,15 +574,23 @@ class XMLBuilder(ForestCentreBuilder):
         estands = self.root.findall(self.xpath_stand, smk_util.NS)
         for estand in estands:
             stand = self.convert_stand_entry(estand)
-            strata = []
+            stratum_attr: dict[str, list] = {}
+            basal_area_sum = 0.0
+
             estrata = estand.findall(self.xpath_strata, smk_util.NS)
             for estratum in estrata:
                 stratum = self.convert_stratum_entry(estratum)
                 stratum.identifier = f"{stand.identifier}.{stratum.tree_number or stratum.identifier}-stratum"
                 stratum.stand = stand
-                strata.append(stratum)
-            stand.tree_strata_pre_vec = strata
-            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata_pre_vec)
+
+                _append_dataclass_to_attr_dict(stratum, stratum_attr)
+                # keep the old semantics: sum basal area over strata
+                if stratum.basal_area is not None:
+                    basal_area_sum += float(stratum.basal_area)
+
+            stand.tree_strata = TreeStrata().vectorize(stratum_attr)
+            stand.tree_strata_pre_vec = []  # keep empty for compatibility
+            stand.basal_area = basal_area_sum
             stands.append(stand)
         return stands
 
@@ -616,16 +672,22 @@ class GeoPackageBuilder(ForestCentreBuilder):
         """
         stands = []
         for _, rowi in self.stands.iterrows():
-            # for each stand row
             stand = self.convert_stand_entry(rowi)
-            strata = []
+
+            stratum_attr: dict[str, list] = {}
+            basal_area_sum = 0.0
+
             i_strata = self.strata[self.strata['standid'] == stand.identifier]
             for _, rowj in i_strata.iterrows():
-                # for each strata row
                 stratum = self.convert_stratum_entry(rowj)
                 stratum.stand = stand
-                strata.append(stratum)
-            stand.tree_strata_pre_vec = strata
-            stand.basal_area = smk_util.calculate_stand_basal_area(stand.tree_strata_pre_vec)
+                _append_dataclass_to_attr_dict(stratum, stratum_attr)
+
+                if stratum.basal_area is not None:
+                    basal_area_sum += float(stratum.basal_area)
+
+            stand.tree_strata = TreeStrata().vectorize(stratum_attr)
+            stand.tree_strata_pre_vec = []
+            stand.basal_area = basal_area_sum
             stands.append(stand)
         return stands

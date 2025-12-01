@@ -1,8 +1,13 @@
 import math
 from collections.abc import Callable, Iterable
 from typing import Optional
+import numpy as np
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ReferenceTree, TreeStratum
+from lukefi.metsi.data.vector_model import (
+    ReferenceTrees as VectorReferenceTrees,
+    TreeStrata as VectorTreeStrata,
+)
 
 
 def calculate_basal_area(tree: ReferenceTree) -> float:
@@ -14,9 +19,9 @@ def calculate_basal_area(tree: ReferenceTree) -> float:
     :return reference tree basal area in square meters (m^2)
     """
     meters_factor = 0.01
-    radius = tree.breast_height_diameter * 0.5 * meters_factor
+    radius = (tree.breast_height_diameter or 0.0) * 0.5 * meters_factor
     single_basal_area = math.pi * math.pow(radius, 2)
-    return single_basal_area * tree.stems_per_ha
+    return (single_basal_area or 0.0) * (tree.stems_per_ha or 0.0)
 
 
 def generate_diameter_threshold(d1: float, d2: float) -> float:

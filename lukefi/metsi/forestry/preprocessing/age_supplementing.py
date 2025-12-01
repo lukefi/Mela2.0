@@ -1,123 +1,175 @@
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.forestry.forestry_utils import find_matching_stratum_by_diameter
-
+import numpy as np
+from lukefi.metsi.data.vector_model import ReferenceTrees as VectorReferenceTrees, TreeStrata as VectorTreeStrata
+from lukefi.metsi.forestry.forestry_utils import (
+    generate_diameter_threshold,
+)
 STRATUM_SUPPLEMENT = 1
 INITIAL_TREE_SUPPLEMENT = 2
 SAME_TREE_DIAMETER_SUPPLEMENT = 3
 SAME_TREE_D13_AGE_SUPPLEMENT = 4
 
 
-class SupplementStrategy:
-    def __init__(self, rt: ReferenceTree):
-        self.reference_tree_id: str = rt.identifier
-        self.solved: bool = False
-        self.strategy: int = None
-        self.tree_identifier: str = None
-
-
-def perform_supplementing(tree_and_strategy: list[tuple[ReferenceTree, SupplementStrategy]],
-                          age_trees: list[ReferenceTree],
-                          age_stratums: list[TreeStratum]) -> list[ReferenceTree]:
-    for (rt, s) in tree_and_strategy:
-        if s.strategy is STRATUM_SUPPLEMENT:
-            same_species_strata = [
-                stratum for stratum in age_stratums if stratum.species == rt.species and stratum.has_diameter()
-            ]
-            stratum = find_matching_stratum_by_diameter(rt, same_species_strata)
-            rt.breast_height_age = stratum.breast_height_age
-            rt.biological_age = stratum.biological_age
-        elif s.strategy is INITIAL_TREE_SUPPLEMENT:
-            supplement_tree = next((tree for tree in age_trees if tree.identifier == s.tree_identifier))
-            rt.breast_height_age = supplement_tree.breast_height_age
-            rt.biological_age = supplement_tree.biological_age
-        elif s.strategy is SAME_TREE_DIAMETER_SUPPLEMENT:
-            rt.breast_height_age = 2 * rt.breast_height_diameter
-            rt.biological_age = 9 + 2 * rt.breast_height_diameter
-        elif s.strategy is SAME_TREE_D13_AGE_SUPPLEMENT:
-            rt.breast_height_age = 2 * rt.breast_height_diameter
-            # Q: bio age calculation is done with 2*diameter as breast_height_age is this correct?
-            rt.biological_age = rt.breast_height_age + 9
-        else:
-            raise UserWarning('error: no supplementing strategy for tree id ' + str(rt))
-    reference_trees = [i[0] for i in tree_and_strategy]
-    return reference_trees
-
-
-def final_tree_strategy(reference_tree: ReferenceTree):
-    """ Final strategy for trees that have no age.
-
-    param: reference_tree: Tree with no age
+def supplement_age_for_reference_trees(
+    reference_trees: VectorReferenceTrees,
+    stratums: VectorTreeStrata,
+) -> None:
     """
-    strategy = SupplementStrategy(reference_tree)
-    if not reference_tree.has_biological_age():
-        strategy.solved = True
-        strategy.strategy = SAME_TREE_DIAMETER_SUPPLEMENT
-        return strategy
-    if not reference_tree.has_height_over_130_cm():
-        strategy.solved = True
-        strategy.strategy = SAME_TREE_D13_AGE_SUPPLEMENT
-        return strategy
-    return strategy
+    SoA-based version of `supplement_age_for_reference_trees`.
 
+    Operates in-place on ReferenceTrees / TreeStrata vector-model containers.
 
-def tree_strategy(reference_tree: ReferenceTree, age_trees: list[ReferenceTree]):
-    """ Secondary startegy for trees that have no age
+    Logic mirrors the old AoS implementation:
 
-    param: reference_tree: Tree with no age
-    param: age_trees: Subset of trees that have age
+      1) Trees that need supplementing:
+         - breast_height_age is missing (NaN)
+         - height > 1.3 m
+
+      2) Strategy priority:
+         - STRATUM_SUPPLEMENT:
+             from strata with breast_height_age > 0 and mean_diameter > 0,
+             same species as tree, choosing the best diameter match
+             using the same threshold logic as in AoS implementation.
+         - INITIAL_TREE_SUPPLEMENT:
+             from another tree with breast_height_age > 0 and same species.
+         - SAME_TREE_DIAMETER_SUPPLEMENT:
+             local rule: bha = 2 * d13, bio = 9 + 2 * d13
+         - SAME_TREE_D13_AGE_SUPPLEMENT:
+             local rule: bha = 2 * d13, bio = bha + 9
+
+    Only trees that initially had no `breast_height_age` are touched.
     """
-    strategy = SupplementStrategy(reference_tree)
-    for age_tree in age_trees:
-        if reference_tree.compare_species(age_tree):
-            strategy.solved = True
-            strategy.strategy = INITIAL_TREE_SUPPLEMENT
-            strategy.tree_identifier = age_tree.identifier
-            return strategy
-    return strategy
 
+    n_trees = reference_trees.size
+    if n_trees == 0 or stratums.size == 0:
+        return
 
-def stratum_strategy(reference_tree: ReferenceTree, stratums: list[TreeStratum]):
-    """ Default strategy for trees that do not have age
+    # Shorthands for tree fields
+    t_species = reference_trees.species          # int codes, -1 == missing
+    t_height = reference_trees.height           # float, NaN == missing
+    t_diameter = reference_trees.breast_height_diameter
+    t_bha = reference_trees.breast_height_age
+    t_bio = reference_trees.biological_age
 
-    param: reference_tree: Tree which does not yet have a age
-    param: startums: Subset of stratums that have age
-    """
-    strategy = SupplementStrategy(reference_tree)
-    for stratum in stratums:
-        if reference_tree.compare_species(stratum) and stratum.has_diameter():
-            strategy.solved = True
-            strategy.strategy = STRATUM_SUPPLEMENT
-            return strategy
-    return strategy
+    # Shorthands for stratum fields
+    s_species = stratums.species
+    s_diameter = stratums.mean_diameter
+    s_bha = stratums.breast_height_age
+    s_bio = stratums.biological_age
 
+    # Trees that already have a valid age (used as donors for INITIAL_TREE_SUPPLEMENT)
+    age_tree_mask = (~np.isnan(t_bha)) & (t_bha > 0.0)
 
-def solve_supplement_strategy(no_age_trees: list[ReferenceTree],
-                              age_trees: list[ReferenceTree],
-                              age_stratums: list[TreeStratum]) -> list[SupplementStrategy]:
-    """ Solveing a supplement strategy happens in a priority order in which stratum strategy
-    is with highest priority and using same same tree to supplement the lowest."""
-    supplement_strategies = []
-    for rt in no_age_trees:
-        strategy = stratum_strategy(rt, age_stratums)
-        if not strategy.solved:
-            strategy = tree_strategy(rt, age_trees)
-        if not strategy.solved:
-            strategy = final_tree_strategy(rt)
-        if strategy.solved:
-            supplement_strategies.append((rt, strategy))
-        else:
-            raise UserWarning('error: supplement strategy for tree number' + str(rt.identifier) + ' can not be solved')
-    return supplement_strategies
+    # Strata that can donate age
+    age_stratum_mask = (~np.isnan(s_bha)) & (s_bha > 0.0)
+    strata_have_diameter = (~np.isnan(s_diameter)) & (s_diameter > 0.0)
 
+    # Trees that need supplementing:
+    # - breast_height_age is NaN
+    # - height > 1.3 m
+    no_age_mask = np.isnan(t_bha) & (~np.isnan(t_height)) & (t_height > 1.3)
+    no_age_indices = np.nonzero(no_age_mask)[0]
 
-def supplement_age_for_reference_trees(reference_trees: list[ReferenceTree],
-                                       stratums: list[TreeStratum]) -> list[ReferenceTree]:
-    """ Supplementing of reference trees that have no d13 age.
-    Supplementing happens from subsets of stratums and trees that have d13 age.
-    Based on a priority a strategy to supplement is selected and supplementing is performed.
-    """
-    no_age_trees = list(filter(lambda t: t.breast_height_age is None and t.has_height_over_130_cm(), reference_trees))
-    age_trees = list(filter(lambda t: (t.breast_height_age or 0) > 0.0, reference_trees))
-    age_stratums = list(filter(lambda s: s.breast_height_age > 0.0, stratums))
-    trees_and_strategies = solve_supplement_strategy(no_age_trees, age_trees, age_stratums)
-    return perform_supplementing(trees_and_strategies, age_trees, age_stratums)
+    # Strategy per tree: 0 == no strategy
+    strategy = np.zeros(n_trees, dtype=np.int8)
+    # For INITIAL_TREE_SUPPLEMENT, we store the donor tree index
+    tree_source_index = np.full(n_trees, -1, dtype=int)
+
+    # --------- Solve strategies (mirrors AoS solve_supplement_strategy) ----------
+    for i in no_age_indices:
+        tree_sp = t_species[i]
+        has_species = tree_sp != -1  # -1 is "missing" sentinel in vector data
+
+        chosen_strategy = 0
+
+        # 1) STRATUM_SUPPLEMENT: use strata with same species, age and diameter
+        if has_species:
+            same_sp_mask = s_species == tree_sp
+            candidate_mask = age_stratum_mask & strata_have_diameter & same_sp_mask
+            if np.any(candidate_mask):
+                chosen_strategy = STRATUM_SUPPLEMENT
+
+        # 2) INITIAL_TREE_SUPPLEMENT: use other trees with age & same species
+        if chosen_strategy == 0 and has_species:
+            same_sp_age_tree_mask = age_tree_mask & (t_species == tree_sp)
+            donor_indices = np.nonzero(same_sp_age_tree_mask)[0]
+            if donor_indices.size > 0:
+                chosen_strategy = INITIAL_TREE_SUPPLEMENT
+                # AoS version effectively uses the first matching tree
+                tree_source_index[i] = int(donor_indices[0])
+
+        # 3) Final strategies based on local information
+        if chosen_strategy == 0:
+            has_bio_age = (~np.isnan(t_bio[i])) & (t_bio[i] > 0.0)
+            has_height_over_130 = (~np.isnan(t_height[i])) & (t_height[i] > 1.3)
+
+            if not has_bio_age:
+                chosen_strategy = SAME_TREE_DIAMETER_SUPPLEMENT
+            elif not has_height_over_130:
+                chosen_strategy = SAME_TREE_D13_AGE_SUPPLEMENT
+
+        if chosen_strategy == 0:
+            # Same behaviour as AoS: unsolved strategy is considered an error
+            raise UserWarning(
+                f"error: supplement strategy for tree index {i} (species={tree_sp}) can not be solved"
+            )
+
+        strategy[i] = chosen_strategy
+
+    # --------- Perform supplementing in-place (mirrors perform_supplementing) ----
+    for i in no_age_indices:
+        s = strategy[i]
+        if s == 0:
+            continue
+
+        if s == STRATUM_SUPPLEMENT:
+            tree_sp = t_species[i]
+            if tree_sp == -1:
+                continue
+
+            same_sp_mask = s_species == tree_sp
+            candidate_mask = age_stratum_mask & strata_have_diameter & same_sp_mask
+            candidate_indices = np.nonzero(candidate_mask)[0]
+            if candidate_indices.size == 0:
+                continue
+
+            tree_d = t_diameter[i]
+            if np.isnan(tree_d) or tree_d <= 0.0:
+                continue
+
+            # Same diameter matching rule as forestry_utils.override_from_diameter /
+            # find_matching_stratum_by_diameter, but SoA-based.
+            associated = int(candidate_indices[0])
+            for j in candidate_indices[1:]:
+                d1 = s_diameter[associated]
+                d2 = s_diameter[j]
+                if np.isnan(d2) or d2 <= 0.0:
+                    continue
+                threshold = generate_diameter_threshold(float(d1), float(d2))
+                if threshold > tree_d:
+                    associated = int(j)
+
+            reference_trees.breast_height_age[i] = s_bha[associated]
+            reference_trees.biological_age[i] = s_bio[associated]
+
+        elif s == INITIAL_TREE_SUPPLEMENT:
+            src = tree_source_index[i]
+            if src == -1:
+                continue
+            reference_trees.breast_height_age[i] = t_bha[src]
+            reference_trees.biological_age[i] = t_bio[src]
+
+        elif s == SAME_TREE_DIAMETER_SUPPLEMENT:
+            d = t_diameter[i]
+            if np.isnan(d) or d <= 0.0:
+                continue
+            bha = 2.0 * d
+            reference_trees.breast_height_age[i] = bha
+            reference_trees.biological_age[i] = 9.0 + 2.0 * d
+
+        elif s == SAME_TREE_D13_AGE_SUPPLEMENT:
+            d = t_diameter[i]
+            if np.isnan(d) or d <= 0.0:
+                continue
+            bha = 2.0 * d
+            reference_trees.breast_height_age[i] = bha
+            reference_trees.biological_age[i] = bha + 9.0
