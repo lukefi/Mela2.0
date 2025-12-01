@@ -385,6 +385,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     method_of_last_cutting: Optional[int] = None
     municipality_id: Optional[int] = None
     dominant_storey_age: Optional[float] = None
+    dominant_height_dominant_storey: Optional[float] = None
 
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
@@ -671,6 +672,33 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
                                      np.sum(strata.basal_area * strata.mean_height)) /
                                      self.basal_area) if (self.basal_area > 0) else None
+
+        self.dominant_height_dominant_storey = self._calculate_dominant_height()
+
+    def _calculate_dominant_height(self) -> float | None:
+        if len(self.reference_trees) == 0:
+            return None
+        trees = self.reference_trees
+        non_saved_trees_indices = np.flatnonzero(trees.management_category != 2)
+        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
+        sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
+        i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
+        if len(i_100_largest_arr) == 0:
+            stems_smallest: float = trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][-1]
+            i_100_largest: int = len(non_saved_trees_indices)
+        elif i_100_largest_arr[0] == 0:
+            stems_smallest = 100.0
+            i_100_largest = 0
+        else:
+            i_100_largest = i_100_largest_arr[0]
+            stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
+
+        numerator_1 = np.sum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][:i_100_largest] *
+                            trees.height[non_saved_trees_indices][sorted_trees_indices][:i_100_largest])
+        numerator_2: float = stems_smallest * trees.height[non_saved_trees_indices][sorted_trees_indices][i_100_largest]
+        denominator = min(100, sorted_cum_stems[i_100_largest])
+
+        return (numerator_1 + numerator_2) / denominator
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
