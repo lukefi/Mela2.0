@@ -1,4 +1,4 @@
-from lukefi.metsi.domain.conditions import MinimumTimeInterval, TimePoints
+from lukefi.metsi.domain.conditions import TimeSinceTreatment, TimePoints
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
@@ -19,7 +19,7 @@ control_structure = {
                     Event(do_nothing),
                     Event(
                         preconditions=[
-                            MinimumTimeInterval(2, toy_inc)
+                            TimeSinceTreatment(2, toy_inc)
                         ],
                         treatment=toy_inc
                     )

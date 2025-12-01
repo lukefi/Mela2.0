@@ -1,3 +1,4 @@
+from copy import copy
 import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -19,7 +20,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         payload = SimulationPayload(unit)
         if db is not None:
             # Write initial state to database
-            output_node_to_db(db, payload, [])
+            output_node_to_db(db, payload, [], {"initial"})
         _simulate_unit(payload, simconfig, db)
 
 
@@ -29,16 +30,19 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
     retval = []
     if not config.end_condition(payload.computational_unit):
         offset = 0
+        all_instructions_failed = True
         for instruction in config.instructions:
             if all(condition(payload) for condition in instruction.conditions):
-                for new_branch in instruction.unwrap(payload, offset, db):
-                    offset += 1
-                    new_branch.computational_unit, _ = config.transition(new_branch.computational_unit)
-                    retval.extend(_simulate_unit(new_branch, config, db))
-            else:
-                # Conditions failed. Don't kill the branch but carry on with transition.
-                payload.computational_unit, _ = config.transition(payload.computational_unit)
-                retval.extend(_simulate_unit(payload, config, db))
+                all_instructions_failed = False
+                for i, root in enumerate(instruction.unwrap()):
+                    for new_branch in root.evaluate(copy(payload), db, i + offset):
+                        new_branch.computational_unit, _ = config.transition(new_branch.computational_unit)
+                        retval.extend(_simulate_unit(new_branch, config, db))
+                offset += 1
+        if all_instructions_failed:
+            # All instructions had failed conditions. Create one branch to carry on with transition.
+            payload.computational_unit, _ = config.transition(payload.computational_unit)
+            retval.extend(_simulate_unit(payload, config, db))
     else:
         # End condition met, update `leaf` column
         if db is not None:

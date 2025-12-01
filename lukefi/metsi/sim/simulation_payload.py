@@ -1,21 +1,21 @@
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.finalizable import Finalizable
-if TYPE_CHECKING:
-    from lukefi.metsi.sim.generators import TreatmentFn
 
+
+type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
 
 class SimulationPayload[T: ComputationalUnit]:
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
     computational_unit: T
-    operation_history: list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]
+    operation_history: OperationHistory
     node_id: list[int]
 
     def __init__(self,
                  computational_unit: T,
-                 operation_history: Optional[list[tuple[int, "TreatmentFn[T]", dict[str, dict]]]] = None,
+                 operation_history: Optional[OperationHistory] = None,
                  node_id: Optional[list[int]] = None) -> None:
         self.computational_unit = computational_unit
 

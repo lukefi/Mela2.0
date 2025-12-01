@@ -5,20 +5,18 @@ from typing import Sequence as Sequence_
 
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.operations import prepared_treatment
 from lukefi.metsi.sim.processor import processor
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData, OpTuple
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.treatment import PreparedTreatment, TreatmentFn
 
 T = TypeVar("T", bound=ComputationalUnit)
 
 ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
-TreatmentFn = Callable[[T], OpTuple[T]]
-ProcessedGenerator = Callable[[Optional[list[EventTree[T]]]], list[EventTree[T]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
@@ -133,7 +131,7 @@ class Event(EventGeneratorBase[T]):
     def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment())
+            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags)
             parent.add_branch(branch)
             retval.append(branch)
         return retval
@@ -145,8 +143,8 @@ class Event(EventGeneratorBase[T]):
     def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
-        treatment = prepared_treatment(self.treatment, **combined_params)
-        return lambda payload: processor(payload, treatment, self.treatment,
+        treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
+        return lambda payload: processor(payload, treatment, treatment.name,
                                          self.preconditions, self.postconditions, **combined_params)
 
     def _check_file_params(self):

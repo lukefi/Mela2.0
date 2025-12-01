@@ -2,7 +2,7 @@ from typing import Any, Optional
 import numpy as np
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.conditions import MinimumTimeInterval
+from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.sim.condition import Condition
@@ -160,7 +160,6 @@ class MarkRetentionTrees(Event[ForestStand]):
                 "tree_type": "SPARE",
                 "management_category": 2,
             },
-            "labels": ["retention_trees"],
         }
 
         merged_params = default_params | params
@@ -177,6 +176,7 @@ class MarkRetentionTrees(Event[ForestStand]):
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"retention_trees"}
         )
 
 
@@ -246,11 +246,10 @@ class Mounding(Event[ForestStand]):
         defaults = {
             "method": "mounding",
             "intensity": 1200.0,
-            "labels": ["mounding"],
         }
         # Default preconditions: at least 20 years since this treatment last ran
         default_preconds: list[ForestCondition] = [
-            MinimumTimeInterval(20, soil_surface_preparation)
+            TimeSinceTreatment(20, soil_surface_preparation)
         ]
 
         merged_params = defaults | (parameters or {})
@@ -262,6 +261,7 @@ class Mounding(Event[ForestStand]):
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"mounding"}
         )
 
 
@@ -333,7 +333,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 
         # --- Preconditions now include both: 20y spacing AND forest_categories
         preconds: list[Condition[SimulationPayload[ForestStand]]] = [
-            MinimumTimeInterval(20, cutting),
+            TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
@@ -384,7 +384,7 @@ class Tracks(Event[ForestStand]):
 
         # Default: at least 20y since last cutting and forest category check
         default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
-            MinimumTimeInterval(20, cutting),
+            TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
