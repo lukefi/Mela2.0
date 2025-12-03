@@ -73,6 +73,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
 
 
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
+    """ Operation function that generates reference trees for each stand """
     debug = operation_params.get("debug", False)
 
     for i, stand in enumerate(stands):
@@ -105,7 +106,7 @@ def supplement_missing_tree_heights(stands: StandList, **operation_params) -> St
 
         for i in range(trees.size):
             h = trees.height[i]
-            # Treat NaN or <= 0 as missing
+
             if not h > 0:
                 d = trees.breast_height_diameter[i]
                 if not d > 0:
@@ -121,7 +122,7 @@ def supplement_missing_tree_heights(stands: StandList, **operation_params) -> St
     return stands
 
 
-def supplement_missing_tree_ages(stands, **operation_params):
+def supplement_missing_tree_ages(stands: StandList, **operation_params):
     """
     Supplement tree ages directly on SoA ReferenceTrees/TreeStrata.
     """
@@ -138,7 +139,9 @@ def supplement_missing_tree_ages(stands, **operation_params):
     return stands
 
 
-def supplement_missing_stratum_diameters(stands, **_):
+def supplement_missing_stratum_diameters(stands: StandList, **operation_params):
+    _ = operation_params  # unused
+
     for stand in stands:
         if stand.tree_strata.size == 0:
             continue
@@ -149,7 +152,9 @@ def supplement_missing_stratum_diameters(stands, **_):
     return stands
 
 
-def generate_sapling_trees_from_sapling_strata(stands, **_):
+def generate_sapling_trees_from_sapling_strata(stands: StandList, **operation_params):
+    _ = operation_params  # unused
+
     for stand in stands:
         strata = stand.tree_strata
         trees = stand.reference_trees

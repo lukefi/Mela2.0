@@ -3,6 +3,7 @@
 *.iml
 __pycache__
 .env
+.myenv
 issues
 build
 *.egg-info

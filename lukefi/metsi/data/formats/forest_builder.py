@@ -275,8 +275,7 @@ class VMI12Builder(VMIBuilder):
 
     def build(self) -> StandList:
         """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata
-        **directly in SoA form** (no *_pre_vec AoS lists).
+        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
         # Per-stand attribute dicts for vectorization
