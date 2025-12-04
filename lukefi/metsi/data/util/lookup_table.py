@@ -75,21 +75,11 @@ def _load_rows(csv_path: Path) -> List[Dict[str, Any]]:
         return list(reader)
 
 
-def _coerce_int(value: Any, key: str) -> int:
-    try:
-        return int(value)
-    except Exception as e:
-        raise ValueError(
-            f"Could not convert {key}={value!r} to int when reading lookup table."
-        ) from e
-
-
 def _find_matching_row(csv_path: str, key_values: Mapping[str, Any]) -> Dict[str, Any]:
     """
     Find a *single* row in csv_path where all key columns match key_values.
 
-    - All key values are compared as ints (simple version).
-      If you need strings later, we can generalize this.
+    Keys are compared by string equality (simple version).
     """
     csv_p = Path(csv_path).resolve()
     rows = _load_rows(csv_p)
@@ -104,14 +94,14 @@ def _find_matching_row(csv_path: str, key_values: Mapping[str, Any]) -> Dict[str
             f"CSV {csv_p} is missing required key column(s) {missing_cols!r}."
         )
 
-    candidates: List[Dict[str, Any]] = []
+    candidates: list[dict[str, Any]] = []
 
     for row in rows:
         match = True
         for col, key_val in key_values.items():
-            row_val = _coerce_int(row[col], col)
-            key_val_int = _coerce_int(key_val, col)
-            if row_val != key_val_int:
+            row_val = row[col]
+            # normalize both sides to strings for comparison
+            if str(row_val) != str(key_val):
                 match = False
                 break
         if match:
