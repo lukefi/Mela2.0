@@ -11,7 +11,7 @@ from lukefi.metsi.forestry.forestry_utils import (
     find_matching_storey_stratum_for_tree,
 )
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees as VectorReferenceTrees, TreeStrata as VectorTreeStrata
+from lukefi.metsi.data.vector_model import ReferenceTrees as VectorReferenceTrees, TreeStrata as VectorTreeStrata, DTYPES_TREE
 
 
 class TreeStrategy(Enum):
@@ -257,7 +257,7 @@ def generate_reference_trees(
         measured_trees_vec = stand.reference_trees
 
     # We'll accumulate attr-dicts and vectorize once at the end for speed
-    attr_dict: dict[str, list] = {name: [] for name in VectorReferenceTrees.dtypes.keys()}
+    attr_dict: dict[str, list] = {name: [] for name in DTYPES_TREE}
 
     # Optional: pre-compute any stand-wide info (like basal_area) if needed
     # For LM we need stand.degree_days and stand.basal_area
