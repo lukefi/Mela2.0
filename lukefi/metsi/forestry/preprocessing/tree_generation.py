@@ -268,6 +268,7 @@ def generate_reference_trees(
         strata_vec, measured_trees_vec, params.get("stratum_association_diameter_threshold", 2.5)
     )
 
+    start_idx = int(stand.reference_trees.size)
     for s_idx in range(strata_vec.size):
         # Skip empty / invalid strata early if you want
         trees_for_stratum = _generate_trees_for_stratum(
@@ -280,6 +281,12 @@ def generate_reference_trees(
         )
 
         for t in trees_for_stratum:
+            if not t.identifier:
+                # Use a stand-wide running index, not per-stratum local_idx
+                identifier = f"{stand.identifier}-{start_idx + 1}-tree"
+                t.identifier = identifier
+                start_idx += 1
+
             attr_dict["identifier"].append(t.identifier or "")
             attr_dict["tree_number"].append(t.tree_number or 0)
             attr_dict["species"].append(int(t.species) if t.species is not None else -1)
@@ -304,10 +311,10 @@ def generate_reference_trees(
             # The rest: fill with neutral defaults so lengths stay consistent
             attr_dict["management_category"].append(-1)
             attr_dict["saw_log_volume_reduction_factor"].append(np.nan)
-            attr_dict["pruning_year"].append(-1)
+            attr_dict["pruning_year"].append(0)
             attr_dict["age_when_10cm_diameter_at_breast_height"].append(-1)
             attr_dict["stand_origin_relative_position"].append(
-                np.array([np.nan, np.nan, np.nan], dtype=float)
+                (0.0, 0.0, 0.0)
             )
             attr_dict["lowest_living_branch_height"].append(np.nan)
             attr_dict["tree_category"].append("")  # or "reference", up to you

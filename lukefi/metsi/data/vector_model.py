@@ -218,9 +218,37 @@ class VectorData():
         Args:
             index (int | list[int]): Index of row to remove
         """
+
+        self._recompute_size()
+
+        # Nothing to delete
+        if self.size == 0:
+            return
+
+        # Normalise to a 1D int array
+        idx_arr = np.atleast_1d(index).astype(int)
+
+        # Filter to valid index range
+        mask = (idx_arr >= 0) & (idx_arr < self.size)
+        idx_arr = idx_arr[mask]
+
+        # If nothing is valid, just return
+        if idx_arr.size == 0:
+            return
+
+        # For np.delete, use scalar if there's only one
+        idx: int | np.ndarray
+        if idx_arr.size == 1:
+            idx = int(idx_arr[0])
+        else:
+            idx = idx_arr
+
         for key in self.dtypes:
             vector: npt.NDArray = getattr(self, key)
-            setattr(self, key, np.delete(vector, index, axis=0))  # delete always creates a copy
+            # Some attributes may not be set or may be empty
+            if not isinstance(vector, np.ndarray) or vector.size == 0:
+                continue
+            setattr(self, key, np.delete(vector, idx, axis=0))  # delete always creates a copy
 
         self._recompute_size()
 

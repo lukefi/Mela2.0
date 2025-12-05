@@ -34,19 +34,32 @@ def vectorize(stands: StandList, **operation_params) -> StandList:
 
     for stand in stands:
         for t in target:
-            attr_dict: dict[str, Any] = {}
+            # Get AoS list (may be empty) and existing SoA container (may already be populated)
+            pre_list = getattr(stand, f"{t}_pre_vec", None)
+            existing_vec = getattr(stand, t, None)
 
-            for data in getattr(stand, f"{t}_pre_vec", []):
-                delattr(data, "stand")
+            # If there is no AoS data and we already have a non-empty SoA container,
+            # avoid overwriting.
+            if (not pre_list) and hasattr(existing_vec, "size") and existing_vec and existing_vec.size > 0:
+                continue
+
+            attr_dict: dict[str, Any] = {}
+            for data in pre_list or []:
+                # Drop back-reference to stand for AoS objects before vectorizing
+                if hasattr(data, "stand"):
+                    delattr(data, "stand")
                 for k, v in data.__dict__.items():
                     attr_dict.setdefault(k, []).append(v)
 
-            # Overwrite old forestry data
             container_obj = CONTAINERS.get(t)
             if not container_obj:
                 raise MetsiException(f"Unknown target type '{t}'")
             setattr(stand, t, container_obj().vectorize(attr_dict))
-            delattr(stand, f"{t}_pre_vec")
+
+            # Only delete *_pre_vec if it actually existed
+            if hasattr(stand, f"{t}_pre_vec"):
+                delattr(stand, f"{t}_pre_vec")
+
     return stands
 
 
