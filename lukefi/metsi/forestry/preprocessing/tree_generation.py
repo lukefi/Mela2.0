@@ -323,7 +323,12 @@ def generate_reference_trees(
             attr_dict["tree_type"].append("")   # set if you have semantics for this
             attr_dict["tuhon_ilmiasu"].append(t.tuhon_ilmiasu or "")
 
-    # After everything is collected in attr_dict:
     vec = VectorReferenceTrees()
     vec.vectorize(attr_dict)
+
+    stand.tree_strata = VectorTreeStrata()
+
+    if hasattr(stand, "tree_strata_pre_vec"):
+        stand.tree_strata_pre_vec = []
+
     return vec

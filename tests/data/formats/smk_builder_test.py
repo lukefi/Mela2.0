@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 import os
 from functools import reduce
 from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
@@ -9,10 +10,11 @@ builder_flags = {
     'strata_origin': StrataOrigin.INVENTORY
 }
 
-declared_conversions = {} # Not yet implemented (only vmi13 and -12 atm.)
+declared_conversions = {}  # Not yet implemented (only vmi13 and -12 atm.)
+
 
 class TestXMLBuilder(unittest.TestCase):
-    
+
     xml_data = 'SMK_source.xml'
     absolute_resource_path = os.path.join(os.getcwd(), 'tests', 'data', 'resources', xml_data)
 
@@ -28,11 +30,11 @@ class TestXMLBuilder(unittest.TestCase):
         ]
         for i in assertions:
             smk_builder = XMLBuilder(
-                builder_flags={ 'strata_origin': StrataOrigin(i[0]) },
+                builder_flags={'strata_origin': StrataOrigin(i[0])},
                 declared_conversions={},
                 data=self.xml_string)
             stands = smk_builder.build()
-            number_of_stratums = len(stands[0].tree_strata_pre_vec)
+            number_of_stratums = stands[0].tree_strata.size
             self.assertEqual(i[1], number_of_stratums)
 
     def test_smk_builder_stands(self):
@@ -117,64 +119,72 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(9.5, self.smk_stands[0].basal_area)
         self.assertEqual(0.0, self.smk_stands[1].basal_area)
 
-
     def test_smk_builder_strata(self):
-        self.assertEqual(3, len(self.smk_stands[0].tree_strata_pre_vec))
-        self.assertEqual(0, len(self.smk_stands[1].tree_strata_pre_vec))
+        self.assertEqual(3, self.smk_stands[0].tree_strata.size)
+        self.assertEqual(0, self.smk_stands[1].tree_strata.size)
 
     def test_smk_builder_stratum_identifiers(self):
-        self.assertEqual('10.1-stratum', self.smk_stands[0].tree_strata_pre_vec[0].identifier)
-        self.assertEqual('10.2-stratum', self.smk_stands[0].tree_strata_pre_vec[1].identifier)
-        self.assertEqual(0, len(self.smk_stands[1].tree_strata_pre_vec))
+        vec0 = self.smk_stands[0].tree_strata
+
+        self.assertEqual('10.1-stratum', vec0.identifier[0])
+        self.assertEqual('10.2-stratum', vec0.identifier[1])
+        self.assertEqual(0, self.smk_stands[1].tree_strata.size)
 
     def test_smk_builder_stratum_variables(self):
-        # tst:TreeSpecies '1' -> 1
-        self.assertEqual(TreeSpecies.SPRUCE, self.smk_stands[0].tree_strata_pre_vec[0].species)
-        # tst:TreeSpecies '2' -> 2
-        self.assertEqual(TreeSpecies.SPRUCE, self.smk_stands[0].tree_strata_pre_vec[1].species)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].origin)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].origin)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].stems_per_ha)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].stems_per_ha)
-        # tst:MeanDiameter '24.1' -> 24.1
-        self.assertEqual(2.0, self.smk_stands[0].tree_strata_pre_vec[0].mean_diameter)
-        # tst:MeanDiameter '22.0' -> 22.0
-        self.assertEqual(13.1, self.smk_stands[0].tree_strata_pre_vec[1].mean_diameter)
-        # tst:MeanHeight '20.5' -> 20.5
-        self.assertEqual(2.3, self.smk_stands[0].tree_strata_pre_vec[0].mean_height)
-        # tst:MeanHeight '19.0' -> 19.0
-        self.assertEqual(12.2, self.smk_stands[0].tree_strata_pre_vec[1].mean_height)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].breast_height_age)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].breast_height_age)
-        # tst:MeanHeight '62' -> 62
-        self.assertEqual(10.0, self.smk_stands[0].tree_strata_pre_vec[0].biological_age)
-        # tst:MeanHeight '62' -> 62
-        self.assertEqual(48.0, self.smk_stands[0].tree_strata_pre_vec[1].biological_age)
-        # tst:BasalArea '10.1' -> 10.1
-        self.assertEqual(0.0, self.smk_stands[0].tree_strata_pre_vec[0].basal_area)
-        # tst:BasalArea '10.5' -> 10.5
-        self.assertEqual(5.2, self.smk_stands[0].tree_strata_pre_vec[1].basal_area)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].saw_log_volume_reduction_factor)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].saw_log_volume_reduction_factor)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].cutting_year)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].cutting_year)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].age_when_10cm_diameter_at_breast_height)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].age_when_10cm_diameter_at_breast_height)
-        # tst:StratumNumber '1' -> 1
-        self.assertEqual(1, self.smk_stands[0].tree_strata_pre_vec[0].tree_number)
-        # tst:StratumNumber '2' -> 2
-        self.assertEqual(2, self.smk_stands[0].tree_strata_pre_vec[1].tree_number)
-        self.assertEqual((0.0, 0.0, 0.0), self.smk_stands[0].tree_strata_pre_vec[1].stand_origin_relative_position)
-        self.assertEqual((0.0, 0.0, 0.0), self.smk_stands[0].tree_strata_pre_vec[1].stand_origin_relative_position)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].lowest_living_branch_height)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].lowest_living_branch_height)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[0].management_category)
-        self.assertEqual(None, self.smk_stands[0].tree_strata_pre_vec[1].management_category)
-        self.assertEqual(Storey.REMOTE, self.smk_stands[0].tree_strata_pre_vec[0].storey)
-        self.assertEqual(Storey.REMOTE, self.smk_stands[0].tree_strata_pre_vec[1].storey)
+        vec0 = self.smk_stands[0].tree_strata
+
+        self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[0]))
+        self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
+
+        self.assertEqual(-1, vec0.origin[0])
+        self.assertEqual(-1, vec0.origin[1])
+
+        # stems_per_ha: None -> np.nan
+        self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
+        self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
+
+        # mean_diameter and mean_height: real floats, same expectations
+        self.assertEqual(2.0, vec0.mean_diameter[0])
+        self.assertEqual(13.1, vec0.mean_diameter[1])
+        self.assertEqual(2.3, vec0.mean_height[0])
+        self.assertEqual(12.2, vec0.mean_height[1])
+
+        # breast_height_age: None -> np.nan
+        self.assertTrue(np.isnan(vec0.breast_height_age[0]))
+        self.assertTrue(np.isnan(vec0.breast_height_age[1]))
+
+        # biological_age, basal_area etc keep the same numeric assertions
+        self.assertEqual(10.0, vec0.biological_age[0])
+        self.assertEqual(48.0, vec0.biological_age[1])
+        self.assertTrue(np.isnan(vec0.basal_area[0]))
+        self.assertEqual(5.2, vec0.basal_area[1])
+
+        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
+        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
+        self.assertEqual(-1, vec0.cutting_year[0])
+        self.assertEqual(-1, vec0.cutting_year[1])
+
+        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
+        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
+
+        self.assertEqual(1, vec0.tree_number[0])
+        self.assertEqual(2, vec0.tree_number[1])
+
+        np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
+        np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
+
+        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
+        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
+
+        self.assertEqual(-1, vec0.management_category[0])
+        self.assertEqual(-1, vec0.management_category[1])
+
+        self.assertEqual(Storey.REMOTE, vec0.storey[0])
+        self.assertEqual(Storey.REMOTE, vec0.storey[1])
+
 
 class TestGeoPackageBuilder(unittest.TestCase):
-    
+
     gpkg_data = 'SMK_source.gpkg'
     absolute_resource_path = os.path.join(os.getcwd(), 'tests', 'data', 'resources', gpkg_data)
 
@@ -194,7 +204,7 @@ class TestGeoPackageBuilder(unittest.TestCase):
                 builder_flags,
                 declared_conversions,
                 self.absolute_resource_path).build()
-            number_of_stratums = reduce(lambda acc, s: acc + len(s.tree_strata_pre_vec), stands, 0)
+            number_of_stratums = reduce(lambda acc, s: acc + s.tree_strata.size, stands, 0)
             self.assertEqual(number_of_stratums, a[1])
 
     def test_geopackage_builder_stands(self):
@@ -269,43 +279,53 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(19.59, self.gpkg_stands[1].basal_area)
 
     def test_gpkg_stratum_build(self):
-        result = reduce(lambda acc, x: len(x.tree_strata_pre_vec) + acc, self.gpkg_stands, 0)
+
+        result = reduce(lambda acc, x: x.tree_strata.size + acc, self.gpkg_stands, 0)
         self.assertEqual(24, result)
 
     def test_gpkg_builder_strata_identifiers(self):
-        self.assertEqual(1086166527, self.gpkg_stands[0].tree_strata_pre_vec[0].identifier)
-        self.assertEqual(1086166549, self.gpkg_stands[1].tree_strata_pre_vec[0].identifier)
+        vec0 = self.gpkg_stands[0].tree_strata
+
+        self.assertEqual(np.str_('1086166527'), vec0.identifier[0])
+        self.assertEqual(np.str_('1086166528'), vec0.identifier[1])
 
     def test_gpkg_builder_stratum_variables(self):
-        self.assertEqual(TreeSpecies.PINE, self.gpkg_stands[0].tree_strata_pre_vec[0].species)
-        self.assertEqual(TreeSpecies.SPRUCE, self.gpkg_stands[0].tree_strata_pre_vec[1].species)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].origin)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].origin)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].stems_per_ha)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].stems_per_ha)
-        self.assertEqual(13.18, self.gpkg_stands[0].tree_strata_pre_vec[0].mean_diameter)
-        self.assertEqual(15.67, self.gpkg_stands[0].tree_strata_pre_vec[1].mean_diameter)
-        self.assertEqual(12.14, self.gpkg_stands[0].tree_strata_pre_vec[0].mean_height)
-        self.assertEqual(12.57, self.gpkg_stands[0].tree_strata_pre_vec[1].mean_height)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].breast_height_age)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].breast_height_age)
-        self.assertEqual(24, self.gpkg_stands[0].tree_strata_pre_vec[0].biological_age)
-        self.assertEqual(32, self.gpkg_stands[0].tree_strata_pre_vec[1].biological_age)
-        self.assertEqual(13.56, self.gpkg_stands[0].tree_strata_pre_vec[0].basal_area)
-        self.assertEqual(7.16, self.gpkg_stands[0].tree_strata_pre_vec[1].basal_area)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].saw_log_volume_reduction_factor)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].saw_log_volume_reduction_factor)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].cutting_year)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].cutting_year)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].age_when_10cm_diameter_at_breast_height)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].age_when_10cm_diameter_at_breast_height)
-        self.assertEqual(1, self.gpkg_stands[0].tree_strata_pre_vec[0].tree_number)
-        self.assertEqual(2, self.gpkg_stands[0].tree_strata_pre_vec[1].tree_number)
-        self.assertEqual((0.0, 0.0, 0.0), self.gpkg_stands[0].tree_strata_pre_vec[1].stand_origin_relative_position)
-        self.assertEqual((0.0, 0.0, 0.0), self.gpkg_stands[0].tree_strata_pre_vec[1].stand_origin_relative_position)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].lowest_living_branch_height)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].lowest_living_branch_height)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[0].management_category)
-        self.assertEqual(None, self.gpkg_stands[0].tree_strata_pre_vec[1].management_category)
-        self.assertEqual(Storey.REMOTE, self.gpkg_stands[0].tree_strata_pre_vec[0].storey)
-        self.assertEqual(Storey.REMOTE, self.gpkg_stands[0].tree_strata_pre_vec[1].storey)
+
+        vec0 = self.gpkg_stands[0].tree_strata
+        self.assertEqual(TreeSpecies.PINE, TreeSpecies(vec0.species[0]))
+        self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
+        self.assertEqual(-1, vec0.origin[0])
+        self.assertEqual(-1, vec0.origin[1])
+        self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
+        self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
+        self.assertEqual(13.18, vec0.mean_diameter[0])
+        self.assertEqual(15.67, vec0.mean_diameter[1])
+        self.assertEqual(12.14, vec0.mean_height[0])
+        self.assertEqual(12.57, vec0.mean_height[1])
+        self.assertTrue(np.isnan(vec0.breast_height_age[0]))
+        self.assertTrue(np.isnan(vec0.breast_height_age[1]))
+
+        self.assertEqual(24, vec0.biological_age[0])
+        self.assertEqual(32, vec0.biological_age[1])
+        self.assertEqual(13.56, vec0.basal_area[0])
+        self.assertEqual(7.16, vec0.basal_area[1])
+
+        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
+        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
+
+        self.assertEqual(-1, vec0.cutting_year[0])
+        self.assertEqual(-1, vec0.cutting_year[1])
+
+        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
+        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
+        self.assertEqual(1, vec0.tree_number[0])
+        self.assertEqual(2, vec0.tree_number[1])
+        np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
+        np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
+
+        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
+        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
+        self.assertEqual(-1, vec0.management_category[0])
+        self.assertEqual(-1, vec0.management_category[0])
+        self.assertEqual(Storey.REMOTE, vec0.storey[0])
+        self.assertEqual(Storey.REMOTE, vec0.storey[1])

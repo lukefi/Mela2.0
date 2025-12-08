@@ -34,12 +34,11 @@ def vectorize(stands: StandList, **operation_params) -> StandList:
 
     for stand in stands:
         for t in target:
+
             # Get AoS list (may be empty) and existing SoA container (may already be populated)
             pre_list = getattr(stand, f"{t}_pre_vec", None)
             existing_vec = getattr(stand, t, None)
 
-            # If there is no AoS data and we already have a non-empty SoA container,
-            # avoid overwriting.
             if (not pre_list) and hasattr(existing_vec, "size") and existing_vec and existing_vec.size > 0:
                 continue
 
