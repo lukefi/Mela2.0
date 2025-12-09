@@ -29,7 +29,6 @@ def site_group_for(site_type_category: int | Any) -> int:
 
 
 def species_group_for(_stand: ForestStand) -> int:
-    # TODO: real dominant species logic.
     return 1  # pine
 
 
@@ -44,14 +43,14 @@ def min_stems_table(csv_path: str = "min_stems.csv") -> LookupTable[ForestStand]
         csv_path=csv_path,
         key_columns=[
             "site_type_category",   # must exist on ForestStand
-            "species_group",        # must exist on ForestStand
+            "species",        # must exist on ForestStand
             "degree_days",          # must exist on ForestStand
         ],
         value_column="min_stems",
         transforms={
             "degree_days": dd_group_for,
             "site_type_category": site_group_for,
-            "species_group": species_group_for,
+            "species": species_group_for,
         },
         value_cast=int,
     )
