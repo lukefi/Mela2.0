@@ -1,9 +1,11 @@
 import unittest
+import numpy as np
 from copy import deepcopy
 from lukefi.metsi.data.formats import vmi_const
 from lukefi.metsi.data.formats.forest_builder import *
 from lukefi.metsi.data.enums.internal import *
 from tests.data.test_util import ForestBuilderTestBench
+
 
 class TestForestBuilder(unittest.TestCase):
 
@@ -17,7 +19,6 @@ class TestForestBuilder(unittest.TestCase):
 
         cls.vmi12_stands_ref_trees_false = ForestBuilderTestBench.vmi12_built({'measured_trees': False, 'strata': True})
         cls.vmi13_stands_ref_trees_false = ForestBuilderTestBench.vmi13_built({'measured_trees': False, 'strata': True})
-
 
     def test_vmi12_init(self):
         vmi12_builder = self.vmi12_builder()
@@ -39,7 +40,7 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(True, self.vmi12_stands[3].auxiliary_stand)
         self.assertEqual(reference_area, self.vmi12_stands[0].area)
         self.assertEqual(reference_area, self.vmi12_stands[1].area)
-        #auxiliary stand area should be 0
+        # auxiliary stand area should be 0
         self.assertEqual(0.0, self.vmi12_stands[3].area)
         self.assertEqual(reference_area, self.vmi12_stands[0].area_weight)
         self.assertEqual(reference_area, self.vmi12_stands[1].area_weight)
@@ -156,79 +157,94 @@ class TestForestBuilder(unittest.TestCase):
         # vallitsevanjakson_d13ika is '045' vallitsevanjakson_ikalisays is '06' -> result to 51.0
         self.assertEqual(51.0, self.vmi12_stands[1].dominant_storey_age)
 
-    def test_vmi12_trees(self):
-        self.assertEqual(0, len(self.vmi12_stands[0].reference_trees_pre_vec))
-        self.assertEqual(1, len(self.vmi12_stands[1].reference_trees_pre_vec))
-        self.assertEqual(0, len(self.vmi12_stands[2].reference_trees_pre_vec))
+        def test_vmi12_trees(self):
+            # SoA counts per stand
+            self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
+            self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
+            self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
 
-        # Trees with back reference to stand
-        self.assertEqual(self.vmi12_stands[1], self.vmi12_stands[1].reference_trees_pre_vec[0].stand)
-        self.assertEqual('0-999-999-98-1-001-tree', self.vmi12_stands[1].reference_trees_pre_vec[0].identifier)
+            # Identifier of the only measured tree for stand 1
+            self.assertEqual(
+                '0-999-999-98-1-001-tree',
+                self.vmi12_stands[1].reference_trees.identifier[0]
+            )
 
     def test_vmi12_tree_variables(self):
-        tree = self.vmi12_stands[1].reference_trees_pre_vec[0]
+
+        trees = self.vmi12_stands[1].reference_trees
+        self.assertEqual(1, trees.size)
+        i = 0
+
         # '7' -> '7'
-        self.assertEqual('7', tree.tree_category)
-        # '1' -> 1
-        self.assertEqual(TreeSpecies.PINE, tree.species)
+        self.assertEqual('7', trees.tree_category[i])
+        # '1' -> 1 (enum stored as int)
+        self.assertEqual(TreeSpecies.PINE, TreeSpecies(trees.species[i]))
         # '207' -> 20.7
-        self.assertEqual(20.7, tree.breast_height_diameter)
+        self.assertEqual(20.7, trees.breast_height_diameter[i])
         # '1741' -> 17.41
-        self.assertEqual(17.41, tree.height)
-        self.assertEqual(None, tree.measured_height)
+        self.assertEqual(17.41, trees.height[i])
+
+        # measured_height was None -> np.nan
+        self.assertTrue(np.isnan(trees.measured_height[i]))
         # diameter 20.7, area factors 1.0
-        self.assertEqual(39.298, tree.stems_per_ha)
+        self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        # No source value established for these. Placeholders for now.
-        self.assertEqual(None, tree.saw_log_volume_reduction_factor)
-        self.assertEqual(0, tree.pruning_year)
-        self.assertEqual(0, tree.age_when_10cm_diameter_at_breast_height)
-        self.assertEqual(0, tree.origin)
-        self.assertEqual((0.0, 0.0, 0.0), tree.stand_origin_relative_position)
+        # No source value -> None -> np.nan in SoA
+        self.assertTrue(np.isnan(trees.saw_log_volume_reduction_factor[i]))
+        self.assertEqual(0, trees.pruning_year[i])
+        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
+        self.assertEqual(0, trees.origin[i])
 
-        #tree id source value 1
-        self.assertEqual(1, tree.tree_number)
+        # 3-element array
+        np.testing.assert_array_equal(
+            trees.stand_origin_relative_position[i],
+            np.array([0.0, 0.0, 0.0])
+        )
 
-        # breast_height_age is '' -> None
-        self.assertEqual(None, tree.breast_height_age)
-        # age_increase is '', total_age is '', breast_height_age is '' -> 0.0
-        self.assertEqual(None, tree.biological_age)
-        # living_branches_height is '' -> 0.0
-        self.assertEqual(0.0, tree.lowest_living_branch_height)
-        # latvuskerros is '2' -> 1
-        self.assertEqual(1, tree.management_category)
-        self.assertEqual(Storey.DOMINANT, tree.storey)
-        self.assertEqual(None, tree.tree_type)
-        self.assertEqual(None, tree.tuhon_ilmiasu)
+        self.assertEqual(1, trees.tree_number[i])
+
+        # None -> np.nan
+        self.assertTrue(np.isnan(trees.breast_height_age[i]))
+        self.assertTrue(np.isnan(trees.biological_age[i]))
+        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
+
+        self.assertEqual(1, trees.management_category[i])
+        self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
+
+        # None -> "" for string fields
+        self.assertEqual("", trees.tree_type[i])
+        self.assertEqual("", trees.tuhon_ilmiasu[i])
 
     def test_vmi12_strata(self):
-        self.assertEqual(0, len(self.vmi12_stands_ref_trees_false[0].tree_strata_pre_vec))
-        self.assertEqual(1, len(self.vmi12_stands_ref_trees_false[1].tree_strata_pre_vec))
+        self.assertEqual(0, self.vmi12_stands_ref_trees_false[0].tree_strata.size)
+        self.assertEqual(1, self.vmi12_stands_ref_trees_false[1].tree_strata.size)
 
-        # Strata with back reference to stand
-        self.assertEqual(self.vmi12_stands_ref_trees_false[1], self.vmi12_stands_ref_trees_false[1].tree_strata_pre_vec[0].stand)
-        self.assertEqual('0-999-999-98-1-01-stratum', self.vmi12_stands_ref_trees_false[1].tree_strata_pre_vec[0].identifier)
+        self.assertEqual('0-999-999-98-1-01-st',
+                         self.vmi12_stands_ref_trees_false[1].tree_strata.identifier[0])
 
     def test_vmi12_stratum(self):
-        stratum = self.vmi12_stands_ref_trees_false[1].tree_strata_pre_vec[0]
+        strata = self.vmi12_stands_ref_trees_false[1].tree_strata
+        self.assertEqual(1, strata.size)
+        i = 0
+
         # species is '1' -> 1
-        self.assertEqual(TreeSpecies.PINE, stratum.species)
-        # mean_diameter is '24' (cm) -> 24.0 (cm)
-        self.assertEqual(24.0, stratum.mean_diameter)
+        self.assertEqual(TreeSpecies.PINE, TreeSpecies(strata.species[i]))
+        # mean_diameter is '24' -> 24.0
+        self.assertEqual(24.0, strata.mean_diameter[i])
         # mean_height is '190' (dm) -> 19.0 (m)
-        self.assertEqual(19.0, stratum.mean_height)
-        # stemps_per_ha is '     ' -> 0.0
-        self.assertEqual(0.0, stratum.stems_per_ha)
+        self.assertEqual(19.0, strata.mean_height[i])
+        # stems_per_ha is '     ' -> 0.0
+        self.assertEqual(0.0, strata.stems_per_ha[i])
         # breast_height_age is '046' -> 46.0
-        self.assertEqual(46.0, stratum.breast_height_age)
+        self.assertEqual(46.0, strata.breast_height_age[i])
         # origin is '1' -> 0
-        self.assertEqual(0, stratum.origin)
-        # biological_age is '06' -> 52.0; (biological_age + breast_height_age = 52.0)
-        self.assertEqual(52.0, stratum.biological_age)
+        self.assertEqual(0, strata.origin[i])
+        # biological_age is '06' -> 52.0
+        self.assertEqual(52.0, strata.biological_age[i])
         # basal area is '17' -> 17.0
-        self.assertEqual(17.0, stratum.basal_area)
-        self.assertEqual(Storey.DOMINANT, stratum.storey)
-        self.assertEqual(1, stratum.tree_number)
+        self.assertEqual(17.0, strata.basal_area[i])
+        self.assertEqual(Storey.DOMINANT.value, strata.storey[i])
+        self.assertEqual(1, strata.tree_number[i])
 
     def test_vmi13_init(self):
         vmi13_builder = self.vmi13_builder()
@@ -244,13 +260,13 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual('0-2-23-2-1', self.vmi13_stands[1].identifier)
 
     def test_vmi13_stand_variables(self):
-        # When county is 21, lohkomuoto is 0 and lohkotarkenne is 0 reference_area is 164.2650475 
+        # When county is 21, lohkomuoto is 0 and lohkotarkenne is 0 reference_area is 164.2650475
         reference_area = 164.2650475
         self.assertEqual(False, self.vmi13_stands[0].auxiliary_stand)
         self.assertEqual(True, self.vmi13_stands[2].auxiliary_stand)
         self.assertEqual(reference_area, self.vmi13_stands[0].area)
         self.assertEqual(reference_area, self.vmi13_stands[1].area)
-        #auxiliary stand area should be 0
+        # auxiliary stand area should be 0
         self.assertEqual(0.0, self.vmi13_stands[2].area)
         self.assertEqual(reference_area, self.vmi13_stands[0].area_weight)
         self.assertEqual(reference_area, self.vmi13_stands[1].area_weight)
@@ -344,83 +360,70 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(51.0, self.vmi13_stands[1].dominant_storey_age)
 
     def test_vmi13_trees(self):
-        self.assertEqual(0, len(self.vmi13_stands[0].reference_trees_pre_vec))
-        self.assertEqual(3, len(self.vmi13_stands[1].reference_trees_pre_vec))
+        self.assertEqual(0, self.vmi13_stands[0].reference_trees.size)
+        self.assertEqual(3, self.vmi13_stands[1].reference_trees.size)
 
-        # Trees with back reference to stand
-        self.assertEqual(self.vmi13_stands[1], self.vmi13_stands[1].reference_trees_pre_vec[0].stand)
-        self.assertEqual('0-2-23-2-1-1-tree', self.vmi13_stands[1].reference_trees_pre_vec[0].identifier)
+        trees = self.vmi13_stands[1].reference_trees
+        self.assertEqual('0-2-23-2-1-1-tree', trees.identifier[0])
 
     def test_vmi13_tree_variables(self):
-        tree = self.vmi13_stands[1].reference_trees_pre_vec[0]
-        # '7' -> '7'
-        self.assertEqual('7', tree.tree_category)
-        # '1' -> 1
-        self.assertEqual(TreeSpecies.PINE, tree.species)
-        # '207' -> 20.7
-        self.assertEqual(20.7, tree.breast_height_diameter)
-        # '1741' -> 17.41
-        self.assertEqual(17.41, tree.height)
-        self.assertEqual(None, tree.measured_height)
-        # missing value normalized to None
-        self.assertEqual(None, None)
-        # diameter 25, area factors 1.0
-        self.assertEqual(39.298, tree.stems_per_ha)
+        trees = self.vmi13_stands[1].reference_trees
+        self.assertGreaterEqual(trees.size, 1)
+        i = 0
 
-        # No source value established for these. Placeholders for now.
-        self.assertEqual(None, tree.saw_log_volume_reduction_factor)
-        self.assertEqual(0, tree.pruning_year)
-        self.assertEqual(0, tree.age_when_10cm_diameter_at_breast_height)
-        self.assertEqual(0, tree.origin)
-        self.assertEqual((0.0, 0.0, 0.0), tree.stand_origin_relative_position)
+        self.assertEqual('7', trees.tree_category[i])
+        self.assertEqual(TreeSpecies.PINE, TreeSpecies(trees.species[i]))
+        self.assertEqual(20.7, trees.breast_height_diameter[i])
+        self.assertEqual(17.41, trees.height[i])
 
-        #tree id source value 1
-        self.assertEqual(1, tree.tree_number)
+        self.assertTrue(np.isnan(trees.measured_height[i]))
+        self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        # breast_height_age is '.' -> None
-        self.assertEqual(None, tree.breast_height_age)
-        # age_increase is '.', total_age is '.', breast_height_age is '.' -> None
-        self.assertEqual(None, tree.biological_age)
-        # living_branches_height is '.' -> 0.0
-        self.assertEqual(0.0, tree.lowest_living_branch_height)
-        # latvuskerros is '2' -> 1
-        self.assertEqual(1, tree.management_category)
-        self.assertEqual(Storey.DOMINANT, tree.storey)
-        self.assertEqual(None, tree.tree_type)
-        self.assertEqual(None, tree.tuhon_ilmiasu)
+        self.assertTrue(np.isnan(trees.saw_log_volume_reduction_factor[i]))
+        self.assertEqual(0, trees.pruning_year[i])
+        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
+        self.assertEqual(0, trees.origin[i])
+
+        np.testing.assert_array_equal(
+            trees.stand_origin_relative_position[i],
+            np.array([0.0, 0.0, 0.0])
+        )
+
+        self.assertEqual(1, trees.tree_number[i])
+
+        self.assertTrue(np.isnan(trees.breast_height_age[i]))
+        self.assertTrue(np.isnan(trees.biological_age[i]))
+        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
+
+        self.assertEqual(1, trees.management_category[i])
+        self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
+
+        self.assertEqual("", trees.tree_type[i])
+        self.assertEqual("", trees.tuhon_ilmiasu[i])
 
     def test_vmi13_strata(self):
-        self.assertEqual(0, len(self.vmi13_stands_ref_trees_false[0].tree_strata_pre_vec))
-        self.assertEqual(2, len(self.vmi13_stands_ref_trees_false[1].tree_strata_pre_vec))
+        self.assertEqual(0, self.vmi13_stands_ref_trees_false[0].tree_strata.size)
+        self.assertEqual(2, self.vmi13_stands_ref_trees_false[1].tree_strata.size)
 
-        # Strata with back reference to stand
-        self.assertEqual(self.vmi13_stands_ref_trees_false[1], self.vmi13_stands_ref_trees_false[1].tree_strata_pre_vec[0].stand)
-        self.assertEqual('0-2-23-2-1-1-stratum', self.vmi13_stands_ref_trees_false[1].tree_strata_pre_vec[0].identifier)
+        self.assertEqual('0-2-23-2-1-1-stratum', self.vmi13_stands_ref_trees_false[1].tree_strata.identifier[0])
 
     def test_vmi13_stratum(self):
-        stratum = self.vmi13_stands_ref_trees_false[1].tree_strata_pre_vec[0]
-        # species is 1 -> 1
-        self.assertEqual(TreeSpecies.PINE, stratum.species)
-        # mean_diameter is '24' (cm) -> 24.0 (cm)
-        self.assertEqual(24.0, stratum.mean_diameter)
-        # mean_height is '19' (dm) -> 19.0 (m)
-        self.assertEqual(19.0, stratum.mean_height)
-        # stems_per_ha is '.' -> 0
-        self.assertEqual(0, stratum.stems_per_ha)
-        # breast_height_age is '46' -> 46.0
-        self.assertEqual(46.0, stratum.breast_height_age)
-        # origin is '1' -> 0
-        self.assertEqual(0, stratum.origin)
-        # biological_age is '52' -> 52.0
-        self.assertEqual(52.0, stratum.biological_age)
-        # basal area is '17' -> 17.0
-        self.assertEqual(17.0, stratum.basal_area)
-        self.assertEqual(Storey.DOMINANT, stratum.storey)
-        self.assertEqual(1, stratum.tree_number)
+        strata = self.vmi13_stands_ref_trees_false[1].tree_strata
+        self.assertGreaterEqual(strata.size, 1)
+        i = 0
 
+        self.assertEqual(TreeSpecies.PINE, TreeSpecies(strata.species[i]))
+        self.assertEqual(24.0, strata.mean_diameter[i])
+        self.assertEqual(19.0, strata.mean_height[i])
+        self.assertEqual(0.0, strata.stems_per_ha[i])
+        self.assertEqual(46.0, strata.breast_height_age[i])
+        self.assertEqual(0, strata.origin[i])
+        self.assertEqual(52.0, strata.biological_age[i])
+        self.assertEqual(17.0, strata.basal_area[i])
+        self.assertEqual(Storey.DOMINANT.value, strata.storey[i])
+        self.assertEqual(1, strata.tree_number[i])
 
     def test_remove_strata(self):
         stands = deepcopy(self.vmi13_stands)
         self.vmi13_builder().remove_strata(stands)
         self.assertEqual(0, len(stands[1].tree_strata_pre_vec))
-
