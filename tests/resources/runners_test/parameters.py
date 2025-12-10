@@ -15,5 +15,5 @@ control_structure = {
         )
     ],
     "transition": ToyTransition(),
-    "end_condition": Condition[ToyModel](lambda x: x.time > 4)
+    "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 4)
 }
