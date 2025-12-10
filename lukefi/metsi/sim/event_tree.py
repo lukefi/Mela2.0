@@ -47,10 +47,15 @@ class EventTree[T: ComputationalUnit]:
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If a database connection is given, all simulated states and collected data is output
         to the database.
-
+        
         :param payload: the simulation data payload (we don't care what it is here)
+        :type payload: SimulationPayload[T]
         :param db: optional connection to an initialized database for output
-        :return: list of result payloads from this EventTree or as concatenated from its branches
+        :type db: Optional[sqlite3.Connection]
+        :param node: numeric identifier for the current simulator node, to be appended to the node_id of the payload
+        :type node: Optional[int]
+        :return: generator of result payloads from this EventTree or as concatenated from its branches
+        :rtype: Generator[SimulationPayload[T], None, None]
         """
         if node is None:
             node = 0
