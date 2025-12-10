@@ -27,7 +27,7 @@ control_structure = {
             'VAR5': Conversion(lambda x, y: pow(float(x), float(y)), indices=(3, 5)),
             'VAR_RANDOM': Conversion(random),
             'VAR_KISSA': Conversion(lambda: "Kissa123"),
-            'VAR8': Conversion(lambda x: str(x) if type(x) is not str else x, indices=(3,)),
+            'VAR8': Conversion(lambda x: str(x) if not isinstance(x, str) else x, indices=(3,)),
             # conversions based on object type spesifications
             'VAR9': Conversion(lambda x, obj: int(x) * obj.area, indices=(0,), object_type=ForestStand),
             'VAR10': Conversion(lambda x, obj: int(x) * obj.VAR1, indices=(0,), object_type=ForestStand),
