@@ -10,10 +10,31 @@ TreatmentFn = Callable[[T_contra], OpTuple[T_contra]]
 
 
 class Treatment(Generic[T_contra]):
+    """
+    Class for wrapping a TreatmentFn with all necessary metadata.
+    """
+
     name: str
+    """
+    A name unique to this Treatment. This will be used to identify the done treatment in the `nodes` table of the output
+    database. Defaults to the `__name__` of the treatment function.
+    """
+
     treatment_fn: TreatmentFn[T_contra]
+    """
+    The actual function that operates on the simulation state.
+    """
+
     default_tags: set[str]
+    """
+    A set of tags that is always associated with this Treatment. This set will be combined with the Event specific tags
+    when writing the simulation node to the output database.
+    """
+
     collected_data: CollectableDataTypes
+    """
+    The set of different types of CollectedData that are returned by the treatment function.
+    """
 
     def __init__(self,
                  treatment_fn: TreatmentFn[T_contra],
@@ -21,6 +42,18 @@ class Treatment(Generic[T_contra]):
                  default_tags: Optional[set[str]] = None,
                  collected_data: Optional[CollectableDataTypes] = None,
                  ) -> None:
+        """
+        Creates a Treatment object with the given treatment function and metadata.
+        
+        :param treatment_fn: The treatment function to wrap
+        :type treatment_fn: TreatmentFn[T_contra]
+        :param name: A name for the Treatment. Defaults to the `__name__` of the function.
+        :type name: Optional[str]
+        :param default_tags: A set of tags to always associate with this Treatment
+        :type default_tags: Optional[set[str]]
+        :param collected_data: The set of CollectedData types that the treatment function can return
+        :type collected_data: Optional[CollectableDataTypes]
+        """
         self.treatment_fn = treatment_fn
         if default_tags is None:
             self.default_tags = set()
