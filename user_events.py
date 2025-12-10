@@ -332,7 +332,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         } | params
 
         # --- Preconditions now include both: 20y spacing AND forest_categories
-        preconds: list[Condition[SimulationPayload[ForestStand]]] = [
+        preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
@@ -348,8 +348,8 @@ class Tracks(Event[ForestStand]):
 
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
-                 postconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  **kw) -> None:
         params = parameters or {}
@@ -383,7 +383,7 @@ class Tracks(Event[ForestStand]):
         } | params
 
         # Default: at least 20y since last cutting and forest category check
-        default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
+        default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]

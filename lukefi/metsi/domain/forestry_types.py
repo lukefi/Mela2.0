@@ -5,4 +5,4 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 StandList = list[ForestStand]
 ForestOpPayload = SimulationPayload[ForestStand]
 SimResults = dict[str, list[ForestOpPayload]]
-ForestCondition = Condition[ForestOpPayload]
+ForestCondition = Condition[ForestStand]

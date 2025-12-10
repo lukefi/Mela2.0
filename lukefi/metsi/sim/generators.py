@@ -84,14 +84,14 @@ class Event(EventGeneratorBase[T]):
     treatment: TreatmentFn[T]
     parameters: dict[str, Any]
     file_parameters: dict[str, str]
-    preconditions: list[Condition[SimulationPayload[T]]]
-    postconditions: list[Condition[SimulationPayload[T]]]
+    preconditions: list[Condition[T]]
+    postconditions: list[Condition[T]]
     tags: set[str]
     collected_data: CollectableDataTypes
 
     def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+                 preconditions: Optional[list[Condition[T]]] = None,
+                 postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  tags: Optional[set[str]] = None,
                  collected_data: Optional[CollectableDataTypes] = None) -> None:
