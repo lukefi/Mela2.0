@@ -50,7 +50,7 @@ control_structure = {
         )
     ],
     "transition": Transition(do_nothing),
-    "end_condition": Condition[ForestStand](lambda x: x.time > 2028)
+    "end_condition": Condition[ForestStand](lambda x: x.computational_unit.time > 2028)
 }
 
 __all__ = ['control_structure']

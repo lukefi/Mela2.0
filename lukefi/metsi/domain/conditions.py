@@ -5,22 +5,22 @@ from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayl
 from lukefi.metsi.sim.treatment import TreatmentFn
 
 
-class TimePoints[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+class TimePoints[T: ComputationalUnit](Condition[T]):
     def __init__(self, time_points: list[int]) -> None:
         super().__init__(lambda x: x.computational_unit.time in time_points)
 
 
-class RelativeTimePoints[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+class RelativeTimePoints[T: ComputationalUnit](Condition[T]):
     def __init__(self, relative_time_points: list[int]) -> None:
         super().__init__(lambda x: x.computational_unit.relative_time in relative_time_points)
 
 
-class TimeSinceTreatment[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+class TimeSinceTreatment[T: ComputationalUnit](Condition[T]):
     def __init__(self, minimum_time: int, treatment: TreatmentFn[T]) -> None:
         super().__init__(lambda x: _check_treatment_last_run(x, treatment, minimum_time))
 
 
-class TimeSinceTag[T: ComputationalUnit](Condition[SimulationPayload[T]]):
+class TimeSinceTag[T: ComputationalUnit](Condition[T]):
     def __init__(self, minimum_time: int, tag: str) -> None:
         super().__init__(lambda x: _check_tag_last_run(x, tag, minimum_time))
 

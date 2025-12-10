@@ -10,8 +10,8 @@ from lukefi.metsi.sim.treatment import PreparedTreatment
 def processor[T: ComputationalUnit](payload: SimulationPayload[T],
                                     treatment: PreparedTreatment[T],
                                     treatment_tag: str,
-                                    preconditions: list[Condition[SimulationPayload[T]]],
-                                    postconditions: list[Condition[SimulationPayload[T]]],
+                                    preconditions: list[Condition[T]],
+                                    postconditions: list[Condition[T]],
                                     **operation_parameters: dict[str, dict]) -> tuple[SimulationPayload[T],
                                                                                       list[CollectedData]]:
     """Managed run conditions and history of a simulator operation. Evaluates the operation."""

@@ -1,3 +1,4 @@
+from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.forestry_types import ForestOpPayload
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
@@ -21,15 +22,15 @@ def do_yet_another_thing(x):
     return x
 
 
-def first_condition_check(t: int, x: ForestOpPayload):
+def first_condition_check(x: ForestOpPayload):
     # Some complex condition check here.
-    _, _ = t, x
+    _ = x
     return True
 
 
-def second_condition_check(t: int, x: ForestOpPayload):
+def second_condition_check(x: ForestOpPayload):
     # Some complex condition check here.
-    _, _ = t, x
+    _ = x
     return True
 
 
@@ -40,9 +41,9 @@ second_condition = ForestCondition(second_condition_check)
 
 # Conditions can also be created with the decorator syntax:
 @ForestCondition
-def third_condition(t: int, x: ForestOpPayload):
+def third_condition(x: ForestOpPayload):
     # Some complex condition check here.
-    _, _ = t, x
+    _ = x
     return True
 
 
@@ -78,7 +79,7 @@ control_structure = {
     },
     "simulation_instructions": [
         SimulationInstruction(
-            time_points=[2025, 2030, 2035],
+            conditions=[TimePoints([2025, 2030, 2035])],
             events=[
                 Sequence([
                     Alternatives([
@@ -87,8 +88,8 @@ control_structure = {
                                   # Conditions can be combined with | and & operators.
                                   # Here do_a_thing will be performed if the year is 2025 or any time that the last
                                   # cutting method was 1.
-                                  ForestCondition(lambda t, _: t == 2025) |
-                                  ForestCondition(lambda _, x: x.computational_unit.method_of_last_cutting == 1)
+                                  ForestCondition(lambda x: x.computational_unit.time == 2025) |
+                                  ForestCondition(lambda x: x.computational_unit.method_of_last_cutting == 1)
                               ]),
                         Event(do_another_thing,
                               preconditions=[
@@ -96,7 +97,8 @@ control_structure = {
                                   # This time do_another_thing will be performed the year 2030 for all non-auxiliary
                                   # stands.
                                   ForestCondition(
-                                      lambda t, x: (t == 2030) and (not x.computational_unit.auxiliary_stand))
+                                      lambda x: (x.computational_unit.time == 2030) and
+                                      (not x.computational_unit.auxiliary_stand))
                               ]),
                         Event(do_yet_another_thing,
                               # More complex conditions can be formulated in separate modules, such as pre-made

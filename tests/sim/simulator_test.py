@@ -28,7 +28,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 1),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 1),
             "transition": ToyTransition()
         }
         config = SimConfiguration[ToyModel](**declaration)
@@ -58,7 +58,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 3)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 3)
         }
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(
@@ -89,7 +89,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 3),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 3),
             "transition": ToyTransition()
         }
         config = SimConfiguration(**declaration)
@@ -117,7 +117,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.relative_time > 5)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.relative_time > 5)
         }
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(
@@ -164,7 +164,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         config = SimConfiguration(**declaration)
 
@@ -215,7 +215,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0),
             "transition": ToyTransition()
         }
         config = SimConfiguration(**declaration)
@@ -258,7 +258,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         declaration_two = {
             "simulation_instructions": [
@@ -278,7 +278,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         configs = [
             SimConfiguration(**declaration_one),
@@ -402,7 +402,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time >= 3)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time >= 3)
         }
 
         config = SimConfiguration[ToyModel](**declaration)

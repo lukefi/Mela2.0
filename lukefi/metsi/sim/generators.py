@@ -85,16 +85,16 @@ class Event(EventGeneratorBase[T]):
     static_parameters: dict[str, Any]
     dynamic_parameters: dict[str, Callable[[T], Any]]
     file_parameters: dict[str, str]
-    preconditions: list[Condition[SimulationPayload[T]]]
-    postconditions: list[Condition[SimulationPayload[T]]]
+    preconditions: list[Condition[T]]
+    postconditions: list[Condition[T]]
     tags: set[str]
     collected_data: CollectableDataTypes
 
     def __init__(self, treatment: TreatmentFn[T],
                  static_parameters: Optional[dict[str, Any]] = None,
                  dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
-                 preconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
-                 postconditions: Optional[list[Condition[SimulationPayload[T]]]] = None,
+                 preconditions: Optional[list[Condition[T]]] = None,
+                 postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  tags: Optional[set[str]] = None,
                  collected_data: Optional[CollectableDataTypes] = None) -> None:

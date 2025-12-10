@@ -28,7 +28,7 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          config: SimConfiguration[T],
                                          db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
     retval = []
-    if not config.end_condition(payload.computational_unit):
+    if not config.end_condition(payload):
         offset = 0
         all_instructions_failed = True
         for instruction in config.instructions:
