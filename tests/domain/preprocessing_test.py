@@ -287,7 +287,3 @@ class PreprocessingTest(unittest.TestCase):
             self.assertRaises(
                 MetsiException, preprocessing.compute_location_metadata, invalid
             )
-
-
-if __name__ == "__main__":
-    unittest.main()
