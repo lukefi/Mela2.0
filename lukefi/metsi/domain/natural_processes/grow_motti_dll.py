@@ -36,6 +36,7 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
 
     return y1 / 1000.0, x1 / 1000.0
 
+
 def find_repo_root(start: Path) -> Optional[Path]:
     """
     Walk up from 'start' to find a repository root by markers:
@@ -52,6 +53,7 @@ def find_repo_root(start: Path) -> Optional[Path]:
         if (p / "pyproject.toml").exists():
             return p
     return None
+
 
 def default_data_dir() -> Path:
     """
@@ -117,7 +119,6 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-
 # -------- vectorized predictor --------
 
 class MottiDLLPredictor:
@@ -162,7 +163,6 @@ class MottiDLLPredictor:
         if self.stand and self.stand.geo_location:
             return self.stand.geo_location[1]
         return None
-
 
     @property
     def get_z(self) -> float:
@@ -261,7 +261,6 @@ class MottiDLLPredictor:
         # Species conversion (raises on invalid)
         spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
 
-
         # Build list[dict] for the DLL (fields used by wrapper)
         trees_py = [
             {
@@ -347,7 +346,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 
-def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees
@@ -388,12 +387,14 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     else:
         pred = predictor
 
-    growth = pred.evolve(step= step, sim_year= sim_year)
+    growth = pred.evolve(step=step, sim_year=sim_year)
 
     # Map deltas by returned IDs (subset of original if deaths occurred)
     id_to_delta_d = {int(i): float(d) for i, d in zip(growth.tree_ids, growth.trees_id)}
     id_to_delta_h = {int(i): float(h) for i, h in zip(growth.tree_ids, growth.trees_ih)}
     id_to_delta_f = {int(i): float(f) for i, f in zip(growth.tree_ids, growth.trees_if)}
+    id_to_age = {int(i): float(a) for i, a in zip(growth.tree_ids, growth.trees_age)}
+    id_to_age13 = {int(i): float(a13) for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
 
     n = rt.size
     ids = np.arange(1, n + 1, dtype=int)
@@ -419,5 +420,35 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
 
     # Apply vectorized update (also advances ages etc. inside util)
     update_stand_growth(stand, d_new, h_new, f_new, step)
+
+    rt = stand.reference_trees
+    n = rt.size
+
+    if getattr(growth, "trees_age", None) is not None and growth.trees_age:
+        id_to_age = {int(i): float(a)
+                     for i, a in zip(growth.tree_ids, growth.trees_age)}
+    else:
+        id_to_age = {}
+
+    if getattr(growth, "trees_age13", None) is not None and growth.trees_age13:
+        id_to_age13 = {int(i): float(a13)
+                       for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
+    else:
+        id_to_age13 = {}
+
+    if id_to_age or id_to_age13:
+        ids = np.arange(1, n + 1, dtype=int)
+
+        bio_age = rt.biological_age.copy()
+        bh_age = rt.breast_height_age.copy()
+
+        for idx, tid in enumerate(ids.tolist()):
+            if tid in id_to_age:
+                bio_age[idx] = id_to_age[tid]
+            if tid in id_to_age13:
+                bh_age[idx] = id_to_age13[tid]
+
+        rt.biological_age = bio_age
+        rt.breast_height_age = bh_age
 
     return stand, []
