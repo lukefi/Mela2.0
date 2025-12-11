@@ -17,4 +17,3 @@ class MunicipalityToRegionConversion:
 
     def __getitem__(self, source: int) -> int:
         return self.mun_to_reg_map[source]
-
