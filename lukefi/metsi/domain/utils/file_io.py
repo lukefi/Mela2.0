@@ -46,6 +46,7 @@ def create_database_tables(db: sqlite3.Connection):
             natural_regeneration_feasibility INTEGER(1),
             regeneration_area_cleaning_year INTEGER,
             development_class INTEGER,
+            main_tree_species_dominant_storey INTEGER,
             artificial_regeneration_year INTEGER,
             young_stand_tending_year INTEGER,
             pruning_year INTEGER,
@@ -63,6 +64,7 @@ def create_database_tables(db: sqlite3.Connection):
             lake_effect REAL,
             basal_area REAL,
             dominant_height_dominant_storey REAL,
+            region INTEGER,
             PRIMARY KEY(node, identifier),
             FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand))
         """

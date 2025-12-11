@@ -568,6 +568,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.natural_regeneration_feasibility,
                 self.regeneration_area_cleaning_year,
                 self.development_class,
+                self.main_tree_species_dominant_storey,
                 self.artificial_regeneration_year,
                 self.young_stand_tending_year,
                 self.pruning_year,
@@ -584,7 +585,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.sea_effect,
                 self.lake_effect,
                 self.basal_area,
-                self.dominant_height_dominant_storey))
+                self.dominant_height_dominant_storey,
+                self.region))
         for i in range(self.reference_trees.size):
             cur.execute(
                 """
