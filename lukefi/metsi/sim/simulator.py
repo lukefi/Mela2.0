@@ -18,6 +18,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
     for unit in units:
         payload = SimulationPayload(unit)
+        payload.computational_unit.update_aggregates()
         if db is not None:
             # Write initial state to database
             output_node_to_db(db, payload, [], {"initial"})
