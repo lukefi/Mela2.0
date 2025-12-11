@@ -511,6 +511,8 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.stand_id = conv(row[36], int)
         self.basal_area = conv(row[37], float)
         self.dominant_storey_age = conv(row[38], float)
+        self.main_tree_species_dominant_storey = conv(row[39], TreeSpecies)
+        self.region = conv(row[40], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -792,5 +794,7 @@ def stand_as_internal_row(stand: ForestStand):
         stand.area_weight_factors[1],
         stand.stand_id,
         stand.basal_area,
-        stand.dominant_storey_age
+        stand.dominant_storey_age,
+        stand.main_tree_species_dominant_storey,
+        stand.region
     ]
