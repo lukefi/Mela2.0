@@ -542,7 +542,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             """
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
@@ -583,7 +583,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.auxiliary_stand,
                 self.sea_effect,
                 self.lake_effect,
-                self.basal_area))
+                self.basal_area,
+                self.dominant_height_dominant_storey))
         for i in range(self.reference_trees.size):
             cur.execute(
                 """

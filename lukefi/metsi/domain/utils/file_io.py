@@ -62,6 +62,7 @@ def create_database_tables(db: sqlite3.Connection):
             sea_effect REAL,
             lake_effect REAL,
             basal_area REAL,
+            dominant_height_dominant_storey REAL,
             PRIMARY KEY(node, identifier),
             FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand))
         """
