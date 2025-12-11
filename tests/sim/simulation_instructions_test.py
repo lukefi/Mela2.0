@@ -35,7 +35,7 @@ class SimulationInstructionsTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time >= 3)
+            "end_condition": Condition[ToyModel](lambda payload: payload.computational_unit.time >= 3)
         }
 
         config = SimConfiguration[ToyModel](**declaration)
