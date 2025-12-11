@@ -34,10 +34,6 @@ class LookupTable(Generic[T]):
         # Build key_values from stand attributes (optionally transformed)
         key_values: Dict[str, Any] = {}
         for col in self.key_columns:
-            if not hasattr(stand, col):
-                raise AttributeError(
-                    f"LookupTable {self.csv_path!r}: stand has no attribute {col!r}"
-                )
 
             raw = getattr(stand, col)
             if self.transforms and col in self.transforms:
