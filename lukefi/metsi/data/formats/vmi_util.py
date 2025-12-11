@@ -49,7 +49,7 @@ def determine_main_tree_species_dominant_storey(species_source: str,
         return None
     if parsed_int == 0:
         if site_type_category is None:
-            return None # TODO: Should this have a proper value instead? Pine?
+            return None
         if site_type_category <= SiteType.DAMP_SITE:
             return TreeSpecies.SPRUCE
         return TreeSpecies.PINE
