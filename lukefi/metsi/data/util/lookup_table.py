@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import lru_cache
+import pandas as pd
 from pathlib import Path
 from typing import Any, Callable, Dict, Generic, List, Mapping, Sequence, TypeVar
 
@@ -76,47 +77,37 @@ def _load_rows(csv_path: Path) -> List[Dict[str, Any]]:
 
 
 def _find_matching_row(csv_path: str, key_values: Mapping[str, Any]) -> Dict[str, Any]:
-    """
-    Find a *single* row in csv_path where all key columns match key_values.
 
-    Keys are compared by string equality (simple version).
-    """
     csv_p = Path(csv_path).resolve()
-    rows = _load_rows(csv_p)
+    df = pd.read_csv(csv_p, dtype=str)  # ensure consistent string comparison
 
-    if not rows:
+    if df.empty:
         raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
 
-    # Ensure all keys exist as CSV columns
-    missing_cols = [col for col in key_values.keys() if col not in rows[0]]
+    # Ensure all key columns exist
+    missing_cols = [col for col in key_values if col not in df.columns]
     if missing_cols:
         raise ValueError(
             f"CSV {csv_p} is missing required key column(s) {missing_cols!r}."
         )
 
-    candidates: list[dict[str, Any]] = []
+    # Build query mask
+    mask = pd.Series(True, index=df.index)
+    for col, key_val in key_values.items():
+        mask &= (df[col] == str(key_val))
 
-    for row in rows:
-        match = True
-        for col, key_val in key_values.items():
-            row_val = row[col]
-            # normalize both sides to strings for comparison
-            if str(row_val) != str(key_val):
-                match = False
-                break
-        if match:
-            candidates.append(row)
+    filtered = df[mask]
 
-    if not candidates:
+    if filtered.empty:
         raise ValueError(
             f"No matching row in CSV {csv_p} for keys: "
             + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
         )
 
-    if len(candidates) > 1:
+    if len(filtered) > 1:
         raise ValueError(
             f"Ambiguous rows in CSV {csv_p} for keys: "
             + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
         )
 
-    return candidates[0]
+    return filtered.iloc[0].to_dict()
