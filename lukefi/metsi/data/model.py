@@ -405,6 +405,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     stems_per_ha: Optional[float] = None
     weighted_mean_diameter: Optional[float] = None
     weighted_mean_height: Optional[float] = None
+    region: Optional[int] = None
 
     def __eq__(self, other):
         return id(self) == id(other)
