@@ -539,10 +539,10 @@ class ForestStand(Finalizable, ComputationalUnit):
         cur = db.cursor()
 
         cur.execute(
-            """
+            """--sql
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
@@ -589,7 +589,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.region))
         for i in range(self.reference_trees.size):
             cur.execute(
-                """
+                """--sql
                 INSERT INTO trees
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -625,7 +625,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         for i in range(self.tree_strata.size):
 
             cur.execute(
-                """
+                """--sql
                 INSERT INTO strata
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -698,7 +698,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
 
         numerator_1 = np.sum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][:i_100_largest] *
-                            trees.height[non_saved_trees_indices][sorted_trees_indices][:i_100_largest])
+                             trees.height[non_saved_trees_indices][sorted_trees_indices][:i_100_largest])
         numerator_2: float = stems_smallest * trees.height[non_saved_trees_indices][sorted_trees_indices][i_100_largest]
         denominator = min(100, sorted_cum_stems[i_100_largest])
 
