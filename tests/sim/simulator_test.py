@@ -9,8 +9,9 @@ from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.metsi.sim.treatment import Treatment
 from tests.test_utils import collect_results
-from tests.toy_model import ToyModel, ToyTransition, toy_inc
+from tests.toy_model import ToyModel, ToyTransition, toy_inc, toy_inc_fn
 
 
 class SimulatorTest(unittest.TestCase):
@@ -179,11 +180,14 @@ class SimulatorTest(unittest.TestCase):
         self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit.value, results)))
 
     def test_nested_tree_generators_multiparameter_alternative(self):
-        def increment(x, **y):
-            return toy_inc(x, **y)
+        def _increment(x, **y):
+            return toy_inc_fn(x, **y)
 
-        def inc_param(x, **y):
-            return toy_inc(x, **y)
+        def _inc_param(x, **y):
+            return toy_inc_fn(x, **y)
+
+        increment = Treatment(_increment, "increment")
+        inc_param = Treatment(_inc_param, "inc_param")
 
         declaration = {
             "simulation_instructions": [

@@ -135,9 +135,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     Writes current simulation state and collected data to database.
 
     :param db: Connection to an initialized database
-    :param node: List of integers describing the position of the current node in the simulation tree
     :param current: The current simulation payload (e.g. state and treatment history)
-    :param collected_data: List of data collected by the treament performed in the current node
+    :param collected_data: List of data collected by the treatment performed in the current node
     """
     if tags is None:
         tags = set()

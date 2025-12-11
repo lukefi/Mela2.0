@@ -3,7 +3,7 @@ import numpy as np
 
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vectorize import vectorize
-from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
+from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from tests.test_utils import prepare_growth_test_stand
 
 
@@ -34,7 +34,7 @@ class GrowActaTest(unittest.TestCase):
     def test_grow_acta(self):
         stand = prepare_growth_test_stand()
         stand = vectorize([stand])[0]
-        grow_acta(stand)
+        grow_acta_fn(stand)
         self.assert_domain_sensibility_vectorized(stand)
         self.assertFalse(stand.reference_trees.sapling[2])
         self.assertEqual(stand.reference_trees.biological_age[0], 60)

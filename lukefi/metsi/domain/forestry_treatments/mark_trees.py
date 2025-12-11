@@ -4,9 +4,10 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.data.util.select_units import select_units
+from lukefi.metsi.sim.treatment import Treatment
 
 
-def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     mark_trees treatment (Python equivalent of the R function `ftrt_mark_trees`):
 
@@ -107,3 +108,5 @@ def mark_trees(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         stand.reference_trees.create(new_rows)
 
     return stand, []
+
+mark_trees = Treatment(mark_trees_fn, "mark_trees")

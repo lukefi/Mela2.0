@@ -12,7 +12,6 @@ from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
-from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.domain.domain_tables import min_stems_table
 
@@ -325,7 +324,6 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             static_parameters=static_params,
             dynamic_parameters=dynamic_params,
             preconditions=preconds,
-            collected_data={RemovedTrees},
             **kw,
         )
 
@@ -381,7 +379,6 @@ class Tracks(Event[ForestStand]):
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
-            collected_data={RemovedTrees},
             **kw
         )
 

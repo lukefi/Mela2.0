@@ -15,6 +15,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.treatment import Treatment
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -36,6 +37,7 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
 
     return y1 / 1000.0, x1 / 1000.0
 
+
 def find_repo_root(start: Path) -> Optional[Path]:
     """
     Walk up from 'start' to find a repository root by markers:
@@ -52,6 +54,7 @@ def find_repo_root(start: Path) -> Optional[Path]:
         if (p / "pyproject.toml").exists():
             return p
     return None
+
 
 def default_data_dir() -> Path:
     """
@@ -117,7 +120,6 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-
 # -------- vectorized predictor --------
 
 class MottiDLLPredictor:
@@ -162,7 +164,6 @@ class MottiDLLPredictor:
         if self.stand and self.stand.geo_location:
             return self.stand.geo_location[1]
         return None
-
 
     @property
     def get_z(self) -> float:
@@ -261,7 +262,6 @@ class MottiDLLPredictor:
         # Species conversion (raises on invalid)
         spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
 
-
         # Build list[dict] for the DLL (fields used by wrapper)
         trees_py = [
             {
@@ -347,7 +347,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 
-def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees
@@ -388,7 +388,7 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     else:
         pred = predictor
 
-    growth = pred.evolve(step= step, sim_year= sim_year)
+    growth = pred.evolve(step=step, sim_year=sim_year)
 
     # Map deltas by returned IDs (subset of original if deaths occurred)
     id_to_delta_d = {int(i): float(d) for i, d in zip(growth.tree_ids, growth.trees_id)}
@@ -421,3 +421,6 @@ def grow_motti_dll(input_:ForestStand, /, **operation_parameters) -> OpTuple[For
     update_stand_growth(stand, d_new, h_new, f_new, step)
 
     return stand, []
+
+
+grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")
