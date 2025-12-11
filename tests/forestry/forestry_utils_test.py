@@ -111,7 +111,7 @@ class ForestryUtilsTest(unittest.TestCase):
         result = futil_mod.find_matching_stratum_by_diameter(
             reference_tree, strata
         )
-        # First spruce DOMINANT stratum should be closest
+
         self.assertEqual(strata[0], result)
 
     def test_find_strata_for_black_spruce(self):

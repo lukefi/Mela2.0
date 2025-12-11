@@ -399,8 +399,7 @@ class VMI13Builder(VMIBuilder):
 
     def build(self) -> StandList:
         """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata
-        **directly in SoA form** (no *_pre_vec AoS lists).
+        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
         # Per-stand attribute dicts for vectorization
@@ -583,7 +582,7 @@ class XMLBuilder(ForestCentreBuilder):
                 stratum.stand = stand
 
                 _append_dataclass_to_attr_dict(stratum, stratum_attr)
-                # keep the old semantics: sum basal area over strata
+                # Sum basal area over strata
                 if stratum.basal_area is not None:
                     basal_area_sum += float(stratum.basal_area)
 

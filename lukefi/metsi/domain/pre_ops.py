@@ -139,7 +139,7 @@ def supplement_missing_tree_ages(stands: StandList, **operation_params):
     return stands
 
 
-def supplement_missing_stratum_diameters(stands: StandList, **operation_params):
+def supplement_missing_stratum_diameters(stands: StandList, **operation_params) -> StandList:
     _ = operation_params  # unused
 
     for stand in stands:
@@ -152,7 +152,7 @@ def supplement_missing_stratum_diameters(stands: StandList, **operation_params):
     return stands
 
 
-def generate_sapling_trees_from_sapling_strata(stands: StandList, **operation_params):
+def generate_sapling_trees_from_sapling_strata(stands: StandList, **operation_params) -> StandList:
     _ = operation_params  # unused
 
     for stand in stands:

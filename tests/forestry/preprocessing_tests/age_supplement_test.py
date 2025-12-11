@@ -59,7 +59,7 @@ class TestAgeSupplementingSoA(unittest.TestCase):
             Input("stratum-2", 2, 0.0, 66.0, 77.0, None),
         ]
         tree_inputs = [
-            Input("tree-1", 1, 10.0, None, None, 3.0),  # needs supplement
+            Input("tree-1", 1, 10.0, None, None, 3.0),
         ]
 
         trees = create_vector_trees(tree_inputs)

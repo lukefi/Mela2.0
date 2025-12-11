@@ -29,8 +29,7 @@ def prepare_rst_output(stands: StandList, **operation_params) -> StandList:
         if trees.size == 0:
             continue
 
-        # SoA version of ReferenceTree.is_living:
-        # AoS used (None, "0", "1", "3", "7") → in SoA, None becomes ""
+        # SoA version of ReferenceTree.is_living
         living_mask = np.isin(
             trees.tree_category,
             np.array(["", "0", "1", "3", "7"], dtype=trees.tree_category.dtype)
