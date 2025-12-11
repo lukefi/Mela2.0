@@ -103,6 +103,7 @@ class VMIBuilder(ForestBuilder):
         result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
+        result.region = util.parse_int(data_row[indices["county"]])
         return result
 
     @overload
