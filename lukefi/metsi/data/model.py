@@ -689,7 +689,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
         if len(i_100_largest_arr) == 0:
             stems_smallest: float = trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][-1]
-            i_100_largest: int = len(non_saved_trees_indices)
+            i_100_largest: int = len(non_saved_trees_indices) - 1
         elif i_100_largest_arr[0] == 0:
             stems_smallest = 100.0
             i_100_largest = 0
