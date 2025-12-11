@@ -11,7 +11,9 @@ from lukefi.metsi.forestry.forestry_utils import (
     find_matching_storey_stratum_for_tree,
 )
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees as VectorReferenceTrees, TreeStrata as VectorTreeStrata, DTYPES_TREE
+from lukefi.metsi.data.vector_model import (
+    ReferenceTrees as VectorReferenceTrees, TreeStrata as VectorTreeStrata, DTYPES_TREE
+)
 
 
 class TreeStrategy(Enum):
