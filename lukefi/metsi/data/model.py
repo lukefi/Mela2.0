@@ -594,7 +594,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -621,7 +621,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                     int(self.reference_trees.storey[i]),
                     bool(self.reference_trees.sapling[i]),
                     self.reference_trees.tree_type[i],
-                    self.reference_trees.tuhon_ilmiasu[i]
+                    self.reference_trees.tuhon_ilmiasu[i],
+                    self.reference_trees.basal_area[i]
                 )
             )
         for i in range(self.tree_strata.size):
