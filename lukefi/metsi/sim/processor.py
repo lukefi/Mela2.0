@@ -9,7 +9,6 @@ from lukefi.metsi.sim.treatment import PreparedTreatment
 
 def processor[T: ComputationalUnit](payload: SimulationPayload[T],
                                     treatment: PreparedTreatment[T],
-                                    treatment_tag: str,
                                     preconditions: list[Condition[T]],
                                     postconditions: list[Condition[T]],
                                     **operation_parameters: dict[str, dict]) -> tuple[SimulationPayload[T],
@@ -17,12 +16,12 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
     """Managed run conditions and history of a simulator operation. Evaluates the operation."""
     for condition in preconditions:
         if not condition(payload):
-            raise ConditionFailed(f'{treatment_tag} aborted - condition "{condition}" failed')
+            raise ConditionFailed(f'Treatment {treatment} aborted - precondition "{condition}" failed')
 
     try:
         new_state, new_collected_data = treatment(payload.computational_unit)
     except UserWarning as e:
-        raise UserWarning(f"Unable to perform operation {treatment_tag}, "
+        raise UserWarning(f"Unable to perform treatment {treatment}, "
                           f"at time point {payload.computational_unit.time}; reason: {e}") from e
 
     new_state.update_aggregates()
@@ -35,11 +34,11 @@ def processor[T: ComputationalUnit](payload: SimulationPayload[T],
 
     for condition in postconditions:
         if not condition(newpayload):
-            raise ConditionFailed(f'{treatment_tag} aborted - condition "{condition}" failed')
+            raise ConditionFailed(f'Treatment {treatment} aborted - postcondition "{condition}" failed')
 
     newpayload.operation_history.append(
         (payload.computational_unit.time,
-         treatment_tag,
+         treatment.name,
          operation_parameters,
          treatment.tags))
 

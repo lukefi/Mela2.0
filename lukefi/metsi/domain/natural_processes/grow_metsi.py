@@ -33,6 +33,7 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
+from lukefi.metsi.sim.treatment import Treatment
 
 
 # ---------- helpers ----------
@@ -143,7 +144,7 @@ class MetsiGrowPredictor(Predict):
         self.trees_h = self._trees_h(rt)
         # years since t0 and t13
         self.trees_t0 = self._trees_t0(rt)   # year - biological_age
-        self.trees_t13 = self._trees_t13(rt) # year - breast_height_age
+        self.trees_t13 = self._trees_t13(rt)  # year - breast_height_age
         # storie placeholder
         self.trees_storie = [Storie.NONE] * rt.size
         # origin per tree
@@ -247,7 +248,7 @@ class MetsiGrowPredictor(Predict):
 
 # ---------- public API  ----------
 
-def grow_metsi(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_metsi_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.
     Assumes input is vectorized
@@ -272,8 +273,8 @@ def grow_metsi(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
 
     # apply deltas to get absolute new values
     diameters = _nan_to_num(rt.breast_height_diameter, 0.0) + idelta
-    heights   = _nan_to_num(rt.height, 0.0) + hdelta
-    stems     = _nan_to_num(rt.stems_per_ha, 0.0) + fdelta
+    heights = _nan_to_num(rt.height, 0.0) + hdelta
+    stems = _nan_to_num(rt.stems_per_ha, 0.0) + fdelta
 
     # update stand in-place
     update_stand_growth(stand, diameters, heights, stems, step)
@@ -284,3 +285,6 @@ def grow_metsi(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         stand.reference_trees.delete(to_delete.tolist())
 
     return stand, []
+
+
+grow_metsi = Treatment(grow_metsi_fn, "grow_metsi")

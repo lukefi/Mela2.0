@@ -5,8 +5,10 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.sim.treatment import Treatment
 
-def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+
+def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     cutting treatment:
       - Requires operation_parameters['tree_selection'] with:
@@ -25,7 +27,6 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     if stand.reference_trees.size == 0:
         return stand, []
 
-
     ts = operation_parameters.get("tree_selection")
     if not ts or "target" not in ts or "sets" not in ts:
         raise MetsiException("Missing 'tree_selection' with 'target' and 'sets'.")
@@ -33,7 +34,6 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
     method = operation_parameters.get("cutting_method")
     if method is None:
         raise MetsiException("Required parameter 'cutting_method' is missing!")
-
 
     target: SelectionTarget = ts["target"]
 
@@ -79,3 +79,6 @@ def cutting(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestSta
         collected = [rt]
 
     return stand, collected
+
+
+cutting = Treatment(cutting_fn, "cutting", collected_data={RemovedTrees})

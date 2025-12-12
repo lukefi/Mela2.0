@@ -11,7 +11,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.treatment import PreparedTreatment, TreatmentFn
+from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
@@ -81,20 +81,18 @@ class Alternatives(EventGenerator[T]):
 class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
-    treatment: TreatmentFn[T]
+    treatment: Treatment[T]
     parameters: dict[str, Any]
     file_parameters: dict[str, str]
     preconditions: list[Condition[T]]
     postconditions: list[Condition[T]]
     tags: set[str]
-    collected_data: CollectableDataTypes
 
-    def __init__(self, treatment: TreatmentFn[T], parameters: Optional[dict[str, Any]] = None,
+    def __init__(self, treatment: Treatment[T], parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[Condition[T]]] = None,
                  postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
-                 tags: Optional[set[str]] = None,
-                 collected_data: Optional[CollectableDataTypes] = None) -> None:
+                 tags: Optional[set[str]] = None) -> None:
         self.treatment = treatment
 
         if parameters is not None:
@@ -122,30 +120,24 @@ class Event(EventGeneratorBase[T]):
         else:
             self.tags = set()
 
-        if collected_data is not None:
-            self.collected_data = collected_data
-        else:
-            self.collected_data = set()
-
     @override
     def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags)
+            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags | self.treatment.default_tags)
             parent.add_branch(branch)
             retval.append(branch)
         return retval
 
     @override
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
-        return self.collected_data
+        return self.treatment.collected_data
 
     def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
         combined_params = self._merge_params()
         treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
-        return lambda payload: processor(payload, treatment, treatment.name,
-                                         self.preconditions, self.postconditions, **combined_params)
+        return lambda payload: processor(payload, treatment, self.preconditions, self.postconditions, **combined_params)
 
     def _check_file_params(self):
         for _, path in self.file_parameters.items():

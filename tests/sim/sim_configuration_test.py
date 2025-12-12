@@ -5,6 +5,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.treatment import Treatment
 from tests.toy_model import ToyModel, ToyTransition
 
 
@@ -16,6 +17,9 @@ class SimConfigurationTest(unittest.TestCase):
         def fn2(y):
             return y
 
+        tr1 = Treatment(fn1)
+        tr2 = Treatment(fn2)
+
         config = {
             'simulation_instructions': [
                 SimulationInstruction(
@@ -23,33 +27,32 @@ class SimConfigurationTest(unittest.TestCase):
                     events=[
                         Event(
                             preconditions=[
-                                TimeSinceTreatment(5, fn1)
+                                TimeSinceTreatment(5, tr1)
                             ],
-                            treatment=fn1,
+                            treatment=tr1,
                             parameters={
                                 'param1': 1
                             }
                         ),
                         Event(
-                            treatment=fn2
+                            treatment=tr2
                         )
                     ]
                 ),
                 SimulationInstruction(
-                    # time_points=[3, 4, 5],
                     events=[
                         Sequence([
                             Event(
                                 preconditions=[
-                                    TimeSinceTreatment(5, fn1)
+                                    TimeSinceTreatment(5, tr1)
                                 ],
-                                treatment=fn1,
+                                treatment=tr1,
                                 parameters={
                                     'param1': 1
                                 }
                             ),
                             Event(
-                                treatment=fn2
+                                treatment=tr2
                             )
                         ])
                     ]

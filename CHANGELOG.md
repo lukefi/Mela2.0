@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] - 2025-12-10
+
+### Added
+
+- Treatment class for containing various treatment metadata: name, default tags and the types of collected data
+
 ## [0.4.1] - 2025-12-10
 
 ### Changed

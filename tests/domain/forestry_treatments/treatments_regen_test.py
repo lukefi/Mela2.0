@@ -2,7 +2,7 @@ import unittest
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
+from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration_fn
 
 class RegenerationTest(unittest.TestCase):
     def make_stand(self, identifier="stand-A", year=2025):
@@ -24,7 +24,7 @@ class RegenerationTest(unittest.TestCase):
             "ntrees": 5,
         }
         start_size = stand.reference_trees.size
-        updated, cdata = regeneration(stand, **params)
+        updated, cdata = regeneration_fn(stand, **params)
 
         self.assertEqual([], cdata)
         self.assertEqual(stand.year, updated.artificial_regeneration_year)
@@ -51,7 +51,7 @@ class RegenerationTest(unittest.TestCase):
             "ntrees": 3,
         }
         start_size = stand.reference_trees.size
-        updated, cdata = regeneration(stand, **params)
+        updated, cdata = regeneration_fn(stand, **params)
 
         self.assertEqual([], cdata)
         self.assertIsNone(updated.artificial_regeneration_year)
@@ -67,11 +67,11 @@ class RegenerationTest(unittest.TestCase):
     def test_identifiers_continue_after_existing_trees(self):
         stand = self.make_stand()
         # First regeneration adds 2 trees -> identifiers ...-1-tree, ...-2-tree
-        regeneration(stand,
+        regeneration_fn(stand,
                      origin=2, species=1, stems_per_ha=200.0,
                      height=0.5, biological_age=1.0, type="artificial", ntrees=2)
         # Second regeneration adds 3 more -> identifiers start at 3
-        updated, _ = regeneration(stand,
+        updated, _ = regeneration_fn(stand,
                                   origin=2, species=1, stems_per_ha=300.0,
                                   height=0.6, biological_age=2.0, type="artificial", ntrees=3)
         ids = list(updated.reference_trees.identifier)
@@ -82,7 +82,7 @@ class RegenerationTest(unittest.TestCase):
     def test_optional_parameters_are_propagated(self):
         stand = self.make_stand()
         start_size = stand.reference_trees.size
-        updated, _ = regeneration(
+        updated, _ = regeneration_fn(
             stand,
             origin=2,
             species=1,
@@ -103,22 +103,22 @@ class RegenerationTest(unittest.TestCase):
         stand = self.make_stand()
 
         with self.assertRaises(MetsiException):
-            regeneration(stand,
+            regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
                          height=0.0, biological_age=3.0, type="artificial", ntrees=5)
 
         with self.assertRaises(MetsiException):
-            regeneration(stand,
+            regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
                          height=0.5, biological_age=3.0, type="invalid", ntrees=5)
 
         with self.assertRaises(MetsiException):
-            regeneration(stand,
+            regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
                          height=0.5, biological_age=3.0, type="natural", ntrees=0)
 
         with self.assertRaises(MetsiException):
-            regeneration(stand,
+            regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=0.0,
                          height=0.5, biological_age=3.0, type="natural", ntrees=5)
 

@@ -44,8 +44,15 @@ class SimConfiguration[T: ComputationalUnit]:
                  end_condition: Condition[T]):
         """
         Initializes the core simulation object.
-        Args:
-            **kwargs: Additional keyword arguments to be passed to the parent class initializer.
+
+        :param simulation_instructions: list of SimulationInstruction declarations describing the structure of Events,
+        Treatments and Conditions in the simulation run
+        :type simulation_instructions: list[SimulationInstruction[T]]
+        :param transition: the Transition used to unconditionally evolve the simulation state between evaluated
+        SimulationInstructions
+        :type transition: Transition[T]
+        :param end_condition: Condition for ending the simulation (per branch)
+        :type end_condition: Condition[T]
         """
         self.transition = transition
         self.instructions = simulation_instructions

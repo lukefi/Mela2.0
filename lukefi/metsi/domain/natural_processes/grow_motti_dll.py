@@ -15,6 +15,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.treatment import Treatment
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -346,7 +347,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 
-def grow_motti_dll(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees
@@ -452,3 +453,6 @@ def grow_motti_dll(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fo
         rt.breast_height_age = bh_age
 
     return stand, []
+
+
+grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")
