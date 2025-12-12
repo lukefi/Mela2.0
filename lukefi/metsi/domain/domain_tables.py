@@ -48,9 +48,9 @@ def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
     return LookupTable[ForestStand](
         csv_path=str(csv_path),
         key_columns=[
-            "site_type_category",   # must exist on ForestStand
-            "development_class",        # must exist on ForestStand
-            "degree_days",          # must exist on ForestStand
+            "site_type_category",
+            "development_class",
+            "degree_days",
         ],
         value_column="min_stems",
         transforms={

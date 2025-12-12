@@ -39,7 +39,7 @@ class LookupTable(Generic[T]):
 
             key_values[col] = raw
 
-        row = _find_matching_row(self.csv_path, key_values)
+        row = self._find_matching_row(key_values)
 
         # Get and cast the value column
         try:
@@ -58,41 +58,38 @@ class LookupTable(Generic[T]):
                 f"in CSV {self.csv_path!r} using {self.value_cast}."
             ) from e
 
+    def _find_matching_row(self, key_values: Mapping[str, Any]) -> Dict[str, Any]:
 
-# --- Internal helpers ----------------------------------------------------
+        csv_p = Path(self.csv_path).resolve()
+        df = pd.read_csv(csv_p, dtype=str)  # ensure consistent string comparison
 
-def _find_matching_row(csv_path: str, key_values: Mapping[str, Any]) -> Dict[str, Any]:
+        if df.empty:
+            raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
 
-    csv_p = Path(csv_path).resolve()
-    df = pd.read_csv(csv_p, dtype=str)  # ensure consistent string comparison
+        # Ensure all key columns exist
+        missing_cols = [col for col in key_values if col not in df.columns]
+        if missing_cols:
+            raise ValueError(
+                f"CSV {csv_p} is missing required key column(s) {missing_cols!r}."
+            )
 
-    if df.empty:
-        raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
+        # Build query mask
+        mask = pd.Series(True, index=df.index)
+        for col, key_val in key_values.items():
+            mask &= (df[col] == str(key_val))
 
-    # Ensure all key columns exist
-    missing_cols = [col for col in key_values if col not in df.columns]
-    if missing_cols:
-        raise ValueError(
-            f"CSV {csv_p} is missing required key column(s) {missing_cols!r}."
-        )
+        filtered = df[mask]
 
-    # Build query mask
-    mask = pd.Series(True, index=df.index)
-    for col, key_val in key_values.items():
-        mask &= (df[col] == str(key_val))
+        if filtered.empty:
+            raise ValueError(
+                f"No matching row in CSV {csv_p} for keys: "
+                + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
+            )
 
-    filtered = df[mask]
+        if len(filtered) > 1:
+            raise ValueError(
+                f"Ambiguous rows in CSV {csv_p} for keys: "
+                + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
+            )
 
-    if filtered.empty:
-        raise ValueError(
-            f"No matching row in CSV {csv_p} for keys: "
-            + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
-        )
-
-    if len(filtered) > 1:
-        raise ValueError(
-            f"Ambiguous rows in CSV {csv_p} for keys: "
-            + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
-        )
-
-    return filtered.iloc[0].to_dict()
+        return filtered.iloc[0].to_dict()
