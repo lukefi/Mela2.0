@@ -11,7 +11,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
+from lukefi.metsi.sim.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
@@ -143,26 +143,14 @@ class Event(EventGeneratorBase[T]):
         base_params = dict(self._merge_params())  # static + file
 
         def _processed(payload: SimulationPayload[T]):
-            stand = payload.computational_unit
-
-            # Evaluate dynamic_parameters: name -> fn(stand)
-            resolved_dynamic: dict[str, Any] = {
-                name: fn(stand) for name, fn in self.dynamic_parameters.items()
-            }
-
-            # Static / file params overridden by dynamic ones if same key
-            combined_params = {**base_params, **resolved_dynamic}
-
-            # Prepare treatment with *this* call's parameters
-            treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
-
-            # Pass combined params to processor so they end up in operation_history
             return processor(
                 payload,
-                treatment,
+                self.treatment,
                 self.preconditions,
                 self.postconditions,
-                **combined_params,
+                event_tags=self.tags,
+                base_params=base_params,
+                dynamic_parameters=self.dynamic_parameters,
             )
 
         return _processed

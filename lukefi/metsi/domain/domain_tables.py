@@ -2,6 +2,7 @@ from typing import Any
 from pathlib import Path
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.lookup_table import LookupTable
+from lukefi.metsi.data.enums.internal import SiteType, TreeSpecies
 
 
 def dd_group_for(degree_days: int) -> int:
@@ -17,20 +18,20 @@ def dd_group_for(degree_days: int) -> int:
 def site_group_for(site_type_category: int | Any) -> int:
     v = getattr(site_type_category, "value", site_type_category)
     if v is None:
-        return 1
-    if 1 <= v <= 2:
-        return 1
-    if v == 3:
-        return 2
-    if v == 4:
-        return 3
-    if 5 <= v <= 8:
-        return 4
+        return SiteType.VERY_RICH_SITE.value
+    if SiteType.VERY_RICH_SITE.value <= v <= SiteType.RICH_SITE.value:
+        return SiteType.VERY_RICH_SITE.value
+    if v == SiteType.DAMP_SITE.value:
+        return SiteType.RICH_SITE.value
+    if v == SiteType.SUB_DRY_SITE.value:
+        return SiteType.DAMP_SITE.value
+    if SiteType.DRY_SITE.value <= v <= SiteType.OPEN_MOUNTAINS.value:
+        return SiteType.SUB_DRY_SITE.value
     raise ValueError(f"Unsupported site_type_category={v!r}; expected 1..8.")
 
 
 def species_group_for(_stand: ForestStand) -> int:
-    return 1  # pine
+    return TreeSpecies.PINE.value
 
 
 def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
