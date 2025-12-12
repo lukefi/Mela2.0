@@ -310,8 +310,6 @@ class FirstThinningMineralSoils(Event[ForestStand]):
 
         dynamic_params = {
             "tree_selection": _tree_selection,
-            # scalar exposed separately:
-            # "min_stems_after_thinning": min_stems_table,
         }
 
         # --- Preconditions now include both: 20y spacing AND forest_categories
