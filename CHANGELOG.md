@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.3] - 2025-12-12
+
+### Added
+
+- Added new ForestStand attributes:
+    - `main_tree_species_dominant_storey` determined once from source data
+    - `region` read from source data, currently only VMI12 and VMI13 formats
+    - `dominant_height_dominant_storey`, aggregate variable updated after every treatment and transition
+
 ## [0.4.2] - 2025-12-10
 
 ### Added
