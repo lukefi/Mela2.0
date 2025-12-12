@@ -1,4 +1,5 @@
 from typing import Any
+from pathlib import Path
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.lookup_table import LookupTable
 
@@ -32,15 +33,20 @@ def species_group_for(_stand: ForestStand) -> int:
     return 1  # pine
 
 
-def min_stems_table(csv_path: str = "data\\parameter_files\\min_stems.csv") -> LookupTable[ForestStand]:
+def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
     """
     Factory for the min stems lookup table.
 
     csv_path is kept as a parameter so user_events.py Events
     can override it via parameters["min_stems_csv"] if they want.
     """
+    if csv_path == "":
+        csv_path = Path("data") / "parameter_files" / "min_stems.csv"
+    else:
+        csv_path = Path(csv_path)
+
     return LookupTable[ForestStand](
-        csv_path=csv_path,
+        csv_path=str(csv_path),
         key_columns=[
             "site_type_category",   # must exist on ForestStand
             "development_class",        # must exist on ForestStand

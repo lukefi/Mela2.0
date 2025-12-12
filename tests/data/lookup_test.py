@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from lukefi.metsi.domain.domain_tables import min_stems_table
 
 
@@ -27,7 +28,7 @@ class MinStemsLookupTableTest(unittest.TestCase):
         """
 
         # Build the lookup table using the real CSV
-        table = min_stems_table("data\\parameter_files\\min_stems.csv")
+        table = min_stems_table(Path("data") / "parameter_files" / "min_stems.csv")
 
         # Minimal fake stand object with the attributes LookupTable expects
         class FakeStand:
