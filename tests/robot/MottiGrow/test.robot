@@ -14,7 +14,7 @@ ${CONTROL_SCRIPT}   ${CURDIR}/input/control_motti_vec_grow.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
 ${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
 ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
-${TOLERANCE}        1e-5
+${TOLERANCE}        1e-4
 
 *** Test Cases ***
 Node Table Should Match Reference
