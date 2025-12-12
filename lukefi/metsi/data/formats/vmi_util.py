@@ -4,7 +4,7 @@ from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import Storey
+from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int
 from lukefi.metsi.data.formats.vmi_const import vmi12_county_areas
 from lukefi.metsi.app.utils import MetsiException
@@ -38,6 +38,22 @@ def determine_development_class(dev_class_source: str) -> int:
     if dev_class_source in {'1', '2', '3', '4', '5', '6', '7', '8', '9'}:
         return int(dev_class_source)
     return 0
+
+
+def determine_main_tree_species_dominant_storey(species_source: str,
+                                                site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
+    if species_source in [' ', '.']:
+        return None
+    parsed_int = parse_int(species_source)
+    if parsed_int is None:
+        return None
+    if parsed_int == 0:
+        if site_type_category is None:
+            return None
+        if site_type_category <= SiteType.DAMP_SITE:
+            return TreeSpecies.SPRUCE
+        return TreeSpecies.PINE
+    return TreeSpecies(parsed_int)
 
 
 def determine_natural_renewal(natural_renewal: str) -> bool:
