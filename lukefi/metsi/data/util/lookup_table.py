@@ -1,8 +1,6 @@
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, List, Mapping, Sequence, TypeVar
-import csv
+from typing import Any, Callable, Dict, Generic, Mapping, Sequence, TypeVar
 import pandas as pd
 
 T = TypeVar("T")  # e.g. ForestStand
@@ -62,14 +60,6 @@ class LookupTable(Generic[T]):
 
 
 # --- Internal helpers ----------------------------------------------------
-
-
-@lru_cache(maxsize=None)
-def _load_rows(csv_path: Path) -> List[Dict[str, Any]]:
-    with csv_path.open("r", encoding="utf8", newline="") as f:
-        reader = csv.DictReader(f)
-        return list(reader)
-
 
 def _find_matching_row(csv_path: str, key_values: Mapping[str, Any]) -> Dict[str, Any]:
 
