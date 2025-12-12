@@ -250,7 +250,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
         params = parameters or {}
 
-        min_stems = min_stems_table("min_stems.csv")
+        min_stems = min_stems_table("data\\parameter_files\\min_stems.csv")
 
         def _min_number_of_stems_after_thinning(stand: ForestStand) -> int:
             return min_stems(stand)

@@ -32,7 +32,7 @@ def species_group_for(_stand: ForestStand) -> int:
     return 1  # pine
 
 
-def min_stems_table(csv_path: str = "min_stems.csv") -> LookupTable[ForestStand]:
+def min_stems_table(csv_path: str = "data\\parameter_files\\min_stems.csv") -> LookupTable[ForestStand]:
     """
     Factory for the min stems lookup table.
 
