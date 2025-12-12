@@ -214,11 +214,15 @@ class MottiDLLPredictor:
     def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
         rt = self.stand.reference_trees
         if not rt:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
         n = rt.size
         if n == 0:
             # nothing to do; fake zeros in the same shape the caller expects
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
 
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
