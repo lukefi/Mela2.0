@@ -5,7 +5,7 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
+from lukefi.metsi.sim.treatment import FinalTreatment, Treatment
 
 
 def processor[T: ComputationalUnit](
@@ -23,19 +23,35 @@ def processor[T: ComputationalUnit](
         if not condition(payload):
             raise ConditionFailed(f'Treatment {treatment.name} aborted - precondition "{condition}" failed')
 
+    def _build_final_treatment(stand: T) -> tuple[FinalTreatment[T], dict[str, Any]]:
+        """
+        Resolve and merge treatment parameters and return an executable FinalTreatment.
+
+        - `base_params` is expected to already contain static + file parameters.
+        - `dynamic_parameters` is a mapping of parameter name -> callable that is evaluated
+          against the current computational unit (`stand`) right before execution.
+        - Dynamic parameters override `base_params` on key collisions.
+        """
+        resolved_dynamic: dict[str, Any] = {}
+        if dynamic_parameters:
+            resolved_dynamic = {k: fn(stand) for k, fn in dynamic_parameters.items()}
+
+        combined_params = {**(base_params or {}), **resolved_dynamic}
+
+        prepared = FinalTreatment(
+            treatment,
+            event_tags=event_tags,
+            **combined_params,
+        )
+        return prepared, combined_params
+
+    for condition in preconditions:
+        if not condition(payload):
+            raise ConditionFailed(f'Treatment {treatment.name} aborted - precondition "{condition}" failed')
+
     stand = payload.computational_unit
 
-    resolved_dynamic: dict[str, Any] = {}
-    if dynamic_parameters:
-        resolved_dynamic = {k: fn(stand) for k, fn in dynamic_parameters.items()}
-
-    combined_params = {**(base_params or {}), **resolved_dynamic}
-
-    prepared = PreparedTreatment(
-        treatment,
-        event_tags=event_tags,
-        **combined_params,
-    )
+    prepared, combined_params = _build_final_treatment(stand)
 
     try:
         new_state, new_collected_data = prepared(stand)

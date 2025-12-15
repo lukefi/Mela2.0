@@ -2,7 +2,7 @@ from collections.abc import Generator
 import sqlite3
 from typing import Optional, TYPE_CHECKING
 from copy import copy
-
+from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.app.utils import ConditionFailed
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db
@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from lukefi.metsi.sim.generators import ProcessedTreatment
 
 
-def identity[T](x: T) -> "OpTuple[T]":
-    return x, []
+def identity[T: ComputationalUnit](payload: SimulationPayload[T]) -> tuple[SimulationPayload[T], list[CollectedData]]:
+    return payload, []
 
 
 class EventTree[T: ComputationalUnit]:
@@ -47,7 +47,7 @@ class EventTree[T: ComputationalUnit]:
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
         copying it for branching. If a database connection is given, all simulated states and collected data is output
         to the database.
-        
+
         :param payload: the simulation data payload (we don't care what it is here)
         :type payload: SimulationPayload[T]
         :param db: optional connection to an initialized database for output

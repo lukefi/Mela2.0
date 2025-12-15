@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import os
 from typing import Any, Generic, Optional, TypeVar, override
 from typing import Sequence as Sequence_
-
+from functools import partial
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.processor import processor
@@ -16,7 +16,6 @@ from lukefi.metsi.sim.treatment import Treatment
 T = TypeVar("T", bound=ComputationalUnit)
 
 ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
-GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
@@ -142,18 +141,15 @@ class Event(EventGeneratorBase[T]):
         self._check_file_params()
         base_params = dict(self._merge_params())  # static + file
 
-        def _processed(payload: SimulationPayload[T]):
-            return processor(
-                payload,
-                self.treatment,
-                self.preconditions,
-                self.postconditions,
-                event_tags=self.tags,
-                base_params=base_params,
-                dynamic_parameters=self.dynamic_parameters,
-            )
-
-        return _processed
+        return partial(
+            processor,
+            treatment=self.treatment,
+            preconditions=self.preconditions,
+            postconditions=self.postconditions,
+            event_tags=self.tags,
+            base_params=base_params,
+            dynamic_parameters=self.dynamic_parameters,
+        )
 
     def _check_file_params(self):
         for _, path in self.file_parameters.items():
