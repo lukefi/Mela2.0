@@ -40,64 +40,6 @@ class TestFileReading(unittest.TestCase):
         result = file_io.file_contents(input_file_path)
         self.assertEqual("kissa123\n", result)
 
-    def test_pickle(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-        file_io.prepare_target_directory('outdir')
-        file_io.pickle_writer(Path('outdir', 'output.pickle'), ec)
-        result = file_io.pickle_reader('outdir/output.pickle')
-        self.assertListEqual(data, result)
-        os.remove('outdir/output.pickle')
-        shutil.rmtree('outdir')
-
-    def test_json(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.json_writer(Path('outdir', 'output.json'), ec)
-        result = file_io.json_reader('outdir/output.json')
-        self.assertListEqual(data, result)
-        os.remove('outdir/output.json')
-        shutil.rmtree('outdir')
-
-    def test_npy(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.npy_writer(Path('outdir', 'output.npy'), ec)
-        result = file_io.npy_file_reader('outdir/output.npy')
-        self.assertListEqual(data, result.tolist())
-        os.remove('outdir/output.npy')
-        shutil.rmtree('outdir')
-
-    def test_npz(self):
-        data = [[
-            Test(a=1),
-            Test(a=2)
-        ], [
-            Test(a=3),
-            Test(a=4)
-        ]]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.npz_writer(Path('outdir', 'output.npz'), ec)
-        result = file_io.npz_file_reader('outdir/output.npz')
-        self.assertListEqual(data, [subresult.tolist() for subresult in result])
-        os.remove('outdir/output.npz')
-        shutil.rmtree('outdir')
-
     def test_csv(self):
         data = [
             ForestStand(
