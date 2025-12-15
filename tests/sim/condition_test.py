@@ -6,7 +6,7 @@ from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.treatment import FinalTreatment, Treatment
+from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
 from tests.toy_model import ToyModel
 
 
@@ -128,7 +128,7 @@ class ConditionTest(unittest.TestCase):
         self.assertEqual(_get_tag_last_run(operation_history, "3"), 8)
         self.assertEqual(_get_tag_last_run(operation_history, "4"), None)
 
-    def test_final_treatment_tag_combinations(self):
+    def test_prepared_treatment_tag_combinations(self):
         def dummy_fn(x: ToyModel, **kwargs) -> tuple[ToyModel, list[CollectedData]]:
             _ = kwargs
             return x, []
@@ -136,10 +136,10 @@ class ConditionTest(unittest.TestCase):
         dummy_1 = Treatment(dummy_fn, "dummy", {"default_tag_1"})
         dummy_2 = Treatment(dummy_fn, "dummy", {"default_tag_2"})
 
-        final_dummy_1 = FinalTreatment(dummy_1, {"additional_tag_1", "additional_tag_2"})
-        final_dummy_2 = FinalTreatment(dummy_1, {"additional_tag_1", "additional_tag_3"})
-        final_dummy_3 = FinalTreatment(dummy_2, {"additional_tag_3", "additional_tag_4"})
+        prepared_dummy_1 = PreparedTreatment(dummy_1, {"additional_tag_1", "additional_tag_2"})
+        prepared_dummy_2 = PreparedTreatment(dummy_1, {"additional_tag_1", "additional_tag_3"})
+        prepared_dummy_3 = PreparedTreatment(dummy_2, {"additional_tag_3", "additional_tag_4"})
 
-        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_2"}, final_dummy_1.tags)
-        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_3"}, final_dummy_2.tags)
-        self.assertSetEqual({"default_tag_2", "additional_tag_3", "additional_tag_4"}, final_dummy_3.tags)
+        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_2"}, prepared_dummy_1.tags)
+        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_3"}, prepared_dummy_2.tags)
+        self.assertSetEqual({"default_tag_2", "additional_tag_3", "additional_tag_4"}, prepared_dummy_3.tags)

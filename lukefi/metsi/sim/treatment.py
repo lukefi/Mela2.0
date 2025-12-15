@@ -70,7 +70,7 @@ class Treatment(Generic[T_contra]):
             self.name = name
 
 
-class FinalTreatment[T: ComputationalUnit]:
+class PreparedTreatment[T: ComputationalUnit]:
     name: str
     treatment_fn: TreatmentFn[T]
     tags: set[str]
