@@ -8,6 +8,39 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import FinalTreatment, Treatment
 
 
+def _build_final_treatment[T: ComputationalUnit](
+    *,
+    stand: T,
+    treatment: Treatment[T],
+    event_tags: Optional[set[str]],
+    base_params: Optional[dict[str, Any]],
+    dynamic_parameters: Optional[dict[str, Callable[[T], Any]]],
+) -> tuple[FinalTreatment[T], dict[str, Any]]:
+    """
+    Resolve and merge treatment parameters and return an executable FinalTreatment.
+
+    - `base_params` should already contain static + file parameters.
+    - `dynamic_parameters` maps parameter name -> callable, evaluated against `stand`
+      right before execution.
+    - Dynamic parameters override `base_params` on key collisions.
+
+    Returns:
+        (prepared_treatment, combined_params)
+    """
+    resolved_dynamic: dict[str, Any] = {}
+    if dynamic_parameters:
+        resolved_dynamic = {k: fn(stand) for k, fn in dynamic_parameters.items()}
+
+    combined_params = {**(base_params or {}), **resolved_dynamic}
+
+    prepared = FinalTreatment(
+        treatment,
+        event_tags=event_tags,
+        **combined_params,
+    )
+    return prepared, combined_params
+
+
 def processor[T: ComputationalUnit](
     payload: SimulationPayload[T],
     treatment: Treatment[T],
@@ -19,31 +52,6 @@ def processor[T: ComputationalUnit](
     dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
 ) -> tuple[SimulationPayload[T], list[CollectedData]]:
     """Managed run conditions and history of a simulator operation. Evaluates the operation."""
-    for condition in preconditions:
-        if not condition(payload):
-            raise ConditionFailed(f'Treatment {treatment.name} aborted - precondition "{condition}" failed')
-
-    def _build_final_treatment(stand: T) -> tuple[FinalTreatment[T], dict[str, Any]]:
-        """
-        Resolve and merge treatment parameters and return an executable FinalTreatment.
-
-        - `base_params` is expected to already contain static + file parameters.
-        - `dynamic_parameters` is a mapping of parameter name -> callable that is evaluated
-          against the current computational unit (`stand`) right before execution.
-        - Dynamic parameters override `base_params` on key collisions.
-        """
-        resolved_dynamic: dict[str, Any] = {}
-        if dynamic_parameters:
-            resolved_dynamic = {k: fn(stand) for k, fn in dynamic_parameters.items()}
-
-        combined_params = {**(base_params or {}), **resolved_dynamic}
-
-        prepared = FinalTreatment(
-            treatment,
-            event_tags=event_tags,
-            **combined_params,
-        )
-        return prepared, combined_params
 
     for condition in preconditions:
         if not condition(payload):
@@ -51,7 +59,13 @@ def processor[T: ComputationalUnit](
 
     stand = payload.computational_unit
 
-    prepared, combined_params = _build_final_treatment(stand)
+    prepared, combined_params = _build_final_treatment(
+        stand=stand,
+        treatment=treatment,
+        event_tags=event_tags,
+        base_params=base_params,
+        dynamic_parameters=dynamic_parameters,
+    )
 
     try:
         new_state, new_collected_data = prepared(stand)
