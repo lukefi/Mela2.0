@@ -375,6 +375,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     natural_regeneration_feasibility: Optional[bool] = None
     regeneration_area_cleaning_year: Optional[int] = None
     development_class: Optional[int] = None
+    main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
     pruning_year: Optional[int] = None
@@ -384,6 +385,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     method_of_last_cutting: Optional[int] = None
     municipality_id: Optional[int] = None
     dominant_storey_age: Optional[float] = None
+    dominant_height_dominant_storey: Optional[float] = None
 
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
@@ -403,6 +405,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     stems_per_ha: Optional[float] = None
     weighted_mean_diameter: Optional[float] = None
     weighted_mean_height: Optional[float] = None
+    region: Optional[int] = None
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -508,6 +511,8 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.stand_id = conv(row[36], int)
         self.basal_area = conv(row[37], float)
         self.dominant_storey_age = conv(row[38], float)
+        self.main_tree_species_dominant_storey = conv(row[39], TreeSpecies)
+        self.region = conv(row[40], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -536,10 +541,10 @@ class ForestStand(Finalizable, ComputationalUnit):
         cur = db.cursor()
 
         cur.execute(
-            """
+            """--sql
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
@@ -580,13 +585,16 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.auxiliary_stand,
                 self.sea_effect,
                 self.lake_effect,
-                self.basal_area))
+                self.basal_area,
+                self.main_tree_species_dominant_storey,
+                self.dominant_height_dominant_storey,
+                self.region))
         for i in range(self.reference_trees.size):
             cur.execute(
-                """
+                """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -613,13 +621,14 @@ class ForestStand(Finalizable, ComputationalUnit):
                     int(self.reference_trees.storey[i]),
                     bool(self.reference_trees.sapling[i]),
                     self.reference_trees.tree_type[i],
-                    self.reference_trees.tuhon_ilmiasu[i]
+                    self.reference_trees.tuhon_ilmiasu[i],
+                    self.reference_trees.basal_area[i]
                 )
             )
         for i in range(self.tree_strata.size):
 
             cur.execute(
-                """
+                """--sql
                 INSERT INTO strata
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -670,6 +679,33 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
                                      np.sum(strata.basal_area * strata.mean_height)) /
                                      self.basal_area) if (self.basal_area > 0) else None
+
+        self.dominant_height_dominant_storey = self._calculate_dominant_height()
+
+    def _calculate_dominant_height(self) -> float | None:
+        if len(self.reference_trees) == 0:
+            return None
+        trees = self.reference_trees
+        non_saved_trees_indices = np.flatnonzero(trees.management_category != 2)
+        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
+        sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
+        i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
+        if len(i_100_largest_arr) == 0:
+            stems_smallest: float = trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][-1]
+            i_100_largest: int = len(non_saved_trees_indices) - 1
+        elif i_100_largest_arr[0] == 0:
+            stems_smallest = 100.0
+            i_100_largest = 0
+        else:
+            i_100_largest = i_100_largest_arr[0]
+            stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
+
+        numerator_1 = np.sum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][:i_100_largest] *
+                             trees.height[non_saved_trees_indices][sorted_trees_indices][:i_100_largest])
+        numerator_2: float = stems_smallest * trees.height[non_saved_trees_indices][sorted_trees_indices][i_100_largest]
+        denominator = min(100, sorted_cum_stems[i_100_largest])
+
+        return (numerator_1 + numerator_2) / denominator
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
@@ -759,5 +795,7 @@ def stand_as_internal_row(stand: ForestStand):
         stand.area_weight_factors[1],
         stand.stand_id,
         stand.basal_area,
-        stand.dominant_storey_age
+        stand.dominant_storey_age,
+        stand.main_tree_species_dominant_storey,
+        stand.region
     ]

@@ -87,6 +87,8 @@ class VMIBuilder(ForestBuilder):
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
         result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
         result.drainage_feasibility = vmi_util.determine_drainage_feasibility(data_row[indices["ojitus_tarve"]])
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.forest_management_category = vmi_util.determine_forest_management_category(
@@ -101,6 +103,7 @@ class VMIBuilder(ForestBuilder):
         result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
+        result.region = util.parse_int(data_row[indices["county"]])
         return result
 
     @overload
@@ -505,6 +508,8 @@ class XMLBuilder(ForestCentreBuilder):
             stand_basic_data.CuttingRestriction) or 1  # 30
         stand.municipality_id = None  # RST record 32
         # RST record 33 and 34 unused
+        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
+            stand.site_type_category)
         return stand
 
     def convert_stratum_entry(self, entry: ET.Element) -> TreeStratum:
@@ -592,6 +597,8 @@ class GeoPackageBuilder(ForestCentreBuilder):
             str(util.parse_type(restrictioncode, int, str)))  # 30
         stand.municipality_id = None  # RST record 32
         # RST record 33 and 34 unused
+        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
+            stand.site_type_category)
         return stand
 
     def convert_stratum_entry(self, entry: Series) -> TreeStratum:

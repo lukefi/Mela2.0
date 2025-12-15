@@ -18,6 +18,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
     for unit in units:
         payload = SimulationPayload(unit)
+        payload.computational_unit.update_aggregates()
         if db is not None:
             # Write initial state to database
             output_node_to_db(db, payload, [], {"initial"})
@@ -37,11 +38,13 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                 for i, root in enumerate(instruction.unwrap()):
                     for new_branch in root.evaluate(copy(payload), db, i + offset):
                         new_branch.computational_unit, _ = config.transition(new_branch.computational_unit)
+                        new_branch.computational_unit.update_aggregates()
                         retval.extend(_simulate_unit(new_branch, config, db))
                 offset += 1
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
             payload.computational_unit, _ = config.transition(payload.computational_unit)
+            payload.computational_unit.update_aggregates()
             retval.extend(_simulate_unit(payload, config, db))
     else:
         # End condition met, update `leaf` column
