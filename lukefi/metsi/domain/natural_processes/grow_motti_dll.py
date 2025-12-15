@@ -429,13 +429,13 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     rt = stand.reference_trees
     n = rt.size
 
-    if getattr(growth, "trees_age", None) is not None and growth.trees_age:
+    if growth.trees_age:
         id_to_age = {int(i): float(a)
                      for i, a in zip(growth.tree_ids, growth.trees_age)}
     else:
         id_to_age = {}
 
-    if getattr(growth, "trees_age13", None) is not None and growth.trees_age13:
+    if growth.trees_age13:
         id_to_age13 = {int(i): float(a13)
                        for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
     else:
