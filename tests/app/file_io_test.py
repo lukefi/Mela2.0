@@ -158,33 +158,10 @@ class TestFileReading(unittest.TestCase):
         self.assertTrue(size > 0)
         shutil.rmtree('outdir')
 
-    def test_read_stands_from_pickle_file(self):
-        config = MetsiConfiguration(
-            input_path="tests/resources/file_io_test/forest_centre.pickle",
-            state_format="fdm",
-            state_input_container="pickle"
-        )
-        unpickled_stands = file_io.read_stands_from_file(config, {})
-        self.assertEqual(len(unpickled_stands), 2)
-        self.assertEqual(type(unpickled_stands[0]), ForestStand)
-        self.assertEqual(type(unpickled_stands[0].tree_strata[0]), TreeStratum)
-
-    def test_read_stands_from_json_file(self):
-        config = MetsiConfiguration(
-            input_path="tests/resources/file_io_test/forest_centre.json",
-            state_format="fdm",
-            state_input_container="json"
-        )
-        stands_from_json = file_io.read_stands_from_file(config, {})
-        self.assertEqual(len(stands_from_json), 2)
-        self.assertEqual(type(stands_from_json[0]), ForestStand)
-        self.assertEqual(type(stands_from_json[0].tree_strata_pre_vec[0]), TreeStratum)
-
     def test_read_stands_from_csv_file(self):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.csv",
             state_format="fdm",
-            state_input_container="csv"
         )
         stands_from_csv = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands_from_csv), 2)
@@ -195,7 +172,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/vmi12.dat",
             state_format="vmi12",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
@@ -204,7 +180,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path=Path("tests", "data", "resources", "VMI13_source_mini.dat"),
             state_format="vmi13",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
@@ -213,7 +188,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.xml",
             state_format="xml",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 2)
@@ -222,7 +196,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/data/resources/SMK_source.gpkg",
             state_format="gpkg",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 9)
@@ -231,7 +204,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="nonexisting_file.pickle",
             state_format="fdm",
-            state_input_container="pickle"
         )
         self.assertRaises(Exception, file_io.read_stands_from_file, config)
 

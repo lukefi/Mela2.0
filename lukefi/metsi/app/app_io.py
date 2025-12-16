@@ -6,7 +6,6 @@ from lukefi.metsi.app.metsi_enum import (
     IntConfigEnum,
     RunMode,
     StateFormat,
-    StateInputFormat,
     StateOutputFormat,
     DerivedDataOutputFormat,
     FormationStrategy,
@@ -26,7 +25,6 @@ class MetsiConfiguration(SimpleNamespace):
     target_directory = ""
     run_modes = [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE]
     state_format = StateFormat.FDM
-    state_input_container = StateInputFormat.CSV
     state_output_container: Optional[StateOutputFormat] = None
     derived_data_output_container: Optional[str] = None
     measured_trees = False
@@ -61,7 +59,6 @@ class MetsiConfiguration(SimpleNamespace):
         config_enums: dict[str, type[StringConfigEnum] | type[IntConfigEnum]] = {
             'run_modes': RunMode,
             'state_format': StateFormat,
-            'state_input_container': StateInputFormat,
             'state_output_container': StateOutputFormat,
             'derived_data_output_container': DerivedDataOutputFormat,
             'formation_strategy': FormationStrategy,

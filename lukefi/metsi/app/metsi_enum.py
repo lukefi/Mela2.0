@@ -94,12 +94,6 @@ class StateFormat(StringConfigEnum):
     GPKG = 'gpkg'
 
 
-class StateInputFormat(StringConfigEnum):
-    PICKLE = 'pickle'
-    JSON = 'json'
-    CSV = 'csv'
-
-
 class StateOutputFormat(StringConfigEnum):
     PICKLE = 'pickle'
     JSON = 'json'
@@ -119,7 +113,6 @@ __all__ = [
     "FormationStrategy",
     "EvaluationStrategy",
     "StateFormat",
-    "StateInputFormat",
     "StateOutputFormat",
     "DerivedDataOutputFormat",
 ]

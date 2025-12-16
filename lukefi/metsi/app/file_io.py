@@ -84,15 +84,10 @@ def file_contents(file_path: str | Path) -> str:
 # solve FdmReader
 
 
-def fdm_reader(container_format: str) -> StandReader:
+def fdm_reader() -> StandReader:
     """Resolve a reader function for FDM data containers"""
-    if container_format == "pickle":
-        return pickle_reader
-    if container_format == "json":
-        return json_reader
-    if container_format == "csv":
-        return lambda path: csv_content_to_stands(csv_file_reader(path))
-    raise MetsiException(f"Unsupported container format '{container_format}'")
+
+    return lambda path: csv_content_to_stands(csv_file_reader(path))
 
 # solve ObjectReader
 
@@ -131,7 +126,7 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     :return: list of ForestStands as computational units for simulation
     """
     if app_config.state_format == "fdm":
-        return fdm_reader(app_config.state_input_container.value)(app_config.input_path)
+        return fdm_reader()(app_config.input_path)
     if app_config.state_format in ("vmi13", "vmi12", "xml", "gpkg"):
         return external_reader(
             app_config.state_format.value,
