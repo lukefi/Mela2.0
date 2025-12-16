@@ -119,11 +119,14 @@ class FakeDLL:
     def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         # Default: zero deltas for every tree ID in order 1..n (infer n from last new_trees)
         if not self.captured_trees_py:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
         n = len(self.captured_trees_py)
         ids = list(range(1, n + 1))
         zeros = [0.0] * n
-        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros)
+        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros,
+                            trees_age=zeros, trees_age13=zeros)
 
 
 # ---------- Tests ----------
@@ -309,6 +312,8 @@ class TestGrowMottiDLLVec(unittest.TestCase):
                     trees_id=[+0.7],    # Δd
                     trees_ih=[+1.2],    # Δh
                     trees_if=[-5.0],    # Δf
+                    trees_age=[20],
+                    trees_age13=[10],
                 )
 
         dll_stub = GrowingDLL()
