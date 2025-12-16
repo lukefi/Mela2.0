@@ -1,12 +1,22 @@
 import sqlite3
+import re
 
+_SET_ITEM_RE = re.compile(r"'([^']*)'")
 SELECT_NODES = "SELECT * FROM nodes ORDER BY stand"
 SELECT_STANDS = "SELECT * FROM stands"
 SELECT_STRATA = "SELECT * FROM strata"
 SELECT_TREES = "SELECT * FROM trees"
 
 
-def _compare(ref: str, res: str, select: str, numeric_tolerance = 0.0):
+def _as_set_if_set_string(v):
+    if isinstance(v, str) and v.startswith("{") and v.endswith("}"):
+        items = _SET_ITEM_RE.findall(v)
+        if items:  # looks like a repr of a set of strings
+            return set(items)
+    return None
+
+
+def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
     ref_db = sqlite3.connect(ref)
     res_db = sqlite3.connect(res)
     ref_cur = ref_db.cursor()
@@ -24,8 +34,14 @@ def _compare(ref: str, res: str, select: str, numeric_tolerance = 0.0):
                                          f"{ref_col} != {res_row[j]}, tolerance {numeric_tolerance}")
             else:
                 if ref_col != res_row[j]:
-                    raise AssertionError(f"Difference in row {i}, column {j}: "
-                                         f"{ref_col} != {res_row[j]}")
+                    ref_set = _as_set_if_set_string(ref_col)
+                    res_set = _as_set_if_set_string(res_row[j])
+                    if ref_set is not None and res_set is not None:
+                        if ref_set != res_set:
+                            raise AssertionError(f"Difference in row {i}, column {j}: {ref_col} != {res_row[j]}")
+                    else:
+                        if ref_col != res_row[j]:
+                            raise AssertionError(f"Difference in row {i}, column {j}: {ref_col} != {res_row[j]}")
 
 
 def node_tables_should_be_equal(ref: str, res: str):
