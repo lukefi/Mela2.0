@@ -5,7 +5,7 @@ import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 import sqlite3
-from typing import Any, Optional
+from typing import Any
 import numpy as np
 import jsonpickle
 from lukefi.metsi.data.formats.forest_builder import VMI13Builder, VMI12Builder, XMLBuilder, GeoPackageBuilder
