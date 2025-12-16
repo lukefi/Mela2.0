@@ -102,7 +102,7 @@ def object_reader(container_format: str) -> Any:
 # SourceDataReaders
 
 
-def external_reader(state_format: str, conversions, **builder_flags) -> StandReader:
+def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
     if state_format == "vmi13":
         return lambda path: VMI13Builder(builder_flags, conversions.get('vmi13', {}), vmi_file_reader(path)).build()
@@ -128,7 +128,7 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     if app_config.state_format == "fdm":
         return fdm_reader()(app_config.input_path)
     if app_config.state_format in ("vmi13", "vmi12", "xml", "gpkg"):
-        return external_reader(
+        return source_data_reader(
             app_config.state_format.value,
             conversions,
             strata=app_config.strata,
