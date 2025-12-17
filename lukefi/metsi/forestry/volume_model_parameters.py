@@ -34,12 +34,28 @@ def volume_params(dbh: npt.NDArray[np.float64],
                   h: npt.NDArray[np.float64],
                   species: npt.NDArray[np.int32],
                   tempsum: float,
-                  dataset: str):
+                  dataset: str) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+    """
+    Calculate the logit transformed form factor ("logita") and lambda vectors for tree volume calculation
+
+    :param dbh: breast height diameter
+    :type dbh: npt.NDArray[np.float64]
+    :param h: height
+    :type h: npt.NDArray[np.float64]
+    :param species: tree species
+    :type species: npt.NDArray[np.int32]
+    :param tempsum: temperature sum ("degree days")
+    :type tempsum: float
+    :param dataset: which dataset fit to use: "climbed", "felled" or "scanned"
+    :type dataset: str
+    :return: logita and lambda for volume calculation
+    :rtype: tuple[NDArray[float64], NDArray[float64]]
+    """
     species_in_pines = np.isin(species, SPECIES_PINES)
     species_in_spruces = np.isin(species, SPECIES_SPRUCES)
     species_in_deciduous = np.isin(species, SPECIES_DECIDUOUS)
 
-    def get_param(param):
+    def get_param(param) -> npt.NDArray[np.float64]:
         return np.where(
             species_in_pines,
             param[0],
@@ -65,6 +81,10 @@ def volume_params(dbh: npt.NDArray[np.float64],
     b_beta = get_param(B_BETA)
     c_alpha = get_param(C_ALPHA)
     c_beta = get_param(C_BETA)
+
+    a_gamma: npt.NDArray[np.float64] | float
+    b_gamma: npt.NDArray[np.float64] | float
+    c_gamma: npt.NDArray[np.float64] | float
 
     if dataset == "climbed":
         a_gamma = 0
