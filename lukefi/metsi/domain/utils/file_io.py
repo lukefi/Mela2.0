@@ -9,7 +9,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 def create_database_tables(db: sqlite3.Connection):
     cur = db.cursor()
     cur.execute(
-        """
+        """--sql
         CREATE TABLE nodes(
             identifier TEXT,
             stand TEXT,
@@ -21,7 +21,7 @@ def create_database_tables(db: sqlite3.Connection):
         """
     )
     cur.execute(
-        """
+        """--sql
         CREATE TABLE stands(
             node TEXT,
             identifier TEXT,
@@ -62,12 +62,15 @@ def create_database_tables(db: sqlite3.Connection):
             sea_effect REAL,
             lake_effect REAL,
             basal_area REAL,
+            main_tree_species_dominant_storey INTEGER,
+            dominant_height_dominant_storey REAL,
+            region INTEGER,
             PRIMARY KEY(node, identifier),
             FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand))
         """
     )
     cur.execute(
-        """
+        """--sql
         CREATE TABLE trees(
             node TEXT,
             stand TEXT,
@@ -92,12 +95,13 @@ def create_database_tables(db: sqlite3.Connection):
             sapling INTEGER(1),
             tree_type TEXT,
             tuhon_ilmiasu TEXT,
+            basal_area REAL,
             PRIMARY KEY (node, identifier),
             FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))
         """
     )
     cur.execute(
-        """
+        """--sql
         CREATE TABLE strata(
             node TEXT,
             stand TEXT,
@@ -135,9 +139,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     Writes current simulation state and collected data to database.
 
     :param db: Connection to an initialized database
-    :param node: List of integers describing the position of the current node in the simulation tree
     :param current: The current simulation payload (e.g. state and treatment history)
-    :param collected_data: List of data collected by the treament performed in the current node
+    :param collected_data: List of data collected by the treatment performed in the current node
     """
     if tags is None:
         tags = set()

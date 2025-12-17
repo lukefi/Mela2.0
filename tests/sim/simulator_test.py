@@ -9,8 +9,9 @@ from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.metsi.sim.treatment import Treatment
 from tests.test_utils import collect_results
-from tests.toy_model import ToyModel, ToyTransition, toy_inc
+from tests.toy_model import ToyModel, ToyTransition, toy_inc, toy_inc_fn
 
 
 class SimulatorTest(unittest.TestCase):
@@ -28,7 +29,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 1),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 1),
             "transition": ToyTransition()
         }
         config = SimConfiguration[ToyModel](**declaration)
@@ -58,7 +59,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 3)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 3)
         }
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(
@@ -89,7 +90,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 3),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 3),
             "transition": ToyTransition()
         }
         config = SimConfiguration(**declaration)
@@ -117,7 +118,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.relative_time > 5)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.relative_time > 5)
         }
         config = SimConfiguration(**declaration)
         payload = SimulationPayload(
@@ -164,7 +165,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         config = SimConfiguration(**declaration)
 
@@ -179,11 +180,14 @@ class SimulatorTest(unittest.TestCase):
         self.assertListEqual([5, 6, 7, 8], list(map(lambda result: result.computational_unit.value, results)))
 
     def test_nested_tree_generators_multiparameter_alternative(self):
-        def increment(x, **y):
-            return toy_inc(x, **y)
+        def _increment(x, **y):
+            return toy_inc_fn(x, **y)
 
-        def inc_param(x, **y):
-            return toy_inc(x, **y)
+        def _inc_param(x, **y):
+            return toy_inc_fn(x, **y)
+
+        increment = Treatment(_increment, "increment")
+        inc_param = Treatment(_inc_param, "inc_param")
 
         declaration = {
             "simulation_instructions": [
@@ -198,13 +202,13 @@ class SimulatorTest(unittest.TestCase):
                             Alternatives([
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 2
                                     }
                                 ),
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 3
                                     }
                                 )
@@ -215,7 +219,7 @@ class SimulatorTest(unittest.TestCase):
                     ])
                 )
             ],
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0),
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0),
             "transition": ToyTransition()
         }
         config = SimConfiguration(**declaration)
@@ -258,7 +262,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         declaration_two = {
             "simulation_instructions": [
@@ -278,7 +282,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time > 0)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 0)
         }
         configs = [
             SimConfiguration(**declaration_one),
@@ -383,7 +387,7 @@ class SimulatorTest(unittest.TestCase):
             "simulation_instructions": [
                 SimulationInstruction(
                     events=[
-                        Event(toy_inc, parameters={
+                        Event(toy_inc, static_parameters={
                             "incrementation": 1
                         })
                     ]
@@ -391,10 +395,10 @@ class SimulatorTest(unittest.TestCase):
                 SimulationInstruction(
                     events=[
                         Alternatives([
-                            Event(toy_inc, parameters={
+                            Event(toy_inc, static_parameters={
                                 "incrementation": 2
                             }),
-                            Event(toy_inc, parameters={
+                            Event(toy_inc, static_parameters={
                                 "incrementation": 3
                             }),
                         ])
@@ -402,7 +406,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             "transition": ToyTransition(),
-            "end_condition": Condition[ToyModel](lambda x: x.time >= 3)
+            "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time >= 3)
         }
 
         config = SimConfiguration[ToyModel](**declaration)

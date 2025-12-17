@@ -5,17 +5,16 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
 
 
 class SimulationInstruction[T: ComputationalUnit]:
-    conditions: Sequence_[Condition[SimulationPayload[T]]]
+    conditions: Sequence_[Condition[T]]
     event_generator: EventGenerator[T]
 
     def __init__(self, events: EventGenerator[T] | list[EventGeneratorBase] | set[EventGeneratorBase],
-                 conditions: Optional[Sequence_[Condition[SimulationPayload[T]]]] = None) -> None:
+                 conditions: Optional[Sequence_[Condition[T]]] = None) -> None:
         if isinstance(events, EventGenerator):
             self.event_generator = events
         elif isinstance(events, list):

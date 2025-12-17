@@ -1,10 +1,12 @@
 import datetime
 import math
 from types import SimpleNamespace
+from typing import Optional
 from xml.etree.ElementTree import Element
 
 import geopandas
 from shapely.geometry import Polygon, Point
+from lukefi.metsi.data.enums.internal import SiteType, TreeSpecies
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.model import TreeStratum
 
@@ -244,3 +246,11 @@ def calculate_stand_basal_area(strata: list[TreeStratum]) -> float:
     for bs, s in zip(basal_areas, strata):
         s.basal_area = bs
     return sum(basal_areas)
+
+
+def determine_main_tree_species_dominant_storey(site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
+    if site_type_category is None:
+        return None
+    if site_type_category <= SiteType.DAMP_SITE:
+        return TreeSpecies.SPRUCE
+    return TreeSpecies.PINE

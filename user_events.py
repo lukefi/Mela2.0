@@ -1,5 +1,6 @@
 from typing import Any, Optional
 import numpy as np
+from pathlib import Path
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
@@ -12,8 +13,8 @@ from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
-from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
+from lukefi.metsi.domain.domain_tables import min_stems_table
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -172,42 +173,12 @@ class MarkRetentionTrees(Event[ForestStand]):
 
         super().__init__(
             treatment=mark_trees,
-            parameters=merged_params,
+            static_parameters=merged_params,
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
             tags={"retention_trees"}
         )
-
-
-class PlantingPines(Event[ForestStand]):
-    """
-    Pine planting event that calls regeneration with sensible defaults.
-    Override by passing 'parameters={...}' when constructing, or subclass for species presets.
-    """
-
-    def __init__(self,
-                 parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
-                 file_parameters: Optional[dict[str, str]] = None) -> None:
-
-        default_params: dict[str, Any] = {
-            "origin": 2,           # planted
-            "method": 2,
-            "species": 1,          # Pine
-            "stems_per_ha": 1500.0,
-            "height": 0.7,
-            "biological_age": 3.0,
-            "type": "artificial",
-        }
-
-        merged = default_params | (parameters or {})
-        super().__init__(treatment=regeneration,
-                         parameters=merged,
-                         preconditions=preconditions,
-                         postconditions=postconditions,
-                         file_parameters=file_parameters)
 
 
 class Mounding(Event[ForestStand]):
@@ -257,7 +228,7 @@ class Mounding(Event[ForestStand]):
 
         super().__init__(
             treatment=soil_surface_preparation,
-            parameters=merged_params,
+            static_parameters=merged_params,
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -271,7 +242,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
     event_first_thinning_example.txt.
 
     Defaults:
-      - Keep 1000 stems/ha (absolute_remain on stems_per_ha)
+      - Keep dynamic min stems/ha (absolute_remain on stems_per_ha)
       - Profile favors removing larger DBH classes (as in the proto)
       - Two selection sets to bias species by site fertility
       - Requires at least 20 years since last cutting
@@ -280,9 +251,13 @@ class FirstThinningMineralSoils(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None, **kw) -> None:
         params = parameters or {}
 
-        # ---- helper: minimum stems after thinning
-        def _min_number_of_stems_after_thinning() -> int:
-            return 1000  # default per the example file
+        min_stems = min_stems_table(Path("data") / "parameter_files" / "min_stems.csv")
+
+        def _min_number_of_stems_after_thinning(stand: ForestStand) -> int:
+            return min_stems(stand)
+
+        def _first_set_target_amount(stand: ForestStand) -> float:
+            return 0.1 * _min_number_of_stems_after_thinning(stand)
 
         def s_conifer_bias(stand: ForestStand, trees) -> np.ndarray:
             fert = (stand.site_type_category or 0)
@@ -292,55 +267,64 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             if fert < 3:
                 # fertile: prefer spruce
                 return trees.species == 2
-
             # Otherwise prefer pine
             return trees.species == 1
 
         profile_x = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         profile_y = [0.5, 0.5, 0.5, 0.5, 0.5, 0.4, 0.25, 0.1, 0.05, 0.05, 0.05]
 
-        tree_selection = {
-            "target": SelectionTarget("absolute_remain", "stems_per_ha", _min_number_of_stems_after_thinning()),
-            "sets": [
-                SelectionSet[ForestStand, ReferenceTrees](
-                    s_conifer_bias,
-                    "breast_height_diameter",
-                    "stems_per_ha",
-                    "absolute_remain",
-                    0.1 * _min_number_of_stems_after_thinning(),
-                    profile_x,
-                    profile_y,
-                    "relative"
-                ),
-                SelectionSet[ForestStand, ReferenceTrees](
-                    s_conifer_bias,
-                    "breast_height_diameter",
-                    "stems_per_ha",
-                    "relative",
-                    1.0,
-                    profile_x,
-                    profile_y,
-                    "relative",
-                ),
-            ],
-        }
+        # --- dynamic tree_selection built per-stand
 
-        event_params = {
-            "tree_selection": tree_selection,
+        def _tree_selection(stand: ForestStand) -> dict[str, Any]:
+            min_stems = _min_number_of_stems_after_thinning(stand)
+            return {
+                "target": SelectionTarget("absolute_remain", "stems_per_ha", min_stems),
+                "sets": [
+                    SelectionSet[ForestStand, ReferenceTrees](
+                        s_conifer_bias,
+                        "breast_height_diameter",
+                        "stems_per_ha",
+                        "absolute_remain",
+                        _first_set_target_amount(stand),
+                        profile_x,
+                        profile_y,
+                        "relative"
+                    ),
+                    SelectionSet[ForestStand, ReferenceTrees](
+                        s_conifer_bias,
+                        "breast_height_diameter",
+                        "stems_per_ha",
+                        "relative",
+                        1.0,
+                        profile_x,
+                        profile_y,
+                        "relative",
+                    ),
+                ],
+            }
+
+        static_params = {
             "mode": "odds_units",
             "cutting_method": MelaMethodOfTheLastCutting.FIRST_THINNING.value,
         } | params
 
+        dynamic_params = {
+            "tree_selection": _tree_selection,
+        }
+
         # --- Preconditions now include both: 20y spacing AND forest_categories
-        preconds: list[Condition[SimulationPayload[ForestStand]]] = [
+        preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
-        super().__init__(treatment=cutting, parameters=event_params,
-                         preconditions=preconds,
-                         collected_data={RemovedTrees},
-                         **kw)
+        super().__init__(
+            treatment=cutting,
+            static_parameters=static_params,
+            dynamic_parameters=dynamic_params,
+            preconditions=preconds,
+            **kw,
+        )
 
 
 class Tracks(Event[ForestStand]):
@@ -348,8 +332,8 @@ class Tracks(Event[ForestStand]):
 
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
-                 preconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
-                 postconditions: Optional[list[Condition[SimulationPayload[ForestStand]]]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  **kw) -> None:
         params = parameters or {}
@@ -383,20 +367,49 @@ class Tracks(Event[ForestStand]):
         } | params
 
         # Default: at least 20y since last cutting and forest category check
-        default_preconds: list[Condition[SimulationPayload[ForestStand]]] = [
+        default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, cutting),
             Condition(_forest_categories_check),
         ]
 
         super().__init__(
             treatment=cutting,
-            parameters=event_params,
+            static_parameters=event_params,
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
-            collected_data={RemovedTrees},
             **kw
         )
+
+
+class PlantingPines(Event[ForestStand]):
+    """
+    Pine planting event that calls regeneration with sensible defaults.
+    Override by passing 'parameters={...}' when constructing, or subclass for species presets.
+    """
+
+    def __init__(self,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+
+        default_params: dict[str, Any] = {
+            "origin": 2,           # planted
+            "method": 2,
+            "species": 1,          # Pine
+            "stems_per_ha": 1500.0,
+            "height": 0.7,
+            "biological_age": 3.0,
+            "type": "artificial",
+        }
+
+        merged = default_params | (parameters or {})
+        super().__init__(treatment=regeneration,
+                         static_parameters=merged,
+                         preconditions=preconditions,
+                         postconditions=postconditions,
+                         file_parameters=file_parameters)
 
 
 __all__ = [

@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.6] - 2025-12-16
+
+### Added
+
+- Added new dynamic parameters feature with lookup table  #MELA2-28
+
+## [0.4.5] - 2025-12-16
+
+### Fixed
+
+- Reads now age and age13 values from Motti model.
+
+## [0.4.4] - 2025-12-12
+
+### Fixed
+
+- Aggregate variables are now calculated for the initial state and updated after every transition
+
+## [0.4.3] - 2025-12-12
+
+### Added
+
+- Added new ForestStand attributes:
+    - `main_tree_species_dominant_storey` determined once from source data
+    - `region` read from source data, currently only VMI12 and VMI13 formats
+    - `dominant_height_dominant_storey`, aggregate variable updated after every treatment and transition
+
+## [0.4.2] - 2025-12-10
+
+### Added
+
+- Treatment class for containing various treatment metadata: name, default tags and the types of collected data
+
+## [0.4.1] - 2025-12-10
+
+### Changed
+
+- Made Condition less generic by assuming SimulationPayload
+
 ## [0.4.0] - 2025-11-28
 
 ### Added

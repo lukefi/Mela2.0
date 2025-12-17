@@ -20,6 +20,8 @@ from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
 )
 
 # ---------- helpers (SoA) ----------
+
+
 def make_empty_sapling() -> SimpleNamespace:
     """Minimal SoA-style 'sapling' container to satisfy any code that inspects it."""
     return SimpleNamespace(
@@ -51,7 +53,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         tax_class_reduction=0,
         reference_trees=rt,
         sapling=sap,
-        saplings=sap,  
+        saplings=sap,
     )
 
 
@@ -117,11 +119,14 @@ class FakeDLL:
     def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         # Default: zero deltas for every tree ID in order 1..n (infer n from last new_trees)
         if not self.captured_trees_py:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
         n = len(self.captured_trees_py)
         ids = list(range(1, n + 1))
         zeros = [0.0] * n
-        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros)
+        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros,
+                            trees_age=zeros, trees_age13=zeros)
 
 
 # ---------- Tests ----------
@@ -256,7 +261,6 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             self.assertEqual(Path.cwd().resolve(), start)
 
 
-
 class TestGrowMottiDLLVec(unittest.TestCase):
     def test_species_mapping_and_euref(self) -> None:
         # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
@@ -308,12 +312,14 @@ class TestGrowMottiDLLVec(unittest.TestCase):
                     trees_id=[+0.7],    # Δd
                     trees_ih=[+1.2],    # Δh
                     trees_if=[-5.0],    # Δf
+                    trees_age=[20],
+                    trees_age13=[10],
                 )
 
         dll_stub = GrowingDLL()
         pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        out_stand, _ = grow_motti.grow_motti_dll(
+        out_stand, _ = grow_motti.grow_motti_dll_fn(
             stand,  # type: ignore[arg-type]
             predictor=pred,
             step=5,

@@ -1,4 +1,5 @@
 from lukefi.metsi.data.vectorize import vectorize
+from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.domain.events import GrowMetsi
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
@@ -29,16 +30,19 @@ control_structure = {
     "simulation_instructions": [
 
         SimulationInstruction(
-            time_points=[2020, 2025, 2030, 2035, 2040, 2045, 2050],
+            conditions=[
+                TimePoints([2020, 2025, 2030, 2035, 2040, 2045, 2050])
+            ],
             events=[
                 GrowMetsi()
             ]
         ),
 
         SimulationInstruction(
-            time_points=[2020],
-            events=[Mounding(),
-            ]
+            conditions=[
+                TimePoints([2020])
+            ],
+            events=[Mounding()]
         ),
     ],
 }

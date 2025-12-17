@@ -2,8 +2,10 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.treatment_utils import req
+from lukefi.metsi.sim.treatment import Treatment
 
-def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+
+def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.
@@ -21,7 +23,6 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
         type: str                   # "artificial" | "natural"
     """
     stand = input_
-
 
     origin = int(req(operation_parameters, "origin"))
     species = int(req(operation_parameters, "species"))
@@ -69,3 +70,6 @@ def regeneration(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
 
     # No cdata here by design
     return stand, []
+
+
+regeneration = Treatment(regeneration_fn, "regeneration")

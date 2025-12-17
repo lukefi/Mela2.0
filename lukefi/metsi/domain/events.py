@@ -5,7 +5,8 @@ from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.sim.treatment import do_nothing
+
 
 class DoNothing(Event[ForestStand]):
     def __init__(self, parameters: Optional[dict[str, Any]] = None,
@@ -13,7 +14,7 @@ class DoNothing(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=do_nothing,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -25,7 +26,7 @@ class GrowActa(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_acta,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -37,7 +38,7 @@ class GrowMetsi(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_metsi,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -50,7 +51,7 @@ class GrowMotti(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_motti_dll,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)

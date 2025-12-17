@@ -5,7 +5,7 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.harvest.cutting import cutting
+from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 from lukefi.metsi.domain.collected_data import RemovedTrees
 
 
@@ -61,7 +61,7 @@ class CuttingTest(unittest.TestCase):
         }
 
         before = stand.reference_trees.stems_per_ha.copy()
-        updated, cdata = cutting(stand, **params)
+        updated, cdata = cutting_fn(stand, **params)
 
         self.assertEqual(1, len(cdata))
         self.assertIsInstance(cdata[0], RemovedTrees)
@@ -84,7 +84,7 @@ class CuttingTest(unittest.TestCase):
         stand.reference_trees = ReferenceTrees()  # size == 0
 
         # With no trees, cutting should return early regardless of sets content
-        updated, cdata = cutting(
+        updated, cdata = cutting_fn(
             stand,
             tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0), "sets": []},
             mode="odds_units",
@@ -101,13 +101,13 @@ class CuttingTest(unittest.TestCase):
 
         # Missing tree_selection
         with self.assertRaises(MetsiException):
-            cutting(stand, mode="odds_units", select_from_all=True)
+            cutting_fn(stand, mode="odds_units", select_from_all=True)
 
         # Empty sets
         with self.assertRaises(MetsiException):
-            cutting(stand, tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0),
-                                           "sets": []},
-                    mode="odds_units", select_from_all=True)
+            cutting_fn(stand, tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0),
+                                              "sets": []},
+                       mode="odds_units", select_from_all=True)
 
         # Mismatched profile shapes
         bad = {
@@ -131,15 +131,15 @@ class CuttingTest(unittest.TestCase):
             "select_from_all": True,
         }
         with self.assertRaises(MetsiException):
-            cutting(stand, **bad)
+            cutting_fn(stand, **bad)
 
         # Missing mode
         with self.assertRaises(MetsiException):
-            cutting(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", select_from_all=True)
+            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", select_from_all=True)
 
         # Missing select_from_all
         with self.assertRaises(MetsiException):
-            cutting(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", mode="odds_units")
+            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", mode="odds_units")
 
 
 if __name__ == "__main__":

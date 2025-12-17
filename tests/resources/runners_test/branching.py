@@ -2,7 +2,7 @@ from lukefi.metsi.domain.conditions import TimeSinceTreatment, TimePoints
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.sim.treatment import do_nothing
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
@@ -28,5 +28,5 @@ control_structure = {
         )
     ],
     "transition": ToyTransition(),
-    "end_condition": Condition[ToyModel](lambda x: x.time > 4)
+    "end_condition": Condition[ToyModel](lambda x: x.computational_unit.time > 4)
 }

@@ -2,10 +2,11 @@ from typing import Any
 import unittest
 
 from lukefi.metsi.domain.conditions import _get_tag_last_run, _get_treatment_last_run
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
 from tests.toy_model import ToyModel
 
 
@@ -32,10 +33,12 @@ class ConditionTest(unittest.TestCase):
         self.assertFalse(c_or(ToyModel("", 6, 1)))
 
     def test_condition_checking(self):
-        def step(x: ToyModel) -> OpTuple[ToyModel]:
+        def _step(x: ToyModel) -> OpTuple[ToyModel]:
             computational_unit = x
             computational_unit.value += 1
             return computational_unit, []
+
+        step = Treatment(_step, "step")
 
         generator = Alternatives[ToyModel]([
             Sequence([
@@ -71,19 +74,24 @@ class ConditionTest(unittest.TestCase):
         self.assertEqual(result[2].computational_unit.value, 2)
         self.assertEqual(result[3].computational_unit.value, 2)
 
-    def test_operation_last_run(self):
+    def test_treatment_last_run(self):
 
-        def operation1(x: Any) -> OpTuple:
+        def operation1_fn(x: Any) -> OpTuple:
             return x, []
 
-        def operation2(x: Any) -> OpTuple:
+        def operation2_fn(x: Any) -> OpTuple:
             return x, []
 
-        def operation3(x: Any) -> OpTuple:
+        def operation3_fn(x: Any) -> OpTuple:
             return x, []
 
-        def operation4(x: Any) -> OpTuple:
+        def operation4_fn(x: Any) -> OpTuple:
             return x, []
+
+        operation1 = Treatment(operation1_fn, "operation1")
+        operation2 = Treatment(operation2_fn, "operation2")
+        operation3 = Treatment(operation3_fn, "operation3")
+        operation4 = Treatment(operation4_fn, "operation4")
 
         operation_history = [
             (1, "operation1", {}, set()),
@@ -103,7 +111,6 @@ class ConditionTest(unittest.TestCase):
         self.assertEqual(_get_treatment_last_run(operation_history, operation4), None)
 
     def test_tag_last_run(self):
-
         operation_history = [
             (1, "operation1", {}, {"1"}),
             (2, "operation2", {}, {"2"}),
@@ -120,3 +127,19 @@ class ConditionTest(unittest.TestCase):
         self.assertEqual(_get_tag_last_run(operation_history, "2"), 6)
         self.assertEqual(_get_tag_last_run(operation_history, "3"), 8)
         self.assertEqual(_get_tag_last_run(operation_history, "4"), None)
+
+    def test_prepared_treatment_tag_combinations(self):
+        def dummy_fn(x: ToyModel, **kwargs) -> tuple[ToyModel, list[CollectedData]]:
+            _ = kwargs
+            return x, []
+
+        dummy_1 = Treatment(dummy_fn, "dummy", {"default_tag_1"})
+        dummy_2 = Treatment(dummy_fn, "dummy", {"default_tag_2"})
+
+        prepared_dummy_1 = PreparedTreatment(dummy_1, {"additional_tag_1", "additional_tag_2"})
+        prepared_dummy_2 = PreparedTreatment(dummy_1, {"additional_tag_1", "additional_tag_3"})
+        prepared_dummy_3 = PreparedTreatment(dummy_2, {"additional_tag_3", "additional_tag_4"})
+
+        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_2"}, prepared_dummy_1.tags)
+        self.assertSetEqual({"default_tag_1", "additional_tag_1", "additional_tag_3"}, prepared_dummy_2.tags)
+        self.assertSetEqual({"default_tag_2", "additional_tag_3", "additional_tag_4"}, prepared_dummy_3.tags)

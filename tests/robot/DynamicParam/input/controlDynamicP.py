@@ -48,7 +48,10 @@ control_structure = {
                     Event(treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
                     Sequence([
                         Event(treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
-                        Event(treatment=do_nothing, static_parameters={"n": 3}, tags={"third_type"})
+                        Event(
+                            treatment=do_nothing,
+                            static_parameters={"n": 3},
+                            dynamic_parameters={"m": lambda x: x.site_type_category.value + 100}, tags={"third_type"})
                     ])
                 ])
             ]
