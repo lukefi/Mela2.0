@@ -176,8 +176,8 @@ class TestForestDataModel(unittest.TestCase):
 
     def test_update_aggregates(self):
         stand = ForestStand()
-        stand.reference_trees.create([{"breast_height_diameter": 12, "stems_per_ha": 5, "height": 13},
-                                     {"breast_height_diameter": 5, "stems_per_ha": 14, "height": 10}])
+        stand.reference_trees.create([{"breast_height_diameter": 12, "stems_per_ha": 5, "height": 13, "species": 1},
+                                     {"breast_height_diameter": 5, "stems_per_ha": 14, "height": 10, "species": 3}])
         stand.tree_strata.create([{"stems_per_ha": 39.2, "basal_area": 23.4,
                                  "mean_diameter": 14.9, "mean_height": 5.9},
                                   {"stems_per_ha": 0.6, "basal_area": 0.12,
