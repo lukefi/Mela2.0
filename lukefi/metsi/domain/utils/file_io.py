@@ -96,6 +96,7 @@ def create_database_tables(db: sqlite3.Connection):
             tree_type TEXT,
             tuhon_ilmiasu TEXT,
             basal_area REAL,
+            volume REAL,
             PRIMARY KEY (node, identifier),
             FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))
         """
