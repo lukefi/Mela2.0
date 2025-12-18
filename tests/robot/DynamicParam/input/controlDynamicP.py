@@ -71,7 +71,6 @@ control_structure = {
     },
     'export_prepro': {
         'csv': {},
-        'json': {}
     }
 }
 
