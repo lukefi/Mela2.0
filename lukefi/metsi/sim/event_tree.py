@@ -22,13 +22,17 @@ class EventTree[T: ComputationalUnit]:
     Event represents a computational operation in a tree of following event paths.
     """
 
-    __slots__ = ('processed_treatment', 'branches', 'tags')
+    __slots__ = ('processed_treatment', 'branches', 'tags', 'db_output')
 
     processed_treatment: "ProcessedTreatment[T]"
     branches: list["EventTree[T]"]
     tags: set[str]
+    db_output: bool
 
-    def __init__(self, treatment: Optional["ProcessedTreatment[T]"] = None, tags: Optional[set[str]] = None):
+    def __init__(self,
+                 treatment: Optional["ProcessedTreatment[T]"] = None,
+                 tags: Optional[set[str]] = None,
+                 db_output: bool = True):
 
         self.processed_treatment = treatment or identity
         self.branches = []
@@ -37,6 +41,7 @@ class EventTree[T: ComputationalUnit]:
             self.tags = set()
         else:
             self.tags = tags
+        self.db_output = db_output
 
     def evaluate(self,
                  payload: SimulationPayload[T],
@@ -67,7 +72,7 @@ class EventTree[T: ComputationalUnit]:
 
         current.node_id.append(node)
 
-        if db is not None:
+        if db is not None and self.db_output:
             output_node_to_db(db, current, collected_data, self.tags)
 
         if isinstance(current.computational_unit, Finalizable):
