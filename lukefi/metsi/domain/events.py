@@ -14,7 +14,7 @@ class DoNothing(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=do_nothing,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -26,7 +26,7 @@ class GrowActa(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_acta,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -38,7 +38,7 @@ class GrowMetsi(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_metsi,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
@@ -51,7 +51,7 @@ class GrowMotti(Event[ForestStand]):
                  postconditions: Optional[list[ForestCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(treatment=grow_motti_dll,
-                         parameters=parameters,
+                         static_parameters=parameters,
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)

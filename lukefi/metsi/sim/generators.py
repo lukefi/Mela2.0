@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import os
 from typing import Any, Generic, Optional, TypeVar, override
 from typing import Sequence as Sequence_
-
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.processor import processor
@@ -16,7 +15,6 @@ from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
 T = TypeVar("T", bound=ComputationalUnit)
 
 ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
-GeneratorFn = Callable[[Optional[list[EventTree[T]]], ProcessedTreatment[T]], list[EventTree[T]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
@@ -82,23 +80,28 @@ class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
     treatment: Treatment[T]
-    parameters: dict[str, Any]
+    static_parameters: dict[str, Any]
+    dynamic_parameters: dict[str, Callable[[T], Any]]
     file_parameters: dict[str, str]
     preconditions: list[Condition[T]]
     postconditions: list[Condition[T]]
     tags: set[str]
 
-    def __init__(self, treatment: Treatment[T], parameters: Optional[dict[str, Any]] = None,
+    def __init__(self, treatment: Treatment[T],
+                 static_parameters: Optional[dict[str, Any]] = None,
+                 dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
                  preconditions: Optional[list[Condition[T]]] = None,
                  postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  tags: Optional[set[str]] = None) -> None:
         self.treatment = treatment
 
-        if parameters is not None:
-            self.parameters = parameters
+        if static_parameters is not None:
+            self.static_parameters = static_parameters
         else:
-            self.parameters = {}
+            self.static_parameters = {}
+
+        self.dynamic_parameters = dynamic_parameters or {}
 
         if file_parameters is not None:
             self.file_parameters = file_parameters
@@ -135,9 +138,32 @@ class Event(EventGeneratorBase[T]):
 
     def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
         self._check_file_params()
-        combined_params = self._merge_params()
-        treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
-        return lambda payload: processor(payload, treatment, self.preconditions, self.postconditions, **combined_params)
+        base_params = dict(self._merge_params())  # static + file
+
+        def _processed(payload: SimulationPayload[T]):
+            stand = payload.computational_unit
+
+            # Evaluate dynamic_parameters: name -> fn(stand)
+            resolved_dynamic: dict[str, Any] = {
+                name: fn(stand) for name, fn in self.dynamic_parameters.items()
+            }
+
+            # Static / file params overridden by dynamic ones if same key
+            combined_params = {**base_params, **resolved_dynamic}
+
+            # Prepare treatment with *this* call's parameters
+            treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
+
+            # Pass combined params to processor so they end up in operation_history
+            return processor(
+                payload,
+                treatment,
+                self.preconditions,
+                self.postconditions,
+                **combined_params,
+            )
+
+        return _processed
 
     def _check_file_params(self):
         for _, path in self.file_parameters.items():
@@ -145,9 +171,9 @@ class Event(EventGeneratorBase[T]):
                 raise FileNotFoundError(f"file {path} defined in operation_file_params was not found")
 
     def _merge_params(self) -> dict[str, Any]:
-        common_keys = self.parameters.keys() & self.file_parameters.keys()
+        common_keys = self.static_parameters.keys() & self.file_parameters.keys()
         if common_keys:
             raise MetsiException(
                 f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
                 "in control.py. Please change the name of one of them.")
-        return self.parameters | self.file_parameters  # pipe is the merge operator
+        return self.static_parameters | self.file_parameters  # pipe is the merge operator

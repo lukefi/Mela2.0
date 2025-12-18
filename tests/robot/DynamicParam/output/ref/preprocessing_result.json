@@ -1,0 +1,5703 @@
+[
+  {
+    "py/object": "lukefi.metsi.data.model.ForestStand",
+    "reference_trees": {
+      "py/object": "lukefi.metsi.data.vector_model.ReferenceTrees",
+      "dtypes": {
+        "identifier": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "U20",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "<",
+                null,
+                null,
+                null,
+                80,
+                4,
+                8
+              ]
+            }
+          ]
+        },
+        "tree_number": {
+          "py/type": "numpy.int32"
+        },
+        "species": {
+          "py/type": "numpy.int32"
+        },
+        "breast_height_diameter": {
+          "py/type": "numpy.float64"
+        },
+        "height": {
+          "py/type": "numpy.float64"
+        },
+        "measured_height": {
+          "py/type": "numpy.float64"
+        },
+        "breast_height_age": {
+          "py/type": "numpy.float64"
+        },
+        "biological_age": {
+          "py/type": "numpy.float64"
+        },
+        "stems_per_ha": {
+          "py/type": "numpy.float64"
+        },
+        "origin": {
+          "py/type": "numpy.int32"
+        },
+        "management_category": {
+          "py/type": "numpy.int32"
+        },
+        "saw_log_volume_reduction_factor": {
+          "py/type": "numpy.float64"
+        },
+        "pruning_year": {
+          "py/type": "numpy.int16"
+        },
+        "age_when_10cm_diameter_at_breast_height": {
+          "py/type": "numpy.int16"
+        },
+        "stand_origin_relative_position": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "V24",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "|",
+                {
+                  "py/tuple": [
+                    {
+                      "py/reduce": [
+                        {
+                          "py/type": "numpy.dtype"
+                        },
+                        {
+                          "py/tuple": [
+                            "f8",
+                            false,
+                            true
+                          ]
+                        },
+                        {
+                          "py/tuple": [
+                            3,
+                            "<",
+                            null,
+                            null,
+                            null,
+                            -1,
+                            -1,
+                            0
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "py/tuple": [
+                        3
+                      ]
+                    }
+                  ]
+                },
+                null,
+                null,
+                24,
+                8,
+                0
+              ]
+            }
+          ]
+        },
+        "lowest_living_branch_height": {
+          "py/type": "numpy.float64"
+        },
+        "tree_category": {
+          "py/type": "numpy.str_"
+        },
+        "storey": {
+          "py/type": "numpy.int32"
+        },
+        "sapling": {
+          "py/type": "numpy.bool"
+        },
+        "tree_type": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "U20",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "<",
+                null,
+                null,
+                null,
+                80,
+                4,
+                8
+              ]
+            }
+          ]
+        },
+        "tuhon_ilmiasu": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "U20",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "<",
+                null,
+                null,
+                null,
+                80,
+                4,
+                8
+              ]
+            }
+          ]
+        },
+        "basal_area": {
+          "py/type": "numpy.float64"
+        }
+      },
+      "size": 20,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 4
+              },
+              false,
+              {
+                "py/b64": "MAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAAxAAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADIAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAAMwAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAA0AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADUAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAANgAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAA3AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADgAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAAOQAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAAxAAAAMAAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADEAAAAxAAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAAMQAAADIAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAAxAAAAMwAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADEAAAA0AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAAMQAAADUAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAAxAAAANgAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADEAAAA3AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAyAAAALQAAADEAAAAtAAAAMQAAADgAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADIAAAAtAAAAMQAAAC0AAAAxAAAAOQAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAADIAAAAwAAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "i4",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "<",
+                      null,
+                      null,
+                      null,
+                      -1,
+                      -1,
+                      0
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": "AQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAAEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "AQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAADAAAAAwAAAAMAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "uB6F61G4KEApXI/C9SgtQM3MzMzMzDBAhetRuB4FM0A9CtejcD01QPYoXI/CdTdArkfhehSuOUBmZmZmZuY7QB+F61G4Hj5A7FG4HoUrQEBxPQrXo/AhQIXrUbgehSVAmpmZmZkZKUAzMzMzM7MsQKRwPQrXIzBArkfhehTuMUB7FK5H4bozQIXrUbgehTVAj8L1KFxPN0Bcj8L1KBw5QA=="
+              }
+            ]
+          }
+        ]
+      },
+      "height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "cT0K16PwLEBcj8L1KFwvQHE9CtejsDBACtejcD2KMUAAAAAAAEAyQB+F61G43jJAKVyPwvVoM0AfhetRuN4zQArXo3A9SjRAZmZmZmamNEDsUbgehWsqQFK4HoXr0SxASOF6FK7HLkD2KFyPwjUwQGZmZmZm5jBAuB6F61F4MUB7FK5H4foxQClcj8L1aDJAzczMzMzMMkCkcD0K1yMzQA=="
+              }
+            ]
+          }
+        ]
+      },
+      "measured_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fw=="
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAR0AAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABEQAAAAAAAAERAAAAAAAAAREAAAAAAAABEQAAAAAAAAERAAAAAAAAAREAAAAAAAABEQAAAAAAAAERAAAAAAAAAREAAAAAAAABEQA=="
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkAAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABHQAAAAAAAAEdAAAAAAAAAR0AAAAAAAABHQA=="
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAABEC4HoXrUTgxQArXo3A9qkRA7FG4HoVrUEAK16NwPSpUQFK4HoXr4VNAhetRuB5lT0DsUbgehWtDQD0K16NwPTJACtejcD0KGUBxPQrXo3DdP3sUrkfhegRAexSuR+F6FUC4HoXrUbgeQD0K16NwPSFAcT0K16NwH0BI4XoUrkcXQIXrUbgehQtAcT0K16Nw+T+amZmZmZnhPw=="
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fw=="
+              }
+            ]
+          }
+        ]
+      },
+      "pruning_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "i2",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "<",
+                      null,
+                      null,
+                      null,
+                      -1,
+                      -1,
+                      0
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": "/////////////////////////////////////////////////////w=="
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fw=="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "U1",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "<",
+                      null,
+                      null,
+                      null,
+                      4,
+                      4,
+                      8
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "//////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+              }
+            ]
+          }
+        ]
+      },
+      "sapling": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "b1",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "|",
+                      null,
+                      null,
+                      null,
+                      -1,
+                      -1,
+                      0
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_type": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 7
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "tuhon_ilmiasu": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 8
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  20
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fw=="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "tree_strata": {
+      "py/object": "lukefi.metsi.data.vector_model.TreeStrata",
+      "dtypes": {
+        "identifier": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "U20",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "<",
+                null,
+                null,
+                null,
+                80,
+                4,
+                8
+              ]
+            }
+          ]
+        },
+        "species": {
+          "py/type": "numpy.int32"
+        },
+        "mean_diameter": {
+          "py/type": "numpy.float64"
+        },
+        "mean_height": {
+          "py/type": "numpy.float64"
+        },
+        "breast_height_age": {
+          "py/type": "numpy.float64"
+        },
+        "biological_age": {
+          "py/type": "numpy.float64"
+        },
+        "stems_per_ha": {
+          "py/type": "numpy.float64"
+        },
+        "basal_area": {
+          "py/type": "numpy.float64"
+        },
+        "origin": {
+          "py/type": "numpy.int32"
+        },
+        "management_category": {
+          "py/type": "numpy.int32"
+        },
+        "saw_log_volume_reduction_factor": {
+          "py/type": "numpy.float64"
+        },
+        "cutting_year": {
+          "py/type": "numpy.int32"
+        },
+        "age_when_10cm_diameter_at_breast_height": {
+          "py/type": "numpy.int16"
+        },
+        "tree_number": {
+          "py/type": "numpy.int32"
+        },
+        "stand_origin_relative_position": {
+          "py/reduce": [
+            {
+              "py/type": "numpy.dtype"
+            },
+            {
+              "py/tuple": [
+                "V24",
+                false,
+                true
+              ]
+            },
+            {
+              "py/tuple": [
+                3,
+                "|",
+                {
+                  "py/tuple": [
+                    {
+                      "py/id": 6
+                    },
+                    {
+                      "py/tuple": [
+                        3
+                      ]
+                    }
+                  ]
+                },
+                null,
+                null,
+                24,
+                8,
+                0
+              ]
+            }
+          ]
+        },
+        "lowest_living_branch_height": {
+          "py/type": "numpy.float64"
+        },
+        "storey": {
+          "py/type": "numpy.int32"
+        },
+        "sapling_stems_per_ha": {
+          "py/type": "numpy.float64"
+        },
+        "sapling_stratum": {
+          "py/type": "numpy.bool"
+        },
+        "number_of_generated_trees": {
+          "py/type": "numpy.int32"
+        }
+      },
+      "size": 0,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 37
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "cutting_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stratum": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 31
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "number_of_generated_trees": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "time": 2018,
+    "start_time": 2018,
+    "identifier": "0-2-23-2-1",
+    "management_unit_id": 2,
+    "stand_id": 2,
+    "area": 164.2650475,
+    "area_weight": 164.2650475,
+    "geo_location": {
+      "py/tuple": [
+        6671298.0,
+        1385598.0,
+        124.0,
+        "EPSG:3067"
+      ]
+    },
+    "degree_days": 1271.0,
+    "owner_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.OwnerCategory"
+        },
+        {
+          "py/tuple": [
+            1
+          ]
+        }
+      ]
+    },
+    "land_use_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.LandUseCategory"
+        },
+        {
+          "py/tuple": [
+            1
+          ]
+        }
+      ]
+    },
+    "soil_peatland_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.SoilPeatlandCategory"
+        },
+        {
+          "py/tuple": [
+            1
+          ]
+        }
+      ]
+    },
+    "site_type_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.SiteType"
+        },
+        {
+          "py/tuple": [
+            3
+          ]
+        }
+      ]
+    },
+    "tax_class_reduction": 0,
+    "tax_class": 2,
+    "drainage_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.DrainageCategory"
+        },
+        {
+          "py/tuple": [
+            1
+          ]
+        }
+      ]
+    },
+    "drainage_feasibility": false,
+    "drainage_year": null,
+    "fertilization_year": null,
+    "soil_surface_preparation_year": 2018,
+    "natural_regeneration_feasibility": false,
+    "regeneration_area_cleaning_year": null,
+    "development_class": 5,
+    "main_tree_species_dominant_storey": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.TreeSpecies"
+        },
+        {
+          "py/tuple": [
+            1
+          ]
+        }
+      ]
+    },
+    "artificial_regeneration_year": null,
+    "young_stand_tending_year": null,
+    "pruning_year": null,
+    "cutting_year": 2011,
+    "forestry_centre_id": 0,
+    "forest_management_category": 1,
+    "method_of_last_cutting": 1,
+    "municipality_id": 417,
+    "dominant_storey_age": 51.0,
+    "dominant_height_dominant_storey": null,
+    "area_weight_factors": {
+      "py/tuple": [
+        0.0,
+        1.0
+      ]
+    },
+    "fra_category": "1",
+    "land_use_category_detail": "0",
+    "auxiliary_stand": false,
+    "monthly_temperatures": null,
+    "monthly_rainfall": null,
+    "sea_effect": null,
+    "lake_effect": null,
+    "basal_area": 19.0,
+    "stems_per_ha": null,
+    "weighted_mean_diameter": null,
+    "weighted_mean_height": null,
+    "region": 21
+  },
+  {
+    "py/object": "lukefi.metsi.data.model.ForestStand",
+    "reference_trees": {
+      "py/object": "lukefi.metsi.data.vector_model.ReferenceTrees",
+      "dtypes": {
+        "py/id": 3
+      },
+      "size": 10,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 4
+              },
+              false,
+              {
+                "py/b64": "MAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADMAAAAtAAAAMgAAAC0AAAAxAAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMwAAAC0AAAAyAAAALQAAADIAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAzAAAALQAAADIAAAAtAAAAMwAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADMAAAAtAAAAMgAAAC0AAAA0AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMwAAAC0AAAAyAAAALQAAADUAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAzAAAALQAAADIAAAAtAAAANgAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADMAAAAtAAAAMgAAAC0AAAA3AAAALQAAAHQAAAByAAAAZQAAAGUAAAAAAAAAAAAAAAAAAAAwAAAALQAAADIAAAAtAAAAMgAAADMAAAAtAAAAMwAAAC0AAAAyAAAALQAAADgAAAAtAAAAdAAAAHIAAABlAAAAZQAAAAAAAAAAAAAAAAAAADAAAAAtAAAAMgAAAC0AAAAyAAAAMwAAAC0AAAAzAAAALQAAADIAAAAtAAAAOQAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAAAAAAAMAAAAC0AAAAyAAAALQAAADIAAAAzAAAALQAAADMAAAAtAAAAMgAAAC0AAAAxAAAAMAAAAC0AAAB0AAAAcgAAAGUAAABlAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "AQAAAAIAAAADAAAABAAAAAUAAAAGAAAABwAAAAgAAAAJAAAACgAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "AQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAAQAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "uB6F61E4JEC4HoXrUTgoQLgehetROCxAmpmZmZkZMECamZmZmRkyQJqZmZmZGTRAmpmZmZkZNkCamZmZmRk4QJqZmZmZGTpA16NwPQoXPEA="
+              }
+            ]
+          }
+        ]
+      },
+      "height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "7FG4HoXrJ0BxPQrXo3AqQArXo3A9iixAzczMzMxMLkBI4XoUrscvQEjhehSuhzBA16NwPQoXMUAUrkfhepQxQMP1KFyPAjJApHA9CtdjMkA="
+              }
+            ]
+          }
+        ]
+      },
+      "measured_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8="
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAACARUAAAAAAAIBFQAAAAAAAgEVAAAAAAACARUAAAAAAAIBFQAAAAAAAgEVAAAAAAACARUAAAAAAAIBFQAAAAAAAgEVAAAAAAACARUA="
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkAAAAAAAABKQAAAAAAAAEpAAAAAAAAASkA="
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "FK5H4XoUGkCamZmZmTlBQI/C9ShcT1FAUrgehevxV0B7FK5H4RpaQPYoXI/CNVdAhetRuB7VUECkcD0K16NDQM3MzMzMDDJAFK5H4XqUIUA="
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "/////////////////////////////////////////////////////w=="
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "/////////////////////////////////////////////////////w=="
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8="
+              }
+            ]
+          }
+        ]
+      },
+      "pruning_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": "//////////////////////////8="
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "U1",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "<",
+                      null,
+                      null,
+                      null,
+                      4,
+                      4,
+                      8
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": "/////////////////////////////////////////////////////w=="
+              }
+            ]
+          }
+        ]
+      },
+      "sapling": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 31
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAA=="
+              }
+            ]
+          }
+        ]
+      },
+      "tree_type": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 7
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "tuhon_ilmiasu": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 8
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  10
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": "AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8AAAAAAAD4fwAAAAAAAPh/AAAAAAAA+H8="
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "tree_strata": {
+      "py/object": "lukefi.metsi.data.vector_model.TreeStrata",
+      "dtypes": {
+        "py/id": 36
+      },
+      "size": 0,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 37
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "cutting_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stratum": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 31
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "number_of_generated_trees": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "time": 2018,
+    "start_time": 2018,
+    "identifier": "0-2-23-3-2",
+    "management_unit_id": 3,
+    "stand_id": 3,
+    "area": 0.0,
+    "area_weight": 164.2650475,
+    "geo_location": {
+      "py/tuple": [
+        8840354.0,
+        7658345.0,
+        124.0,
+        "EPSG:3067"
+      ]
+    },
+    "degree_days": 1271.0,
+    "owner_category": {
+      "py/id": 59
+    },
+    "land_use_category": {
+      "py/id": 60
+    },
+    "soil_peatland_category": {
+      "py/id": 61
+    },
+    "site_type_category": {
+      "py/id": 62
+    },
+    "tax_class_reduction": 1,
+    "tax_class": 3,
+    "drainage_category": {
+      "py/id": 63
+    },
+    "drainage_feasibility": false,
+    "drainage_year": null,
+    "fertilization_year": null,
+    "soil_surface_preparation_year": 2018,
+    "natural_regeneration_feasibility": false,
+    "regeneration_area_cleaning_year": null,
+    "development_class": 5,
+    "main_tree_species_dominant_storey": {
+      "py/id": 64
+    },
+    "artificial_regeneration_year": null,
+    "young_stand_tending_year": null,
+    "pruning_year": null,
+    "cutting_year": 2011,
+    "forestry_centre_id": 0,
+    "forest_management_category": 1,
+    "method_of_last_cutting": 3,
+    "municipality_id": 417,
+    "dominant_storey_age": 52.0,
+    "dominant_height_dominant_storey": null,
+    "area_weight_factors": {
+      "py/tuple": [
+        0.0,
+        1.0
+      ]
+    },
+    "fra_category": "1",
+    "land_use_category_detail": "0",
+    "auxiliary_stand": true,
+    "monthly_temperatures": null,
+    "monthly_rainfall": null,
+    "sea_effect": null,
+    "lake_effect": null,
+    "basal_area": 17.0,
+    "stems_per_ha": null,
+    "weighted_mean_diameter": null,
+    "weighted_mean_height": null,
+    "region": 21
+  },
+  {
+    "py/object": "lukefi.metsi.data.model.ForestStand",
+    "reference_trees": {
+      "py/object": "lukefi.metsi.data.vector_model.ReferenceTrees",
+      "dtypes": {
+        "py/id": 3
+      },
+      "size": 0,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 4
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "measured_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "pruning_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/reduce": [
+                  {
+                    "py/type": "numpy.dtype"
+                  },
+                  {
+                    "py/tuple": [
+                      "U1",
+                      false,
+                      true
+                    ]
+                  },
+                  {
+                    "py/tuple": [
+                      3,
+                      "<",
+                      null,
+                      null,
+                      null,
+                      4,
+                      4,
+                      8
+                    ]
+                  }
+                ]
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 31
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_type": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 7
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tuhon_ilmiasu": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 8
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "tree_strata": {
+      "py/object": "lukefi.metsi.data.vector_model.TreeStrata",
+      "dtypes": {
+        "py/id": 36
+      },
+      "size": 0,
+      "identifier": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 37
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "species": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_diameter": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "mean_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "breast_height_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "biological_age": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "basal_area": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "origin": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "management_category": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "saw_log_volume_reduction_factor": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "cutting_year": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "age_when_10cm_diameter_at_breast_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 23
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "tree_number": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "stand_origin_relative_position": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0,
+                  3
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "lowest_living_branch_height": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "storey": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stems_per_ha": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 6
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "sapling_stratum": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 31
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      },
+      "number_of_generated_trees": {
+        "py/reduce": [
+          {
+            "py/function": "numpy._core.multiarray._reconstruct"
+          },
+          {
+            "py/tuple": [
+              {
+                "py/type": "numpy.ndarray"
+              },
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/b64": "Yg=="
+              }
+            ]
+          },
+          {
+            "py/tuple": [
+              1,
+              {
+                "py/tuple": [
+                  0
+                ]
+              },
+              {
+                "py/id": 11
+              },
+              false,
+              {
+                "py/b64": ""
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "time": 2018,
+    "start_time": 2018,
+    "identifier": "0-3-23-4-1",
+    "management_unit_id": 4,
+    "stand_id": 4,
+    "area": 164.2650475,
+    "area_weight": 164.2650475,
+    "geo_location": {
+      "py/tuple": [
+        85959511.0,
+        7599843.0,
+        70.0,
+        "EPSG:3067"
+      ]
+    },
+    "degree_days": 1275.0,
+    "owner_category": {
+      "py/id": 59
+    },
+    "land_use_category": {
+      "py/id": 60
+    },
+    "soil_peatland_category": {
+      "py/id": 61
+    },
+    "site_type_category": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.SiteType"
+        },
+        {
+          "py/tuple": [
+            2
+          ]
+        }
+      ]
+    },
+    "tax_class_reduction": 0,
+    "tax_class": 1,
+    "drainage_category": {
+      "py/id": 63
+    },
+    "drainage_feasibility": false,
+    "drainage_year": null,
+    "fertilization_year": null,
+    "soil_surface_preparation_year": 2018,
+    "natural_regeneration_feasibility": false,
+    "regeneration_area_cleaning_year": null,
+    "development_class": 1,
+    "main_tree_species_dominant_storey": {
+      "py/reduce": [
+        {
+          "py/type": "lukefi.metsi.data.enums.internal.TreeSpecies"
+        },
+        {
+          "py/tuple": [
+            2
+          ]
+        }
+      ]
+    },
+    "artificial_regeneration_year": null,
+    "young_stand_tending_year": null,
+    "pruning_year": null,
+    "cutting_year": 2017,
+    "forestry_centre_id": 0,
+    "forest_management_category": 1,
+    "method_of_last_cutting": 2,
+    "municipality_id": 417,
+    "dominant_storey_age": 0.0,
+    "dominant_height_dominant_storey": null,
+    "area_weight_factors": {
+      "py/tuple": [
+        0.0,
+        1.0
+      ]
+    },
+    "fra_category": "1",
+    "land_use_category_detail": "0",
+    "auxiliary_stand": false,
+    "monthly_temperatures": null,
+    "monthly_rainfall": null,
+    "sea_effect": null,
+    "lake_effect": null,
+    "basal_area": 0.0,
+    "stems_per_ha": null,
+    "weighted_mean_diameter": null,
+    "weighted_mean_height": null,
+    "region": 21
+  }
+]

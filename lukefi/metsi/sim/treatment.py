@@ -44,7 +44,7 @@ class Treatment(Generic[T_contra]):
                  ) -> None:
         """
         Creates a Treatment object with the given treatment function and metadata.
-        
+
         :param treatment_fn: The treatment function to wrap
         :type treatment_fn: TreatmentFn[T_contra]
         :param name: A name for the Treatment. Defaults to the `__name__` of the function.

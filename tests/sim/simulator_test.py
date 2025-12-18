@@ -202,13 +202,13 @@ class SimulatorTest(unittest.TestCase):
                             Alternatives([
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 2
                                     }
                                 ),
                                 Event(
                                     inc_param,
-                                    parameters={
+                                    static_parameters={
                                         "incrementation": 3
                                     }
                                 )
@@ -387,7 +387,7 @@ class SimulatorTest(unittest.TestCase):
             "simulation_instructions": [
                 SimulationInstruction(
                     events=[
-                        Event(toy_inc, parameters={
+                        Event(toy_inc, static_parameters={
                             "incrementation": 1
                         })
                     ]
@@ -395,10 +395,10 @@ class SimulatorTest(unittest.TestCase):
                 SimulationInstruction(
                     events=[
                         Alternatives([
-                            Event(toy_inc, parameters={
+                            Event(toy_inc, static_parameters={
                                 "incrementation": 2
                             }),
-                            Event(toy_inc, parameters={
+                            Event(toy_inc, static_parameters={
                                 "incrementation": 3
                             }),
                         ])

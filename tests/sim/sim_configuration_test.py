@@ -30,7 +30,7 @@ class SimConfigurationTest(unittest.TestCase):
                                 TimeSinceTreatment(5, tr1)
                             ],
                             treatment=tr1,
-                            parameters={
+                            static_parameters={
                                 'param1': 1
                             }
                         ),
@@ -47,7 +47,7 @@ class SimConfigurationTest(unittest.TestCase):
                                     TimeSinceTreatment(5, tr1)
                                 ],
                                 treatment=tr1,
-                                parameters={
+                                static_parameters={
                                     'param1': 1
                                 }
                             ),

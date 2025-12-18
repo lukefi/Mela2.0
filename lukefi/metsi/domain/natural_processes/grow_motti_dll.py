@@ -214,11 +214,15 @@ class MottiDLLPredictor:
     def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
         rt = self.stand.reference_trees
         if not rt:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
         n = rt.size
         if n == 0:
             # nothing to do; fake zeros in the same shape the caller expects
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[])
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
 
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
@@ -394,6 +398,8 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     id_to_delta_d = {int(i): float(d) for i, d in zip(growth.tree_ids, growth.trees_id)}
     id_to_delta_h = {int(i): float(h) for i, h in zip(growth.tree_ids, growth.trees_ih)}
     id_to_delta_f = {int(i): float(f) for i, f in zip(growth.tree_ids, growth.trees_if)}
+    id_to_age = {int(i): float(a) for i, a in zip(growth.tree_ids, growth.trees_age)}
+    id_to_age13 = {int(i): float(a13) for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
 
     n = rt.size
     ids = np.arange(1, n + 1, dtype=int)
@@ -419,6 +425,36 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
     # Apply vectorized update (also advances ages etc. inside util)
     update_stand_growth(stand, d_new, h_new, f_new, step)
+
+    rt = stand.reference_trees
+    n = rt.size
+
+    if growth.trees_age:
+        id_to_age = {int(i): float(a)
+                     for i, a in zip(growth.tree_ids, growth.trees_age)}
+    else:
+        id_to_age = {}
+
+    if growth.trees_age13:
+        id_to_age13 = {int(i): float(a13)
+                       for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
+    else:
+        id_to_age13 = {}
+
+    if id_to_age or id_to_age13:
+        ids = np.arange(1, n + 1, dtype=int)
+
+        bio_age = rt.biological_age.copy()
+        bh_age = rt.breast_height_age.copy()
+
+        for idx, tid in enumerate(ids.tolist()):
+            if tid in id_to_age:
+                bio_age[idx] = id_to_age[tid]
+            if tid in id_to_age13:
+                bh_age[idx] = id_to_age13[tid]
+
+        rt.biological_age = bio_age
+        rt.breast_height_age = bh_age
 
     return stand, []
 

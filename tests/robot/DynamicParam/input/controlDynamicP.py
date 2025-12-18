@@ -11,6 +11,7 @@ from lukefi.metsi.sim.treatment import do_nothing
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
+        # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
         # "state_output_container": "csv",  # options: pickle, json, csv, null
         # "derived_data_output_container": "pickle",  # options: pickle, json, null
         "run_modes": ["preprocess", "export_prepro", "simulate"]
@@ -47,7 +48,10 @@ control_structure = {
                     Event(treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
                     Sequence([
                         Event(treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
-                        Event(treatment=do_nothing, static_parameters={"n": 3}, tags={"third_type"})
+                        Event(
+                            treatment=do_nothing,
+                            static_parameters={"n": 3},
+                            dynamic_parameters={"m": lambda x: x.site_type_category.value + 100}, tags={"third_type"})
                     ])
                 ])
             ]
@@ -67,6 +71,7 @@ control_structure = {
     },
     'export_prepro': {
         'csv': {},
+        'json': {}
     }
 }
 

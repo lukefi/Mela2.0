@@ -13,6 +13,9 @@ class GrowthDeltas:
     trees_id: List[float]   # diameter increments (xd)
     trees_ih: List[float]   # height increments (xh)
     trees_if: List[float]   # stems/ha delta (Δf)
+    trees_age: List[float]   # final biological age
+    trees_age13: List[float]  # final breast-height age
+
 
 @contextmanager
 def _maybe_chdir(tmp_dir: Optional[Path] = None):
@@ -38,6 +41,7 @@ class Motti4DLL:
     Wrapper aligned with the C wrapper’s flow:
       SiteInit(Y,X,Z) -> fill yy (no dd) -> CheckYY -> Init -> UpdateAfterImport -> (loop) Growth
     """
+
     def __init__(self, lib_path: str | Path, data_dir: Optional[str | Path] = None):
         self.data_dir = Path(data_dir) if data_dir else None
         lib_path = Path(lib_path).resolve()
@@ -80,7 +84,6 @@ class Motti4DLL:
     def maybe_chdir(tmp_dir: Path | None = None):
         """Public wrapper around internal contextmanager _maybe_chdir."""
         return _maybe_chdir(tmp_dir)
-
 
     @property
     def param_290(self) -> float:
@@ -135,8 +138,8 @@ class Motti4DLL:
             float dg_kkp, dg_klv, dg_vlj;
             float _40;
         } Motti4SaplingStratum;
-        typedef struct { 
-            Motti4SaplingStratum ma, ku, ra, hi, ha, hl, tl, mh, ml, _10; 
+        typedef struct {
+            Motti4SaplingStratum ma, ku, ra, hi, ha, hl, tl, mh, ml, _10;
         } Motti4SaplingsSpev;
         typedef Motti4SaplingsSpev Motti4Saplings[10];
 
@@ -286,9 +289,9 @@ class Motti4DLL:
     # ---------- full grow (Init -> UpdateAfterImport -> loop Growth) ----------
 
     def grow(
-            self, yy, yp, numtrees: int, step: int = 5,
-            ctrl: Optional[dict] = None, skip_init: bool = True
-        ) -> GrowthDeltas:
+        self, yy, yp, numtrees: int, step: int = 5,
+        ctrl: Optional[dict] = None, skip_init: bool = True
+    ) -> GrowthDeltas:
         ffi, lib = self.ffi, self.lib
         strata = ffi.new("Motti4Strata *")
         saplings = ffi.new("Motti4Saplings *")
@@ -368,5 +371,14 @@ class Motti4DLL:
         out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
         out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
         out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
+        out_age = [float(yp[0][i].age) for i in range(ntrees_p[0])]
+        out_age13 = [float(yp[0][i].age13) for i in range(ntrees_p[0])]
 
-        return GrowthDeltas(tree_ids=ids_now, trees_id=out_id, trees_ih=out_ih, trees_if=out_if)
+        return GrowthDeltas(
+            tree_ids=ids_now,
+            trees_id=out_id,
+            trees_ih=out_ih,
+            trees_if=out_if,
+            trees_age=out_age,
+            trees_age13=out_age13,
+        )
