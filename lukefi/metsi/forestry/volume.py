@@ -42,9 +42,9 @@ def tree_volumes(reference_trees: ReferenceTrees,
     dbh = reference_trees.breast_height_diameter
     h = reference_trees.height
     species = reference_trees.species
-    logita, lambda_ = volume_params(dbh, h, species, temperature_sum, dataset)
+    logita, lambda_ = volume_params(dbh, h, species, temperature_sum / 10, dataset)
 
-    return _tree_volumes(dbh, h, logita, lambda_)
+    return _tree_volumes(dbh, h, logita, lambda_) / 1000
 
 
 def _tree_volumes(dbh: npt.NDArray[np.float64],
