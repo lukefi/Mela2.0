@@ -85,7 +85,7 @@ def file_contents(file_path: str | Path) -> str:
 
 
 def csv_reader() -> StandReader:
-    """Resolve a reader function for FDM data containers"""
+    """Reads FDM data from CSV to SOA vectors"""
 
     return lambda path: csv_content_to_stands(csv_file_reader(path))
 
