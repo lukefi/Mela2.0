@@ -291,7 +291,7 @@ class VMI12Builder(VMIBuilder):
             result[stand.identifier] = stand
 
         # Strata → TreeStrata SoA
-        if self.builder_flags.get('strata', True):
+        if self.builder_flags.get('strata', False):
             for row in self.tree_strata:
                 stratum = self.convert_stratum_entry(VMI12_STRATUM_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
@@ -302,7 +302,7 @@ class VMI12Builder(VMIBuilder):
                 _append_dataclass_to_attr_dict(stratum, attr_dict)
 
         # Trees → ReferenceTrees SoA
-        if self.builder_flags.get('measured_trees', True):
+        if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
                 tree = self.convert_tree_entry(VMI12_TREE_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
