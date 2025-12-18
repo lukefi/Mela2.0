@@ -24,7 +24,7 @@ class MetsiConfiguration(SimpleNamespace):
     input_path = ""
     target_directory = ""
     run_modes = [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE]
-    state_format = StateFormat.FDM
+    state_format = StateFormat.CSV
     state_output_container: Optional[StateOutputFormat] = None
     derived_data_output_container: Optional[str] = None
     measured_trees = False

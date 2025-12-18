@@ -30,7 +30,7 @@ class TestAppIO(unittest.TestCase):
         self.assertEqual(args[0], result.input_path)
         self.assertEqual(args[1], result.target_directory)
         self.assertEqual(args[2], result.control_file)
-        self.assertEqual(StateFormat.FDM, result.state_format)  # MetsiConfiguration default
+        self.assertEqual(StateFormat.CSV, result.state_format)  # MetsiConfiguration default
         self.assertEqual(None, result.derived_data_output_container)  # MetsiConfiguration default
         self.assertEqual(StateOutputFormat.PICKLE, result.state_output_container)  # Overrides default
         self.assertEqual([RunMode.PREPROCESS, RunMode.SIMULATE], result.run_modes)

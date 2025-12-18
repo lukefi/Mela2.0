@@ -161,7 +161,7 @@ class TestFileReading(unittest.TestCase):
     def test_read_stands_from_csv_file(self):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.csv",
-            state_format="fdm",
+            state_format="csv",
         )
         stands_from_csv = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands_from_csv), 2)
@@ -203,7 +203,7 @@ class TestFileReading(unittest.TestCase):
     def test_read_stands_from_nonexisting_file(self):
         config = MetsiConfiguration(
             input_path="nonexisting_file.pickle",
-            state_format="fdm",
+            state_format="csv",
         )
         self.assertRaises(Exception, file_io.read_stands_from_file, config)
 

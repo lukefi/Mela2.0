@@ -87,7 +87,7 @@ class EvaluationStrategy(StringConfigEnum):
 
 
 class StateFormat(StringConfigEnum):
-    FDM = 'fdm'
+    CSV = 'csv'
     VMI12 = 'vmi12'
     VMI13 = 'vmi13'
     XML = 'xml'

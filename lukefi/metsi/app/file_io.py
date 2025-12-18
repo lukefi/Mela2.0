@@ -84,20 +84,12 @@ def file_contents(file_path: str | Path) -> str:
 # solve FdmReader
 
 
-def fdm_reader() -> StandReader:
+def csv_reader() -> StandReader:
     """Resolve a reader function for FDM data containers"""
 
     return lambda path: csv_content_to_stands(csv_file_reader(path))
 
 # solve ObjectReader
-
-
-def object_reader(container_format: str) -> Any:
-    if container_format == "pickle":
-        return pickle_reader
-    if container_format == "json":
-        return json_reader
-    raise MetsiException(f"Unsupported container format '{container_format}'")
 
 # SourceDataReaders
 
@@ -119,14 +111,14 @@ def source_data_reader(state_format: str, conversions, **builder_flags) -> Stand
 
 def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str, Conversion]) -> StandList:
     """
-    Read a list of ForestStands from given file with given configuration. Directly reads FDM format data. Utilizes
-    FDM ForestBuilder utilities to transform VMI12, VMI13 or Forest Centre data into FDM ForestStand format.
+    Read a list of ForestStands from given file with given configuration. Directly reads CSV format data. Utilizes
+    FDM ForestBuilder utilities to transform VMI12, VMI13 or Forest Centre data into CSV ForestStand format.
 
     :param app_config: Mela2Configuration
     :return: list of ForestStands as computational units for simulation
     """
-    if app_config.state_format == "fdm":
-        return fdm_reader()(app_config.input_path)
+    if app_config.state_format == "csv":
+        return csv_reader()(app_config.input_path)
     if app_config.state_format in ("vmi13", "vmi12", "xml", "gpkg"):
         return source_data_reader(
             app_config.state_format.value,
@@ -195,30 +187,6 @@ def xml_file_reader(file: str | Path) -> str:
 def csv_file_reader(file: str | Path) -> list[list[str]]:
     with open(file, 'r', encoding='utf-8') as input_file:
         return list(csv.reader(input_file, delimiter=';'))
-
-## ObjectFileReaders start ##
-
-
-def json_reader(file_path: str | Path) -> StandList:
-    return jsonpickle.decode(file_contents(file_path))  # type: ignore
-
-
-def pickle_reader(file_path: str | Path) -> StandList:
-    with open(file_path, 'rb') as f:
-        return pickle.load(f)
-
-
-def npy_file_reader(file_path: str | Path) -> np.ndarray:
-    with open(file_path, 'rb') as f:
-        return np.load(f, allow_pickle=True)
-
-
-def npz_file_reader(file_path: str | Path):
-    with np.load(file_path, allow_pickle=True) as data:
-        retval = []
-        for v in data.values():
-            retval.append(v)
-    return retval
 
 
 def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
