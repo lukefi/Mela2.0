@@ -1,7 +1,8 @@
 from collections.abc import Sequence, Iterable
 from abc import ABC, abstractmethod
-from typing import overload
+from typing import overload, Any
 import xml.etree.ElementTree as ET
+import numpy as np
 from pandas import DataFrame, Series
 
 from lukefi.metsi.app.console_logging import print_logline
@@ -20,6 +21,133 @@ from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.metsi.data.vector_model import DTYPES_TREE, DTYPES_STRATA
+
+
+def _append_stratum_row(attr: dict[str, list], indices, row, stand: ForestStand, conversion_reader: ConversionMapper):
+    identifier = vmi_util.generate_stratum_identifier(row, indices)
+    species = vmi2internal.convert_species(row[indices["species"]])
+    origin = vmi_util.determine_stratum_origin(row[indices["origin"]])
+
+    stems_per_ha = util.get_or_default(util.parse_type(row[indices["stems_per_ha"]], float), 0.0)
+    sapling_stems_per_ha = util.get_or_default(util.parse_type(row[indices["sapling_stems_per_ha"]], float), 0.0)
+    sapling_stratum = sapling_stems_per_ha > 0
+
+    mean_diameter = util.parse_type(row[indices["avg_diameter"]], float)
+    mean_height = vmi_util.determine_stratum_tree_height(row[indices["avg_height"]])
+    biological_age, breast_height_age = vmi_util.determine_stratum_age_values(
+        row[indices["biological_age"]],
+        row[indices["d13_age"]],
+        mean_height,
+    )
+
+    basal_area = util.parse_type(row[indices["basal_area"]], float)
+    tree_number = util.parse_int(row[indices["stratum_number"]])
+    storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
+
+    # Fill all keys (use your current defaults)
+    attr["identifier"].append(identifier)
+    attr["species"].append(species)
+    attr["origin"].append(origin)
+    attr["stems_per_ha"].append(stems_per_ha)
+    attr["mean_diameter"].append(mean_diameter)
+    attr["mean_height"].append(mean_height)
+    attr["breast_height_age"].append(breast_height_age)
+    attr["biological_age"].append(biological_age)
+    attr["basal_area"].append(basal_area)
+    attr["sapling_stems_per_ha"].append(sapling_stems_per_ha)
+    attr["sapling_stratum"].append(sapling_stratum)
+    attr["storey"].append(storey)
+
+    # keep the same placeholders you currently set in AoS:
+    attr["cutting_year"].append(0)
+    attr["age_when_10cm_diameter_at_breast_height"].append(0)
+    attr["stand_origin_relative_position"].append((0.0, 0.0, 0.0))
+    attr["lowest_living_branch_height"].append(0.0)
+    attr["management_category"].append(1)
+    attr["tree_number"].append(tree_number)
+
+
+def _append_tree_row(
+    attr: dict[str, list],
+    indices,
+    row,
+    is_vmi12: bool = False,
+):
+    """
+    Append one VMI tree row into an SoA attribute dict compatible with DTYPES_TREE.
+
+    Key rule:
+      - Every key we touch must be a DTYPES_TREE key
+      - For keys we touch, we MUST append exactly one value per tree row
+      - Keys we don't touch must be absent from `attr` so VectorData.vectorize() can default them
+    """
+
+    # --- Parse / convert values exactly once ---
+    identifier = vmi_util.generate_tree_identifier(row, indices)
+    tree_number = util.parse_type(row[indices["tree_number"]], int)
+
+    species = vmi2internal.convert_species(row[indices["species"]])
+    tree_category = row[indices["tree_category"]]
+
+    breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
+
+    breast_height_age, biological_age = vmi_util.determine_tree_age_values(
+        row[indices["d13_age"]],
+        row[indices["age_increase"]],
+        row[indices["total_age"]],
+    )
+
+    # Heights: VMI provides dm-ish numeric strings; function returns meters or None
+    height = vmi_util.determine_tree_height(row[indices["height"]])
+    measured_height = vmi_util.determine_tree_height(row[indices["measured_height"]])
+
+    # Stems/ha differs between VMI12 and VMI13 (so pass flag from builder)
+    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
+
+    origin = 0
+    management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
+    storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
+
+    saw_log_volume_reduction_factor = 0.0
+    pruning_year = 0
+    age_when_10cm_diameter_at_breast_height = 0
+    stand_origin_relative_position = (0.0, 0.0, 0.0)
+
+    lowest_living_branch_height = (
+        util.get_or_default(util.parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
+    )
+
+    sapling = False
+    tree_type = vmi_util.determine_tree_type(row[indices["tree_type"]])
+
+    tuhon_raw = row[indices["tuhon_ilmiasu"]]
+    tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
+
+    basal_area = None  # VectorData will default None -> np.nan for float
+
+    attr.setdefault("identifier", []).append(identifier)
+    attr.setdefault("tree_number", []).append(tree_number)
+    attr.setdefault("species", []).append(species)
+    attr.setdefault("breast_height_diameter", []).append(breast_height_diameter)
+    attr.setdefault("height", []).append(height)
+    attr.setdefault("measured_height", []).append(measured_height)
+    attr.setdefault("breast_height_age", []).append(breast_height_age)
+    attr.setdefault("biological_age", []).append(biological_age)
+    attr.setdefault("stems_per_ha", []).append(stems_per_ha)
+    attr.setdefault("origin", []).append(origin)
+    attr.setdefault("management_category", []).append(management_category)
+    attr.setdefault("saw_log_volume_reduction_factor", []).append(saw_log_volume_reduction_factor)
+    attr.setdefault("pruning_year", []).append(pruning_year)
+    attr.setdefault("age_when_10cm_diameter_at_breast_height", []).append(age_when_10cm_diameter_at_breast_height)
+    attr.setdefault("stand_origin_relative_position", []).append(stand_origin_relative_position)
+    attr.setdefault("lowest_living_branch_height", []).append(lowest_living_branch_height)
+    attr.setdefault("tree_category", []).append(tree_category)
+    attr.setdefault("storey", []).append(storey)
+    attr.setdefault("sapling", []).append(sapling)
+    attr.setdefault("tree_type", []).append(tree_type)
+    attr.setdefault("tuhon_ilmiasu", []).append(tuhon_ilmiasu)
+    attr.setdefault("basal_area", []).append(basal_area)
 
 
 def _append_dataclass_to_attr_dict(obj, attr_dict: dict[str, list]):
@@ -291,15 +419,17 @@ class VMI12Builder(VMIBuilder):
             result[stand.identifier] = stand
 
         # Strata → TreeStrata SoA
+
         if self.builder_flags.get('strata', False):
+
             for row in self.tree_strata:
                 stratum = self.convert_stratum_entry(VMI12_STRATUM_INDICES, row)
                 stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
                 stand = result[stand_id]
                 stratum.stand = stand  # only for conversion logic; not stored in SoA
 
-                attr_dict = strata_attrs.setdefault(stand_id, {})
-                _append_dataclass_to_attr_dict(stratum, attr_dict)
+                attr_dict = strata_attrs.get(stand_id, {})
+                _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row, stand, self.conversion_reader)
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
@@ -310,7 +440,7 @@ class VMI12Builder(VMIBuilder):
                 tree.stand = stand
 
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                _append_dataclass_to_attr_dict(tree, attr_dict)
+                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi12=True)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
@@ -423,7 +553,7 @@ class VMI13Builder(VMIBuilder):
                 stratum.stand = stand  # only for conversion logic; not stored in SoA
 
                 attr_dict = strata_attrs.setdefault(stand_id, {})
-                _append_dataclass_to_attr_dict(stratum, attr_dict)
+                _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row, stand, self.conversion_reader)
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', True):
@@ -434,7 +564,7 @@ class VMI13Builder(VMIBuilder):
                 tree.stand = stand
 
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                _append_dataclass_to_attr_dict(tree, attr_dict)
+                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row, is_vmi12=False)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
