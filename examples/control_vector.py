@@ -43,12 +43,7 @@ control_structure = {
         )
     ],
     'export_prepro': {
-        # "csv": {},  # default csv export
-        # "rst": {},
-        # "json": {}
-        "pickle": {},
-        "npy": {},
-        "npz": {},
+        "csv": {},
     }
 }
 

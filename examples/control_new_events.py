@@ -12,7 +12,6 @@ control_structure = {
         "formation_strategy": "partial",
         "evaluation_strategy": "depth",
         "run_modes": ["preprocess", "simulate"],
-        "state_output_container": "csv",
     },
     "preprocessing_operations": [
         generate_reference_trees,

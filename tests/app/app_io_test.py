@@ -21,7 +21,6 @@ class TestAppIO(unittest.TestCase):
         args = ['cli_input', 'cli_output', 'cli_control.py']
         cli_args = parse_cli_arguments(args)
         control_args = {
-            'state_output_container': 'pickle',
             'run_modes': ['preprocess',
                           'simulate'],
             'multiprocessing': True}
@@ -31,8 +30,6 @@ class TestAppIO(unittest.TestCase):
         self.assertEqual(args[1], result.target_directory)
         self.assertEqual(args[2], result.control_file)
         self.assertEqual(StateFormat.CSV, result.state_format)  # MetsiConfiguration default
-        self.assertEqual(None, result.derived_data_output_container)  # MetsiConfiguration default
-        self.assertEqual(StateOutputFormat.PICKLE, result.state_output_container)  # Overrides default
         self.assertEqual([RunMode.PREPROCESS, RunMode.SIMULATE], result.run_modes)
 
     def test_control_config_with_invalid_values(self):

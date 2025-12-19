@@ -11,8 +11,6 @@ from lukefi.metsi.sim.treatment import do_nothing
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
-        # "state_output_container": "csv",  # options: pickle, json, csv, null
-        # "derived_data_output_container": "pickle",  # options: pickle, json, null
         "run_modes": ["preprocess", "export_prepro", "simulate"]
     },
     "preprocessing_operations": [
