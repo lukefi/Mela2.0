@@ -6,8 +6,6 @@ from lukefi.metsi.app.metsi_enum import (
     IntConfigEnum,
     RunMode,
     StateFormat,
-    StateOutputFormat,
-    DerivedDataOutputFormat,
     FormationStrategy,
     EvaluationStrategy,
     StrataOrigin,
