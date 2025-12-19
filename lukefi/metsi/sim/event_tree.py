@@ -70,7 +70,8 @@ class EventTree[T: ComputationalUnit]:
         except ConditionFailed:
             return
 
-        current.node_id.append(node)
+        if self.db_output:
+            current.node_id.append(node)
 
         if db is not None and self.db_output:
             output_node_to_db(db, current, collected_data, self.tags)
@@ -83,7 +84,7 @@ class EventTree[T: ComputationalUnit]:
             return
 
         if len(self.branches) == 1:
-            yield from self.branches[0].evaluate(current, db)
+            yield from self.branches[0].evaluate(current, db, 0 if self.db_output else node)
             return
 
         for i, branch in enumerate(self.branches):
