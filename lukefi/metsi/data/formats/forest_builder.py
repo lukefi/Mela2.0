@@ -1,8 +1,7 @@
 from collections.abc import Sequence, Iterable
 from abc import ABC, abstractmethod
-from typing import overload, Any
+from typing import overload
 import xml.etree.ElementTree as ET
-import numpy as np
 from pandas import DataFrame, Series
 
 from lukefi.metsi.app.console_logging import print_logline
