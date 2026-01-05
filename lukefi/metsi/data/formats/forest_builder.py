@@ -536,14 +536,14 @@ class VMI13Builder(VMIBuilder):
             result[stand.identifier] = stand
 
         # Strata → TreeStrata SoA
-        if self.builder_flags.get('strata', True):
+        if self.builder_flags.get('strata', False):
             for row in self.tree_strata:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 attr_dict = strata_attrs.setdefault(stand_id, {})
                 _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row)
 
         # Trees → ReferenceTrees SoA
-        if self.builder_flags.get('measured_trees', True):
+        if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_id, {})
