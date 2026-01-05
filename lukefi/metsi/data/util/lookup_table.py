@@ -92,4 +92,5 @@ class LookupTable(Generic[T]):
                 + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
             )
 
-        return filtered.iloc[0].to_dict()
+        row = filtered.iloc[0].to_dict()
+        return {str(k): v for k, v in row.items()}
