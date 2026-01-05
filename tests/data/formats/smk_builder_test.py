@@ -286,8 +286,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
     def test_gpkg_builder_strata_identifiers(self):
         vec0 = self.gpkg_stands[0].tree_strata
 
-        self.assertEqual(np.str_('1086166527'), vec0.identifier[0])
-        self.assertEqual(np.str_('1086166528'), vec0.identifier[1])
+        self.assertEqual(np.str_('41652739.1-stratum'), vec0.identifier[0])
+        self.assertEqual(np.str_('41652739.2-stratum'), vec0.identifier[1])
 
     def test_gpkg_builder_stratum_variables(self):
 

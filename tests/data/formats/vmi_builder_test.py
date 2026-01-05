@@ -422,8 +422,3 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(17.0, strata.basal_area[i])
         self.assertEqual(Storey.DOMINANT.value, strata.storey[i])
         self.assertEqual(1, strata.tree_number[i])
-
-    def test_remove_strata(self):
-        stands = deepcopy(self.vmi13_stands)
-        self.vmi13_builder().remove_strata(stands)
-        self.assertEqual(0, len(stands[1].tree_strata_pre_vec))

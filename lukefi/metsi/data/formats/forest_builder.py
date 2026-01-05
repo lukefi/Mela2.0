@@ -131,7 +131,7 @@ def _append_tree_row(
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
-    saw_log_volume_reduction_factor = 0.0
+    saw_log_volume_reduction_factor = None
     pruning_year = 0
     age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
@@ -201,14 +201,10 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "breast_height_age": None,
         "biological_age": util.parse_type(sd.Age, float),
         "basal_area": basal_area,
-        "origin": 0,
-        "management_category": 1,
-        "saw_log_volume_reduction_factor": -1.0,
-        "cutting_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
+        "origin": None,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": 0.0,
+        "lowest_living_branch_height": None,
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
         "sapling_stratum": False,
@@ -242,14 +238,14 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "breast_height_age": None,
         "biological_age": util.parse_type(rowj.age, float),
         "basal_area": basal_area,
-        "origin": 0,
-        "management_category": 1,
-        "saw_log_volume_reduction_factor": -1.0,
-        "cutting_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
+        "origin": None,
+        "management_category": None,
+        "saw_log_volume_reduction_factor": None,
+        "cutting_year": None,
+        "age_when_10cm_diameter_at_breast_height": None,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": 0.0,
+        "lowest_living_branch_height": None,
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
         "sapling_stratum": False,
