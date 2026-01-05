@@ -89,7 +89,7 @@ def _append_stratum_row(
     }
 
     # Always append in DTYPES_STRATA order
-    for key in DTYPES_STRATA.keys():
+    for key in DTYPES_STRATA:
         attr.setdefault(key, []).append(values.get(key, None))
 
 
@@ -173,7 +173,7 @@ def _append_tree_row(
     }
 
     # Always append in DTYPES_TREE order (guarantees equal-length)
-    for key in DTYPES_TREE.keys():
+    for key in DTYPES_TREE:
         attr.setdefault(key, []).append(values.get(key, None))
 
 
@@ -210,7 +210,7 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "number_of_generated_trees": None,
     }
 
-    for key in DTYPES_STRATA.keys():
+    for key in DTYPES_STRATA:
         attr.setdefault(key, []).append(values.get(key, None))
 
     return float(basal_area or 0.0)
@@ -251,7 +251,7 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "number_of_generated_trees": None,
     }
 
-    for key in DTYPES_STRATA.keys():
+    for key in DTYPES_STRATA:
         attr.setdefault(key, []).append(values.get(key, None))
 
     return float(basal_area or 0.0)
