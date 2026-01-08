@@ -188,6 +188,91 @@ VMI13_STRATUM_INDICES: dict[str, int] = {
 }
 
 
+VMI10_STAND_INDICES: dict[str, slice] = {
+    # identification (used by vmi_util.generate_stand_identifier)
+    "lohkomuoto": slice(1, 2),          # lohmuo
+    "section_y": slice(2, 5),           # lohy
+    "section_x": slice(5, 8),           # lohx
+    "test_area_number": slice(9, 11),   # koeala
+    "stand_number": slice(12, 13),      # kuvio
+    "row_type": slice(13, 14),          # tielaji (row type)
+
+    # geo
+    "lat": slice(18, 25),               # pkoonim
+    "lon": slice(25, 32),               # ikoonim
+    "height_above_sea_level": slice(82, 87),  # korkeus (dm)
+
+    # weights / area
+    "osuusrel": slice(36, 38),          # osuusrel
+    "osuus7m": slice(40, 42),           # osuus7m
+    "area_ha": slice(50, 59),           # eduala (ha, 5 decimals implied)
+
+    # other basic stand fields
+    "municipality": slice(68, 71),      # kunta
+    "degree_days": slice(87, 91),       # lamsum1
+    "owner_group": slice(92, 93),       # omiryh (optional, may be unused)
+    "date": slice(93, 99),              # pvm (ddmmyy)
+
+    # land/site keys
+    "land_category": slice(100, 101),           # maaluo 101
+    "land_category_detail": slice(101, 102),    # maaluotar 102
+    "paatyyppi": slice(104, 105),               # paatyy 105
+    "kasvupaikkatunnus": slice(106, 107),       # kaspai 107
+    "fra_class": slice(116, 117),               # fraluo 117
+
+    # basal area components (0.1 m2 units)
+    "ppa1": slice(284, 287),
+    "ppa2": slice(288, 291),
+    "ppa3": slice(292, 295),
+    "ppa4": slice(296, 299),
+    "ppa5": slice(300, 303),
+}
+
+VMI10_TREE_INDICES: dict[str, slice] = {
+    # identification (used by vmi_util.generate_tree_identifier)
+    "lohkomuoto": slice(1, 2),          # lohmuo
+    "section_y": slice(2, 5),           # lohy
+    "section_x": slice(5, 8),           # lohx
+    "test_area_number": slice(9, 11),   # koeala
+    "stand_number": slice(12, 13),      # kuvio
+    "row_type": slice(13, 14),          # tielaji
+
+    # core tree fields
+    "tree_type": slice(14, 15),         # puutyy
+    "tree_number": slice(15, 17),       # idnro
+    "species": slice(17, 19),           # puulaji
+    "diameter": slice(19, 22),          # d13 (mm)
+    "tree_category": slice(24, 25),     # puuluo
+    "latvuskerros": slice(26, 27),      # latker
+
+    # heights (dm)
+    "living_branches_height": slice(58, 61),  # elalatva (dm)
+    "height": slice(61, 64),            # pituus (dm)
+
+    # ages (years)
+    "d13_age": slice(91, 94),           # d13ika (v)
+    "total_age": slice(97, 100),        # ika (v)
+
+    # damage
+    "tuhon_ilmiasu": slice(83, 84),     # tuhilm
+}
+
+VMI10_DEADWOOD_INDICES: dict[str, slice] = {
+    "lohkomuoto": slice(1, 2),
+    "section_y": slice(2, 5),
+    "section_x": slice(5, 8),
+    "test_area_number": slice(9, 11),
+    "stand_number": slice(12, 13),
+    "row_type": slice(13, 14),
+
+    # lahopuu-specific
+    "tree_number": slice(15, 17),   # idnro (cols 16–17)
+    "species": slice(17, 19),       # puulaji (18–19)
+    "diameter_cm": slice(25, 28),   # d13cm (26–28) NOTE: cm, not mm
+    "height_dm": slice(32, 35),     # pituus (33–35) dm
+    "kpl": slice(19, 21),           # kpl (20–21) optional
+}
+
 vmi12_county_areas = [
     341.144731908512, 333.997181334169, 0.0, 342.095800524934, 344.973457199735, 342.790305010893,
     337.97691292876, 341.680159256802, 344.538163001294, 334.106632294352, 388.636152954809,

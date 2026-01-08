@@ -8,7 +8,9 @@ import sqlite3
 from typing import Any, Optional
 import numpy as np
 import jsonpickle
-from lukefi.metsi.data.formats.forest_builder import VMI13Builder, VMI12Builder, XMLBuilder, GeoPackageBuilder
+from lukefi.metsi.data.formats.forest_builder import (
+    VMI13Builder, VMI12Builder, VMI10Builder,
+    XMLBuilder, GeoPackageBuilder)
 from lukefi.metsi.data.formats.io_utils import (
     stands_to_csv_content,
     csv_content_to_stands,
@@ -28,6 +30,8 @@ ObjectLike = StandList | SimResults | CollectedData
 ObjectWriter = Callable[[Path, ObjectLike], None]
 
 # io_utils?
+
+
 def prepare_target_directory(path_descriptor: str) -> Path:
     """
     Sanity check a given directory path. Existing directory must be accessible for writing. Raise exception if directory
@@ -48,6 +52,8 @@ def prepare_target_directory(path_descriptor: str) -> Path:
     return Path(path_descriptor)
 
 # solve FileWriter - interface
+
+
 def stand_writer(container_format: str) -> StandWriter:
     """Return a serialization file writer function for a ForestDataPackage"""
     if container_format == "pickle":
@@ -73,6 +79,8 @@ def write_stands_to_file(
     writer(filepath, result)
 
 # solve ObjectWriter
+
+
 def object_writer(container_format: str) -> ObjectWriter:
     """Return a serialization file writer function for arbitrary data"""
     if container_format == "pickle":
@@ -82,15 +90,21 @@ def object_writer(container_format: str) -> ObjectWriter:
     raise MetsiException(f"Unsupported container format '{container_format}'")
 
 # io_utils
+
+
 def determine_file_path(dir_: str | Path, filename: str) -> Path:
     return Path(dir_, filename)
 
 # io_utils
+
+
 def file_contents(file_path: str | Path) -> str:
     with open(file_path, 'r', encoding="utf-8") as f:
         return f.read()
 
 # solve FdmReader
+
+
 def fdm_reader(container_format: str) -> StandReader:
     """Resolve a reader function for FDM data containers"""
     if container_format == "pickle":
@@ -102,6 +116,8 @@ def fdm_reader(container_format: str) -> StandReader:
     raise MetsiException(f"Unsupported container format '{container_format}'")
 
 # solve ObjectReader
+
+
 def object_reader(container_format: str) -> Any:
     if container_format == "pickle":
         return pickle_reader
@@ -110,12 +126,20 @@ def object_reader(container_format: str) -> Any:
     raise MetsiException(f"Unsupported container format '{container_format}'")
 
 # SourceDataReaders
+
+
 def external_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
     if state_format == "vmi13":
         return lambda path: VMI13Builder(builder_flags, conversions.get('vmi13', {}), vmi_file_reader(path)).build()
     if state_format == "vmi12":
         return lambda path: VMI12Builder(builder_flags, conversions.get('vmi12', {}), vmi_file_reader(path)).build()
+    # if state_format == "vmi11":
+    #    return lambda path: VMI11Builder(builder_flags, conversions.get('vmi11', {}), vmi_file_reader(path)).build()
+    if state_format == "vmi10":
+        return lambda path: VMI10Builder(builder_flags, conversions.get('vmi10', {}), vmi_file_reader(path)).build()
+    # if state_format == "vmi9":
+    #    return lambda path: VMI9Builder(builder_flags, conversions.get('vmi9', {}), vmi_file_reader(path)).build()
     if state_format == "xml":
         return lambda path: XMLBuilder(builder_flags, conversions.get('xml', {}), xml_file_reader(path)).build()
     if state_format == "gpkg":
@@ -123,6 +147,8 @@ def external_reader(state_format: str, conversions, **builder_flags) -> StandRea
     raise MetsiException(f"Unsupported state format '{state_format}'")
 
 # source data main entry function
+
+
 def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str, Conversion]) -> StandList:
     """
     Read a list of ForestStands from given file with given configuration. Directly reads FDM format data. Utilizes
@@ -133,7 +159,8 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     """
     if app_config.state_format == "fdm":
         return fdm_reader(app_config.state_input_container.value)(app_config.input_path)
-    if app_config.state_format in ("vmi13", "vmi12", "xml", "gpkg"):
+
+    if app_config.state_format in ("vmi13", "vmi12", "vmi11", "vmi10", "vmi9", "xml", "gpkg"):
         return external_reader(
             app_config.state_format.value,
             conversions,
@@ -141,6 +168,7 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
             measured_trees=app_config.measured_trees,
             strata_origin=app_config.strata_origin)(app_config.input_path)
     raise MetsiException(f"Unsupported state format '{app_config.state_format}'")
+
 
 def write_full_simulation_result_dirtree(result: SimResults, app_arguments: MetsiConfiguration):
     """
@@ -163,6 +191,8 @@ def write_full_simulation_result_dirtree(result: SimResults, app_arguments: Mets
                                      app_arguments.state_output_container.value)
 
 # io_util?
+
+
 def scan_dir_for_file(dirpath: Path, basename: str, suffixes: list[str]) -> Optional[tuple[Path, str]]:
     """
     From given directory path, find the filename for given basename with list of possible file suffixes.
@@ -179,6 +209,8 @@ def scan_dir_for_file(dirpath: Path, basename: str, suffixes: list[str]) -> Opti
     return None
 
 # io_util?
+
+
 def parse_file_or_default(file: Path, reader: Callable[[Path], Any], default=None) -> Optional[Any]:
     """Deserialize given file with given reader function or return default"""
     if os.path.exists(file):
@@ -186,6 +218,8 @@ def parse_file_or_default(file: Path, reader: Callable[[Path], Any], default=Non
     return default
 
 # io_util?
+
+
 def get_subdirectory_names(path: str | Path) -> list[str]:
     if not os.path.isdir(path):
         raise MetsiException(f"Given input path {path} is not a directory.")
@@ -222,6 +256,8 @@ def json_writer(filepath: Path, container: ObjectLike | ExportableContainer):
         f.write(str(jsonpickle.encode(outputtable)))
 
 # generic writer
+
+
 def row_writer(filepath: Path, rows: list[str]):
     with open(filepath, 'a', newline='\n', encoding="utf-8") as file:
         for row in rows:
@@ -238,6 +274,7 @@ def rst_writer(filepath: Path, container: ExportableContainer[ForestStand]):
     row_writer(filepath, rows)
     if container.additional_vars is not None:
         par_writer(filepath, container.additional_vars)
+
 
 def npy_writer(filepath: Path, container: ExportableContainer):
     stands = container.export_objects
@@ -256,6 +293,8 @@ def par_writer(filepath: Path, var_names: list[str]):
     row_writer(to_par_filepath(filepath), mela_par_file_content(var_names))
 
 ##### SourceFileReaders start #####
+
+
 def vmi_file_reader(file: str | Path) -> list[str]:
     with open(file, 'r', encoding='utf-8') as input_file:
         return input_file.readlines()
@@ -271,17 +310,21 @@ def csv_file_reader(file: str | Path) -> list[list[str]]:
         return list(csv.reader(input_file, delimiter=';'))
 
 ## ObjectFileReaders start ##
+
+
 def json_reader(file_path: str | Path) -> StandList:
-    return jsonpickle.decode(file_contents(file_path)) # type: ignore
+    return jsonpickle.decode(file_contents(file_path))  # type: ignore
 
 
 def pickle_reader(file_path: str | Path) -> StandList:
     with open(file_path, 'rb') as f:
         return pickle.load(f)
 
+
 def npy_file_reader(file_path: str | Path) -> np.ndarray:
     with open(file_path, 'rb') as f:
         return np.load(f, allow_pickle=True)
+
 
 def npz_file_reader(file_path: str | Path):
     with np.load(file_path, allow_pickle=True) as data:
@@ -289,6 +332,7 @@ def npz_file_reader(file_path: str | Path):
         for v in data.values():
             retval.append(v)
     return retval
+
 
 def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
     if os.path.isfile(file_path):
