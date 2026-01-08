@@ -699,26 +699,3 @@ def determine_tree_type(source: str) -> Optional[str]:
     if source in (' ', '.', ''):
         return None
     return source
-
-
-def parse_vmi10_date(date_string: str) -> Optional[dt]:
-    if date_string is None:
-        return None
-
-    raw = date_string.strip()
-    if not raw:
-        return None
-
-    digits = "".join(ch for ch in raw if ch.isdigit())
-
-    # VMI10 might include a case with 5 digits (e.g. "80807 " -> "080807")
-    if len(digits) == 5:
-        digits = "0" + digits
-
-    if len(digits) >= 6:
-        try:
-            return dt.strptime(digits[:6], "%d%m%y")
-        except ValueError:
-            return None
-
-    return None

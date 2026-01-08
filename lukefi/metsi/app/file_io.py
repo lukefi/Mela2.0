@@ -134,12 +134,8 @@ def external_reader(state_format: str, conversions, **builder_flags) -> StandRea
         return lambda path: VMI13Builder(builder_flags, conversions.get('vmi13', {}), vmi_file_reader(path)).build()
     if state_format == "vmi12":
         return lambda path: VMI12Builder(builder_flags, conversions.get('vmi12', {}), vmi_file_reader(path)).build()
-    # if state_format == "vmi11":
-    #    return lambda path: VMI11Builder(builder_flags, conversions.get('vmi11', {}), vmi_file_reader(path)).build()
     if state_format == "vmi10":
         return lambda path: VMI10Builder(builder_flags, conversions.get('vmi10', {}), vmi_file_reader(path)).build()
-    # if state_format == "vmi9":
-    #    return lambda path: VMI9Builder(builder_flags, conversions.get('vmi9', {}), vmi_file_reader(path)).build()
     if state_format == "xml":
         return lambda path: XMLBuilder(builder_flags, conversions.get('xml', {}), xml_file_reader(path)).build()
     if state_format == "gpkg":
@@ -160,7 +156,7 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     if app_config.state_format == "fdm":
         return fdm_reader(app_config.state_input_container.value)(app_config.input_path)
 
-    if app_config.state_format in ("vmi13", "vmi12", "vmi11", "vmi10", "vmi9", "xml", "gpkg"):
+    if app_config.state_format in ("vmi13", "vmi12", "vmi10", "xml", "gpkg"):
         return external_reader(
             app_config.state_format.value,
             conversions,

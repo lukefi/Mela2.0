@@ -201,7 +201,6 @@ def _parse_vmi10_area_ha(raw: str) -> float:
 def _append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
     """
     Append one VMI10 tree row into SoA dict compatible with DTYPES_TREE.
-    Uses safe defaults; does NOT require VMI12/VMI13-only fields.
     """
     identifier = vmi_util.generate_tree_identifier(row, indices)
     tree_number = util.get_or_default(util.parse_type(row[indices["tree_number"]], int), 0)
@@ -492,7 +491,7 @@ class VMIBuilder(ForestBuilder):
 
 
 class VMI10Builder(VMIBuilder):
-    """VMI10 specific builder implementation (fixed-width). No explicit strata support."""
+    """VMI10 specific builder implementation with no strata support."""
 
     def __init__(self,
                  builder_flags: dict,
@@ -514,7 +513,6 @@ class VMI10Builder(VMIBuilder):
                 self.deadwood.append(row)
 
     def find_row_type(self, row: str) -> int:
-        # VMI10: row type is at column 14 (1-based), so index 13 (0-based)
         return int(row[13])
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
@@ -525,8 +523,8 @@ class VMI10Builder(VMIBuilder):
         result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
         result.set_identifiers(stand_id)
 
-        # Year/date (safe default)
-        parsed = vmi_util.parse_vmi10_date(data_row[indices["date"]])
+        # Year/date (vmi12 parser looks usable for vmi10)
+        parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
         if parsed is None:
             raise MetsiException(
                 "Year is None in VMI10 data")
@@ -534,7 +532,7 @@ class VMI10Builder(VMIBuilder):
         result.year = parsed.year
         result.start_year = parsed.year
 
-        # Degree days (safe default = 0)
+        # Degree days
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
 
         # Area (eduala)
@@ -592,9 +590,6 @@ class VMI10Builder(VMIBuilder):
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
-
-        # Strata: intentionally empty
-        # (We still attach an empty TreeStrata container so downstream code won't crash.)
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
