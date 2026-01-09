@@ -180,142 +180,6 @@ def _append_tree_row(
         attr.setdefault(key, []).append(values.get(key, None))
 
 
-def _parse_vmi10_area_ha(raw: str) -> float:
-    """
-    VMI10: eduala = represented area in hectares, "5 decimals implied".
-    - If decimal point exists, parse directly.
-    - Else interpret as integer with 5 implied decimals.
-    """
-    s = (raw or "").strip()
-    if not s:
-        return 0.0
-    if "." in s:
-        return util.get_or_default(util.parse_type(s, float), 0.0)
-    # implied 5 decimals
-    try:
-        return int(s) / 100000.0
-    except ValueError:
-        return util.get_or_default(util.parse_type(s, float), 0.0)
-
-
-def _append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
-    """
-    Append one VMI10 tree row into SoA dict compatible with DTYPES_TREE.
-    """
-    identifier = vmi_util.generate_tree_identifier(row, indices)
-    tree_number = util.get_or_default(util.parse_type(row[indices["tree_number"]], int), 0)
-
-    # Species: use converter if possible, otherwise None
-    species = None
-
-    species = vmi2internal.convert_species(row[indices["species"]])
-
-    tree_category = row[indices["tree_category"]].strip() or None
-    breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
-
-    # Heights are in dm -> meters via /10
-    height = vmi_util.determine_tree_height(row[indices["height"]], conversion_factor=10.0)
-    measured_height = None  # not present in this VMI10 layout
-
-    lowest_living_branch_height = (
-        util.get_or_default(util.parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
-    )
-
-    # Ages: VMI10 provides d13ika and ika directly
-    breast_height_age = util.parse_type(row[indices["d13_age"]], float)
-    biological_age = util.parse_type(row[indices["total_age"]], float)
-
-    # Keep the same simple stems-per-ha estimator as VMI13 (safe default)
-    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
-
-    management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
-    storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
-    tree_type = vmi_util.determine_tree_type(row[indices["tree_type"]])
-
-    tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
-
-    values = {
-        "identifier": identifier,
-        "tree_number": tree_number,
-        "species": species,
-        "tree_category": tree_category,
-        "breast_height_diameter": breast_height_diameter,
-        "height": height,
-        "measured_height": measured_height,
-        "breast_height_age": breast_height_age,
-        "biological_age": biological_age,
-        "stems_per_ha": stems_per_ha,
-        "origin": 0,
-        "management_category": management_category,
-        "storey": storey,
-        "saw_log_volume_reduction_factor": None,
-        "pruning_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": lowest_living_branch_height,
-        "sapling": False,
-        "tree_type": tree_type,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
-        "basal_area": None,
-    }
-
-    for k, v in values.items():
-        attr.setdefault(k, []).append(v)
-
-
-def _append_deadwood_row_vmi10(attr: dict[str, list],
-                               indices: dict[str, slice],
-                               row: str):
-
-    # --- identifiers ---
-    base_id = vmi_util.generate_tree_identifier(row, indices)
-    identifier = f"{base_id}-lp"   # lahopuu
-    tree_number = util.get_or_default(util.parse_type(row[indices["tree_number"]], int), 0)
-
-    # --- species ---
-
-    species = vmi2internal.convert_species(row[indices["species"]])
-
-    # --- measurements ---
-    # lahopuu: diameter is already cm in VMI10 (per tk_laskenta10.tsv)
-    breast_height_diameter = util.get_or_default(util.parse_type(row[indices["diameter_cm"]], float), 0.0)
-
-    # lahopuu height: dm -> meters (if field is dm like most VMI10 heights)
-    height = vmi_util.determine_tree_height(row[indices["height_dm"]], conversion_factor=10.0)
-
-    # if you have better stems/ha logic for deadwood later, plug it here
-    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
-
-    values = {
-        "identifier": identifier,
-        "tree_number": tree_number,
-        "species": species,
-        "tree_category": None,
-        "breast_height_diameter": breast_height_diameter,
-        "height": height,
-        "measured_height": None,
-        "breast_height_age": None,
-        "biological_age": None,
-        "stems_per_ha": stems_per_ha,
-        "origin": 0,
-        "management_category": None,
-        "storey": 0,
-        "saw_log_volume_reduction_factor": 1.0,
-        "pruning_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": 0.0,
-        "sapling": False,
-        "tree_type": "5",
-        "tuhon_ilmiasu": None,
-        "basal_area": None,
-    }
-
-    for k, v in values.items():
-        attr.setdefault(k, []).append(v)
-
-
 def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element) -> float:
     """Append one Forest Centre (XML) stratum row into an SoA attribute dict.
 
@@ -536,7 +400,7 @@ class VMI10Builder(VMIBuilder):
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
 
         # Area (eduala)
-        area_ha = _parse_vmi10_area_ha(data_row[indices["area_ha"]])
+        area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
 
         # Area weight factors (use same simple scaling as VMI12: /10)
@@ -598,14 +462,14 @@ class VMI10Builder(VMIBuilder):
                 if stand_id not in result:
                     continue
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                _append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row)
+                vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row)
 
             for row in self.deadwood:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
                 if stand_id not in result:
                     continue
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                _append_deadwood_row_vmi10(attr_dict, VMI10_DEADWOOD_INDICES, row)
+                vmi_util.append_deadwood_row_vmi10(attr_dict, VMI10_DEADWOOD_INDICES, row)
         # Attach containers
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize({})  # empty
