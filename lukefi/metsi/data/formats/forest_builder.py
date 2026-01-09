@@ -434,7 +434,7 @@ class VMI12Builder(VMIBuilder):
         if self.builder_flags.get('strata', False):
 
             for row in self.tree_strata:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
+                stand_id = vmi_util.generate_stand_identifier(row, VMI12_STRATUM_INDICES)
                 stand = result[stand_id]
                 attr_dict = strata_attrs.setdefault(stand_id, {})
                 _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row)
@@ -442,7 +442,7 @@ class VMI12Builder(VMIBuilder):
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI12_STAND_INDICES)
+                stand_id = vmi_util.generate_stand_identifier(row, VMI12_STRATUM_INDICES)
                 stand = result[stand_id]
                 attr_dict = tree_attrs.setdefault(stand_id, {})
                 _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi12=True)
@@ -538,14 +538,14 @@ class VMI13Builder(VMIBuilder):
         # Strata → TreeStrata SoA
         if self.builder_flags.get('strata', False):
             for row in self.tree_strata:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
+                stand_id = vmi_util.generate_stand_identifier(row, VMI13_STRATUM_INDICES)
                 attr_dict = strata_attrs.setdefault(stand_id, {})
                 _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row)
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI13_STAND_INDICES)
+                stand_id = vmi_util.generate_stand_identifier(row, VMI13_STRATUM_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_id, {})
                 _append_tree_row(attr_dict, VMI13_TREE_INDICES, row, is_vmi12=False)
 
