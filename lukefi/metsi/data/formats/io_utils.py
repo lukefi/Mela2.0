@@ -14,7 +14,7 @@ from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb
 from lukefi.metsi.domain.forestry_types import StandList
 
 
-def rst_float(source) -> str:
+def rst_float(source: str | int | float | None) -> str:
     """
     Convert source to a float string with 6 decimals.
     Handles numpy arrays and various non-scalar types defensively.
