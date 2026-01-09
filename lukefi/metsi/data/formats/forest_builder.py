@@ -1,6 +1,6 @@
 from collections.abc import Sequence, Iterable
 from abc import ABC, abstractmethod
-from typing import overload
+from typing import overload, Any
 import xml.etree.ElementTree as ET
 from pandas import DataFrame, Series
 from lukefi.metsi.app.utils import MetsiException
@@ -9,7 +9,6 @@ from lukefi.metsi.data.enums.internal import OwnerCategory
 from lukefi.metsi.data.formats.vmi_const import (
     VMI10_STAND_INDICES,
     VMI10_TREE_INDICES,
-    VMI10_DEADWOOD_INDICES,
     VMI12_STAND_INDICES,
     VMI12_STRATUM_INDICES,
     VMI12_TREE_INDICES,
@@ -285,20 +284,7 @@ class VMIBuilder(ForestBuilder):
         self.tree_strata: list[str] = []
         self.builder_flags = builder_flags
         self.conversion_reader = ConversionMapper(declared_conversions)
-
-        for row in data_rows:
-            try:
-                row_type = self.find_row_type(row)
-                if row_type == 1:
-                    self.forest_stands.append(row)
-                elif row_type == 2:
-                    self.tree_strata.append(row)
-                elif row_type == 3:
-                    self.reference_trees.append(row)
-            except (IndexError, TypeError) as e:
-                print(e)
-                print('warning: VMI row not addressable: ')
-                print('    ' + str(row))
+        self._read_rows(data_rows)
 
     @overload
     def convert_stand_entry(self, indices: dict[str, int],
@@ -309,6 +295,37 @@ class VMIBuilder(ForestBuilder):
     def convert_stand_entry(self, indices: dict[str, slice],
                             data_row: str, stand_id: int | None = None) -> ForestStand:
         ...
+
+    def _read_rows(self, data_rows: Iterable) -> None:
+        """Generic row iteration + error handling. Subclasses control classification."""
+        for row in data_rows:
+            try:
+                kind = self.classify_row(row)
+                if kind == "stand":
+                    self.forest_stands.append(row)
+                elif kind == "stratum":
+                    self.tree_strata.append(row)
+                elif kind == "tree":
+                    self.reference_trees.append(row)
+            except (IndexError, TypeError, ValueError) as e:
+                print(e)
+                print("warning: VMI row not addressable: ")
+                print("    " + str(row))
+
+    def classify_row(self, row: Any) -> str | None:
+        """
+        Return 'stand', 'stratum', 'tree' or None.
+        Default mapping assumes: 1=stand, 2=stratum, 3=tree.
+        Subclasses override if their semantics differ (e.g., VMI10).
+        """
+        row_type = self.find_row_type(row)
+        if row_type == 1:
+            return "stand"
+        if row_type == 2:
+            return "stratum"
+        if row_type == 3:
+            return "tree"
+        return None
 
     def convert_stand_entry(self, indices, data_row, stand_id=None) -> ForestStand:
         """Create a ForestStand out of given VMI type 1 data row using given data indices and order number"""
@@ -365,19 +382,17 @@ class VMI10Builder(VMIBuilder):
             data_rows = []
         super().__init__(builder_flags, declared_conversions, data_rows)
 
-        # In this VMI10 layout, row_type == 2 are measured trees (no separate strata rows).
-        # VMIBuilder by default classifies type 2 as strata, so we swap them here.
-        self.reference_trees = self.tree_strata
-        self.tree_strata = []
-
-        # lahopuu
-        self.deadwood: list[str] = []
-        for row in data_rows:
-            if self.find_row_type(row) == 5:
-                self.deadwood.append(row)
-
     def find_row_type(self, row: str) -> int:
         return int(row[13])
+
+    def classify_row(self, row: str) -> str | None:
+        # VMI10 semantics: 1=stand, 2=measured tree,
+        row_type = self.find_row_type(row)
+        if row_type == 1:
+            return "stand"
+        if row_type == 2:
+            return "tree"
+        return None
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
         """
@@ -424,13 +439,7 @@ class VMI10Builder(VMIBuilder):
         result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
             data_row[indices["paatyyppi"]].strip())
 
-        # Basal area from ppa1..ppa5 (0.1 m2 units)
-        ppas = []
-        for k in ("ppa1", "ppa2", "ppa3", "ppa4", "ppa5"):
-
-            ppas.append(util.get_or_default(util.parse_type(data_row[indices[k]], float), 0.0))
-
-        result.basal_area = sum(ppas) / 10.0
+        result.basal_area = util.basal_from_ppa(data_row, indices)
 
         # Geo location: pkoonim/ikoonim meters, korkeus dm -> m
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
@@ -464,12 +473,6 @@ class VMI10Builder(VMIBuilder):
                 attr_dict = tree_attrs.setdefault(stand_id, {})
                 vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row)
 
-            for row in self.deadwood:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
-                if stand_id not in result:
-                    continue
-                attr_dict = tree_attrs.setdefault(stand_id, {})
-                vmi_util.append_deadwood_row_vmi10(attr_dict, VMI10_DEADWOOD_INDICES, row)
         # Attach containers
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize({})  # empty

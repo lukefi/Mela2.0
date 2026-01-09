@@ -257,21 +257,6 @@ VMI10_TREE_INDICES: dict[str, slice] = {
     "tuhon_ilmiasu": slice(83, 84),     # tuhilm
 }
 
-VMI10_DEADWOOD_INDICES: dict[str, slice] = {
-    "lohkomuoto": slice(1, 2),
-    "section_y": slice(2, 5),
-    "section_x": slice(5, 8),
-    "test_area_number": slice(9, 11),
-    "stand_number": slice(12, 13),
-    "row_type": slice(13, 14),
-
-    # lahopuu-specific
-    "tree_number": slice(15, 17),   # idnro (cols 16–17)
-    "species": slice(17, 19),       # puulaji (18–19)
-    "diameter_cm": slice(25, 28),   # d13cm (26–28) NOTE: cm, not mm
-    "height_dm": slice(32, 35),     # pituus (33–35) dm
-    "kpl": slice(19, 21),           # kpl (20–21) optional
-}
 
 vmi12_county_areas = [
     341.144731908512, 333.997181334169, 0.0, 342.095800524934, 344.973457199735, 342.790305010893,
