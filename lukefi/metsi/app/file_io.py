@@ -24,8 +24,6 @@ StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]
 ObjectLike = StandList | SimResults | CollectedData
 ObjectWriter = Callable[[Path, ObjectLike], None]
 
-# io_utils?
-
 
 def prepare_target_directory(path_descriptor: str) -> Path:
     """
@@ -67,26 +65,19 @@ def write_stands_to_file(
     writer(filepath, result)
 
 
-# io_utils
 def determine_file_path(dir_: str | Path, filename: str) -> Path:
     return Path(dir_, filename)
-
-# io_utils
 
 
 def file_contents(file_path: str | Path) -> str:
     with open(file_path, 'r', encoding="utf-8") as f:
         return f.read()
 
-# solve FdmReader
-
 
 def csv_reader() -> StandReader:
     """Reads FDM data from CSV to SOA vectors"""
 
     return lambda path: csv_content_to_stands(csv_file_reader(path))
-
-# solve ObjectReader
 
 # SourceDataReaders
 
