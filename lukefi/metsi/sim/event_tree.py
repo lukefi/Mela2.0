@@ -36,11 +36,7 @@ class EventTree[T: ComputationalUnit]:
 
         self.processed_treatment = treatment or identity
         self.branches = []
-
-        if tags is None:
-            self.tags = set()
-        else:
-            self.tags = tags
+        self.tags = tags or set()
         self.db_output = db_output
 
     def evaluate(self,
