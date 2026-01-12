@@ -10,7 +10,7 @@ def prep_inc(x: SimulationPayload[ToyModel]) -> tuple[SimulationPayload[ToyModel
     return x, []
 
 
-class ComputationModelTest(unittest.TestCase):
+class EventTreeTest(unittest.TestCase):
 
     root = EventTree(prep_inc)
     root.branches = [
