@@ -46,7 +46,7 @@ class EventTree[T: ComputationalUnit]:
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: Optional[sqlite3.Connection] = None,
-                 node: Optional[int] = None,
+                 node: int = 0,
                  ) -> Generator[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
@@ -62,16 +62,13 @@ class EventTree[T: ComputationalUnit]:
         :return: generator of result payloads from this EventTree or as concatenated from its branches
         :rtype: Generator[SimulationPayload[T], None, None]
         """
-        if node is None:
-            node = 0
 
         try:
             current, collected_data = self.processed_treatment(payload)
         except ConditionFailed:
             return
 
-        if self.db_output:
-            current.node_id.append(node)
+        current.node_id.append(node)
 
         if db is not None and self.db_output:
             output_node_to_db(db, current, collected_data, self.tags)
@@ -84,7 +81,7 @@ class EventTree[T: ComputationalUnit]:
             return
 
         if len(self.branches) == 1:
-            yield from self.branches[0].evaluate(current, db, 0 if self.db_output else node)
+            yield from self.branches[0].evaluate(current, db)
             return
 
         for i, branch in enumerate(self.branches):
