@@ -148,7 +148,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     node_str = "-".join(map(str, current.node_id))
     cur = db.cursor()
     cur.execute(
-        """
+        """--sql
         INSERT INTO nodes (identifier, stand, done_treatment, treatment_params, tags)
         VALUES
             (?, ?, ?, ?, ?)
@@ -166,7 +166,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
 def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
     cur = db.cursor()
     cur.execute(
-        """
+        """--sql
         UPDATE nodes
         SET leaf = 1
         WHERE
