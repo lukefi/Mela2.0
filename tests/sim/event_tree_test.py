@@ -39,12 +39,15 @@ class EventTreeTest(unittest.TestCase):
         treatment = Mock(return_value=(current, collected_data))
         payload = Mock()
         db = Mock()
+        cursor = Mock()
+        db.cursor = Mock(return_value=cursor)
 
         root1 = EventTree(treatment, None, True)
         root2 = EventTree(treatment, None, False)
 
         next(root1.evaluate(payload, db))
         db.cursor.assert_called()
+        cursor.execute.assert_called()
         db.reset_mock()
         next(root2.evaluate(payload, db))
         db.cursor.assert_not_called()
