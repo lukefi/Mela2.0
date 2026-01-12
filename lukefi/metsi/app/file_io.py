@@ -69,11 +69,6 @@ def determine_file_path(dir_: str | Path, filename: str) -> Path:
     return Path(dir_, filename)
 
 
-def file_contents(file_path: str | Path) -> str:
-    with open(file_path, 'r', encoding="utf-8") as f:
-        return f.read()
-
-
 def csv_reader() -> StandReader:
     """Reads FDM data from CSV to SOA vectors"""
 

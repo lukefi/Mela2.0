@@ -35,11 +35,6 @@ class TestFileReading(unittest.TestCase):
             result = file_io.determine_file_path(*a[0])
             self.assertEqual(a[1], result)
 
-    def test_file_contents(self):
-        input_file_path = os.path.join(os.getcwd(), "tests", "resources", "file_io_test", "test_dummy")
-        result = file_io.file_contents(input_file_path)
-        self.assertEqual("kissa123\n", result)
-
     def test_csv(self):
         data = [
             ForestStand(
