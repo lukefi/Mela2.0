@@ -1,11 +1,8 @@
 from typing import Any, Callable
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.utils.filter import applyfilter
-from lukefi.metsi.domain.utils.opt_utils import opt_species
-from lukefi.metsi.forestry.preprocessing import tree_generation, pre_util
+from lukefi.metsi.forestry.preprocessing import tree_generation
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
-from lukefi.metsi.forestry.preprocessing.age_supplementing import supplement_age_for_reference_trees
-from lukefi.metsi.forestry.preprocessing.naslund import naslund_height
 from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.app.utils import MetsiException
 
