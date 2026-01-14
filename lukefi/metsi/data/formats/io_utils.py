@@ -14,28 +14,22 @@ from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb
 from lukefi.metsi.domain.forestry_types import StandList
 
 
-def rst_float(source) -> str:
+def rst_float(source: str | int | float | None) -> str:
     """
     Convert source to a float string with 6 decimals.
     Handles numpy arrays and various non-scalar types defensively.
     """
     if source is None:
-        return f"{0.0:.6f}"
+        return "0.000000"
 
     try:
-        # Handle numpy arrays explicitly
-        if isinstance(source, np.ndarray):
-            if source.size == 0:
-                value = 0.0
-            else:
-                # Use first element if there are many
-                value = float(source.reshape(-1)[0])
-        else:
-            value = float(source)
+        value = float(source)
+        if np.isnan(value):
+            value = 0.0
     except (TypeError, ValueError):
         value = 0.0
 
-    return f"{round(value, 6):.6f}"
+    return f"{value:.6f}"
 
 
 def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
