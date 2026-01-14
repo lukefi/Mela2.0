@@ -115,12 +115,6 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
     # are scaled by proportion of the sample plot with 9 m radius.
     _ = operation_params
     for stand in stands:
-        # for t in stand.reference_trees_pre_vec:
-        #     if 4.5 <= t.breast_height_diameter < 9.5 and 0 < stand.area_weight_factors[0] < 1 > 0:
-        #         t.stems_per_ha = t.stems_per_ha / stand.area_weight_factors[0]
-        #     if t.breast_height_diameter >= 9.5 and 0 < stand.area_weight_factors[1] < 1:
-        #         t.stems_per_ha = t.stems_per_ha / stand.area_weight_factors[1]
-
         trees = stand.reference_trees
         smaller_diameter = (4.5 <= trees.breast_height_diameter < 9.5) & (0 < stand.area_weight_factors[0] < 1)
         larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
