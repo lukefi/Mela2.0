@@ -1,4 +1,5 @@
 from typing import Callable
+import numpy as np
 from lukefi.metsi.domain.forestry_types import StandList
 
 VERBS: set[str] = {"select", "remove"}
@@ -22,27 +23,45 @@ def parsecommand(command: str) -> tuple[str, str]:
 
 def applyfilter(stands: StandList, command: str, predicate: Callable[..., bool]) -> StandList:
     verb, object_ = parsecommand(command)
-    if verb == "remove":
-        p = predicate
-        predicate = lambda f: not p(f)  # pylint: disable=unnecessary-lambda-assignment
+
     if object_ == "stands":
-        stands = [
-            s
-            for s in stands
-            if predicate(s)
-        ]
-    elif object_ == "trees":
+        if verb == "select":
+            return [s for s in stands if predicate(s)]
+        # remove
+        return [s for s in stands if not predicate(s)]
+
+    if object_ == "trees":
         for s in stands:
-            s.reference_trees_pre_vec = [
-                t
-                for t in s.reference_trees_pre_vec
-                if predicate(t)
-            ]
-    elif object_ == "strata":
-        for s in stands:
-            s.tree_strata_pre_vec = [
-                t
-                for t in s.tree_strata_pre_vec
-                if predicate(t)
-            ]
+            trees = s.reference_trees
+            if trees.size == 0:
+                continue
+
+            mask = np.asarray(predicate(trees), dtype=bool)
+            if mask.shape != (trees.size,):
+                raise ValueError(
+                    f"tree predicate must return mask of shape ({trees.size},), got {mask.shape}"
+                )
+
+            if verb == "remove":
+                mask = ~mask
+
+            s.reference_trees = trees[mask]
+        return stands
+
+    # handle strata
+    for s in stands:
+        strata = s.tree_strata
+        if strata.size == 0:
+            continue
+
+        mask = np.asarray(predicate(strata), dtype=bool)
+        if mask.shape != (strata.size,):
+            raise ValueError(
+                f"strata predicate must return mask of shape ({strata.size},), got {mask.shape}"
+            )
+
+        if verb == "remove":
+            mask = ~mask
+
+        s.tree_strata = strata[mask]
     return stands

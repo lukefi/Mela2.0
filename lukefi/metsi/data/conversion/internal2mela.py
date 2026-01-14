@@ -1,5 +1,8 @@
 from copy import copy
+import numpy as np
+from typing import cast
 from lukefi.metsi.data.model import ForestStand, ReferenceTree
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.mela import (
     MelaOwnerCategory,
     MelaSiteTypeCategory,
@@ -16,7 +19,7 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     DrainageCategory
 )
-from lukefi.metsi.data.conversion.util import apply_mappers
+from lukefi.metsi.data.conversion.util import apply_mappers, copy_vector_data
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -225,41 +228,61 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     result.geo_location = copy(stand.geo_location)
     result.area_weight_factors = copy(stand.area_weight_factors)
     result = apply_mappers(result, *default_mela_stand_mappers)
-    result.reference_trees_pre_vec = list(map(mela_tree, result.reference_trees_pre_vec))
-    for tree in result.reference_trees_pre_vec:
-        tree.stand = result
-    result.tree_strata_pre_vec = list(map(mela_stratum, result.tree_strata_pre_vec))
-    for stratum in result.tree_strata_pre_vec:
-        stratum.stand = result
+
     # Some  fixed RST spesific classifier conversions TODO: find a better place for these.
     # stand level
     result.forestry_centre_id = (-1 if result.forestry_centre_id is None
                                  else result.forestry_centre_id)
     result.municipality_id = (-1 if result.municipality_id is None
                               else result.municipality_id)
-    result.soil_peatland_category = (0 if result.soil_peatland_category is None
-                                     else result.soil_peatland_category.value)
-    result.site_type_category = (0 if result.site_type_category is None
-                                 else result.site_type_category.value)
-    result.drainage_category = (0 if result.drainage_category is None
-                                else result.drainage_category.value)
+
+    result.soil_peatland_category = cast(
+        "SoilPeatlandCategory | None",
+        0 if result.soil_peatland_category is None else result.soil_peatland_category.value,
+    )
+
+    result.site_type_category = cast(
+        "SiteType | None",
+        0 if result.site_type_category is None else result.site_type_category.value,
+    )
+
+    result.drainage_category = cast(
+        "DrainageCategory | None",
+        0 if result.drainage_category is None else result.drainage_category.value,
+    )
+
     # tree level
-    for t in result.reference_trees_pre_vec:
-        t.saw_log_volume_reduction_factor = (
-            -1
-            if t.saw_log_volume_reduction_factor is None
-            else t.saw_log_volume_reduction_factor
+    rt: ReferenceTrees = copy_vector_data(result.reference_trees)
+
+    if rt.size:
+        rt.saw_log_volume_reduction_factor = np.where(
+            np.isnan(rt.saw_log_volume_reduction_factor),
+            -1.0,
+            rt.saw_log_volume_reduction_factor,
         )
-        t.species = 0 if t.species is None else t.species.value
-    # strata level
-    for s in result.tree_strata_pre_vec:
-        s.species = 0 if s.species is None else s.species.value
-        s.storey = 0 if s.storey is None else s.storey.value
-        # all None values to -1
-        rsts_default = -1
-        for k, v in s.__dict__.items():
-            if v is None:
-                setattr(s, k, rsts_default)
+
+        rt.species = np.where(rt.species == -1, 0, rt.species).astype(np.int32, copy=False)
+
+    result.reference_trees = rt
+
+    # --- Strata-level conversions (SoA) ---
+    ts: TreeStrata = copy_vector_data(result.tree_strata)
+
+    if ts.size:
+        ts.species = np.where(ts.species == -1, 0, ts.species).astype(np.int32, copy=False)
+        ts.storey = np.where(ts.storey == -1, 0, ts.storey).astype(np.int32, copy=False)
+
+        for key, declared_dtype in ts.dtypes.items():
+            arr = getattr(ts, key)
+            if np.issubdtype(declared_dtype, np.floating):
+                setattr(ts, key, np.where(np.isnan(arr), -1.0, arr))
+
+        # also handle the (n,3) float array field similarly
+        if hasattr(ts, "stand_origin_relative_position"):
+            a = ts.stand_origin_relative_position
+            ts.stand_origin_relative_position = np.where(np.isnan(a), -1.0, a)
+
+    result.tree_strata = ts
     return result
 
 

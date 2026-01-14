@@ -337,9 +337,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     # VMI data type 1
     # SMK data type Stand
 
-    reference_trees_pre_vec: list[ReferenceTree] = dataclasses.field(default_factory=list)
-    tree_strata_pre_vec: list[TreeStratum] = dataclasses.field(default_factory=list)
-
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
 
