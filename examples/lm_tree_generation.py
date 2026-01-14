@@ -9,7 +9,6 @@ control_structure = {
     },
 
     "preprocessing_operations": [
-        supplement_missing_stratum_diameters,
         preproc_filter,
         scale_area_weight,
         generate_reference_trees

@@ -96,76 +96,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def supplement_missing_tree_heights(stands: StandList, **operation_params) -> StandList:
-    """Fill in missing (None or nonpositive) tree heights from Näslund height curve using SoA data."""
-    _ = operation_params
-    for stand in stands:
-        trees = stand.reference_trees
-        if trees.size == 0:
-            continue
-
-        for i in range(trees.size):
-            h = trees.height[i]
-
-            if not h > 0:
-                d = trees.breast_height_diameter[i]
-                if not d > 0:
-                    continue
-
-                species = opt_species(trees.species[i])
-                new_h = naslund_height(float(d), species)
-                if new_h is None:
-                    continue
-
-                trees.update({"height": float(new_h)}, i)
-
-    return stands
-
-
-def supplement_missing_tree_ages(stands: StandList, **operation_params):
-    """
-    Supplement tree ages directly on SoA ReferenceTrees/TreeStrata.
-    """
-    _ = operation_params
-    for stand in stands:
-        trees_vec = stand.reference_trees
-        strata_vec = stand.tree_strata
-
-        if trees_vec.size == 0 or strata_vec.size == 0:
-            continue
-
-        supplement_age_for_reference_trees(trees_vec, strata_vec)
-
-    return stands
-
-
-def supplement_missing_stratum_diameters(stands: StandList, **operation_params) -> StandList:
-    _ = operation_params  # unused
-
-    for stand in stands:
-        if stand.tree_strata.size == 0:
-            continue
-        pre_util.supplement_mean_diameter(
-            stand.tree_strata,
-            _land_use_category=stand.land_use_category,
-        )
-    return stands
-
-
-def generate_sapling_trees_from_sapling_strata(stands: StandList, **operation_params) -> StandList:
-    _ = operation_params  # unused
-
-    for stand in stands:
-        strata = stand.tree_strata
-        trees = stand.reference_trees
-        base = trees.size
-
-        rows = pre_util.create_sapling_rows_from_strata(strata, stand.identifier, base)
-        if rows:
-            trees.create(rows)
-    return stands
-
-
 def scale_area_weight(stands: StandList, **operation_params):
     """ Scales area weight of a stand.
 
@@ -200,10 +130,6 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 __all__ = ['preproc_filter',
            'compute_location_metadata',
            'generate_reference_trees',
-           'supplement_missing_tree_heights',
-           'supplement_missing_tree_ages',
-           'supplement_missing_stratum_diameters',
-           'generate_sapling_trees_from_sapling_strata',
            'scale_area_weight',
            'convert_coordinates',
            'vectorize']
