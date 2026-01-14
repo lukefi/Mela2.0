@@ -99,6 +99,37 @@ def scale_area_weight(stands: StandList, **operation_params):
     return stands
 
 
+def area_ha_to_1000ha(stands: StandList, **operation_params):
+    # Converts area of a stand from ha to 1000 ha
+    _ = operation_params
+    for stand in stands:
+        stand.area_weight = stand.area_weight / 1000
+        stand.area = stand.area / 1000
+    return stands
+
+
+def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
+    # scale the number of stems of the (measured) trees according to the stand's
+    # proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
+    # by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
+    # are scaled by proportion of the sample plot with 9 m radius.
+    _ = operation_params
+    for stand in stands:
+        # for t in stand.reference_trees_pre_vec:
+        #     if 4.5 <= t.breast_height_diameter < 9.5 and 0 < stand.area_weight_factors[0] < 1 > 0:
+        #         t.stems_per_ha = t.stems_per_ha / stand.area_weight_factors[0]
+        #     if t.breast_height_diameter >= 9.5 and 0 < stand.area_weight_factors[1] < 1:
+        #         t.stems_per_ha = t.stems_per_ha / stand.area_weight_factors[1]
+
+        trees = stand.reference_trees
+        smaller_diameter = (4.5 <= trees.breast_height_diameter < 9.5) & (0 < stand.area_weight_factors[0] < 1)
+        larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
+        trees.stems_per_ha[smaller_diameter] = trees.stems_per_ha[smaller_diameter] / stand.area_weight_factors[0]
+        trees.stems_per_ha[larger_diameter] = trees.stems_per_ha[larger_diameter] / stand.area_weight_factors[1]
+
+    return stands
+
+
 def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -> StandList:
     """ Preprocessing operation for converting the current coordinate system to target system
 
