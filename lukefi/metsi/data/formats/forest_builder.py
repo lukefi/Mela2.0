@@ -285,7 +285,7 @@ class VMIBuilder(ForestBuilder):
             result.forestry_centre_id,
             data_row,
             result.owner_category,
-            indices, False)
+            indices)
         result.municipality_id = vmi_util.determine_municipality(
             data_row[indices["municipality"]],
             data_row[indices["kitukunta"]])

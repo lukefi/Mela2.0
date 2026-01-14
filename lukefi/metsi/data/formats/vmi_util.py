@@ -378,28 +378,159 @@ def parse_forestry_centre(forestry_centre: str) -> int:
         return 10
 
 
-def determine_forest_management_category(land_category: int, forestry_centre: int, muuttujat: Sequence,
-                                         owner_group: int, indices: dict,
-                                         is_vmi12: bool = True) -> int:
+def determine_forest_management_category(land_use_category: int, county: int, muuttujat: Sequence,
+                                         owner_group: int, indices: dict) -> float:
     """Determine forest management category  for given conditions."""
 
-    fmc = 1
-    other_values = muuttujat[indices["muut_arvot"]]
+    return protection_code(muuttujat[indices["puuntuotannon_rajoitus"]],
+                           muuttujat[indices["puuntuotannon_rajoitus_tarkenne"]],
+                           land_use_category,
+                           muuttujat[indices["muut_arvot"]],
+                           muuttujat[indices["suojametsakoodi"]],
+                           owner_group,
+                           county,
+                           muuttujat[indices["ahvenanmaan_markkinahakkuualue"]],
+                           muuttujat[indices["koealan_kasittelyluokka"]])
 
-    if is_vmi12:
-        fmc = determine_fmc_by_land_category(fmc, land_category)
-    fmc = determine_fmc_by_production_limitations(fmc, other_values, owner_group,
-                                                  muuttujat[indices["puuntuotannon_rajoitus"]],
-                                                  muuttujat[indices["puuntuotannon_rajoitus_tarkenne"]],
-                                                  muuttujat[indices["suojametsakoodi"]])
-    # fmc = determine_fmc_by_natura_area(fmc, muuttujat[indices.naturaaluekoodi])
-    fmc = determine_fmc_by_aland_centre(fmc, muuttujat[indices["ahvenanmaan_markkinahakkuualue"]], forestry_centre,
-                                        other_values)
-    forest_management_category_override = determine_fmc_by_test_area_handling_class(
-        muuttujat[indices["koealan_kasittelyluokka"]])
 
-    # VMI-raj korvataan tiukemmalla MH-rajoituksella
-    fmc = max(fmc, forest_management_category_override)
+def protection_code(production_limitation: str, production_limitation_detail: str,
+                    land_use_category: int, other_values: str, protection_forest_code: str,
+                    owner_group: int, county: int, aland_area_code: str,
+                    test_area_handling_class: str) -> float:
+
+    # Determine first the NFI management category (vmi_pt)
+    # MELA management category is then determined by NFI management category and land_use_category
+    vmi_pt = 3
+    decimals = 10.0
+
+    if (production_limitation in ('101',
+                                  '102',
+                                  '103',
+                                  '104',
+                                  '105',
+                                  '108',
+                                  '301',
+                                  '401',
+                                  '402',
+                                  '403',
+                                  '404',
+                                  '408',
+                                  '409')):
+        vmi_pt = 1
+        decimals = int(production_limitation) / 1000
+
+    if (production_limitation in ('107',
+                                  '109',
+                                  '201',
+                                  '205',
+                                  '206',
+                                  '207',
+                                  '302',
+                                  '303',
+                                  '304',
+                                  '305',
+                                  '306',
+                                  '307',
+                                  '308',
+                                  '309',
+                                  '310',
+                                  '405',
+                                  '406',
+                                  '407',
+                                  '501',
+                                  '502',
+                                  '503',
+                                  '504') and production_limitation_detail in ('1', '2') and vmi_pt == 3):
+        vmi_pt = 1
+        decimals = int(production_limitation) / 1000
+
+    if (production_limitation in ('107',
+                                  '109',
+                                  '201',
+                                  '205',
+                                  '206',
+                                  '207',
+                                  '302',
+                                  '303',
+                                  '304',
+                                  '305',
+                                  '306',
+                                  '307',
+                                  '308',
+                                  '309',
+                                  '310',
+                                  '405',
+                                  '406',
+                                  '407',
+                                  '501',
+                                  '502',
+                                  '503',
+                                  '504') and production_limitation_detail in ('3', '4') and vmi_pt == 3):
+        vmi_pt = 2
+        decimals = int(production_limitation) / 1000
+
+    if (production_limitation in ('202', '203') and
+            production_limitation_detail in ('1', '2', '3', '4') and vmi_pt == 3):
+        vmi_pt = 2
+        decimals = int(production_limitation) / 1000
+
+    if other_values in ('1', '2', '3', '4', '5', '6') and vmi_pt == 3:
+        vmi_pt = 2
+        decimals = 0.6 + int(other_values) / 100
+
+    # if (land_use_category in ('2','3') and vmi_pt == 3):
+    if land_use_category in (2, 3) and vmi_pt == 3:
+        vmi_pt = 2
+        decimals = 0.9
+
+    if protection_forest_code == '1' and owner_group == 4 and vmi_pt == 3:
+        vmi_pt = 2
+        decimals = 0.7
+
+    # Ahvenanmaa;
+    if (county == 21 and (aland_area_code != '1' or other_values == '2') and vmi_pt > 1):
+        vmi_pt = 1
+        decimals = 0.7
+
+    # Metsähallituksen rajoitukset;
+    mh_pt = 5
+
+    if (test_area_handling_class == '1' and mh_pt == 5):
+        mh_pt = 3
+
+    if (test_area_handling_class == '2' and mh_pt == 5):
+        mh_pt = 2
+
+    if (test_area_handling_class in ('3.1', '3.2') and mh_pt == 5):
+        mh_pt = 1
+
+    if mh_pt < vmi_pt:
+        decimals = 0.8
+
+    pt = min(vmi_pt, mh_pt)
+
+    # MELA forest management category
+    fmc = 1.0
+    if pt == 3 and land_use_category == 1:
+        fmc = 1
+    if pt == 3 and land_use_category == 2:
+        fmc = 3
+    if pt == 3 and land_use_category == 3:
+        fmc = 6
+
+    if pt == 2 and land_use_category == 1:
+        fmc = 2
+    if pt == 2 and land_use_category == 2:
+        fmc = 3
+    if pt == 2 and land_use_category == 3:
+        fmc = 6
+
+    if pt == 1:
+        fmc = 7
+
+    # decimals
+    if decimals < 1 < fmc:
+        fmc = fmc + decimals
 
     return fmc
 
@@ -414,69 +545,11 @@ def determine_fmc_by_land_category(default: int, land_category: int) -> int:
     return default
 
 
-def determine_fmc_by_production_limitations(default: int, other_values: str, owner_group: int,
-                                            production_limitation: str, production_limitation_detail: str,
-                                            protection_forest_code: str) -> int:
-    if production_limitation == '0':
-        return 1
-    if production_limitation in \
-            ('101', '102', '103', '104', '105', '108'):
-        return 7
-    if production_limitation in ('201', '205', '206', '207') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation == '301':
-        return 7
-    if production_limitation in ('302', '303', '304', '305', '306', '307', '308', '309', '310') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('401', '402', '403', '404', '408', '409'):
-        return 7
-    if production_limitation in ('405', '406', '407') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('501', '502', '503', '504') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('107', '109') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('201', '205', '206', '207') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('202', '203') and \
-            production_limitation_detail in ('1', '2', '3', '4'):
-        return 2
-    if production_limitation in ('302', '303', '304', '305', '306', '307', '308', '309', '310') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('405', '406', '407') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('501', '502', '503', '504') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if other_values in ('1', '2', '3', '4', '5', '6'):
-        return 2
-    # Lisäksi suojametsät metsähallituksen mailla;
-    if protection_forest_code == '1' and owner_group == 4:
-        return 2
-    return default
-
-
 def determine_fmc_by_natura_area(default: int, natura_area_code: str) -> int:
     # Natura-alueet: luonto-kohteet (2) ja molemmat (3) pois puuntuotannosta;
     # Tarkista onko minaan vuonna voimassa
     if natura_area_code in ('2', '3'):
         return 1  # * lintu-kohde=1;
-    return default
-
-
-def determine_fmc_by_aland_centre(default: int, aland_area_code: str, forestry_centre: int,
-                                  other_values: str) -> int:
-    # * Ahvenanmaa;
-    if forestry_centre == 21 and (aland_area_code != '1' or other_values == '2'):
-        return 7
     return default
 
 
