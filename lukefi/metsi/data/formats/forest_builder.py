@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import overload
 import xml.etree.ElementTree as ET
 from pandas import DataFrame, Series
+import numpy as np
 
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.enums.internal import OwnerCategory
@@ -177,10 +178,8 @@ def _append_tree_row(
         attr.setdefault(key, []).append(values.get(key, None))
 
 
-def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element) -> float:
+def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element):
     """Append one Forest Centre (XML) stratum row into an SoA attribute dict.
-
-    Returns basal area (float) for convenience when summing stand basal area.
     """
 
     sd = smk_util.parse_stratum_data(estratum)
@@ -213,13 +212,9 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
     for key in DTYPES_STRATA:
         attr.setdefault(key, []).append(values.get(key, None))
 
-    return float(basal_area or 0.0)
 
-
-def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj: Series) -> float:
+def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj: Series):
     """Append one GeoPackage stratum row into an SoA attribute dict.
-
-    Returns basal area (float) for convenience when summing stand basal area.
     """
 
     tree_number = util.parse_type(rowj.stratumnumber, int)
@@ -253,8 +248,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
 
     for key in DTYPES_STRATA:
         attr.setdefault(key, []).append(values.get(key, None))
-
-    return float(basal_area or 0.0)
 
 
 class ForestBuilder(ABC):
@@ -430,7 +423,6 @@ class VMI12Builder(VMIBuilder):
             result[stand.identifier] = stand
 
         # Strata → TreeStrata SoA
-
         if self.builder_flags.get('strata', False):
 
             for row in self.tree_strata:
@@ -670,14 +662,13 @@ class XMLBuilder(ForestCentreBuilder):
         for estand in estands:
             stand = self.convert_stand_entry(estand)
             stratum_attr: dict[str, list] = {}
-            basal_area_sum = 0.0
 
             estrata = estand.findall(self.xpath_strata, smk_util.NS)
             for estratum in estrata:
-                basal_area_sum += _append_fc_stratum_row(stratum_attr, stand.identifier, estratum)
+                _append_fc_stratum_row(stratum_attr, stand.identifier, estratum)
 
             stand.tree_strata = TreeStrata().vectorize(stratum_attr)
-            stand.basal_area = basal_area_sum
+            stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
             stands.append(stand)
         return stands
 
@@ -739,8 +730,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
             stand.site_type_category)
         return stand
 
-    # Strata are appended directly into SoA structures (TreeStrata) in build().
-
     def build(self) -> StandList:
         """ Converts geopackage into list of ForestStand objects.
         :return: List of ForestStand objects
@@ -750,13 +739,13 @@ class GeoPackageBuilder(ForestCentreBuilder):
             stand = self.convert_stand_entry(rowi)
 
             stratum_attr: dict[str, list] = {}
-            basal_area_sum = 0.0
 
             i_strata = self.strata[self.strata['standid'] == stand.identifier]
             for _, rowj in i_strata.iterrows():
-                basal_area_sum += _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
+                _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
 
             stand.tree_strata = TreeStrata().vectorize(stratum_attr)
-            stand.basal_area = basal_area_sum
+
+            stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
             stands.append(stand)
         return stands

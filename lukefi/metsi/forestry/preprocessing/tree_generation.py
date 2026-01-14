@@ -324,6 +324,7 @@ def generate_reference_trees(
             attr_dict["sapling"].append(False)  # generated trees are usually non-sapling
             attr_dict["tree_type"].append("")   # set if you have semantics for this
             attr_dict["tuhon_ilmiasu"].append(t.tuhon_ilmiasu or "")
+            attr_dict["basal_area"].append(np.nan)
 
     vec = VectorReferenceTrees()
     vec.vectorize(attr_dict)

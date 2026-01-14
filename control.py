@@ -19,9 +19,7 @@ control_structure = {
         scale_area_weight,
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
         preproc_filter,
-        # "supplement_missing_tree_heights",
-        # "supplement_missing_tree_ages",
-        # "generate_sapling_trees_from_sapling_strata"
+
     ],
     "preprocessing_params": {
         generate_reference_trees: [

@@ -211,44 +211,20 @@ class VectorData():
                     vector.flags.writeable = True
                 vector[index] = value
 
-    def delete(self, index: int | list[int]):
+    def delete(self, index: int | list[int] | npt.NDArray[np.integer]):
         """
-        Removes data at given index.
+        Removes data at given index/indices.
 
         Args:
-            index (int | list[int]): Index of row to remove
+            index: Row index/indices to remove. May be an int, list[int], or numpy integer array
+                (e.g. output of np.where(mask)[0]).
         """
-
-        self._recompute_size()
-
-        # Nothing to delete
         if self.size == 0:
             return
 
-        # Normalise to a 1D int array
-        idx_arr = np.atleast_1d(index).astype(int)
-
-        # Filter to valid index range
-        mask = (idx_arr >= 0) & (idx_arr < self.size)
-        idx_arr = idx_arr[mask]
-
-        # If nothing is valid, just return
-        if idx_arr.size == 0:
-            return
-
-        # For np.delete, use scalar if there's only one
-        idx: int | np.ndarray
-        if idx_arr.size == 1:
-            idx = int(idx_arr[0])
-        else:
-            idx = idx_arr
-
         for key in self.dtypes:
             vector: npt.NDArray = getattr(self, key)
-            # Some attributes may not be set or may be empty
-            if not isinstance(vector, np.ndarray) or vector.size == 0:
-                continue
-            setattr(self, key, np.delete(vector, idx, axis=0))  # delete always creates a copy
+            setattr(self, key, np.delete(vector, index, axis=0))  # delete always creates a copy
 
         self._recompute_size()
 
