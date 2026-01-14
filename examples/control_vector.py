@@ -1,4 +1,3 @@
-from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
@@ -15,7 +14,6 @@ control_structure = {
     "preprocessing_operations": [
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
         preproc_filter,
-        vectorize
     ],
     "preprocessing_params": {
         generate_reference_trees: [
@@ -27,8 +25,8 @@ control_structure = {
         ],
         preproc_filter: [
             {
-                "remove trees": "sapling or stems_per_ha == 0",
-                "remove stands": "(site_type_category == 0) or (site_type_category == None)",  # not reference_trees
+                "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
+                "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
             }
         ]
     },

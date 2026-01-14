@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from tests.test_utils import prepare_growth_test_stand
 

@@ -1,4 +1,3 @@
-from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.domain.events import GrowMetsi
@@ -16,7 +15,6 @@ control_structure = {
     },
     "preprocessing_operations": [
         generate_reference_trees,
-        vectorize,
     ],
     "preprocessing_params": {
         generate_reference_trees: [

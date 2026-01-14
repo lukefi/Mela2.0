@@ -3,7 +3,6 @@ import unittest
 
 import numpy as np
 
-from lukefi.metsi.data.vectorize import ReferenceTrees, TreeStrata, vectorize
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 
@@ -15,13 +14,13 @@ class TestVectorize(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.before = [ForestStand(reference_trees_pre_vec=[ReferenceTree(species=TreeSpecies(1)),
-                                                   ReferenceTree(species=TreeSpecies(2))]),
+                                                           ReferenceTree(species=TreeSpecies(2))]),
                       ForestStand(reference_trees_pre_vec=[ReferenceTree(species=TreeSpecies(3)),
-                                                   ReferenceTree(species=TreeSpecies(4))],
+                                                           ReferenceTree(species=TreeSpecies(4))],
                                   tree_strata_pre_vec=[TreeStratum(species=TreeSpecies(1)),
-                                               TreeStratum(species=TreeSpecies(2))]),
+                                                       TreeStratum(species=TreeSpecies(2))]),
                       ForestStand(tree_strata_pre_vec=[TreeStratum(species=TreeSpecies(3)),
-                                               TreeStratum(species=TreeSpecies(4))])]
+                                                       TreeStratum(species=TreeSpecies(4))])]
 
     def setUp(self) -> None:
         self.after = copy.deepcopy(TestVectorize.before)

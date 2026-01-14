@@ -1,4 +1,3 @@
-from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
@@ -20,7 +19,6 @@ control_structure = {
         scale_area_weight,
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
         preproc_filter,
-        vectorize
         # "supplement_missing_tree_heights",
         # "supplement_missing_tree_ages",
         # "generate_sapling_trees_from_sapling_strata"
@@ -36,7 +34,6 @@ control_structure = {
         preproc_filter: [
             {
                 "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
-                # not reference_trees
                 "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
             }
         ]

@@ -13,7 +13,6 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.app_io import MetsiConfiguration
-from lukefi.metsi.data.vectorize import vectorize
 
 
 @dataclass
