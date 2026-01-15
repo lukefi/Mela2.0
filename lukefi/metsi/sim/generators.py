@@ -86,14 +86,17 @@ class Event(EventGeneratorBase[T]):
     preconditions: list[Condition[T]]
     postconditions: list[Condition[T]]
     tags: set[str]
+    db_output: bool
 
-    def __init__(self, treatment: Treatment[T],
+    def __init__(self,
+                 treatment: Treatment[T],
                  static_parameters: Optional[dict[str, Any]] = None,
                  dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
                  preconditions: Optional[list[Condition[T]]] = None,
                  postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
-                 tags: Optional[set[str]] = None) -> None:
+                 tags: Optional[set[str]] = None,
+                 db_output: bool = True) -> None:
         self.treatment = treatment
 
         if static_parameters is not None:
@@ -123,11 +126,16 @@ class Event(EventGeneratorBase[T]):
         else:
             self.tags = set()
 
+        self.db_output = db_output
+
     @override
     def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
         retval = []
         for parent in parents:
-            branch = EventTree(self._prepare_paremeterized_treatment(), self.tags | self.treatment.default_tags)
+            branch = EventTree(
+                self._prepare_paremeterized_treatment(),
+                self.tags | self.treatment.default_tags,
+                self.db_output)
             parent.add_branch(branch)
             retval.append(branch)
         return retval

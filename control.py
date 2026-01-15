@@ -44,8 +44,8 @@ control_structure = {
                 Alternatives([
                     Event(treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
                     Sequence([
-                        Event(treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
-                        Event(treatment=do_nothing, static_parameters={"n": 3}, tags={"third_type"})
+                        Event(treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}, db_output=True),
+                        Event(treatment=do_nothing, static_parameters={"n": 3}, tags={"third_type"}, db_output=True)
                     ])
                 ])
             ]
