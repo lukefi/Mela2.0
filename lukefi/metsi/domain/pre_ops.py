@@ -110,15 +110,6 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
     for stand in stands:
         assert stand.land_use_category is not None
 
-        # for tree in stand.reference_trees_pre_vec:
-        #     if tree.breast_height_diameter > 0:
-        #         if tree.management_category != 2:
-        #             ba_sums[stand.land_use_category.value - 1][tree.species.value - 1] += \
-        #                 stand.area * tree.stems_per_ha * math.pi * ((tree.breast_height_diameter / 200)**2)
-        #         else:
-        #             ba_sum_ret = ba_sum_ret + stand.area * tree.stems_per_ha * math.pi * \
-        #                 ((tree.breast_height_diameter / 200)**2)
-
         trees = stand.reference_trees
         bhd_positive = trees.breast_height_diameter > 0
         is_retained = trees.management_category == 2
@@ -151,18 +142,6 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
 
     for stand in stands:
         assert stand.land_use_category is not None
-
-        # for tree in stand.reference_trees_pre_vec:
-        #     assert tree.species is not None
-        #     assert tree.stems_per_ha is not None
-
-        #     if tree.management_category != 2:
-        #         if scale_coeffs[stand.land_use_category - 1][tree.species.value - 1] >= 0:
-        #             tree.stems_per_ha = scale_coeffs[stand.land_use_category.value -
-        #                                              1][tree.species.value - 1] * tree.stems_per_ha
-        #     else:
-        #         if scale_coeff_ret >= 0:
-        #             tree.stems_per_ha = scale_coeff_ret * tree.stems_per_ha
 
         trees = stand.reference_trees
         is_retained = trees.management_category == 2
