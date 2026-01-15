@@ -19,8 +19,6 @@ class TestCVarRstRow(unittest.TestCase):
         self.mock_stand = ForestStand(
             identifier="123",
             stand_id=1,
-            reference_trees_pre_vec=[],
-            tree_strata_pre_vec=[]
         )
         self.mock_stand.get_value_list = lambda cvar_decl: [1.23, 4.56, 7.89]  # Mock method
 
@@ -45,13 +43,11 @@ class IoUtilsTest(ConverterTestSuite):
 
     def test_rst_forest_stand_rows(self):
         vmi13_stands = vmi13_builder.build()
-        vectorize(vmi13_stands)
         result = rst_forest_stand_rows(vmi13_stands[1], additional_vars=[])
         self.assertEqual(4, len(result))
 
     def test_rst_rows(self):
         vmi13_stands = vmi13_builder.build()
-        vectorize(vmi13_stands)
         container = ExportableContainer(vmi13_stands, additional_vars=None)
         result = stands_to_rst_content(container)
         self.assertEqual(10, len(result))
@@ -59,7 +55,6 @@ class IoUtilsTest(ConverterTestSuite):
     def test_stands_to_csv(self):
         delimiter = ";"
         vmi13_stands = vmi13_builder.build()
-        vectorize(vmi13_stands)
         container = ExportableContainer(vmi13_stands, additional_vars=None)
         result = stands_to_csv_content(container, delimiter)
         self.assertEqual(13, len(result))
@@ -76,12 +71,10 @@ class IoUtilsTest(ConverterTestSuite):
     def test_csv_to_stands(self):
         """tests that the roundtrip conversion stands-->csv-->stands maintains the stand structure"""
         vmi13_stands = vmi13_builder.build()
-        vectorize(vmi13_stands)
         delimiter = ";"
         serialized = '\n'.join(stands_to_csv_content(ExportableContainer(vmi13_stands, None), delimiter))
         deserialized = list(csv.reader(StringIO(serialized), delimiter=delimiter))
         stands_from_csv = csv_content_to_stands(deserialized)
-        vectorize(stands_from_csv)
         self.assertEqual(4, len(stands_from_csv))
 
         # Test that the stands from csv and the original stands are equal.
