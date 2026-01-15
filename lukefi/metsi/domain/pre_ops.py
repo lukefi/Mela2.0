@@ -157,6 +157,72 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
     return stands
 
 
+def update_strata_to_match_trees(stands: StandList, **operation_params) -> StandList:
+    _ = operation_params
+
+    for stand in stands:
+        itree = -1
+        G = 0
+        for s in stand.tree_strata:
+            if s.number_of_generated_trees is not None:
+                ntrees = 0
+                stems = 0
+                g = 0
+                g_species = [0] * max([spe.value for spe in TreeSpecies])
+                dsum = 0
+                hsum = 0
+                hasum = 0
+                aged13sum = 0
+                aged13asum = 0
+                agebiolsum = 0
+                agebiolasum = 0
+                # count the number of reference_trees left (having positive stems_per_ha) for each stratum
+                for i in range(s.number_of_generated_trees):
+                    itree = itree + 1
+                    if stand.reference_trees[itree].stems_per_ha > 0:
+                        gtree = stand.reference_trees[itree].stems_per_ha * math.pi * \
+                            ((stand.reference_trees[itree].breast_height_diameter / 200)**2)
+                        dsum = dsum + gtree * stand.reference_trees[itree].breast_height_diameter
+                        hsum = hsum + gtree * stand.reference_trees[itree].height
+                        hasum = hasum + stand.reference_trees[itree].stems_per_ha * stand.reference_trees[itree].height
+                        aged13sum = aged13sum + gtree * stand.reference_trees[itree].breast_height_age
+                        aged13asum = aged13asum + \
+                            stand.reference_trees[itree].stems_per_ha * stand.reference_trees[itree].breast_height_age
+                        agebiolsum = agebiolsum + gtree * stand.reference_trees[itree].biological_age
+                        agebiolasum = agebiolasum + \
+                            stand.reference_trees[itree].stems_per_ha * stand.reference_trees[itree].biological_age
+                        g = g + gtree
+                        g_species[stand.reference_trees[itree].species.value -
+                                  1] = g_species[stand.reference_trees[itree].species.value - 1] + gtree
+
+                        ntrees = ntrees + 1
+                        stems = stems + stand.reference_trees[itree].stems_per_ha
+
+                # update stratum
+                s.basal_area = g
+                if stems > 0:
+                    s.mean_diameter = dsum / g if g > 0 else 0
+                    s.mean_height = hsum / g if g > 0 else hasum / stems
+                    s.breast_height_age = aged13sum / g if g > 0 else aged13asum / stems
+                    s.biological_age = agebiolsum / g if g > 0 else agebiolasum / stems
+                else:
+                    s.mean_diameter = None
+                    s.mean_height = None
+                    s.breast_height_age = None
+                    s.biological_age = None
+                s.stems_per_ha = stems
+                s.number_of_generated_trees = ntrees
+                s.sapling_stems_per_ha = None
+                s.sapling_stratum = False
+
+                # basal area of the whole stand
+                G = G + g
+
+        stand.reference_trees = [rt for rt in stand.reference_trees if round(rt.stems_per_ha, 4) > 0.0]
+        stand.basal_area = G
+    return stands
+
+
 def scale_area_weight(stands: StandList, **operation_params):
     """ Scales area weight of a stand.
 
