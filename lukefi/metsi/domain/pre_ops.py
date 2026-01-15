@@ -1,4 +1,8 @@
 from typing import Any, Callable
+
+import numpy as np
+from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
+from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.utils.filter import applyfilter
 from lukefi.metsi.forestry.preprocessing import tree_generation
@@ -84,6 +88,93 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         stand.reference_trees = new_vec
 
     print()
+    return stands
+
+
+def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> StandList:
+    # scale basal area at the county level to match basal areas by species in NFI data
+    # NOTE: It is supposed that all stands belong to same county and represent the whole county
+
+    # Basal areas by county, land use categories and species
+
+    _ = operation_params
+
+    county = stands[0].region
+    if county == 19 and stands[1].municipality_id in (47, 148, 890):
+        county = 30
+
+    # basal area sums by species an land use classes (index 0 = forest land, 1 = scrub land)
+    ba_sums = np.asarray([[0] * max(TreeSpecies), [0] * max(TreeSpecies)])
+    ba_sum_ret = 0  # retention trees
+
+    for stand in stands:
+        assert stand.land_use_category is not None
+
+        # for tree in stand.reference_trees_pre_vec:
+        #     if tree.breast_height_diameter > 0:
+        #         if tree.management_category != 2:
+        #             ba_sums[stand.land_use_category.value - 1][tree.species.value - 1] += \
+        #                 stand.area * tree.stems_per_ha * math.pi * ((tree.breast_height_diameter / 200)**2)
+        #         else:
+        #             ba_sum_ret = ba_sum_ret + stand.area * tree.stems_per_ha * math.pi * \
+        #                 ((tree.breast_height_diameter / 200)**2)
+
+        trees = stand.reference_trees
+        bhd_positive = trees.breast_height_diameter > 0
+        is_retained = trees.management_category == 2
+        is_not_retained = ~is_retained
+
+        for species in TreeSpecies:
+            mask1 = bhd_positive & is_not_retained & (trees.species == species)
+            mask2 = bhd_positive & is_retained & (trees.species == species)
+
+            ba_sums[stand.land_use_category - 1][species - 1] += stand.area * np.pi * \
+                np.sum(trees.stems_per_ha[mask1] * ((trees.breast_height_diameter[mask1] / 200) ** 2))
+            ba_sum_ret += stand.area * np.pi * \
+                np.sum(trees.stems_per_ha[mask2] * ((trees.breast_height_diameter[mask2] / 200) ** 2))
+
+    # scale coefficients
+    ba_targets: list[list[list[float]]] = [[x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 1],
+                                           [x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 2]]
+    ba_target_ret = [x.ppa for x in BA_NFI_RET if x.maakunta == county][0]
+
+    if len(ba_targets) == 0:
+        scale_coeffs = [[1] * max(TreeSpecies), [1] * max(TreeSpecies)]
+    else:
+        scale_coeffs = [[], []]
+        for i in range(2):
+            for target, generated in zip(ba_targets[i][0], ba_sums[i]):
+                coeff = target / generated if generated > 0 else -1
+                scale_coeffs[i].append(coeff)
+                # print(i+1,generated, target, coeff)
+    scale_coeff_ret = ba_target_ret / ba_sum_ret if ba_sum_ret > 0 else -1
+
+    for stand in stands:
+        assert stand.land_use_category is not None
+
+        # for tree in stand.reference_trees_pre_vec:
+        #     assert tree.species is not None
+        #     assert tree.stems_per_ha is not None
+
+        #     if tree.management_category != 2:
+        #         if scale_coeffs[stand.land_use_category - 1][tree.species.value - 1] >= 0:
+        #             tree.stems_per_ha = scale_coeffs[stand.land_use_category.value -
+        #                                              1][tree.species.value - 1] * tree.stems_per_ha
+        #     else:
+        #         if scale_coeff_ret >= 0:
+        #             tree.stems_per_ha = scale_coeff_ret * tree.stems_per_ha
+
+        trees = stand.reference_trees
+        is_retained = trees.management_category == 2
+        is_not_retained = ~is_retained
+        scale_coeffs_for_trees = np.asarray(scale_coeffs[stand.land_use_category - 1])[trees.species - 1]
+        mask = is_not_retained & (scale_coeffs_for_trees >= 0)
+
+        trees.stems_per_ha[mask] *= scale_coeffs_for_trees[mask]
+
+        if scale_coeff_ret >= 0:
+            trees.stems_per_ha[is_retained] *= scale_coeff_ret
+
     return stands
 
 
