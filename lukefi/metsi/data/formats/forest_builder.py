@@ -146,7 +146,8 @@ def _append_tree_row(
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
 
-    basal_area = None  # VectorData will default None -> np.nan for float
+    basal_area = None
+    volume = None
 
     values = {
         "identifier": identifier,
@@ -171,6 +172,7 @@ def _append_tree_row(
         "tree_type": tree_type,
         "tuhon_ilmiasu": tuhon_ilmiasu,
         "basal_area": basal_area,
+        "volume": volume,
     }
 
     # Always append in DTYPES_TREE order (guarantees equal-length)
@@ -199,7 +201,7 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "breast_height_age": None,
         "biological_age": util.parse_type(sd.Age, float),
         "basal_area": basal_area,
-        "origin": None,
+        "origin": 0,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "lowest_living_branch_height": None,
