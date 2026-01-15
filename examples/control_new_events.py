@@ -9,8 +9,6 @@ from user_events import Mounding
 control_structure = {
     "app_configuration": {
         "state_format": "xml",
-        "formation_strategy": "partial",
-        "evaluation_strategy": "depth",
         "run_modes": ["preprocess", "simulate"],
     },
     "preprocessing_operations": [

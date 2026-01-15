@@ -44,8 +44,6 @@ def prepare_target_directory(path_descriptor: str) -> Path:
     os.makedirs(path_descriptor)
     return Path(path_descriptor)
 
-# solve FileWriter - interface
-
 
 def stand_writer(container_format: str) -> StandWriter:
     """Return a serialization file writer function for a ForestDataPackage"""
@@ -57,7 +55,6 @@ def stand_writer(container_format: str) -> StandWriter:
     raise MetsiException(f"Unsupported container format '{container_format}'")
 
 
-# entry of FileWriter
 def write_stands_to_file(
         result: ExportableContainer[ForestStand], filepath: Path, state_output_container: str):
     """Resolve a writer function for ForestStands matching the given state_output_container. Invokes write."""
@@ -74,8 +71,6 @@ def csv_reader() -> StandReader:
 
     return lambda path: csv_content_to_stands(csv_file_reader(path))
 
-# SourceDataReaders
-
 
 def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
@@ -88,8 +83,6 @@ def source_data_reader(state_format: str, conversions, **builder_flags) -> Stand
     if state_format == "gpkg":
         return lambda path: GeoPackageBuilder(builder_flags, conversions.get('gpkg', {}), str(path)).build()
     raise MetsiException(f"Unsupported state format '{state_format}'")
-
-# source data main entry function
 
 
 def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str, Conversion]) -> StandList:
@@ -127,9 +120,6 @@ def read_control_module(control_path: str, control: str = "control_structure") -
     raise ImportError(f"Could not load control module from {config_path}")
 
 
-##### FileWriters start #####
-
-# generic writer
 def row_writer(filepath: Path, rows: list[str]):
     with open(filepath, 'a', newline='\n', encoding="utf-8") as file:
         for row in rows:
@@ -153,8 +143,6 @@ def par_writer(filepath: Path, var_names: list[str]):
         dir_parts = list(filepath.parts)[0:-1]
         return determine_file_path(os.path.join(*dir_parts), 'c-variables.par')
     row_writer(to_par_filepath(filepath), mela_par_file_content(var_names))
-
-##### SourceFileReaders start #####
 
 
 def vmi_file_reader(file: str | Path) -> list[str]:

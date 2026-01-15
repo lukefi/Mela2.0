@@ -50,8 +50,6 @@ def third_condition(x: ForestOpPayload):
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
-        "formation_strategy": "partial",
-        "evaluation_strategy": "depth",
         "run_modes": ["preprocess", "simulate"]
     },
     "preprocessing_operations": [

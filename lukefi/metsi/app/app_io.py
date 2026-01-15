@@ -6,8 +6,6 @@ from lukefi.metsi.app.metsi_enum import (
     IntConfigEnum,
     RunMode,
     StateFormat,
-    FormationStrategy,
-    EvaluationStrategy,
     StrataOrigin,
     StringConfigEnum,
 )
@@ -55,8 +53,6 @@ class MetsiConfiguration(SimpleNamespace):
         config_enums: dict[str, type[StringConfigEnum] | type[IntConfigEnum]] = {
             'run_modes': RunMode,
             'state_format': StateFormat,
-            'formation_strategy': FormationStrategy,
-            'evaluation_strategy': EvaluationStrategy,
             'strata_origin': StrataOrigin,
         }
         for key, value in kwargs.items():
