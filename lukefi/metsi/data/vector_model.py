@@ -200,7 +200,7 @@ class VectorData():
                     vector.flags.writeable = True
                 vector[index] = value
 
-    def delete(self, index: int | list[int] | npt.NDArray[np.integer]):
+    def delete(self, index: int | list[int] | npt.NDArray[np.int_]):
         """
         Removes data at given index/indices.
 
