@@ -11,6 +11,7 @@ from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, Si
                                               TreeSpecies, DrainageCategory, Storey)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
 
 # NOTE:
@@ -594,7 +595,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -622,7 +623,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                     bool(self.reference_trees.sapling[i]),
                     self.reference_trees.tree_type[i],
                     self.reference_trees.tuhon_ilmiasu[i],
-                    self.reference_trees.basal_area[i]
+                    self.reference_trees.basal_area[i],
+                    self.reference_trees.volume[i]
                 )
             )
         for i in range(self.tree_strata.size):
@@ -667,6 +669,7 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         # ReferenceTrees
         trees.basal_area = np.pi * (trees.breast_height_diameter / 200) ** 2
+        trees.volume = tree_volumes(trees, self.degree_days or 0.0)
 
         # ForestStand
         self.stems_per_ha = np.sum(trees.stems_per_ha) + np.sum(strata.stems_per_ha)
