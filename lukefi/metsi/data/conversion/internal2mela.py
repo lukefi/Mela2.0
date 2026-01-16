@@ -1,6 +1,6 @@
 from copy import copy
-import numpy as np
 from typing import cast
+import numpy as np
 from lukefi.metsi.data.model import ForestStand, ReferenceTree
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.mela import (

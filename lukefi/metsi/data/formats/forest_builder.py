@@ -64,7 +64,7 @@ def _append_stratum_row(
     age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
     lowest_living_branch_height = 0.0
-    number_of_generated_trees = None  # vectorize() will default ints to -1
+    number_of_generated_trees = None
 
     values = {
         "identifier": identifier,
@@ -105,7 +105,6 @@ def _append_tree_row(
     No ConversionMapper / declared conversions are applied here.
     """
 
-    # --- Parse / convert values exactly once ---
     identifier = vmi_util.generate_tree_identifier(row, indices)
     tree_number = util.parse_type(row[indices["tree_number"]], int)
 
@@ -120,11 +119,9 @@ def _append_tree_row(
         row[indices["total_age"]],
     )
 
-    # Heights: mirror VMI12/VMI13 fixed conversions (100.0 for height, 10.0 for measured height)
     height = vmi_util.determine_tree_height(row[indices["height"]], conversion_factor=100.0)
     measured_height = vmi_util.determine_tree_height(row[indices["measured_height"]], conversion_factor=10.0)
 
-    # Stems/ha differs between VMI12 and VMI13 (so pass flag from builder)
     stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
 
     origin = 0
@@ -411,8 +408,7 @@ class VMI12Builder(VMIBuilder):
         return int(row[13])
 
     def build(self) -> StandList:
-        """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
+        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
         # Per-stand attribute dicts
@@ -514,11 +510,10 @@ class VMI13Builder(VMIBuilder):
         return result
 
     def build(self) -> StandList:
-        """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
+        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts for vectorization
+        # Per-stand attribute dicts
         strata_attrs: dict[str, dict[str, list]] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
