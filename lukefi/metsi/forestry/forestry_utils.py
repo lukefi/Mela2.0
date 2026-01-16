@@ -130,3 +130,23 @@ def find_matching_storey_stratum_for_tree(
         selected_stratum = None
 
     return selected_stratum
+
+
+def storey_match(stratum: TreeStratum, tree: ReferenceTree):
+    # b.	Puu voidaan kohdistaa vain ositteeseen jonka jaksotieto vastaa puun latvuskerrostietoa.
+    # c.	Jättöpuu (latvuskerroskoodi kirjain) voidaan kohdistaa vain jättöylispuujaksoon
+    #   (koodit F ja G), ja jättöpuujaksoon voidaan kohdistaa vain jättöpuita.
+    #   Vallitsevan jakson ja alikasvoksen jättöpuut jäävät aina kohdentamatta, koska
+    #   VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
+
+    # |puu$latker=="E") { # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
+    if tree.latvuskerros == "5":
+        return stratum.asema == 5 or stratum.asema == 6 or stratum.asema == 9
+    elif tree.latvuskerros == "6" or tree.latvuskerros == "7":  # ylispuujakso, ei jättöpuu
+        return stratum.asema == 2 or stratum.asema == 4
+    elif tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
+        return stratum.asema == 3
+    elif tree.latvuskerros in ("2", "3", "4"):  # valitseva jakso
+        return stratum.asema <= 1
+    else:
+        return False
