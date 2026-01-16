@@ -175,13 +175,13 @@ def _append_tree_row(
         "volume": volume,
     }
 
-    # Always append in DTYPES_TREE order (guarantees equal-length)
     for key in DTYPES_TREE:
         attr.setdefault(key, []).append(values.get(key, None))
 
 
 def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element):
-    """Append one Forest Centre (XML) stratum row into an SoA attribute dict.
+    """
+    Append one Forest Centre (XML) stratum row into an SoA attribute dict.
     """
 
     sd = smk_util.parse_stratum_data(estratum)
@@ -415,7 +415,7 @@ class VMI12Builder(VMIBuilder):
         Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts for vectorization
+        # Per-stand attribute dicts
         strata_attrs: dict[str, dict[str, list]] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
@@ -559,8 +559,6 @@ class ForestCentreBuilder(ForestBuilder):
     @abstractmethod
     def convert_stand_entry(self, entry) -> ForestStand:
         ...
-
-    # Strata are appended directly into SoA structures (TreeStrata) in subclasses.
 
 
 class XMLBuilder(ForestCentreBuilder):
@@ -739,9 +737,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stands = []
         for _, rowi in self.stands.iterrows():
             stand = self.convert_stand_entry(rowi)
-
             stratum_attr: dict[str, list] = {}
-
             i_strata = self.strata[self.strata['standid'] == stand.identifier]
             for _, rowj in i_strata.iterrows():
                 _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
