@@ -68,26 +68,119 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
 
 
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
-    """ Operation function that generates reference trees for each stand """
-    debug = operation_params.get("debug", False)
+    """ Operation function that generates (N * stratum) reference trees for each stand """
+    debug = operation_params.get('debug', False)
+    debug_output_rows = []
+    debug_strata_rows = []
+    debug_tree_rows = []
 
+    # oletusarvo true vai false?
+    add_retention_trees = operation_params.get('add_retention_trees', True)
+
+    stratum_association_diameter_threshold = operation_params.get('stratum_association_diameter_threshold', 3)
     for i, stand in enumerate(stands):
         print(f"\rGenerating trees for stand {stand.identifier}    {i}/{len(stands)}", end="")
+        retention_trees = []
+        stand_trees = sorted(stand.reference_trees_pre_vec, key=lambda tree: tree.identifier)
+        for tree in stand_trees:
 
-        try:
-            new_vec = tree_generation.generate_reference_trees(stand, **operation_params)
-        except Exception as e:  # noqa: BLE001
-            print(f"\nError generating trees for stand {stand.identifier}")
-            if debug:
-                # pylint: disable=import-outside-toplevel
-                import traceback  # type: ignore[import-outside-toplevel]
-                traceback.print_exc()
+            stratum = find_matching_storey_stratum_for_tree(
+                tree, stand.tree_strata, stratum_association_diameter_threshold)
+            if stratum is None:
+                if add_retention_trees and tree.management_category == 2 and tree.is_measured_type() and tree.is_living():
+                    # ositteisiin kuulumattomat säästöpuut
+                    retention_trees.append(tree)
                 continue
-            raise e
 
-        stand.reference_trees = new_vec
+            if stratum.__dict__.get('_trees') is not None:
+                stratum._trees.append(tree)
+            else:
+                stratum._trees = [tree]
+            if debug:
+                debug_tree_rows.append([
+                    stratum.identifier,
+                    tree.species.value,
+                    tree.tree_category,
+                    tree.tree_type,
+                    tree.latvuskerros,
+                    tree.breast_height_diameter or 'NA',
+                    tree.measured_height or 'NA',
+                    tree.stems_per_ha or 'NA'
+                ])
+        stand.tree_strata.sort(key=lambda stratum: stratum.identifier)
+        new_trees = []
+        for stratum in stand.tree_strata:
+            stratum_trees = []
+            try:
+                stratum_trees = tree_generation.reference_trees_from_tree_stratum(stratum, **operation_params)
+            except Exception as e:
+                print(
+                    f"\nError generating trees for stratum {
+                        stratum.identifier} with diameter {
+                        stratum.mean_diameter}, height {
+                        stratum.mean_height}, basal_area {
+                        stratum.basal_area}")
+                print()
+                if debug:
+                    traceback.print_exc()
+                    continue
+                else:
+                    raise e
+            stand_tree_count = len(new_trees)
+            for i, tree in enumerate(stratum_trees):
+                tree.identifier = "{}-{}-tree".format(stand.identifier, stand_tree_count + i + 1)
+                new_trees.append(tree)
+
+            validation_set = create_stratum_tree_comparison_set(stratum, stratum_trees)
+
+            if debug:
+                debug_strata_rows.append([
+                    stratum.identifier,
+                    stratum.mean_diameter,
+                    stratum.mean_height,
+                    stand.basal_area,
+                    stratum.basal_area,
+                    stratum.species.value,
+                    stand.degree_days
+                ])
+                debug_output_rows.append(debug_output_row_from_comparison_set(stratum, validation_set))
+
+        # lisätään irralliset säästöpuut
+        if len(retention_trees) > 0:
+            retention_trees, new_trees = adjust_retention_trees(stand, new_trees, retention_trees)
+        if operation_params.get('age_model', False):
+            for t in new_trees:
+                if t.breast_height_diameter > 0:
+                    breast_height_age, biological_age = ages(stand, t, 10, new_trees + retention_trees)
+                    t.breast_height_age = round(breast_height_age, 1)
+                    t.biological_age = round(biological_age, 1)
+            adjust_ages(stand, new_trees)
+
+        for t in retention_trees:
+            new_trees.append(t)
+            new_stratum = generate_stratum_from_retention_tree(t, stand.identifier, len(stand.tree_strata))
+            stand.tree_strata.append(new_stratum)
+
+        stand.reference_trees = [rt for rt in new_trees]
 
     print()
+    if debug:
+        import csv
+        with open('debug_generated_tree_results.csv', 'w', newline='\n') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
+            writer.writerow(debug_output_header_row())
+            writer.writerows(debug_output_rows)
+        if len(debug_strata_rows) > 1:
+            with open('r_strata.dat', 'w', newline='\n') as stratum_file:
+                writer = csv.writer(stratum_file, delimiter=' ')
+                writer.writerow(["stratum", "DGM", "HGM", "G", "Gos", "spe", "DDY"])
+                writer.writerows(debug_strata_rows)
+        if len(debug_tree_rows) > 1:
+            with open('r_trees.dat', 'w', newline='\n') as tree_file:
+                writer = csv.writer(tree_file, delimiter=' ')
+                writer.writerow(["stratum", "spe", "cat", "type", "latker", "lpm", "height", "lkm"])
+                writer.writerows(debug_tree_rows)
+
     return stands
 
 
