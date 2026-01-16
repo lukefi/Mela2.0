@@ -136,8 +136,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[0]))
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
 
-        self.assertEqual(-1, vec0.origin[0])
-        self.assertEqual(-1, vec0.origin[1])
+        self.assertEqual(0, vec0.origin[0])
+        self.assertEqual(0, vec0.origin[1])
 
         # stems_per_ha: None -> np.nan
         self.assertTrue(np.isnan(vec0.stems_per_ha[0]))

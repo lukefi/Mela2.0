@@ -22,26 +22,27 @@ class EventTree[T: ComputationalUnit]:
     Event represents a computational operation in a tree of following event paths.
     """
 
-    __slots__ = ('processed_treatment', 'branches', 'tags')
+    __slots__ = ('processed_treatment', 'branches', 'tags', 'db_output')
 
     processed_treatment: "ProcessedTreatment[T]"
     branches: list["EventTree[T]"]
     tags: set[str]
+    db_output: bool
 
-    def __init__(self, treatment: Optional["ProcessedTreatment[T]"] = None, tags: Optional[set[str]] = None):
+    def __init__(self,
+                 treatment: Optional["ProcessedTreatment[T]"] = None,
+                 tags: Optional[set[str]] = None,
+                 db_output: bool = True):
 
         self.processed_treatment = treatment or identity
         self.branches = []
-
-        if tags is None:
-            self.tags = set()
-        else:
-            self.tags = tags
+        self.tags = tags or set()
+        self.db_output = db_output
 
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: Optional[sqlite3.Connection] = None,
-                 node: Optional[int] = None,
+                 node: int = 0,
                  ) -> Generator[SimulationPayload[T]]:
         """
         Recursive pre-order walkthrough of this event tree to evaluate its treatments with the given payload,
@@ -57,8 +58,6 @@ class EventTree[T: ComputationalUnit]:
         :return: generator of result payloads from this EventTree or as concatenated from its branches
         :rtype: Generator[SimulationPayload[T], None, None]
         """
-        if node is None:
-            node = 0
 
         try:
             current, collected_data = self.processed_treatment(payload)
@@ -67,7 +66,7 @@ class EventTree[T: ComputationalUnit]:
 
         current.node_id.append(node)
 
-        if db is not None:
+        if db is not None and self.db_output:
             output_node_to_db(db, current, collected_data, self.tags)
 
         if isinstance(current.computational_unit, Finalizable):

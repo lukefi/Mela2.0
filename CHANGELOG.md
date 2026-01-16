@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.8] - 2026-01-13
+
+### Added
+
+- Added boolean parameter `db_output` for Events to toggle database output
+
+## [0.4.7] - 2025-12-18
+
+### Added
+
+- Tree volume calculation based on the [variable form factor model](https://doi.org/10.1093/forestry/cpac038)
+
 ## [0.4.6] - 2025-12-16
 
 ### Added
