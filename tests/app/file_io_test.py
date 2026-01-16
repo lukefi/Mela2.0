@@ -35,69 +35,6 @@ class TestFileReading(unittest.TestCase):
             result = file_io.determine_file_path(*a[0])
             self.assertEqual(a[1], result)
 
-    def test_file_contents(self):
-        input_file_path = os.path.join(os.getcwd(), "tests", "resources", "file_io_test", "test_dummy")
-        result = file_io.file_contents(input_file_path)
-        self.assertEqual("kissa123\n", result)
-
-    def test_pickle(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-        file_io.prepare_target_directory('outdir')
-        file_io.pickle_writer(Path('outdir', 'output.pickle'), ec)
-        result = file_io.pickle_reader('outdir/output.pickle')
-        self.assertListEqual(data, result)
-        os.remove('outdir/output.pickle')
-        shutil.rmtree('outdir')
-
-    def test_json(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.json_writer(Path('outdir', 'output.json'), ec)
-        result = file_io.json_reader('outdir/output.json')
-        self.assertListEqual(data, result)
-        os.remove('outdir/output.json')
-        shutil.rmtree('outdir')
-
-    def test_npy(self):
-        data = [
-            Test(a=1),
-            Test(a=2)
-        ]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.npy_writer(Path('outdir', 'output.npy'), ec)
-        result = file_io.npy_file_reader('outdir/output.npy')
-        self.assertListEqual(data, result.tolist())
-        os.remove('outdir/output.npy')
-        shutil.rmtree('outdir')
-
-    def test_npz(self):
-        data = [[
-            Test(a=1),
-            Test(a=2)
-        ], [
-            Test(a=3),
-            Test(a=4)
-        ]]
-        ec = ExportableContainer(export_objects=data, additional_vars=None)
-
-        file_io.prepare_target_directory('outdir')
-        file_io.npz_writer(Path('outdir', 'output.npz'), ec)
-        result = file_io.npz_file_reader('outdir/output.npz')
-        self.assertListEqual(data, [subresult.tolist() for subresult in result])
-        os.remove('outdir/output.npz')
-        shutil.rmtree('outdir')
-
     def test_csv(self):
         stand = ForestStand(
             identifier="123-234",
@@ -211,8 +148,7 @@ class TestFileReading(unittest.TestCase):
     def test_read_stands_from_csv_file(self):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.csv",
-            state_format="fdm",
-            state_input_container="csv"
+            state_format="csv",
         )
         stands_from_csv = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands_from_csv), 2)
@@ -224,7 +160,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/vmi12.dat",
             state_format="vmi12",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
@@ -233,7 +168,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path=Path("tests", "data", "resources", "VMI13_source_mini.dat"),
             state_format="vmi13",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
@@ -242,7 +176,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/resources/file_io_test/forest_centre.xml",
             state_format="xml",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 2)
@@ -251,7 +184,6 @@ class TestFileReading(unittest.TestCase):
         config = MetsiConfiguration(
             input_path="tests/data/resources/SMK_source.gpkg",
             state_format="gpkg",
-            state_input_container=""
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 9)
@@ -259,8 +191,7 @@ class TestFileReading(unittest.TestCase):
     def test_read_stands_from_nonexisting_file(self):
         config = MetsiConfiguration(
             input_path="nonexisting_file.pickle",
-            state_format="fdm",
-            state_input_container="pickle"
+            state_format="csv",
         )
         self.assertRaises(Exception, file_io.read_stands_from_file, config)
 
