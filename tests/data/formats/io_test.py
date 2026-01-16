@@ -143,14 +143,10 @@ class IoUtilsTest(ConverterTestSuite):
             stands_expected = vmi13_stands[i].__dict__
             stands_actual = stands_from_csv[i].__dict__
 
-            # Ignore all tree containers (old and new names)
+            # Ignore all tree containers
             for key in [
                 "reference_trees",
                 "tree_strata",
-                "reference_trees_soa",
-                "tree_strata_soa",
-                "reference_trees_pre_vec",
-                "tree_strata_pre_vec",
             ]:
                 stands_expected[key] = None
                 stands_actual[key] = None

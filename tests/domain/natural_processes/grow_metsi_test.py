@@ -34,8 +34,7 @@ def make_tree(
     )
 
 
-def make_stand(trees):
-    # Pick valid enum values without knowing the exact names:
+def make_stand():
     mal_val = list(LandUseCategory)[0]
     mty_val = list(SiteType)[0]
     alr_val = list(SoilPeatlandCategory)[0]
@@ -43,7 +42,7 @@ def make_stand(trees):
     verlt_val = list(gm.TaxClassReduction)[0].value
     return ForestStand(
         time=2000,
-        geo_location=(62.0, 25.0, 150.0, None),  # (Y, X, Z)
+        geo_location=(62.0, 25.0, 150.0, None),
         degree_days=1100.0,
         sea_effect=0.0,
         lake_effect=0.0,
@@ -52,7 +51,6 @@ def make_stand(trees):
         soil_peatland_category=alr_val,
         tax_class=verl_val,
         tax_class_reduction=verlt_val,
-        reference_trees_pre_vec=list(trees),
     )
 
 
@@ -93,7 +91,7 @@ class TestMetsiGrowPredictorVec(unittest.TestCase):
                 bh_age=(20.0, 30.0),
                 origin=(None, None),
             )
-            stand = make_stand([])  # site props + year from the common helper
+            stand = make_stand()  # site props + year from the common helper
             # Attach SoA trees
             stand.reference_trees = rt
 
@@ -126,7 +124,7 @@ class TestMetsiGrowPredictorVec(unittest.TestCase):
                 bh_age=(20.0,),
                 origin=(None,),
             )
-            stand = make_stand([])
+            stand = make_stand()
             stand.reference_trees = rt
 
             p = gmv.MetsiGrowPredictor(stand)
@@ -146,7 +144,7 @@ class TestGrowMetsiVecWrapper(unittest.TestCase):
             bh_age=(20.0, 18.0),
             origin=(None, None),
         )
-        stand = make_stand([])
+        stand = make_stand()
         stand.reference_trees = rt
 
         # Growth deltas returned by .evolve(step)
