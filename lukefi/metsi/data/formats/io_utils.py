@@ -14,13 +14,10 @@ from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb
 from lukefi.metsi.domain.forestry_types import StandList
 
 
-def rst_float(source: str | int | float | None) -> str:
+def rst_float(source: str | int | float) -> str:
     """
     Convert source to a float string with 6 decimals.
-    Handles numpy arrays and various non-scalar types defensively.
     """
-    if source is None:
-        return "0.000000"
 
     try:
         value = float(source)
@@ -39,7 +36,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
         Initial data record stand metadata
         Initial data record tree set metadata
     """
-    outputtable_id = parse_float(stand.identifier) or stand.stand_id
+    outputtable_id = parse_float(stand.identifier) or stand.stand_id or 0
 
     logical_record_length = sum([
         msb_meta.logical_record_metadata_length,
@@ -68,7 +65,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
 
 def c_var_metadata(uid: float | None, cvars_len: int) -> list[str]:
     total_length = 2 + cvars_len
-    cvars_meta = map(rst_float, [uid, total_length, 2, cvars_len])
+    cvars_meta = map(rst_float, [uid or 0, total_length, 2, cvars_len])
     return list(cvars_meta)
 
 
