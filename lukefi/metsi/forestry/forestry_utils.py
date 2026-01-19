@@ -56,6 +56,44 @@ def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: Tree
     return initial_stratum
 
 
+def find_matching_stratum_by_diameter_lm(
+        reference_tree: ReferenceTree,
+        strata: Iterable[TreeStratum],
+        threshold=3) -> Optional[TreeStratum]:
+    """
+    Find the stratum that has the closest diameter to the reference tree diameter by factor of difference, where the
+    reference tree diameter is between the stratum mean diameter divided by threshold and multiplied by threshold.
+
+    :param reference_tree: candidate reference tree
+    :param strata: candidate strata
+    :param threshold: threshold factor for diameter bounds
+    :return: matching stratum or None if no match is found
+    """
+
+    # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
+    #   jonka keskiläpimitta on lähinnä puun läpimittaa.
+    # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
+    #   R-koodissa kerroin = 3.
+
+    candidate = min(
+        strata,
+        # R-koodin mukaisesti puuttuva dgm <- 0
+        key=lambda stratum: 0 if stratum.mean_diameter is None else abs(
+            reference_tree.breast_height_diameter - stratum.mean_diameter),
+        default=None
+    )
+    if candidate is None:
+        return None
+
+    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter is not None else reference_tree.breast_height_diameter
+    lower = candidate_dgm / threshold
+    upper = candidate_dgm * threshold
+    if lower <= reference_tree.breast_height_diameter <= upper:
+        return candidate
+    else:
+        return None
+
+
 def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, list]:
     """ Splits a list into two lists based on a predicate.
 
