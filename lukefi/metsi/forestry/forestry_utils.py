@@ -120,6 +120,12 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
     :param strata:
     :return:
     """
+    # e.	Jos koivulle ei ole oman puulajin ositetta, kohdistetaan se toisen koivulajin ositteeseen,
+    #   jos sellainen on.
+    # f.	Jos havupuulle ei ole olemassa oman puulajin ositetta, kohdistetaan se jonkin muun havupuun ositteeseen.
+    # g.	Jos lehtipuulle ei ole oman puulajin ositetta eikä koivulle koivuositetta, kohdistetaan se jonkun muun lehtipuun ositteeseen.
+    #   Koivuositteeseen ei kuitenkaan kohdisteta muita kuin koivuja.
+
     candidates = []
 
     if species.is_deciduous():
@@ -127,8 +133,13 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
             candidates.extend(filter(lambda s: s.species == TreeSpecies.SILVER_BIRCH, strata))
         elif species == TreeSpecies.SILVER_BIRCH:
             candidates.extend(filter(lambda s: s.species == TreeSpecies.DOWNY_BIRCH, strata))
-        else:
-            candidates.extend(filter(lambda s: s.species.is_deciduous(), strata))
+        if len(candidates) == 0:
+            candidates.extend(
+                filter(
+                    lambda s: s.species.is_deciduous() and s.species not in (
+                        TreeSpecies.SILVER_BIRCH,
+                        TreeSpecies.DOWNY_BIRCH),
+                    strata))
     elif species.is_coniferous():
         candidates.extend(filter(lambda s: s.species.is_coniferous(), strata))
 
