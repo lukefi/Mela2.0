@@ -220,8 +220,6 @@ class VectorData():
             index: Row index/indices to remove. May be an int, list[int], or numpy integer array
                 (e.g. output of np.where(mask)[0]).
         """
-        if self.size == 0:
-            return
 
         for key in self.dtypes:
             vector: npt.NDArray = getattr(self, key)
