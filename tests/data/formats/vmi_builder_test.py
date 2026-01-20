@@ -1,9 +1,13 @@
 import unittest
 import numpy as np
-from copy import deepcopy
 from lukefi.metsi.data.formats import vmi_const
-from lukefi.metsi.data.formats.forest_builder import *
-from lukefi.metsi.data.enums.internal import *
+from lukefi.metsi.data.enums.internal import (
+    Storey,
+    TreeSpecies,
+    DrainageCategory,
+    LandUseCategory,
+    OwnerCategory
+)
 from tests.data.test_util import ForestBuilderTestBench
 
 
@@ -157,17 +161,17 @@ class TestForestBuilder(unittest.TestCase):
         # vallitsevanjakson_d13ika is '045' vallitsevanjakson_ikalisays is '06' -> result to 51.0
         self.assertEqual(51.0, self.vmi12_stands[1].dominant_storey_age)
 
-        def test_vmi12_trees(self):
-            # SoA counts per stand
-            self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
-            self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
-            self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
+    def test_vmi12_trees(self):
+        # SoA counts per stand
+        self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
+        self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
+        self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
 
-            # Identifier of the only measured tree for stand 1
-            self.assertEqual(
-                '0-999-999-98-1-001-tree',
-                self.vmi12_stands[1].reference_trees.identifier[0]
-            )
+        # Identifier of the only measured tree for stand 1
+        self.assertEqual(
+            '0-999-999-98-1-001-tree',
+            self.vmi12_stands[1].reference_trees.identifier[0]
+        )
 
     def test_vmi12_tree_variables(self):
 
@@ -219,7 +223,7 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(0, self.vmi12_stands_ref_trees_false[0].tree_strata.size)
         self.assertEqual(1, self.vmi12_stands_ref_trees_false[1].tree_strata.size)
 
-        self.assertEqual('0-999-999-98-1-01-st',
+        self.assertEqual('0-999-999-98-1-01-stratum',
                          self.vmi12_stands_ref_trees_false[1].tree_strata.identifier[0])
 
     def test_vmi12_stratum(self):
@@ -368,7 +372,7 @@ class TestForestBuilder(unittest.TestCase):
 
     def test_vmi13_tree_variables(self):
         trees = self.vmi13_stands[1].reference_trees
-        self.assertGreaterEqual(trees.size, 1)
+        self.assertEqual(trees.size, 3)
         i = 0
 
         self.assertEqual('7', trees.tree_category[i])

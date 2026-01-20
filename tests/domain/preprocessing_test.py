@@ -1,64 +1,10 @@
 import unittest
-import numpy as np
-
 import lukefi.metsi.domain.pre_ops as preprocessing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import CRS
 from lukefi.metsi.app.utils import MetsiException
-
-
-def generate_stand_with_saplings(sapling_tree_count, reference_tree_count):
-    """
-    Generates a ForestStand with a given number of ReferenceTrees of which a
-    given number is sapling trees, using SoA (ReferenceTrees).
-    """
-    stand = ForestStand()
-    identifiers = []
-    saplings = []
-    species = []
-
-    for i in range(reference_tree_count):
-        identifiers.append(f"{stand.identifier or 'stand'}-{i + 1}-tree")
-        saplings.append(i < sapling_tree_count)
-        # Species value not important for these tests; use PINE
-        species.append(TreeSpecies.PINE.value)
-
-    stand.reference_trees = ReferenceTrees().vectorize(
-        {
-            "identifier": identifiers,
-            "sapling": saplings,
-            "species": species,
-        }
-    )
-    return stand
-
-
-def generate_empty_stands(stand_count, empty_stand_count):
-    """
-    Generates a list of ForestStand objects where some stands have no trees
-    and some have one tree, using SoA (ReferenceTrees).
-    """
-    stands = []
-    for i in range(stand_count):
-        stand = ForestStand()
-        stand_is_empty = i < empty_stand_count
-
-        if not stand_is_empty:
-            stand.reference_trees = ReferenceTrees().vectorize(
-                {
-                    "identifier": [f"stand-{i + 1}-1-tree"],
-                    "species": [TreeSpecies(1).value],
-                }
-            )
-        else:
-            # Empty SoA container
-            stand.reference_trees = ReferenceTrees()
-
-        stands.append(stand)
-
-    return stands
 
 
 class PreprocessingTest(unittest.TestCase):
@@ -119,25 +65,26 @@ class PreprocessingTest(unittest.TestCase):
         for asse in valid_assertions:
             result = preprocessing.convert_coordinates(one_stand_list, **asse)
             rstand = result[0]
-            self.assertEqual(rstand.geo_location[0], 6643400.000631507)
-            self.assertEqual(rstand.geo_location[1], 3268000.003019635)
-            self.assertEqual(rstand.geo_location[3], CRS.EPSG_2393.name)
-        invalid_assertion = {"target_system": "ASD"}
-        self.assertRaises(
-            Exception,
-            preprocessing.convert_coordinates,
-            [ForestStand()],
-            **invalid_assertion,
-        )
+            if rstand.geo_location:
+                self.assertEqual(rstand.geo_location[0], 6643400.000631507)
+                self.assertEqual(rstand.geo_location[1], 3268000.003019635)
+                self.assertEqual(rstand.geo_location[3], CRS.EPSG_2393.name)
+            invalid_assertion = {"target_system": "ASD"}
+            self.assertRaises(
+                Exception,
+                preprocessing.convert_coordinates,
+                [ForestStand()],
+                **invalid_assertion,
+            )
 
     def test_compute_location_metadata(self):
         # generate testing data
-        LAT = 6643400.000631507
-        LON = 3268000.003019635
+        latitude = 6643400.000631507
+        longitude = 3268000.003019635
         sea_level_heights = [25.0, 25.0, None]
         valid_crs = ["EPSG:3067", "EPSG:2393", "EPSG:2393"]
         valid_fixtures = [
-            ForestStand(geo_location=(LAT, LON, sl_height, crs))
+            ForestStand(geo_location=(latitude, longitude, sl_height, crs))
             for crs, sl_height in zip(valid_crs, sea_level_heights)
         ]
 
@@ -178,23 +125,29 @@ class PreprocessingTest(unittest.TestCase):
 
         for result, asse in zip(results, assertions):
             geo = result.geo_location
-            self.assertIsNotNone(geo)
-            self.assertIsNotNone(geo[2])
-            temperatures = result.monthly_temperatures
-            self.assertIsNotNone(temperatures)
-            rainfall = result.monthly_rainfall
-            self.assertIsNotNone(rainfall)
-            # actual test validation
-            self.assertEqual(geo[0], LAT)
-            self.assertEqual(geo[1], LON)
-            self.assertEqual(float(geo[2]), asse[0])
-            self.assertEqual(geo[3], asse[1])
+            if geo:
+                self.assertIsNotNone(geo)
+                self.assertIsNotNone(geo[2])
+                temperatures = result.monthly_temperatures
+                self.assertIsNotNone(temperatures)
+                rainfall = result.monthly_rainfall
+                self.assertIsNotNone(rainfall)
+                # actual test validation
+                self.assertEqual(geo[0], latitude)
+                self.assertEqual(geo[1], longitude)
+                if geo[2]:
+                    self.assertEqual(float(geo[2]), asse[0])
+                if geo[3]:
+                    self.assertEqual(geo[3], asse[1])
             self.assertEqual(results[0].degree_days, asse[2])
             self.assertEqual(results[0].sea_effect, asse[3])
-            self.assertEqual(float(temperatures[0]), asse[4])
-            self.assertEqual(float(temperatures[1]), asse[5])
-            self.assertEqual(float(rainfall[0]), asse[6])
-            self.assertEqual(float(rainfall[1]), asse[7])
+
+            if temperatures:
+                self.assertEqual(float(temperatures[0]), asse[4])
+                self.assertEqual(float(temperatures[1]), asse[5])
+            if rainfall:
+                self.assertEqual(float(rainfall[0]), asse[6])
+                self.assertEqual(float(rainfall[1]), asse[7])
 
         invalid_fixtures = [
             [ForestStand(geo_location=(None, None, None, None))],

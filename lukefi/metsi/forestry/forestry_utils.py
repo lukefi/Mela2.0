@@ -1,5 +1,5 @@
 import math
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import Optional
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeSpecies
@@ -56,56 +56,6 @@ def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: Tree
     return initial_stratum
 
 
-def find_matching_stratum_by_diameter(
-        reference_tree: ReferenceTree,
-        strata: list[TreeStratum]) -> Optional[TreeStratum]:
-    """ Solves from which stratum the supplementing of reference tree should happen.
-
-    Return a stratum that has the closest diameter to the reference tree diameter.
-
-    :param reference_tree: A reference tree for which a matching stratum needs to be found
-    :param strata: list of stratums from which a diameter match is searched
-    :returns: a matching stratum or None if not match is possible
-    """
-    if len(strata) == 0:
-        return None
-    associated_stratum = strata[0]
-    for stratum in strata[1:]:
-        if stratum.has_diameter():
-            associated_stratum = override_from_diameter(associated_stratum, stratum, reference_tree)
-    return associated_stratum
-
-
-def find_matching_stratum_by_diameter_lm(
-        reference_tree: ReferenceTree,
-        strata: Iterable[TreeStratum],
-        threshold=2.5) -> Optional[TreeStratum]:
-    """
-    Find the stratum that has the closest diameter to the reference tree diameter by factor of difference, where the
-    reference tree diameter is between the stratum mean diameter divided by threshold and multiplied by threshold.
-
-    :param reference_tree: candidate reference tree
-    :param strata: candidate strata
-    :param threshold: threshold factor for diameter bounds
-    :return: matching stratum or None if no match is found
-    """
-    candidate = min(
-        strata,
-        key=lambda stratum: abs(reference_tree.breast_height_diameter or 0.0 / (stratum.mean_diameter or 0.0) - 1),
-        default=None
-    )
-    if candidate is None:
-        return None
-
-    lower = candidate.mean_diameter or 0.0 / threshold
-    upper = candidate.mean_diameter or 0.0 * threshold
-    if not lower or not upper or not reference_tree.breast_height_diameter:
-        return None
-    if lower < reference_tree.breast_height_diameter < upper:
-        return candidate
-    return None
-
-
 def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, list]:
     """ Splits a list into two lists based on a predicate.
 
@@ -122,40 +72,6 @@ def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, lis
         else:
             non_matching_items.append(item)
     return matching_items, non_matching_items
-
-
-def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratum]) -> list[TreeStratum]:
-    """
-    Find a list of strata which have a similar species to the given species.
-    Out of deciduous trees, silver birch is considered most similar to downy birch and vice versa.
-    """
-    candidates: list[TreeStratum] = []
-
-    if species.is_deciduous():
-        if species == TreeSpecies.DOWNY_BIRCH:
-            candidates.extend(
-                filter(lambda s: s.species == TreeSpecies.SILVER_BIRCH, strata)
-            )
-        elif species == TreeSpecies.SILVER_BIRCH:
-            candidates.extend(
-                filter(lambda s: s.species == TreeSpecies.DOWNY_BIRCH, strata)
-            )
-        else:
-            candidates.extend(
-                filter(
-                    lambda s: s.species is not None and s.species.is_deciduous(),
-                    strata,
-                )
-            )
-    elif species.is_coniferous():
-        candidates.extend(
-            filter(
-                lambda s: s.species is not None and s.species.is_coniferous(),
-                strata,
-            )
-        )
-
-    return candidates
 
 
 def find_matching_storey_stratum_for_tree(
@@ -213,7 +129,6 @@ def find_matching_storey_stratum_for_tree(
     same_species_idx = same_storey_idx[same_species_mask]
     other_species_idx = same_storey_idx[~same_species_mask]
 
-    # Helper to build "similar species" indices (SoA version of find_strata_by_similar_species)
     def _similar_species_indices() -> np.ndarray:
         # If tree species is missing, just bail out
         if tree_species_code == -1:

@@ -1,9 +1,18 @@
+
 import unittest
-import numpy as np
 import os
 from functools import reduce
+import numpy as np
+
 from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
-from lukefi.metsi.data.enums.internal import *
+from lukefi.metsi.data.enums.internal import (
+    OwnerCategory,
+    SoilPeatlandCategory,
+    SiteType,
+    DrainageCategory,
+    TreeSpecies,
+    Storey
+)
 from lukefi.metsi.app.metsi_enum import StrataOrigin
 
 builder_flags = {
@@ -139,21 +148,17 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(0, vec0.origin[0])
         self.assertEqual(0, vec0.origin[1])
 
-        # stems_per_ha: None -> np.nan
         self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
         self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
 
-        # mean_diameter and mean_height: real floats, same expectations
         self.assertEqual(2.0, vec0.mean_diameter[0])
         self.assertEqual(13.1, vec0.mean_diameter[1])
         self.assertEqual(2.3, vec0.mean_height[0])
         self.assertEqual(12.2, vec0.mean_height[1])
 
-        # breast_height_age: None -> np.nan
         self.assertTrue(np.isnan(vec0.breast_height_age[0]))
         self.assertTrue(np.isnan(vec0.breast_height_age[1]))
 
-        # biological_age, basal_area etc keep the same numeric assertions
         self.assertEqual(10.0, vec0.biological_age[0])
         self.assertEqual(48.0, vec0.biological_age[1])
         self.assertTrue(np.isnan(vec0.basal_area[0]))
@@ -197,15 +202,16 @@ class TestGeoPackageBuilder(unittest.TestCase):
             (2, 24),
             (3, 0),
         ]
-        for a in assertions:
-            builder_flags = {'strata_origin': StrataOrigin(a[0])}
-            declared_conversions = {}
+        for origin, expected in assertions:
+            test_builder_flags = {'strata_origin': StrataOrigin(origin)}
+            test_declared_conversions = {}
             stands = GeoPackageBuilder(
-                builder_flags,
-                declared_conversions,
-                self.absolute_resource_path).build()
+                test_builder_flags,
+                test_declared_conversions,
+                self.absolute_resource_path
+            ).build()
             number_of_stratums = reduce(lambda acc, s: acc + s.tree_strata.size, stands, 0)
-            self.assertEqual(number_of_stratums, a[1])
+            self.assertEqual(number_of_stratums, expected)
 
     def test_geopackage_builder_stands(self):
         self.assertEqual(len(self.gpkg_stands), 9)

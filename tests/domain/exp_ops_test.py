@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import Mock
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.app.utils import ConfigurationException
