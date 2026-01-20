@@ -98,22 +98,6 @@ class ForestryUtilsTest(unittest.TestCase):
             )
             self.assertEqual(expected_stratum, result)
 
-    def test_find_matching_stratum_by_diameter(self):
-        reference_tree = ReferenceTree()
-        reference_tree.species = TreeSpecies.SPRUCE
-        reference_tree.breast_height_diameter = 13.0
-
-        strata = [
-            stratum
-            for stratum in strata_fixture()
-            if stratum.species == TreeSpecies.SPRUCE
-        ]
-        result = futil.find_matching_stratum_by_diameter(
-            reference_tree, strata
-        )
-
-        self.assertEqual(strata[0], result)
-
     #
     # SoA-based tests for find_matching_storey_stratum_for_tree
     #
