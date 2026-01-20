@@ -20,8 +20,12 @@ _VMI9_STAND_COMMON: dict[str, slice] = {
     "osuusrel": slice(36, 38),         # osuusrel (col 37-38)
     "osuus7m": slice(59, 61),          # osuus7m (col 60-61)
 
+    "county": slice(64, 66),           # laani (col 65-66)
+    "forestry_centre": slice(66, 68),  # metkes (col 67-68)
+
     # admin / meta
     "municipality": slice(68, 71),     # kunta (col 69-71)
+    "owner_group": slice(81, 82),      # omiryh (col 82)
     "degree_days": slice(87, 91),      # lamsum1 (col 88-91)
 
     # land/site

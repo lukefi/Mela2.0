@@ -435,6 +435,10 @@ class VMI9Builder(VMIBuilder):
 
         result.basal_area = util.basal_from_ppa(data_row, indices)
 
+        result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
+        result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
+        result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
+
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
@@ -447,14 +451,10 @@ class VMI9Builder(VMIBuilder):
         result: dict[str, ForestStand] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
-        # Build stands (need correct ESUOMI/PSUOMI indices per stand row)
-        stand_indices_by_id: dict[str, dict[str, slice]] = {}
-
         for i, row in enumerate(self.forest_stands):
             idx = self._select_stand_indices(row)
             stand = self.convert_stand_entry(idx, row, i + 1)
             result[stand.identifier] = stand
-            stand_indices_by_id[stand.identifier] = idx
 
         # Trees
         if self.builder_flags.get("measured_trees", False):
