@@ -6,7 +6,7 @@ import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 
 DTYPES_TREE: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U20"),
+    "identifier": np.dtype("U30"),
     "tree_number": np.int32,
     "species": np.int32,
     "breast_height_diameter": np.float64,
@@ -32,7 +32,7 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
 }
 
 DTYPES_STRATA: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U20"),
+    "identifier": np.dtype("U30"),
     "species": np.int32,
     "mean_diameter": np.float64,
     "mean_height": np.float64,

@@ -169,7 +169,7 @@ class TestForestBuilder(unittest.TestCase):
 
         # Identifier of the only measured tree for stand 1
         self.assertEqual(
-            '0-999-999-98-1-001-t',
+            '0-999-999-98-1-001-tree',
             self.vmi12_stands[1].reference_trees.identifier[0]
         )
 
@@ -223,7 +223,7 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(0, self.vmi12_stands_ref_trees_false[0].tree_strata.size)
         self.assertEqual(1, self.vmi12_stands_ref_trees_false[1].tree_strata.size)
 
-        self.assertEqual('0-999-999-98-1-01-st',
+        self.assertEqual('0-999-999-98-1-01-stratum',
                          self.vmi12_stands_ref_trees_false[1].tree_strata.identifier[0])
 
     def test_vmi12_stratum(self):
