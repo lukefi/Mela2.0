@@ -1,5 +1,5 @@
 import math
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import Optional
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeSpecies
