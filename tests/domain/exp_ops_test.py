@@ -1,13 +1,12 @@
 import unittest
-from lukefi.metsi.data.vector_model import ReferenceTrees
 from unittest.mock import Mock
+from lukefi.metsi.data.vector_model import ReferenceTrees
+
 from lukefi.metsi.data.model import ReferenceTree, ForestStand, TreeStratum
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.data.conversion.internal2mela import mela_stand
 from lukefi.metsi.app.utils import ConfigurationException
 from lukefi.metsi.domain.exp_ops import prepare_rst_output, classify_values_to
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.enums.mela import MelaTreeSpecies
 
 
 class TestExpOps(unittest.TestCase):

@@ -124,40 +124,6 @@ def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, lis
     return matching_items, non_matching_items
 
 
-def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratum]) -> list[TreeStratum]:
-    """
-    Find a list of strata which have a similar species to the given species.
-    Out of deciduous trees, silver birch is considered most similar to downy birch and vice versa.
-    """
-    candidates: list[TreeStratum] = []
-
-    if species.is_deciduous():
-        if species == TreeSpecies.DOWNY_BIRCH:
-            candidates.extend(
-                filter(lambda s: s.species == TreeSpecies.SILVER_BIRCH, strata)
-            )
-        elif species == TreeSpecies.SILVER_BIRCH:
-            candidates.extend(
-                filter(lambda s: s.species == TreeSpecies.DOWNY_BIRCH, strata)
-            )
-        else:
-            candidates.extend(
-                filter(
-                    lambda s: s.species is not None and s.species.is_deciduous(),
-                    strata,
-                )
-            )
-    elif species.is_coniferous():
-        candidates.extend(
-            filter(
-                lambda s: s.species is not None and s.species.is_coniferous(),
-                strata,
-            )
-        )
-
-    return candidates
-
-
 def find_matching_storey_stratum_for_tree(
     tree_index: int,
     trees: VectorReferenceTrees,
@@ -213,7 +179,6 @@ def find_matching_storey_stratum_for_tree(
     same_species_idx = same_storey_idx[same_species_mask]
     other_species_idx = same_storey_idx[~same_species_mask]
 
-    # Helper to build "similar species" indices (SoA version of find_strata_by_similar_species)
     def _similar_species_indices() -> np.ndarray:
         # If tree species is missing, just bail out
         if tree_species_code == -1:

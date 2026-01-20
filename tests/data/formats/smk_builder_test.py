@@ -1,9 +1,18 @@
+
 import unittest
-import numpy as np
 import os
 from functools import reduce
+import numpy as np
+
 from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
-from lukefi.metsi.data.enums.internal import *
+from lukefi.metsi.data.enums.internal import (
+    OwnerCategory,
+    SoilPeatlandCategory,
+    SiteType,
+    DrainageCategory,
+    TreeSpecies,
+    Storey
+)
 from lukefi.metsi.app.metsi_enum import StrataOrigin
 
 builder_flags = {
@@ -197,15 +206,16 @@ class TestGeoPackageBuilder(unittest.TestCase):
             (2, 24),
             (3, 0),
         ]
-        for a in assertions:
-            builder_flags = {'strata_origin': StrataOrigin(a[0])}
-            declared_conversions = {}
+        for origin, expected in assertions:
+            test_builder_flags = {'strata_origin': StrataOrigin(origin)}
+            test_declared_conversions = {}
             stands = GeoPackageBuilder(
-                builder_flags,
-                declared_conversions,
-                self.absolute_resource_path).build()
+                test_builder_flags,
+                test_declared_conversions,
+                self.absolute_resource_path
+            ).build()
             number_of_stratums = reduce(lambda acc, s: acc + s.tree_strata.size, stands, 0)
-            self.assertEqual(number_of_stratums, a[1])
+            self.assertEqual(number_of_stratums, expected)
 
     def test_geopackage_builder_stands(self):
         self.assertEqual(len(self.gpkg_stands), 9)
