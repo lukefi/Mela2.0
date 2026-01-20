@@ -7,58 +7,6 @@ from lukefi.metsi.forestry.preprocessing.coordinate_conversion import CRS
 from lukefi.metsi.app.utils import MetsiException
 
 
-def generate_stand_with_saplings(sapling_tree_count, reference_tree_count):
-    """
-    Generates a ForestStand with a given number of ReferenceTrees of which a
-    given number is sapling trees, using SoA (ReferenceTrees).
-    """
-    stand = ForestStand()
-    identifiers = []
-    saplings = []
-    species = []
-
-    for i in range(reference_tree_count):
-        identifiers.append(f"{stand.identifier or 'stand'}-{i + 1}-tree")
-        saplings.append(i < sapling_tree_count)
-        # Species value not important for these tests; use PINE
-        species.append(TreeSpecies.PINE.value)
-
-    stand.reference_trees = ReferenceTrees().vectorize(
-        {
-            "identifier": identifiers,
-            "sapling": saplings,
-            "species": species,
-        }
-    )
-    return stand
-
-
-def generate_empty_stands(stand_count, empty_stand_count):
-    """
-    Generates a list of ForestStand objects where some stands have no trees
-    and some have one tree, using SoA (ReferenceTrees).
-    """
-    stands = []
-    for i in range(stand_count):
-        stand = ForestStand()
-        stand_is_empty = i < empty_stand_count
-
-        if not stand_is_empty:
-            stand.reference_trees = ReferenceTrees().vectorize(
-                {
-                    "identifier": [f"stand-{i + 1}-1-tree"],
-                    "species": [TreeSpecies(1).value],
-                }
-            )
-        else:
-            # Empty SoA container
-            stand.reference_trees = ReferenceTrees()
-
-        stands.append(stand)
-
-    return stands
-
-
 class PreprocessingTest(unittest.TestCase):
 
     def test_generate_reference_trees(self):
