@@ -721,15 +721,75 @@ def parse_vmi10_area_ha(raw: str) -> float:
         return get_or_default(parse_type(s, float), 0.0)
 
 
+def append_tree_row_vmi9(attr: dict[str, list], indices, row: str):
+    """
+    Append one VMI9 tree row into SoA dict compatible with DTYPES_TREE.
+    """
+    identifier = generate_tree_identifier(row, indices)
+    tree_number = get_or_default(parse_type(row[indices["tree_number"]], int), 0)
+
+    species = vmi2internal.convert_species(row[indices["species"]])
+
+    tree_category = row[indices["tree_category"]].strip() or None
+    breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
+
+    # dm -> m
+    height = determine_tree_height(row[indices["height"]], conversion_factor=10.0)
+    measured_height = None
+
+    lowest_living_branch_height = (
+        get_or_default(parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
+    )
+
+    breast_height_age, biological_age = determine_tree_age_values(
+        row[indices["d13_age"]],
+        row[indices["age_increase"]],
+        row[indices["total_age"]],
+    )
+
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
+
+    management_category = determine_tree_management_category(row[indices["latvuskerros"]])
+    storey = determine_storey_for_tree(row[indices["latvuskerros"]])
+
+    tuhon_raw = row[indices["tuhon_ilmiasu"]]
+    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
+
+    values = {
+        "identifier": identifier,
+        "tree_number": tree_number,
+        "species": species,
+        "tree_category": tree_category,
+        "breast_height_diameter": breast_height_diameter,
+        "height": height,
+        "measured_height": measured_height,
+        "breast_height_age": breast_height_age,
+        "biological_age": biological_age,
+        "stems_per_ha": stems_per_ha,
+        "origin": 0,
+        "management_category": management_category,
+        "storey": storey,
+        "saw_log_volume_reduction_factor": None,
+        "pruning_year": 0,
+        "age_when_10cm_diameter_at_breast_height": 0,
+        "stand_origin_relative_position": (0.0, 0.0, 0.0),
+        "lowest_living_branch_height": lowest_living_branch_height,
+        "sapling": False,
+        "tree_type": None,
+        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "basal_area": None,
+    }
+
+    for k, v in values.items():
+        attr.setdefault(k, []).append(v)
+
+
 def append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
     """
     Append one VMI10 tree row into SoA dict compatible with DTYPES_TREE.
     """
     identifier = generate_tree_identifier(row, indices)
     tree_number = get_or_default(parse_type(row[indices["tree_number"]], int), 0)
-
-    # Species: use converter if possible, otherwise None
-    species = None
 
     species = vmi2internal.convert_species(row[indices["species"]])
 

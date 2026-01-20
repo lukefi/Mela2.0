@@ -1,5 +1,79 @@
 """ Constant data indices of the app """
 
+# NOTE: pvm (date) location differs; fra_class exists only in PSUOMI but we map it for both (blank in ESUOMI).
+_VMI9_STAND_COMMON: dict[str, slice] = {
+    # identification (used by vmi_util.generate_stand_identifier)
+    "lohkomuoto": slice(8, 9),         # lohmuo  (col 9)
+    "section_y": slice(2, 5),          # lohy    (col 3-5)
+    "section_x": slice(5, 8),          # lohx    (col 6-8)
+    "test_area_number": slice(10, 12),  # koeala  (col 11-12)
+    "stand_number": slice(12, 13),     # kuvio   (col 13)
+    "row_type": slice(13, 14),         # tielaji (col 14)
+
+    # geo (EPSG:2393; these are meters)
+    "lat": slice(18, 25),              # pkoonim (col 19-25)
+    "lon": slice(25, 32),              # ikoonim (col 26-32)
+    "height_above_sea_level": slice(82, 87),  # korkeus dm (col 83-87)
+
+    # area + weights
+    "area_ha": slice(50, 59),          # eduala (col 51-59)
+    "osuusrel": slice(36, 38),         # osuusrel (col 37-38)
+    "osuus7m": slice(59, 61),          # osuus7m (col 60-61)
+
+    # admin / meta
+    "municipality": slice(68, 71),     # kunta (col 69-71)
+    "degree_days": slice(87, 91),      # lamsum1 (col 88-91)
+
+    # land/site
+    "fra_class": slice(99, 100),       # fraluo (col 100) in PSUOMI, blank in ESUOMI
+    "land_category": slice(100, 101),  # maaluo (col 101)
+    "land_category_detail": slice(101, 102),  # maaluotar (col 102)
+    "paatyyppi": slice(104, 105),      # paatyy (col 105)
+    "kasvupaikkatunnus": slice(106, 107),  # kaspai (col 107)
+
+    # basal area via ppa buckets
+    "ppa1": slice(203, 206),           # ppa1 (col 204-206)
+    "ppa2": slice(207, 210),           # ppa2 (col 208-210)
+    "ppa3": slice(211, 214),           # ppa3 (col 212-214)
+    "ppa4": slice(0, 0),               # not present in VMI9
+    "ppa5": slice(0, 0),               # not present in VMI9
+}
+
+# Stand row indices – Etelä-Suomi (pvm at 45-50)
+VMI9_STAND_INDICES_ESUOMI = dict(_VMI9_STAND_COMMON)
+VMI9_STAND_INDICES_ESUOMI["date"] = slice(44, 50)  # pvm (col 45-50)
+
+# Stand row indices – Pohjois-Suomi (pvm at 76-81)
+VMI9_STAND_INDICES_PSUOMI = dict(_VMI9_STAND_COMMON)
+VMI9_STAND_INDICES_PSUOMI["date"] = slice(75, 81)  # pvm (col 76-81)
+
+
+# Tree row indices (same for south & north in tk_laskenta9 docs)
+VMI9_TREE_INDICES: dict[str, slice] = {
+    # identification (used by vmi_util.generate_tree_identifier)
+    "lohkomuoto": slice(8, 9),         # lohmuo (col 9)
+    "section_y": slice(2, 5),          # lohy (col 3-5)
+    "section_x": slice(5, 8),          # lohx (col 6-8)
+    "test_area_number": slice(10, 12),  # koeala (col 11-12)
+    "stand_number": slice(12, 13),     # kuvio (col 13)
+    "tree_number": slice(15, 17),      # idnro (col 16-17)
+
+    "species": slice(17, 19),          # puulaji (col 18-19)
+    "diameter": slice(19, 22),         # d13 mm (col 20-22)
+    "tree_category": slice(24, 25),    # puuluo (col 25)
+    "latvuskerros": slice(26, 27),     # latker (col 27)
+
+    "height": slice(61, 64),           # pituus dm (col 62-64)
+    "living_branches_height": slice(58, 61),  # elalatva dm (col 59-61)
+
+    "tuhon_ilmiasu": slice(83, 84),    # tuhilm (col 84)
+
+    "d13_age": slice(91, 94),          # d13ika (col 92-94)
+    "age_increase": slice(95, 97),     # ikalis (col 96-97)
+    "total_age": slice(97, 100),       # kokika (col 98-100)
+}
+
+
 VMI12_STAND_INDICES: dict[str, slice] = {
     "lohkomuoto": slice(1, 2),
     "section_y": slice(2, 5),

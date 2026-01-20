@@ -9,6 +9,9 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.enums.internal import OwnerCategory
 from lukefi.metsi.data.formats.vmi_const import (
+    VMI9_STAND_INDICES_ESUOMI,
+    VMI9_STAND_INDICES_PSUOMI,
+    VMI9_TREE_INDICES,
     VMI10_STAND_INDICES,
     VMI10_TREE_INDICES,
     VMI12_STAND_INDICES,
@@ -363,6 +366,115 @@ class VMIBuilder(ForestBuilder):
     @abstractmethod
     def build(self) -> StandList:
         ...
+
+
+class VMI9Builder(VMIBuilder):
+    """VMI9 specific builder implementation with no strata support."""
+
+    def __init__(self,
+                 builder_flags: dict,
+                 declared_conversions: dict,
+                 data_rows: list[str] | None = None):
+        if data_rows is None:
+            data_rows = []
+        super().__init__(builder_flags, declared_conversions, data_rows)
+
+    def find_row_type(self, row: str) -> int:
+        return int(row[13])
+
+    def classify_row(self, row: str) -> str | None:
+        row_type = self.find_row_type(row)
+        if row_type == 1:
+            return "stand"
+        if row_type == 2:
+            return "tree"
+        return None
+
+    def _select_stand_indices(self, row: str) -> dict[str, slice]:
+        # ESUOMI pvm at 45–50 (0-based 44:50)
+        candidate = row[VMI9_STAND_INDICES_ESUOMI["date"]].strip()
+        if candidate.isdigit():
+            return VMI9_STAND_INDICES_ESUOMI
+        return VMI9_STAND_INDICES_PSUOMI
+
+    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
+        result = ForestStand()
+        result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
+        result.set_identifiers(stand_id)
+
+        parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
+        if parsed is None:
+            raise MetsiException("Year is None in VMI9 data")
+
+        result.year = parsed.year
+        result.start_year = parsed.year
+
+        result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
+
+        area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
+        result.set_area(area_ha)
+
+        result.area_weight_factors = vmi_util.determine_area_factors(
+            data_row[indices["osuus7m"]],
+            data_row[indices["osuusrel"]],
+        )
+
+        result.municipality_id = util.parse_int(data_row[indices["municipality"]])
+
+        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
+        result.land_use_category_detail = data_row[indices["land_category_detail"]]
+
+        fra_raw = data_row[indices["fra_class"]].strip()
+        result.fra_category = None if fra_raw in ("", ".") else fra_raw
+
+        result.site_type_category = vmi2internal.convert_site_type_category(
+            data_row[indices["kasvupaikkatunnus"]].strip())
+
+        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
+            data_row[indices["paatyyppi"]].strip())
+
+        result.basal_area = util.basal_from_ppa(data_row, indices)
+
+        lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
+        lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
+        height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
+        result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
+
+        result.tax_class_reduction = 0
+        return result
+
+    def build(self) -> StandList:
+        result: dict[str, ForestStand] = {}
+        tree_attrs: dict[str, dict[str, list]] = {}
+
+        # Build stands (need correct ESUOMI/PSUOMI indices per stand row)
+        stand_indices_by_id: dict[str, dict[str, slice]] = {}
+
+        for i, row in enumerate(self.forest_stands):
+            idx = self._select_stand_indices(row)
+            stand = self.convert_stand_entry(idx, row, i + 1)
+            result[stand.identifier] = stand
+            stand_indices_by_id[stand.identifier] = idx
+
+        # Trees
+        if self.builder_flags.get("measured_trees", False):
+            for row in self.reference_trees:
+                # Use ESUOMI identifier slices (they match the id fields; only date differs)
+                stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
+                if stand_id not in result:
+                    continue
+                attr_dict = tree_attrs.setdefault(stand_id, {})
+                vmi_util.append_tree_row_vmi9(attr_dict, VMI9_TREE_INDICES, row)
+
+        # Attach containers (same as VMI10Builder)
+        out = StandList()
+        for sid, stand in result.items():
+            stand.reference_trees = ReferenceTrees()
+            stand.reference_trees.vectorize(tree_attrs.get(sid, {}))
+            stand.tree_strata = TreeStrata()  # empty
+            out.append(stand)
+
+        return out
 
 
 class VMI10Builder(VMIBuilder):
