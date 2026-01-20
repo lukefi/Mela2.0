@@ -148,21 +148,17 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(0, vec0.origin[0])
         self.assertEqual(0, vec0.origin[1])
 
-        # stems_per_ha: None -> np.nan
         self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
         self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
 
-        # mean_diameter and mean_height: real floats, same expectations
         self.assertEqual(2.0, vec0.mean_diameter[0])
         self.assertEqual(13.1, vec0.mean_diameter[1])
         self.assertEqual(2.3, vec0.mean_height[0])
         self.assertEqual(12.2, vec0.mean_height[1])
 
-        # breast_height_age: None -> np.nan
         self.assertTrue(np.isnan(vec0.breast_height_age[0]))
         self.assertTrue(np.isnan(vec0.breast_height_age[1]))
 
-        # biological_age, basal_area etc keep the same numeric assertions
         self.assertEqual(10.0, vec0.biological_age[0])
         self.assertEqual(48.0, vec0.biological_age[1])
         self.assertTrue(np.isnan(vec0.basal_area[0]))

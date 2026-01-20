@@ -372,7 +372,7 @@ class TestForestBuilder(unittest.TestCase):
 
     def test_vmi13_tree_variables(self):
         trees = self.vmi13_stands[1].reference_trees
-        self.assertGreaterEqual(trees.size, 1)
+        self.assertEqual(trees.size, 3)
         i = 0
 
         self.assertEqual('7', trees.tree_category[i])
