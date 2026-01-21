@@ -167,10 +167,12 @@ def csv_content_to_stands(csv_content: list[list[str]]) -> StandList:
 
         elif row_type == "tree":
             t = ReferenceTree.from_csv_row(row)
+            assert current_tree_attrs is not None, "Tree row encountered before first stand row"
             _append_obj_to_attr_dict(current_tree_attrs, t)
 
         elif row_type == "stratum":
             s = TreeStratum.from_csv_row(row)
+            assert current_stratum_attrs is not None, "Stratum row encountered before first stand row"
             _append_obj_to_attr_dict(current_stratum_attrs, s)
 
     # finalize last stand
