@@ -2,7 +2,6 @@
 
 # NOTE: pvm (date) location differs; fra_class exists only in PSUOMI but we map it for both (blank in ESUOMI).
 _VMI9_STAND_COMMON: dict[str, slice] = {
-    # identification (used by vmi_util.generate_stand_identifier)
     "lohkomuoto": slice(8, 9),         # lohmuo  (col 9)
     "section_y": slice(2, 5),          # lohy    (col 3-5)
     "section_x": slice(5, 8),          # lohx    (col 6-8)
@@ -52,9 +51,8 @@ VMI9_STAND_INDICES_PSUOMI = dict(_VMI9_STAND_COMMON)
 VMI9_STAND_INDICES_PSUOMI["date"] = slice(75, 81)  # pvm (col 76-81)
 
 
-# Tree row indices (same for south & north in tk_laskenta9 docs)
+# Tree row indices
 VMI9_TREE_INDICES: dict[str, slice] = {
-    # identification (used by vmi_util.generate_tree_identifier)
     "lohkomuoto": slice(8, 9),         # lohmuo (col 9)
     "section_y": slice(2, 5),          # lohy (col 3-5)
     "section_x": slice(5, 8),          # lohx (col 6-8)
@@ -77,6 +75,186 @@ VMI9_TREE_INDICES: dict[str, slice] = {
     "total_age": slice(97, 100),       # kokika (col 98-100)
 }
 
+
+VMI10_STAND_INDICES: dict[str, slice] = {
+    "lohkomuoto": slice(1, 2),          # lohmuo
+    "section_y": slice(2, 5),           # lohy
+    "section_x": slice(5, 8),           # lohx
+    "test_area_number": slice(9, 11),   # koeala
+    "stand_number": slice(12, 13),      # kuvio
+    "row_type": slice(13, 14),          # tielaji (row type)
+
+    # geo
+    "lat": slice(18, 25),               # pkoonim
+    "lon": slice(25, 32),               # ikoonim
+    "height_above_sea_level": slice(82, 87),  # korkeus (dm)
+
+    # weights / area
+    "osuusrel": slice(36, 38),          # osuusrel
+    "osuus7m": slice(40, 42),           # osuus7m
+    "area_ha": slice(50, 59),           # eduala (ha, 5 decimals implied)
+
+    # other basic stand fields
+    "municipality": slice(68, 71),      # kunta
+    "degree_days": slice(87, 91),       # lamsum1
+    "owner_group": slice(92, 93),       # omiryh (optional, may be unused)
+    "date": slice(93, 99),              # pvm (ddmmyy)
+
+    # land/site keys
+    "land_category": slice(100, 101),           # maaluo 101
+    "land_category_detail": slice(101, 102),    # maaluotar 102
+    "paatyyppi": slice(104, 105),               # paatyy 105
+    "kasvupaikkatunnus": slice(106, 107),       # kaspai 107
+    "fra_class": slice(116, 117),               # fraluo 117
+
+    # basal area components (0.1 m2 units)
+    "ppa1": slice(284, 287),
+    "ppa2": slice(288, 291),
+    "ppa3": slice(292, 295),
+    "ppa4": slice(296, 299),
+    "ppa5": slice(300, 303),
+}
+
+VMI10_TREE_INDICES: dict[str, slice] = {
+    "lohkomuoto": slice(1, 2),          # lohmuo
+    "section_y": slice(2, 5),           # lohy
+    "section_x": slice(5, 8),           # lohx
+    "test_area_number": slice(9, 11),   # koeala
+    "stand_number": slice(12, 13),      # kuvio
+    "row_type": slice(13, 14),          # tielaji
+
+    # core tree fields
+    "tree_type": slice(14, 15),         # puutyy
+    "tree_number": slice(15, 17),       # idnro
+    "species": slice(17, 19),           # puulaji
+    "diameter": slice(19, 22),          # d13 (mm)
+    "tree_category": slice(24, 25),     # puuluo
+    "latvuskerros": slice(26, 27),      # latker
+
+    # heights (dm)
+    "living_branches_height": slice(58, 61),  # elalatva (dm)
+    "height": slice(61, 64),            # pituus (dm)
+
+    # ages (years)
+    "d13_age": slice(91, 94),           # d13ika (v)
+    "total_age": slice(97, 100),        # ika (v)
+
+    # damage
+    "tuhon_ilmiasu": slice(83, 84),     # tuhilm
+}
+
+
+VMI11_STAND_INDICES: dict[str, slice] = {
+    # Plot / stand identification
+    "lohkomuoto": slice(1, 2),
+    "section_y": slice(2, 5),
+    "section_x": slice(5, 8),
+    "test_area_number": slice(9, 11),
+    "stand_number": slice(12, 13),  # kuvio
+    "row_type": slice(13, 14),      # tielaji
+
+    # Location / geometry
+    "lat": slice(183, 190),  # pkoo
+    "lon": slice(190, 197),  # ikoo
+
+    # Area weights / represented area
+    "osuusrel": slice(36, 38),
+    "osuus12x": slice(38, 40),
+    "osuus7m": slice(40, 42),
+    "area_ha": slice(50, 59),  # eduala
+
+    # Administrative
+    "county": slice(63, 66),          # invalue (Maastotyöalue) — used as region code
+    "forestry_centre": slice(66, 68),  # metkes
+    "municipality": slice(68, 71),    # kunta
+    "kitukunta": slice(68, 71),       # VMI11 doesn't provide a separate kitukunta → using kunta but lets confirm this
+
+    # Site / stand descriptors
+    "height_above_sea_level": slice(82, 87),
+    "degree_days": slice(87, 91),
+    "owner_group": slice(92, 93),
+    "date": slice(93, 99),
+    "land_category": slice(100, 101),
+    "land_category_detail": slice(101, 102),
+    "fra_class": slice(102, 103),
+    "paatyyppi": slice(104, 105),
+    "kasvupaikkatunnus": slice(106, 107),
+
+    # Drainage / taxation
+    "ojitus_tilanne": slice(126, 127),
+    "ojitus_aika": slice(128, 130),
+    "ojitus_tarve": slice(130, 131),
+    "tax_class": slice(132, 133),
+    "tax_class_reduction": slice(133, 134),
+
+    # Restrictions
+    "puuntuotannon_rajoitus": slice(135, 138),
+    "puuntuotannon_rajoitus_tarkenne": slice(138, 139),
+    "suojametsakoodi": slice(139, 140),
+    "muut_arvot": slice(140, 141),
+    "naturaaluekoodi": slice(141, 142),
+
+    # Development / structure
+    "kehitysluokka": slice(201, 202),
+    "main_tree_species_dominant_storey": slice(202, 204),
+    "pohjapintaala": slice(228, 230),  # kuvppa
+
+    # Age
+    "vallitsevanjakson_d13ika": slice(247, 250),
+    "vallitsevanjakson_ikalisays": slice(250, 252),
+
+    # Operations / proposals
+    "hakkuu_tapa": slice(262, 263),
+    "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus": slice(268, 269),
+    "viljely": slice(270, 271),
+    "viljely_aika": slice(271, 272),
+    "muu_toimenpide": slice(274, 275),
+    "muu_toimenpide_aika": slice(275, 276),
+    "hakkuuehdotus": slice(276, 277),  # hakehd1
+}
+
+
+VMI11_TREE_INDICES: dict[str, slice] = {
+    "lohkomuoto": slice(1, 2),
+    "section_y": slice(2, 5),
+    "section_x": slice(5, 8),
+    "test_area_number": slice(9, 11),
+    "stand_number": slice(12, 13),
+    "tree_type": slice(14, 15),
+    "tree_number": slice(15, 17),
+    "species": slice(17, 19),
+    "diameter": slice(22, 24),  # d13cm
+    "tree_category": slice(24, 25),
+    "latvuskerros": slice(26, 27),
+    "height": slice(61, 64),
+    "living_branches_height": slice(58, 61),
+    "measured_height": slice(61, 64),
+    "tuhon_ilmiasu": slice(82, 84),
+    "d13_age": slice(91, 94),
+    "age_increase": slice(95, 97),
+    "total_age": slice(97, 100),
+}
+
+
+VMI11_STRATUM_INDICES: dict[str, slice] = {
+    "lohkomuoto": slice(1, 2),
+    "section_y": slice(2, 5),
+    "section_x": slice(5, 8),
+    "test_area_number": slice(9, 11),
+    "stand_number": slice(12, 13),
+    "stratum_number": slice(15, 17),
+    "stratum_rank": slice(19, 20),
+    "species": slice(20, 22),
+    "origin": slice(22, 23),
+    "sapling_stems_per_ha": slice(24, 28),
+    "stems_per_ha": slice(28, 33),
+    "avg_diameter": slice(36, 38),
+    "avg_height": slice(39, 42),
+    "d13_age": slice(44, 47),
+    "biological_age": slice(47, 49),  # ikalis (age increase)
+    "basal_area": slice(50, 52),
+}
 
 VMI12_STAND_INDICES: dict[str, slice] = {
     "lohkomuoto": slice(1, 2),
@@ -263,76 +441,6 @@ VMI13_STRATUM_INDICES: dict[str, int] = {
     "d13_age": 19,
     "biological_age": 20,
     "basal_area": 23,
-}
-
-
-VMI10_STAND_INDICES: dict[str, slice] = {
-    # identification (used by vmi_util.generate_stand_identifier)
-    "lohkomuoto": slice(1, 2),          # lohmuo
-    "section_y": slice(2, 5),           # lohy
-    "section_x": slice(5, 8),           # lohx
-    "test_area_number": slice(9, 11),   # koeala
-    "stand_number": slice(12, 13),      # kuvio
-    "row_type": slice(13, 14),          # tielaji (row type)
-
-    # geo
-    "lat": slice(18, 25),               # pkoonim
-    "lon": slice(25, 32),               # ikoonim
-    "height_above_sea_level": slice(82, 87),  # korkeus (dm)
-
-    # weights / area
-    "osuusrel": slice(36, 38),          # osuusrel
-    "osuus7m": slice(40, 42),           # osuus7m
-    "area_ha": slice(50, 59),           # eduala (ha, 5 decimals implied)
-
-    # other basic stand fields
-    "municipality": slice(68, 71),      # kunta
-    "degree_days": slice(87, 91),       # lamsum1
-    "owner_group": slice(92, 93),       # omiryh (optional, may be unused)
-    "date": slice(93, 99),              # pvm (ddmmyy)
-
-    # land/site keys
-    "land_category": slice(100, 101),           # maaluo 101
-    "land_category_detail": slice(101, 102),    # maaluotar 102
-    "paatyyppi": slice(104, 105),               # paatyy 105
-    "kasvupaikkatunnus": slice(106, 107),       # kaspai 107
-    "fra_class": slice(116, 117),               # fraluo 117
-
-    # basal area components (0.1 m2 units)
-    "ppa1": slice(284, 287),
-    "ppa2": slice(288, 291),
-    "ppa3": slice(292, 295),
-    "ppa4": slice(296, 299),
-    "ppa5": slice(300, 303),
-}
-
-VMI10_TREE_INDICES: dict[str, slice] = {
-    # identification (used by vmi_util.generate_tree_identifier)
-    "lohkomuoto": slice(1, 2),          # lohmuo
-    "section_y": slice(2, 5),           # lohy
-    "section_x": slice(5, 8),           # lohx
-    "test_area_number": slice(9, 11),   # koeala
-    "stand_number": slice(12, 13),      # kuvio
-    "row_type": slice(13, 14),          # tielaji
-
-    # core tree fields
-    "tree_type": slice(14, 15),         # puutyy
-    "tree_number": slice(15, 17),       # idnro
-    "species": slice(17, 19),           # puulaji
-    "diameter": slice(19, 22),          # d13 (mm)
-    "tree_category": slice(24, 25),     # puuluo
-    "latvuskerros": slice(26, 27),      # latker
-
-    # heights (dm)
-    "living_branches_height": slice(58, 61),  # elalatva (dm)
-    "height": slice(61, 64),            # pituus (dm)
-
-    # ages (years)
-    "d13_age": slice(91, 94),           # d13ika (v)
-    "total_age": slice(97, 100),        # ika (v)
-
-    # damage
-    "tuhon_ilmiasu": slice(83, 84),     # tuhilm
 }
 
 
