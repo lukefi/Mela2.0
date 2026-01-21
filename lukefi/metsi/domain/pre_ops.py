@@ -3,7 +3,6 @@ from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.utils.filter import applyfilter
 from lukefi.metsi.forestry.preprocessing import tree_generation
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
-
 from lukefi.metsi.app.utils import MetsiException
 
 

@@ -16,7 +16,6 @@ control_structure = {
         scale_area_weight,
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
         preproc_filter,
-
     ],
     "preprocessing_params": {
         generate_reference_trees: [
