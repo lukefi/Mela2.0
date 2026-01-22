@@ -115,11 +115,11 @@ class FilterTest(unittest.TestCase):
 
     def test_reject_invalid_command(self):
         with self.assertRaisesRegex(ValueError, "filter syntax error"):
-            applyfilter([], "? ? ?", lambda x: 1)
+            applyfilter([], "? ? ?", lambda x: 1)  # type: ignore[arg-type]
         with self.assertRaisesRegex(ValueError, "invalid filter verb"):
-            applyfilter([], "choose", lambda x: 1)
+            applyfilter([], "choose", lambda x: 1)  # type: ignore[arg-type]
         with self.assertRaisesRegex(ValueError, "invalid filter object"):
-            applyfilter([], "select something", lambda x: 1)
+            applyfilter([], "select something", lambda x: 1)  # type: ignore[arg-type]
 
     def test_tree_predicate_must_return_correct_mask_shape(self):
         stand = ForestStand(identifier="S")
@@ -131,7 +131,7 @@ class FilterTest(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, r"tree predicate must return mask of shape \(2,\)"):
-            applyfilter([stand], "select trees", lambda trees: np.array([True]))
+            applyfilter([stand], "select trees", lambda trees: np.array([True]))  # type: ignore[arg-type]
 
     def test_preproc_filter(self):
         s1 = ForestStand(identifier="1")
