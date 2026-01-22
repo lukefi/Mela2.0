@@ -1,6 +1,6 @@
 import unittest
+from copy import deepcopy
 import numpy as np
-
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from tests.test_utils import prepare_growth_test_stand
@@ -26,7 +26,7 @@ class GrowActaTest(unittest.TestCase):
         stand = prepare_growth_test_stand()
 
         # Keep a pre-growth snapshot for monotonicity checks.
-        before = ForestStand(**stand.__dict__)
+        before = deepcopy(stand)
         before.reference_trees = stand.reference_trees[:]
         before.tree_strata = stand.tree_strata[:]
 

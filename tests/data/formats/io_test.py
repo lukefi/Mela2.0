@@ -4,7 +4,6 @@ from io import StringIO
 from unittest.mock import Mock
 import numpy as np
 from tests.data.test_util import ConverterTestSuite, ForestBuilderTestBench
-from lukefi.metsi.data.formats.io_utils import c_var_rst_row
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.data.formats.io_utils import (
     c_var_rst_row,
@@ -14,7 +13,6 @@ from lukefi.metsi.data.formats.io_utils import (
     stands_to_csv_content,
     csv_content_to_stands)
 from lukefi.metsi.data.model import ForestStand
-from tests.data.test_util import ConverterTestSuite, ForestBuilderTestBench
 vmi13_builder = ForestBuilderTestBench.vmi13_builder()
 
 
