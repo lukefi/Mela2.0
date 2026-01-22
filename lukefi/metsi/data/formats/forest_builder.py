@@ -14,6 +14,9 @@ from lukefi.metsi.data.formats.vmi_const import (
     VMI9_TREE_INDICES,
     VMI10_STAND_INDICES,
     VMI10_TREE_INDICES,
+    VMI11_STAND_INDICES,
+    VMI11_STRATUM_INDICES,
+    VMI11_TREE_INDICES,
     VMI12_STAND_INDICES,
     VMI12_STRATUM_INDICES,
     VMI12_TREE_INDICES,
@@ -105,6 +108,8 @@ def _append_tree_row(
     indices,
     row,
     is_vmi12: bool = False,
+    height_conversion_factor: float = 100.0,
+    measured_height_conversion_factor: float = 10.0,
 ):
     """Append one VMI tree row into an SoA attribute dict compatible with DTYPES_TREE.
 
@@ -126,10 +131,14 @@ def _append_tree_row(
         row[indices["total_age"]],
     )
 
-    # Heights: mirror VMI12/VMI13 fixed conversions (100.0 for height, 10.0 for measured height)
-    height = vmi_util.determine_tree_height(row[indices["height"]], conversion_factor=100.0)
-    measured_height = vmi_util.determine_tree_height(row[indices["measured_height"]], conversion_factor=10.0)
-
+    height = vmi_util.determine_tree_height(
+        row[indices["height"]],
+        conversion_factor=height_conversion_factor,
+    )
+    measured_height = vmi_util.determine_tree_height(
+        row[indices["measured_height"]],
+        conversion_factor=measured_height_conversion_factor,
+    )
     # Stems/ha differs between VMI12 and VMI13 (so pass flag from builder)
     stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
 
@@ -283,16 +292,6 @@ class VMIBuilder(ForestBuilder):
         self.conversion_reader = ConversionMapper(declared_conversions)
         self._read_rows(data_rows)
 
-    @overload
-    def convert_stand_entry(self, indices: dict[str, int],
-                            data_row: Sequence[str], stand_id: int | None = None) -> ForestStand:
-        ...
-
-    @overload
-    def convert_stand_entry(self, indices: dict[str, slice],
-                            data_row: str, stand_id: int | None = None) -> ForestStand:
-        ...
-
     def _read_rows(self, data_rows: Iterable) -> None:
         """Generic row iteration + error handling. Subclasses control classification."""
         for row in data_rows:
@@ -324,39 +323,56 @@ class VMIBuilder(ForestBuilder):
             return "tree"
         return None
 
+    @overload
+    def convert_stand_entry(self, indices: dict[str, int],
+                            data_row: Sequence[str], stand_id: int | None = None) -> ForestStand:
+        ...
+
+    @overload
+    def convert_stand_entry(self, indices: dict[str, slice],
+                            data_row: str, stand_id: int | None = None) -> ForestStand:
+        ...
+
     def convert_stand_entry(self, indices, data_row, stand_id=None) -> ForestStand:
         """Create a ForestStand out of given VMI type 1 data row using given data indices and order number"""
         result = ForestStand()
+
+        # Identifiers
         result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
         result.set_identifiers(stand_id)
+
+        # Climate / owner / FRA
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
         result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
-        result.fra_category = None if data_row[indices["fra_class"]] == '.' else data_row[indices["fra_class"]]
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]])
+
+        fra_raw = data_row[indices["fra_class"]].strip()
+        result.fra_category = None if fra_raw in ("", ".") else fra_raw
+
+        # Land / site / soil
+        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
         result.land_use_category_detail = data_row[indices["land_category_detail"]]
-        result.site_type_category = vmi2internal.convert_site_type_category(data_row[indices["kasvupaikkatunnus"]])
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(data_row[indices["paatyyppi"]])
+        result.site_type_category = vmi2internal.convert_site_type_category(
+            data_row[indices["kasvupaikkatunnus"]].strip())
+        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
+            data_row[indices["paatyyppi"]].strip())
+
+        # Taxation
         result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
+
+        # Drainage
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
         result.drainage_feasibility = vmi_util.determine_drainage_feasibility(data_row[indices["ojitus_tarve"]])
+
+        # Forestry centre
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
-        result.forest_management_category = vmi_util.determine_forest_management_category(
-            result.land_use_category,
-            result.forestry_centre_id,
-            data_row,
-            result.owner_category,
-            indices, False)
-        result.municipality_id = vmi_util.determine_municipality(
-            data_row[indices["municipality"]],
-            data_row[indices["kitukunta"]])
-        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
+
+        # Municipality (VMI9/10 do not have kitukunta, so common conversion uses municipality only)
+        result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(data_row[indices["municipality"]]))
+
+        # Auxiliary stand flag exists across 9–13
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
-        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
-        result.region = util.parse_int(data_row[indices["county"]])
+
         return result
 
     @abstractmethod
@@ -398,9 +414,8 @@ class VMI9Builder(VMIBuilder):
         return VMI9_STAND_INDICES_PSUOMI
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-        result = ForestStand()
-        result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
-        result.set_identifiers(stand_id)
+
+        result = super().convert_stand_entry(indices, data_row, stand_id)
 
         parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
         if parsed is None:
@@ -408,8 +423,6 @@ class VMI9Builder(VMIBuilder):
 
         result.year = parsed.year
         result.start_year = parsed.year
-
-        result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
 
         area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
@@ -419,32 +432,21 @@ class VMI9Builder(VMIBuilder):
             data_row[indices["osuusrel"]],
         )
 
-        result.municipality_id = util.parse_int(data_row[indices["municipality"]])
+        result.drainage_year = vmi_util.determine_drainage_year(
+            data_row[indices["ojitus_aika"]],
+            result.year
+        )
+        result.region = util.parse_int(data_row[indices["county"]])
 
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
-        result.land_use_category_detail = data_row[indices["land_category_detail"]]
-
-        fra_raw = data_row[indices["fra_class"]].strip()
-        result.fra_category = None if fra_raw in ("", ".") else fra_raw
-
-        result.site_type_category = vmi2internal.convert_site_type_category(
-            data_row[indices["kasvupaikkatunnus"]].strip())
-
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
-            data_row[indices["paatyyppi"]].strip())
-
+        # Basal area from ppa-buckets in VMI9
         result.basal_area = util.basal_from_ppa(data_row, indices)
 
-        result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
-        result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
-        result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
-
+        # Geometry
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
-        result.tax_class_reduction = 0
         return result
 
     def build(self) -> StandList:
@@ -504,57 +506,64 @@ class VMI10Builder(VMIBuilder):
         """
         VMI10 stand conversion.
         """
-        result = ForestStand()
-        result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
-        result.set_identifiers(stand_id)
+        result = super().convert_stand_entry(indices, data_row, stand_id)
 
-        # Year/date (vmi12 parser looks usable for vmi10)
         parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
         if parsed is None:
-            raise MetsiException(
-                "Year is None in VMI10 data")
+            raise MetsiException("Year is None in VMI10 data")
 
         result.year = parsed.year
         result.start_year = parsed.year
 
-        # Degree days
-        result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
-
-        # Area (eduala)
+        # Area
         area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
 
-        # Area weight factors (use same simple scaling as VMI12: /10)
+        # Area weight factors
         result.area_weight_factors = vmi_util.determine_area_factors(
             data_row[indices["osuus7m"]],
             data_row[indices["osuusrel"]],
         )
 
-        # Municipality id (optional)
-        result.municipality_id = util.parse_int(data_row[indices["municipality"]])
-
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
-
-        result.land_use_category_detail = data_row[indices["land_category_detail"]]
-        result.fra_category = None if data_row[indices["fra_class"]
-                                               ].strip() == '.' else data_row[indices["fra_class"]].strip()
-
-        result.site_type_category = vmi2internal.convert_site_type_category(
-            data_row[indices["kasvupaikkatunnus"]].strip())
-
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
-            data_row[indices["paatyyppi"]].strip())
-
+        # Basal area from ppa-buckets in VMI10
         result.basal_area = util.basal_from_ppa(data_row, indices)
 
-        # Geo location: pkoonim/ikoonim meters, korkeus dm -> m
+        # Operations / years
+        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
+        result.fertilization_year = None  # value missing in VMI10 source
+
+        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
+            data_row[indices["maanmuokkaus"]],
+            result.year
+        )
+
+        result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
+            data_row[indices["muu_toimenpide"]],
+            data_row[indices["muu_toimenpide_aika"]],
+            result.year,
+        )
+
+        result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
+            data_row[indices["viljely"]],
+            data_row[indices["viljely_aika"]],
+            result.year,
+        )
+
+        maintenance_details = vmi_util.determine_forest_maintenance_details(
+            data_row[indices["hakkuu_tapa"]],
+            data_row[indices["hakkuu_aika"]],
+            result.year,
+        )
+        result.young_stand_tending_year = maintenance_details[0]
+        result.cutting_year = maintenance_details[1]
+        result.method_of_last_cutting = maintenance_details[2]
+
+        # Geo location
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
-        # Defaults for fields missing in VMI10
-        result.tax_class_reduction = 0
         return result
 
     def build(self) -> StandList:
@@ -582,6 +591,148 @@ class VMI10Builder(VMIBuilder):
         # Attach containers
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize({})  # empty
+            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
+
+        return list(result.values())
+
+
+class VMI11Builder(VMIBuilder):
+    """VMI11 specific builder implementation."""
+
+    def __init__(
+        self,
+        builder_flags: dict,
+        declared_conversions: dict,
+        data_rows: list[str] | None = None,
+    ):
+        if data_rows is None:
+            data_rows = []
+        super().__init__(builder_flags, declared_conversions, data_rows)
+
+    def find_row_type(self, row: str) -> int:
+        return int(row[13])
+
+    def classify_row(self, row: str) -> str | None:
+        row_type = self.find_row_type(row)
+        if row_type == 1:
+            return "stand"
+        if row_type == 2:
+            return "stratum"
+        if row_type == 3:
+            return "tree"
+        return None
+
+    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
+        """Create a ForestStand out of given VMI11 type 1 data row."""
+        result = super().convert_stand_entry(indices, data_row, stand_id)
+
+        # VMI11 has kitukunta -> override municipality using precedence logic
+        result.municipality_id = vmi_util.determine_municipality(
+            data_row[indices["municipality"]],
+            data_row[indices["kitukunta"]],
+        )
+
+        # Date/year
+        result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
+        result.start_year = result.year
+
+        # VMI11+ stand fields (not available in VMI9/10)
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]],
+            result.site_type_category,
+        )
+        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(
+            data_row[indices["hakkuuehdotus"]]
+        )
+        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
+        result.region = util.parse_int(data_row[indices["county"]])
+
+        # Area & weights
+        area_ha = util.get_or_default(util.parse_type(data_row[indices["area_ha"]], float), 0.0)
+        result.area_weight_factors = vmi_util.determine_area_factors(
+            data_row[indices["osuus7m"]],
+            data_row[indices["osuusrel"]],
+        )
+        result.set_area(area_ha)
+
+        # Geometry
+        lat = util.parse_type(data_row[indices["lat"]], float)
+        lon = util.parse_type(data_row[indices["lon"]], float)
+        height = vmi_util.transform_vmi12_height_above_sea_level(data_row[indices["height_above_sea_level"]])
+        result.set_geo_location(lat, lon, height, "EPSG:2393")
+
+        # Operations / years
+        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
+        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
+            data_row[indices["maanmuokkaus"]],
+            result.year,
+        )
+        result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
+            data_row[indices["muu_toimenpide"]],
+            data_row[indices["muu_toimenpide_aika"]],
+            result.year,
+        )
+        result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
+            data_row[indices["viljely"]],
+            data_row[indices["viljely_aika"]],
+            result.year,
+        )
+
+        maintenance_details = vmi_util.determine_forest_maintenance_details(
+            data_row[indices["hakkuu_tapa"]],
+            data_row[indices["hakkuu_aika"]],
+            result.year,
+        )
+        result.young_stand_tending_year = maintenance_details[0]
+        result.cutting_year = maintenance_details[1]
+        result.method_of_last_cutting = maintenance_details[2]
+
+        # Age
+        result.dominant_storey_age = vmi_util.determine_vmi12_dominant_storey_age(
+            data_row[indices["vallitsevanjakson_d13ika"]],
+            data_row[indices["vallitsevanjakson_ikalisays"]],
+        )
+
+        # Declared conversions
+        result = self.conversion_reader.apply_conversions(result, data_row)
+        return result
+
+    def build(self) -> StandList:
+        """Populate ForestStand objects with associated ReferenceTrees and TreeStrata (SoA)."""
+        result: dict[str, ForestStand] = {}
+        strata_attrs: dict[str, dict[str, list]] = {}
+        tree_attrs: dict[str, dict[str, list]] = {}
+
+        # Build stands
+        for i, row in enumerate(self.forest_stands):
+            stand = self.convert_stand_entry(VMI11_STAND_INDICES, row, i + 1)
+            result[stand.identifier] = stand
+
+        # Strata
+        if self.builder_flags.get('strata', False):
+            for row in self.tree_strata:
+                stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_STRATUM_INDICES)
+                attr_dict = strata_attrs.setdefault(stand_identifier, {})
+                _append_stratum_row(attr_dict, VMI11_STRATUM_INDICES, row)
+
+        # Trees
+        if self.builder_flags.get('measured_trees', False):
+            for row in self.reference_trees:
+                stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
+                attr_dict = tree_attrs.setdefault(stand_identifier, {})
+                _append_tree_row(
+                    attr_dict,
+                    VMI11_TREE_INDICES,
+                    row,
+                    is_vmi12=False,
+                    height_conversion_factor=10.0,            # VMI11 pituus is in dm
+                    measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
+                )
+
+        # Attach SoA containers to stands
+        for stand_id, stand in result.items():
+            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
             stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
 
         return list(result.values())
@@ -643,6 +794,31 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
+
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]],
+            result.site_type_category,
+        )
+        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
+        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
+        result.region = util.parse_int(data_row[indices["county"]])
+
+        result.municipality_id = vmi_util.determine_municipality(
+            data_row[indices["municipality"]],
+            data_row[indices["kitukunta"]],
+        )
+
+        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+            result.forest_management_category = vmi_util.determine_forest_management_category(
+                result.land_use_category,
+                result.forestry_centre_id,
+                data_row,
+                result.owner_category,
+                indices,
+                True,  # VMI12 True
+            )
+
         # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
@@ -750,6 +926,31 @@ class VMI13Builder(VMIBuilder):
         result.dominant_storey_age = vmi_util.determine_vmi13_dominant_storey_age(
             data_row[indices["vallitsevanjaksonika"]]
         )
+
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]],
+            result.site_type_category,
+        )
+        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
+        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
+        result.region = util.parse_int(data_row[indices["county"]])
+
+        result.municipality_id = vmi_util.determine_municipality(
+            data_row[indices["municipality"]],
+            data_row[indices["kitukunta"]],
+        )
+
+        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+            result.forest_management_category = vmi_util.determine_forest_management_category(
+                result.land_use_category,
+                result.forestry_centre_id,
+                data_row,
+                result.owner_category,
+                indices,
+                False,  # VMI13 rules (same as your old base call)
+            )
+
         # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result

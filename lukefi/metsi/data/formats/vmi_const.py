@@ -2,6 +2,7 @@
 
 # NOTE: pvm (date) location differs; fra_class exists only in PSUOMI but we map it for both (blank in ESUOMI).
 _VMI9_STAND_COMMON: dict[str, slice] = {
+
     "lohkomuoto": slice(8, 9),         # lohmuo  (col 9)
     "section_y": slice(2, 5),          # lohy    (col 3-5)
     "section_x": slice(5, 8),          # lohx    (col 6-8)
@@ -33,6 +34,14 @@ _VMI9_STAND_COMMON: dict[str, slice] = {
     "land_category_detail": slice(101, 102),  # maaluotar (col 102)
     "paatyyppi": slice(104, 105),      # paatyy (col 105)
     "kasvupaikkatunnus": slice(106, 107),  # kaspai (col 107)
+
+    # drainage / taxation / restrictions
+    "ojitus_tilanne": slice(126, 127),  # ojitil (col 127)
+    "ojitus_aika": slice(128, 129),     # ojiaik (col 129)
+    "ojitus_tarve": slice(129, 130),    # ojitar (col 130)
+    "tax_class": slice(132, 133),       # veroluo (col 133)
+    "tax_class_reduction": slice(133, 134),  # verotar (col 134)
+    "suojametsakoodi": slice(97, 98),   # suojamet (col 98)
 
     # basal area via ppa buckets
     "ppa1": slice(203, 206),           # ppa1 (col 204-206)
@@ -95,6 +104,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "area_ha": slice(50, 59),           # eduala (ha, 5 decimals implied)
 
     # other basic stand fields
+    "forestry_centre": slice(66, 68),  # metkes
     "municipality": slice(68, 71),      # kunta
     "degree_days": slice(87, 91),       # lamsum1
     "owner_group": slice(92, 93),       # omiryh (optional, may be unused)
@@ -105,6 +115,16 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "land_category_detail": slice(101, 102),    # maaluotar 102
     "paatyyppi": slice(104, 105),               # paatyy 105
     "kasvupaikkatunnus": slice(106, 107),       # kaspai 107
+
+    # drainage / taxation / restrictions
+    "ojitus_tilanne": slice(126, 127),  # ojitil
+    "ojitus_aika": slice(128, 130),     # ojiaik
+    "ojitus_tarve": slice(130, 131),    # ojitar
+    "tax_class": slice(132, 133),       # veroluo
+    "tax_class_reduction": slice(133, 134),  # verotar
+    "suojametsakoodi": slice(139, 140),  # suojamet
+    "muut_arvot": slice(140, 141),       # muuarvo
+    "naturaaluekoodi": slice(141, 142),  # natura
     "fra_class": slice(116, 117),               # fraluo 117
 
     # basal area components (0.1 m2 units)
@@ -137,6 +157,7 @@ VMI10_TREE_INDICES: dict[str, slice] = {
 
     # ages (years)
     "d13_age": slice(91, 94),           # d13ika (v)
+    "age_increase": slice(95, 97),     # ikalis (v)
     "total_age": slice(97, 100),        # ika (v)
 
     # damage
@@ -193,6 +214,7 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "suojametsakoodi": slice(139, 140),
     "muut_arvot": slice(140, 141),
     "naturaaluekoodi": slice(141, 142),
+    "ahvenanmaan_markkinahakkuualue": slice(149, 150),
 
     # Development / structure
     "kehitysluokka": slice(201, 202),
@@ -255,6 +277,7 @@ VMI11_STRATUM_INDICES: dict[str, slice] = {
     "biological_age": slice(47, 49),  # ikalis (age increase)
     "basal_area": slice(50, 52),
 }
+
 
 VMI12_STAND_INDICES: dict[str, slice] = {
     "lohkomuoto": slice(1, 2),

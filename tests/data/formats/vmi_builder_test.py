@@ -58,7 +58,7 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(OwnerCategory.UNKNOWN, self.vmi12_stands[0].owner_category)
         # owner group is '1', which translated to 0
         self.assertEqual(OwnerCategory.PRIVATE, self.vmi12_stands[1].owner_category)
-        self.assertEqual(' ', self.vmi12_stands[0].fra_category)
+        self.assertEqual(None, self.vmi12_stands[0].fra_category)
         self.assertEqual('1', self.vmi12_stands[1].fra_category)
         self.assertEqual(LandUseCategory.SEA, self.vmi12_stands[0].land_use_category)
         self.assertEqual(LandUseCategory.FOREST, self.vmi12_stands[1].land_use_category)
@@ -157,17 +157,17 @@ class TestForestBuilder(unittest.TestCase):
         # vallitsevanjakson_d13ika is '045' vallitsevanjakson_ikalisays is '06' -> result to 51.0
         self.assertEqual(51.0, self.vmi12_stands[1].dominant_storey_age)
 
-        def test_vmi12_trees(self):
-            # SoA counts per stand
-            self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
-            self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
-            self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
+    def test_vmi12_trees(self):
+        # SoA counts per stand
+        self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
+        self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
+        self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
 
-            # Identifier of the only measured tree for stand 1
-            self.assertEqual(
-                '0-999-999-98-1-001-tree',
-                self.vmi12_stands[1].reference_trees.identifier[0]
-            )
+        # Identifier of the only measured tree for stand 1
+        self.assertEqual(
+            '0-999-999-98-1-001-tree',
+            self.vmi12_stands[1].reference_trees.identifier[0]
+        )
 
     def test_vmi12_tree_variables(self):
 
