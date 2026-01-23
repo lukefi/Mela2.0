@@ -19,7 +19,7 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     DrainageCategory
 )
-from lukefi.metsi.data.conversion.util import apply_mappers, copy_vector_data
+from lukefi.metsi.data.conversion.util import apply_mappers
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -236,32 +236,17 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     result.municipality_id = (-1 if result.municipality_id is None
                               else result.municipality_id)
 
-    result.soil_peatland_category = cast(
-        "SoilPeatlandCategory | None",
-        0 if result.soil_peatland_category is None else result.soil_peatland_category.value,
-    )
-
-    result.site_type_category = cast(
-        "SiteType | None",
-        0 if result.site_type_category is None else result.site_type_category.value,
-    )
-
-    result.drainage_category = cast(
-        "DrainageCategory | None",
-        0 if result.drainage_category is None else result.drainage_category.value,
-    )
-
     # tree level
-    rt: ReferenceTrees = copy_vector_data(result.reference_trees)
+    rt = copy(result.reference_trees)
 
     if rt.size:
-        rt.saw_log_volume_reduction_factor = np.where(
-            np.isnan(rt.saw_log_volume_reduction_factor),
-            -1.0,
-            rt.saw_log_volume_reduction_factor,
-        )
+        if rt.saw_log_volume_reduction_factor is not None:
+            rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
+            np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
 
-        rt.species = np.where(rt.species == -1, 0, rt.species).astype(np.int32, copy=False)
+        if rt.species is not None:
+            # np.where returns a new array anyway, so original won't be mutated
+            rt.species = np.where(rt.species == -1, 0, rt.species).astype(np.int32, copy=False)
 
     result.reference_trees = rt
 
