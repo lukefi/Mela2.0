@@ -67,6 +67,87 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
+def _calculate_g_from_trees(stems_per_ha, breast_height_diameter) -> float:
+    # G = sum(list(map(lambda t: t.stems_per_ha * math.pi*((t.breast_height_diameter/200)**2), trees)))
+    # G = sum([t.stems_per_ha * math.pi * ((t.breast_height_diameter / 200)**2) for t in trees])
+    # return G
+
+    return np.pi * np.sum(stems_per_ha * ((breast_height_diameter / 200) ** 2))
+
+
+def _adjust_retention_trees(stand: ForestStand,
+                            new_trees: ReferenceTrees,
+                            retention_trees_mask: npt.NDArray[np.bool_]):
+    # Scales the stem counts so that basal area does not increase
+    # Basal area may increse if the basal area of the retention trees is greater than
+    # basal area of the reference trees
+
+    # x*g_generated_not_retention + g_generated_retention + g_retention = G = g_generated
+    # x = (g_generated - g_generated_retention - g_retention)/g_generated_not_retention
+    #   = (g_generated_not_retention - g_retention)/g_generated_not_retention
+    # g_retention = calculate_g_from_trees(retention_trees_mask)
+
+    trees = stand.reference_trees
+
+    g_retention = _calculate_g_from_trees(
+        trees.stems_per_ha[retention_trees_mask],
+        trees.breast_height_diameter[retention_trees_mask])
+
+    # g_generated_not_retention_trees = calculate_g_from_trees([t for t in new_trees if t.management_category != 2])
+
+    g_generated_not_retention_trees = _calculate_g_from_trees(
+        new_trees.stems_per_ha[new_trees.management_category != 2],
+        new_trees.breast_height_diameter[new_trees.management_category != 2])
+
+    scale_factor_stand = max((g_generated_not_retention_trees - g_retention) / g_generated_not_retention_trees, 0) \
+        if g_generated_not_retention_trees > 0.0 else 1
+
+    # skaalauksessa jätetään kuhunkin ositteeseen min(1, ositteen kuvauaspuiden  ppa) m2/ha
+    # säästöpuite ei skaalata
+    itree = -1
+    for i_stratum in range(len(stand.tree_strata)):
+        scale_factor_stratum = scale_factor_stand
+
+        g_stratum = 0
+        g_stratum_retention = 0
+        itree0 = itree
+        for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
+            itree = itree + 1
+            g_stratum = g_stratum + new_trees.stems_per_ha[itree] * \
+                np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
+            if new_trees.management_category[itree] == 2:
+                g_stratum_retention = g_stratum_retention + \
+                    new_trees.stems_per_ha[itree] * np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
+        g_stratum_scaled = scale_factor_stratum * g_stratum
+
+        if g_stratum_scaled < 1 and g_stratum <= 1:
+            scale_factor_stratum = 1
+        elif g_stratum_scaled < 1 and g_stratum > 1:
+            if g_stratum_retention == 0:
+                scale_factor_stratum = 1 / g_stratum
+            elif g_stratum_retention < 1:
+                scale_factor_stratum = (1 - g_stratum_retention) / g_stratum
+            else:
+                scale_factor_stratum = 0
+
+        for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
+            itree = itree0 + i + 1
+            if new_trees.management_category[itree] != 2:
+                new_trees.stems_per_ha[itree] = scale_factor_stratum * new_trees.stems_per_ha[itree]
+
+    stand_tree_count = len(new_trees)
+    # for i, t in enumerate(retention_trees_mask):
+    #     t.identifier = "{}-{}-tree".format(stand.identifier, stand_tree_count + i + 1)
+    #     t.management_category = 2
+    #     t.storey = Storey.SPARE
+    #     breast_height_age, biological_age = determine_ages(stand, new_trees, retention_trees_mask, t, 10)
+    #     t.breast_height_age = round(breast_height_age, 1)
+    #     t.biological_age = round(biological_age, 1)
+
+    for i in np.where(retention_trees_mask)[0]:
+        trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
+
+
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
     debug = operation_params.get('debug', False)
