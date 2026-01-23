@@ -47,30 +47,39 @@ def prepare_growth_test_stand():
             310260.0,
             10.0,
             "EPSG:3067"),
-        reference_trees_pre_vec=[
-            ReferenceTree(
-                species=TreeSpecies.PINE,
-                stems_per_ha=123,
-                breast_height_diameter=30,
-                height=20,
-                biological_age=55,
-                breast_height_age=15,
-                sapling=False),
-            ReferenceTree(
-                species=TreeSpecies.SPRUCE,
-                stems_per_ha=123,
-                breast_height_diameter=25,
-                height=17,
-                biological_age=37,
-                breast_height_age=15,
-                sapling=False),
-            ReferenceTree(
-                species=TreeSpecies.PINE,
-                stems_per_ha=123,
-                breast_height_diameter=0,
-                height=0.3,
-                biological_age=1,
-                breast_height_age=0,
-                sapling=True)],
-        time=2025)
+        time=2025,
+    )
+
+    stand.reference_trees.create([
+        {
+            "identifier": "123-1",
+            "species": int(TreeSpecies.PINE),
+            "stems_per_ha": 123.0,
+            "breast_height_diameter": 30.0,
+            "height": 20.0,
+            "biological_age": 55.0,
+            "breast_height_age": 15.0,
+            "sapling": False,
+        },
+        {
+            "identifier": "123-2",
+            "species": int(TreeSpecies.SPRUCE),
+            "stems_per_ha": 123.0,
+            "breast_height_diameter": 25.0,
+            "height": 17.0,
+            "biological_age": 37.0,
+            "breast_height_age": 15.0,
+            "sapling": False,
+        },
+        {
+            "identifier": "123-3",
+            "species": int(TreeSpecies.PINE),
+            "stems_per_ha": 123.0,
+            "breast_height_diameter": 0.0,
+            "height": 0.3,
+            "biological_age": 1.0,
+            "breast_height_age": 0.0,
+            "sapling": True,
+        },
+    ])
     return stand

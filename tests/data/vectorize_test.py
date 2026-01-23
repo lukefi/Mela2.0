@@ -1,54 +1,42 @@
-import copy
 import unittest
-
 import numpy as np
-
-from lukefi.metsi.data.vectorize import ReferenceTrees, TreeStrata, vectorize
-from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ForestStand, ReferenceTree, TreeStratum
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 
 class TestVectorize(unittest.TestCase):
 
-    before: list[ForestStand]
+    def test_reference_trees_vectorize_defaults_and_types(self):
+        vec = ReferenceTrees().vectorize({
+            "identifier": ["t-1", "t-2"],
+            "tree_number": [1, 2],
+            "species": [1, 2],
+            # intentionally leave other fields missing -> defaults
+        })
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.before = [ForestStand(reference_trees_pre_vec=[ReferenceTree(species=TreeSpecies(1)),
-                                                   ReferenceTree(species=TreeSpecies(2))]),
-                      ForestStand(reference_trees_pre_vec=[ReferenceTree(species=TreeSpecies(3)),
-                                                   ReferenceTree(species=TreeSpecies(4))],
-                                  tree_strata_pre_vec=[TreeStratum(species=TreeSpecies(1)),
-                                               TreeStratum(species=TreeSpecies(2))]),
-                      ForestStand(tree_strata_pre_vec=[TreeStratum(species=TreeSpecies(3)),
-                                               TreeStratum(species=TreeSpecies(4))])]
+        self.assertEqual(len(vec), 2)
+        self.assertIsInstance(vec.species, np.ndarray)
+        self.assertEqual(vec.species.dtype, np.int32)
+        self.assertListEqual(vec.identifier.tolist(), ["t-1", "t-2"])
 
-    def setUp(self) -> None:
-        self.after = copy.deepcopy(TestVectorize.before)
-        vectorize(self.after)
+        # Missing float fields default to NaN
+        self.assertTrue(np.isnan(vec.height[0]))
+        # Missing ints default to -1
+        self.assertEqual(int(vec.origin[0]), -1)
+        # Missing bools default to False
+        self.assertFalse(bool(vec.sapling[0]))
+        # Missing strings default to empty string
+        self.assertEqual(str(vec.tree_type[0]), "")
 
-    def test_types(self):
-        self.assertIsInstance(TestVectorize.before[0].reference_trees_pre_vec, list)
-        self.assertIsInstance(TestVectorize.before[0].tree_strata_pre_vec, list)
-        self.assertIsInstance(self.after[0].reference_trees, ReferenceTrees)
-        self.assertIsInstance(self.after[0].tree_strata, TreeStrata)
-        self.assertIsNotNone(self.after[0].reference_trees)
-        self.assertIsNotNone(self.after[1].tree_strata)
-        self.assertIsInstance(self.after[0].reference_trees.species, np.ndarray)
-        self.assertIsInstance(self.after[1].tree_strata.species, np.ndarray)
-        self.assertFalse(hasattr(self.after[0], "reference_trees_pre_vec"))
-        self.assertFalse(hasattr(self.after[1], "reference_trees_pre_vec"))
-        self.assertFalse(hasattr(self.after[0], "tree_strata_pre_vec"))
-        self.assertFalse(hasattr(self.after[1], "tree_strata_pre_vec"))
+    def test_tree_strata_vectorize_and_slice(self):
+        strata = TreeStrata().vectorize({
+            "identifier": ["s-1", "s-2", "s-3"],
+            "species": [1, 2, 3],
+            "stems_per_ha": [100.0, 200.0, 300.0],
+        })
 
-    def test_lengths(self):
-        self.assertEqual(len(self.after), len(TestVectorize.before))
+        self.assertEqual(strata.size, 3)
 
-    def test_species(self):
-        for before, after in zip(TestVectorize.before, self.after):
-            for aso_tree, soa_tree_species in zip(before.reference_trees_pre_vec, after.reference_trees.species if
-                                                  after.reference_trees.size > 0 else []):
-                self.assertEqual(aso_tree.species, soa_tree_species)
-            for aso_stratum, soa_stratum_species in zip(before.tree_strata_pre_vec, after.tree_strata.species if
-                                                        after.tree_strata.size > 0 else []):
-                self.assertEqual(aso_stratum.species, soa_stratum_species)
+        sub = strata[1:]
+        self.assertIsInstance(sub, TreeStrata)
+        self.assertEqual(sub.size, 2)
+        self.assertListEqual(sub.identifier.tolist(), ["s-2", "s-3"])

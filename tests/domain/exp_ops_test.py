@@ -1,13 +1,11 @@
 import unittest
-from lukefi.metsi.data.vector_model import ReferenceTrees
 from unittest.mock import Mock
-from lukefi.metsi.data.model import ReferenceTree, ForestStand, TreeStratum
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.data.conversion.internal2mela import mela_stand
 from lukefi.metsi.app.utils import ConfigurationException
 from lukefi.metsi.domain.exp_ops import prepare_rst_output, classify_values_to
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.enums.mela import MelaTreeSpecies
 
 
 class TestExpOps(unittest.TestCase):
@@ -69,21 +67,26 @@ class TestExpOps(unittest.TestCase):
         self.assertListEqual(result[0].reference_trees.tree_number.tolist(), [1])
 
     def test_classify_values_to_valid_format(self):
-        # Dummy data
+
         stand = ForestStand(
             geo_location=(6654200, 102598, 0.0, "EPSG:3067"),
             area_weight=100.0,
-            auxiliary_stand=True)
-        stand.reference_trees_pre_vec.append(
-            ReferenceTree(species=TreeSpecies.SPRUCE, stand=stand))
-        stand.tree_strata_pre_vec.append(
-            TreeStratum(species=TreeSpecies.PINE, stand=stand))
+            auxiliary_stand=True,
+        )
 
-        # fixture
-        operation_params = {'format': 'rst'}
+        stand.reference_trees = ReferenceTrees().vectorize({
+            "identifier": ["t1"],
+            "tree_number": [1],
+            "species": [int(TreeSpecies.SPRUCE)],
+            "stems_per_ha": [100.0],
+        })
+        stand.tree_strata = TreeStrata().vectorize({
+            "identifier": ["s1"],
+            "species": [int(TreeSpecies.PINE)],
+            "stems_per_ha": [50.0],
+        })
 
-        # test
-        result = classify_values_to([stand], **operation_params)
+        result = classify_values_to([stand], format="rst")
         self.assertEqual(len(result), 1)
 
     def test_classify_values_to_invalid_format(self):

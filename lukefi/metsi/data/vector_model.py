@@ -6,7 +6,7 @@ import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 
 DTYPES_TREE: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U25"),
+    "identifier": np.dtype("U30"),
     "tree_number": np.int32,
     "species": np.int32,
     "breast_height_diameter": np.float64,
@@ -27,11 +27,12 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "sapling": np.bool_,
     "tree_type": np.dtype("U20"),
     "tuhon_ilmiasu": np.dtype("U20"),
-    "basal_area": np.float64
+    "basal_area": np.float64,
+    "volume": np.float64
 }
 
 DTYPES_STRATA: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U20"),
+    "identifier": np.dtype("U30"),
     "species": np.int32,
     "mean_diameter": np.float64,
     "mean_height": np.float64,
@@ -219,8 +220,6 @@ class VectorData():
             index: Row index/indices to remove. May be an int, list[int], or numpy integer array
                 (e.g. output of np.where(mask)[0]).
         """
-        if self.size == 0:
-            return
 
         for key in self.dtypes:
             vector: npt.NDArray = getattr(self, key)
@@ -276,6 +275,7 @@ class ReferenceTrees(VectorData):
     tuhon_ilmiasu: npt.NDArray[np.str_]
     latvuskerros: npt.NDArray[np.float64]
     basal_area: npt.NDArray[np.float64]
+    volume: npt.NDArray[np.float64]
 
     def __init__(self):
         super().__init__(DTYPES_TREE)

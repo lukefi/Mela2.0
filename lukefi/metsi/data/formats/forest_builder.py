@@ -73,7 +73,7 @@ def _append_stratum_row(
     age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
     lowest_living_branch_height = 0.0
-    number_of_generated_trees = None  # vectorize() will default ints to -1
+    number_of_generated_trees = None
 
     values = {
         "identifier": identifier,
@@ -116,7 +116,6 @@ def _append_tree_row(
     No ConversionMapper / declared conversions are applied here.
     """
 
-    # --- Parse / convert values exactly once ---
     identifier = vmi_util.generate_tree_identifier(row, indices)
     tree_number = util.parse_type(row[indices["tree_number"]], int)
 
@@ -161,7 +160,8 @@ def _append_tree_row(
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
 
-    basal_area = None  # VectorData will default None -> np.nan for float
+    basal_area = None
+    volume = None
 
     values = {
         "identifier": identifier,
@@ -186,15 +186,16 @@ def _append_tree_row(
         "tree_type": tree_type,
         "tuhon_ilmiasu": tuhon_ilmiasu,
         "basal_area": basal_area,
+        "volume": volume,
     }
 
-    # Always append in DTYPES_TREE order (guarantees equal-length)
     for key in DTYPES_TREE:
         attr.setdefault(key, []).append(values.get(key, None))
 
 
 def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element):
-    """Append one Forest Centre (XML) stratum row into an SoA attribute dict.
+    """
+    Append one Forest Centre (XML) stratum row into an SoA attribute dict.
     """
 
     sd = smk_util.parse_stratum_data(estratum)
@@ -214,7 +215,7 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "breast_height_age": None,
         "biological_age": util.parse_type(sd.Age, float),
         "basal_area": basal_area,
-        "origin": None,
+        "origin": 0,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "lowest_living_branch_height": None,
@@ -828,11 +829,10 @@ class VMI12Builder(VMIBuilder):
         return int(row[13])
 
     def build(self) -> StandList:
-        """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
+        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts for vectorization
+        # Per-stand attribute dicts
         strata_attrs: dict[str, dict[str, list]] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
@@ -956,11 +956,10 @@ class VMI13Builder(VMIBuilder):
         return result
 
     def build(self) -> StandList:
-        """
-        Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
+        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts for vectorization
+        # Per-stand attribute dicts
         strata_attrs: dict[str, dict[str, list]] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
@@ -1001,8 +1000,6 @@ class ForestCentreBuilder(ForestBuilder):
     @abstractmethod
     def convert_stand_entry(self, entry) -> ForestStand:
         ...
-
-    # Strata are appended directly into SoA structures (TreeStrata) in subclasses.
 
 
 class XMLBuilder(ForestCentreBuilder):
@@ -1181,9 +1178,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stands = []
         for _, rowi in self.stands.iterrows():
             stand = self.convert_stand_entry(rowi)
-
             stratum_attr: dict[str, list] = {}
-
             i_strata = self.strata[self.strata['standid'] == stand.identifier]
             for _, rowj in i_strata.iterrows():
                 _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)

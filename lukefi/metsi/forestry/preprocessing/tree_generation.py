@@ -29,6 +29,7 @@ def finalize_trees(reference_trees: list[ReferenceTree], stratum: TreeStratum) -
     for i, reference_tree in enumerate(reference_trees):
         reference_tree.stand = stratum.stand
         reference_tree.species = stratum.species
+        reference_tree.origin = stratum.origin
         reference_tree.breast_height_age = 0.0 \
             if stratum.number_of_generated_trees == 1 else stratum.get_breast_height_age()
         reference_tree.biological_age = stratum.biological_age
@@ -324,13 +325,12 @@ def generate_reference_trees(
             attr_dict["sapling"].append(False)  # generated trees are usually non-sapling
             attr_dict["tree_type"].append("")   # set if you have semantics for this
             attr_dict["tuhon_ilmiasu"].append(t.tuhon_ilmiasu or "")
+            attr_dict["basal_area"].append(np.nan)
+            attr_dict["volume"].append(np.nan)
 
     vec = VectorReferenceTrees()
     vec.vectorize(attr_dict)
 
     stand.tree_strata = VectorTreeStrata()
-
-    if hasattr(stand, "tree_strata_pre_vec"):
-        stand.tree_strata_pre_vec = []
 
     return vec

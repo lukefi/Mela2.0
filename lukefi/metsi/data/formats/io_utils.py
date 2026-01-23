@@ -1,4 +1,5 @@
 from itertools import chain
+from enum import Enum
 from typing import Any, Optional
 from collections.abc import Callable
 import numpy as np
@@ -12,15 +13,13 @@ from lukefi.metsi.data.model import (
     stand_as_rst_row)
 from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb_meta
 from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 
-def rst_float(source: str | int | float | None) -> str:
+def rst_float(source: str | int | float) -> str:
     """
     Convert source to a float string with 6 decimals.
-    Handles numpy arrays and various non-scalar types defensively.
     """
-    if source is None:
-        return "0.000000"
 
     try:
         value = float(source)
@@ -39,7 +38,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
         Initial data record stand metadata
         Initial data record tree set metadata
     """
-    outputtable_id = parse_float(stand.identifier) or stand.stand_id
+    outputtable_id = parse_float(stand.identifier) or stand.stand_id or 0
 
     logical_record_length = sum([
         msb_meta.logical_record_metadata_length,
@@ -68,7 +67,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
 
 def c_var_metadata(uid: float | None, cvars_len: int) -> list[str]:
     total_length = 2 + cvars_len
-    cvars_meta = map(rst_float, [uid, total_length, 2, cvars_len])
+    cvars_meta = map(rst_float, [uid or 0, total_length, 2, cvars_len])
     return list(cvars_meta)
 
 
@@ -132,22 +131,53 @@ def stands_to_csv_content(container: ExportableContainer[ForestStand], delimeter
     return result
 
 
+def _append_obj_to_attr_dict(attr_dict: dict[str, list[Any]], obj: Any) -> None:
+    # obj is a dataclass-like instance produced by from_csv_row
+    for k, v in obj.__dict__.items():
+        if k == "stand":
+            continue
+        if isinstance(v, Enum):
+            v = v.value
+        attr_dict.setdefault(k, []).append(v)
+
+
 def csv_content_to_stands(csv_content: list[list[str]]) -> StandList:
     stands: list[ForestStand] = []
-    for row in csv_content:
-        if row[0] == "stand":
-            stands.append(ForestStand.from_csv_row(row))
-        elif row[0] == "tree":
-            stands[-1].reference_trees_pre_vec.append(ReferenceTree.from_csv_row(row))
-        elif row[0] == "stratum":
-            stands[-1].tree_strata_pre_vec.append(TreeStratum.from_csv_row(row))
 
-    # once all stands are recreated, add the stand reference to trees and strata
-    for stand in stands:
-        for tree in stand.reference_trees_pre_vec:
-            tree.stand = stand
-        for stratum in stand.tree_strata_pre_vec:
-            stratum.stand = stand
+    current_tree_attrs: dict[str, list[Any]] | None = None
+    current_stratum_attrs: dict[str, list[Any]] | None = None
+
+    def _finalize_current() -> None:
+        if not stands:
+            return
+        stand = stands[-1]
+        stand.reference_trees = ReferenceTrees().vectorize(current_tree_attrs or {})
+        stand.tree_strata = TreeStrata().vectorize(current_stratum_attrs or {})
+
+    for row in csv_content:
+        row_type = row[0]
+
+        if row_type == "stand":
+            # finish previous stand before starting a new one
+            _finalize_current()
+
+            stands.append(ForestStand.from_csv_row(row))
+            current_tree_attrs = {}
+            current_stratum_attrs = {}
+
+        elif row_type == "tree":
+            t = ReferenceTree.from_csv_row(row)
+            assert current_tree_attrs is not None, "Tree row encountered before first stand row"
+            _append_obj_to_attr_dict(current_tree_attrs, t)
+
+        elif row_type == "stratum":
+            s = TreeStratum.from_csv_row(row)
+            assert current_stratum_attrs is not None, "Stratum row encountered before first stand row"
+            _append_obj_to_attr_dict(current_stratum_attrs, s)
+
+    # finalize last stand
+    _finalize_current()
+
     return stands
 
 

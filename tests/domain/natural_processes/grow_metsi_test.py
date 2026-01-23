@@ -4,9 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 import numpy as np
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import CollectedData
 import lukefi.metsi.domain.natural_processes.grow_metsi as gm
-import lukefi.metsi.domain.natural_processes.grow_metsi as gmv
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.internal import (LandUseCategory,
                                               SiteType,
@@ -34,8 +32,7 @@ def make_tree(
     )
 
 
-def make_stand(trees):
-    # Pick valid enum values without knowing the exact names:
+def make_stand():
     mal_val = list(LandUseCategory)[0]
     mty_val = list(SiteType)[0]
     alr_val = list(SoilPeatlandCategory)[0]
@@ -43,7 +40,7 @@ def make_stand(trees):
     verlt_val = list(gm.TaxClassReduction)[0].value
     return ForestStand(
         time=2000,
-        geo_location=(62.0, 25.0, 150.0, None),  # (Y, X, Z)
+        geo_location=(62.0, 25.0, 150.0, None),
         degree_days=1100.0,
         sea_effect=0.0,
         lake_effect=0.0,
@@ -52,7 +49,6 @@ def make_stand(trees):
         soil_peatland_category=alr_val,
         tax_class=verl_val,
         tax_class_reduction=verlt_val,
-        reference_trees_pre_vec=list(trees),
     )
 
 
@@ -82,7 +78,7 @@ def make_rtrees_soa(
 class TestMetsiGrowPredictorVec(unittest.TestCase):
     def test_spedom_uses_vectors_and_site_props_convert(self):
         # Patch species conversion to keep the test light-weight.
-        with patch.object(gmv, "to_mg_species", side_effect=lambda s: gmv.Species.SPRUCE):
+        with patch.object(gm, "to_mg_species", side_effect=lambda s: gm.Species.SPRUCE):
             # Two trees; only need species to influence spedom (dominant)
             rt = make_rtrees_soa(
                 stems=(100.0, 80.0),
@@ -93,30 +89,30 @@ class TestMetsiGrowPredictorVec(unittest.TestCase):
                 bh_age=(20.0, 30.0),
                 origin=(None, None),
             )
-            stand = make_stand([])  # site props + year from the common helper
+            stand = make_stand()  # site props + year from the common helper
             # Attach SoA trees
             stand.reference_trees = rt
 
-            p = gmv.MetsiGrowPredictor(stand)
+            p = gm.MetsiGrowPredictor(stand)
 
             # Dominant species should come from converted vectors
-            self.assertEqual(p.spedom, gmv.Species.SPRUCE)
+            self.assertEqual(p.spedom, gm.Species.SPRUCE)
 
             # site/state properties should map to enums correctly (vectorized predictor)
-            self.assertIsInstance(p.mal, gmv.LandUseCategoryVMI)
-            self.assertEqual(p.mal, gmv.LandUseCategoryVMI(stand.land_use_category))
-            self.assertIsInstance(p.mty, gmv.SiteTypeVMI)
-            self.assertEqual(p.mty, gmv.SiteTypeVMI(stand.site_type_category))
-            self.assertIsInstance(p.alr, gmv.SoilCategoryVMI)
-            self.assertEqual(p.alr, gmv.SoilCategoryVMI(stand.soil_peatland_category))
+            self.assertIsInstance(p.mal, gm.LandUseCategoryVMI)
+            self.assertEqual(p.mal, gm.LandUseCategoryVMI(stand.land_use_category))
+            self.assertIsInstance(p.mty, gm.SiteTypeVMI)
+            self.assertEqual(p.mty, gm.SiteTypeVMI(stand.site_type_category))
+            self.assertIsInstance(p.alr, gm.SoilCategoryVMI)
+            self.assertEqual(p.alr, gm.SoilCategoryVMI(stand.soil_peatland_category))
             # verl may be optional; the AoS helper always provides a valid nonzero value
-            self.assertIsInstance(p.verl, gmv.TaxClass)
-            self.assertEqual(p.verl, gmv.TaxClass(stand.tax_class))
-            self.assertIsInstance(p.verlt, gmv.TaxClassReduction)
-            self.assertEqual(p.verlt, gmv.TaxClassReduction(stand.tax_class_reduction))
+            self.assertIsInstance(p.verl, gm.TaxClass)
+            self.assertEqual(p.verl, gm.TaxClass(stand.tax_class))
+            self.assertIsInstance(p.verlt, gm.TaxClassReduction)
+            self.assertEqual(p.verlt, gm.TaxClassReduction(stand.tax_class_reduction))
 
     def test_trees_spe_invalid_raises_vec(self):
-        with patch.object(gmv, "to_mg_species", side_effect=ValueError("bad species")):
+        with patch.object(gm, "to_mg_species", side_effect=ValueError("bad species")):
             rt = make_rtrees_soa(
                 stems=(100.0,),
                 d=(10.0,),
@@ -126,10 +122,10 @@ class TestMetsiGrowPredictorVec(unittest.TestCase):
                 bh_age=(20.0,),
                 origin=(None,),
             )
-            stand = make_stand([])
+            stand = make_stand()
             stand.reference_trees = rt
 
-            p = gmv.MetsiGrowPredictor(stand)
+            p = gm.MetsiGrowPredictor(stand)
             with self.assertRaises(ValueError):
                 _ = p.trees_spe  # triggers conversion path with error
 
@@ -146,7 +142,7 @@ class TestGrowMetsiVecWrapper(unittest.TestCase):
             bh_age=(20.0, 18.0),
             origin=(None, None),
         )
-        stand = make_stand([])
+        stand = make_stand()
         stand.reference_trees = rt
 
         # Growth deltas returned by .evolve(step)
@@ -164,11 +160,11 @@ class TestGrowMetsiVecWrapper(unittest.TestCase):
             s.year += step
 
         with (
-            patch.object(gmv.MetsiGrowPredictor, "evolve", return_value=growth) as mock_evolve,
-            patch.object(gmv, "update_stand_growth", side_effect=fake_update_stand_growth_vec) as mock_update,
-            patch.object(gmv, "to_mg_species", side_effect=lambda s: gmv.Species.PINE),  # keep species simple
+            patch.object(gm.MetsiGrowPredictor, "evolve", return_value=growth) as mock_evolve,
+            patch.object(gm, "update_stand_growth", side_effect=fake_update_stand_growth_vec) as mock_update,
+            patch.object(gm, "to_mg_species", side_effect=lambda s: gm.Species.PINE),  # keep species simple
         ):
-            out_stand, _ = gmv.grow_metsi_fn(stand, step=5)
+            out_stand, _ = gm.grow_metsi_fn(stand, step=5)
 
             # evolve called with step=5
             mock_evolve.assert_called_once_with(step=5)

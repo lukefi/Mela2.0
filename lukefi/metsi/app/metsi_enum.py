@@ -87,30 +87,14 @@ class EvaluationStrategy(StringConfigEnum):
 
 
 class StateFormat(StringConfigEnum):
-    FDM = 'fdm'
+    CSV = 'csv'
+    VMI9 = 'vmi9'
     VMI10 = 'vmi10'
+    VMI11 = 'vmi11'
     VMI12 = 'vmi12'
     VMI13 = 'vmi13'
     XML = 'xml'
     GPKG = 'gpkg'
-
-
-class StateInputFormat(StringConfigEnum):
-    PICKLE = 'pickle'
-    JSON = 'json'
-    CSV = 'csv'
-
-
-class StateOutputFormat(StringConfigEnum):
-    PICKLE = 'pickle'
-    JSON = 'json'
-    CSV = 'csv'
-    RST = 'rst'
-
-
-class DerivedDataOutputFormat(StringConfigEnum):
-    PICKLE = 'pickle'
-    JSON = 'json'
 
 
 # Expose public API
@@ -120,7 +104,4 @@ __all__ = [
     "FormationStrategy",
     "EvaluationStrategy",
     "StateFormat",
-    "StateInputFormat",
-    "StateOutputFormat",
-    "DerivedDataOutputFormat",
 ]

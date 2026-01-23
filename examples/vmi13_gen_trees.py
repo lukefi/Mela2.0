@@ -7,7 +7,6 @@ from lukefi.metsi.sim.generators import *
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",
-        "formation_strategy": "partial",
         "run_modes": ["preprocess", "export_prepro"]
     },
     "preprocessing_params": {
