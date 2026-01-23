@@ -2,7 +2,6 @@ from copy import copy
 from typing import cast
 import numpy as np
 from lukefi.metsi.data.model import ForestStand, ReferenceTree
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.mela import (
     MelaOwnerCategory,
     MelaSiteTypeCategory,
