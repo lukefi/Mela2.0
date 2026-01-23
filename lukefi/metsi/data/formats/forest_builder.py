@@ -28,9 +28,8 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.conversion import vmi2internal, fc2internal
 from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata, DTYPES_TREE, DTYPES_STRATA
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.data.vector_model import DTYPES_TREE, DTYPES_STRATA
 
 
 def _append_stratum_row(
@@ -425,7 +424,7 @@ class VMI9Builder(VMIBuilder):
         result.year = parsed.year
         result.start_year = parsed.year
 
-        area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
+        area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
 
         result.area_weight_factors = vmi_util.determine_area_factors(
@@ -517,7 +516,10 @@ class VMI10Builder(VMIBuilder):
         result.start_year = parsed.year
 
         # Area
-        area_ha = vmi_util.parse_vmi10_area_ha(data_row[indices["area_ha"]])
+        area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
+        result.set_area(area_ha)
+
+        area_ha = vmi_util.get_vmi10_area_ha(data_row[indices["forestry_centre"]], data_row[indices["lohkomuoto"]])
         result.set_area(area_ha)
 
         # Area weight factors
@@ -893,6 +895,7 @@ class VMI13Builder(VMIBuilder):
                 util.parse_int(data_row[indices["lohkotarkenne"]]),
                 0)
         )
+
         result.area_weight_factors = vmi_util.determine_area_factors(
             data_row[indices["osuus4m"]],
             data_row[indices["osuus9m"]]

@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
-from lukefi.metsi.data.formats.vmi_const import vmi12_county_areas
+from lukefi.metsi.data.formats.vmi_const import vmi12_county_areas, VMI10_AREA_HA_TABLE
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -703,11 +703,9 @@ def determine_tree_type(source: str) -> Optional[str]:
     return source
 
 
-def parse_vmi10_area_ha(raw: str) -> float:
+def parse_vmi_area_ha(raw: str) -> float:
     """
-    VMI10: eduala = represented area in hectares, "5 decimals implied".
-    - If decimal point exists, parse directly.
-    - Else interpret as integer with 5 implied decimals.
+    Not sure is this useful
     """
     s = (raw or "").strip()
     if not s:
@@ -845,3 +843,14 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
 
     for k, v in values.items():
         attr.setdefault(k, []).append(v)
+
+
+def get_vmi10_area_ha(keskus: int, lohkomuoto: int) -> float:
+    """
+    VMI10 area lookup.
+    Returns area_ha for given keskus and lohkomuoto.
+    """
+    try:
+        return VMI10_AREA_HA_TABLE[keskus][lohkomuoto]
+    except KeyError as exc:
+        raise KeyError(f'No VMI10 area_ha for keskus={keskus}, lohkomuoto={lohkomuoto}') from exc
