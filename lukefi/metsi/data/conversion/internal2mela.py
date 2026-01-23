@@ -265,24 +265,6 @@ def mela_stand(stand: ForestStand) -> ForestStand:
 
     result.reference_trees = rt
 
-    # --- Strata-level conversions (SoA) ---
-    ts: TreeStrata = copy_vector_data(result.tree_strata)
-
-    if ts.size:
-        ts.species = np.where(ts.species == -1, 0, ts.species).astype(np.int32, copy=False)
-        ts.storey = np.where(ts.storey == -1, 0, ts.storey).astype(np.int32, copy=False)
-
-        for key, declared_dtype in ts.dtypes.items():
-            arr = getattr(ts, key)
-            if np.issubdtype(declared_dtype, np.floating):
-                setattr(ts, key, np.where(np.isnan(arr), -1.0, arr))
-
-        # also handle the (n,3) float array field similarly
-        if hasattr(ts, "stand_origin_relative_position"):
-            a = ts.stand_origin_relative_position
-            ts.stand_origin_relative_position = np.where(np.isnan(a), -1.0, a)
-
-    result.tree_strata = ts
     return result
 
 

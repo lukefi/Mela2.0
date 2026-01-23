@@ -1,5 +1,9 @@
 from collections.abc import Callable
 from copy import copy
+from typing import TypeVar
+from lukefi.metsi.data.vector_model import VectorData
+
+V = TypeVar("V", bound=VectorData)
 
 
 def apply_mappers(target, *mappers: Callable):
@@ -9,7 +13,7 @@ def apply_mappers(target, *mappers: Callable):
     return target
 
 
-def copy_vector_data(v):
+def copy_vector_data(v: V) -> V:
     """Shallow-copy VectorData object + deep-copy its numpy arrays."""
     out = copy(v)
     for key in v.dtypes:
