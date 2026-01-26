@@ -519,7 +519,10 @@ class VMI10Builder(VMIBuilder):
         area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
 
-        area_ha = vmi_util.get_vmi10_area_ha(data_row[indices["forestry_centre"]], data_row[indices["lohkomuoto"]])
+        area_ha = vmi_util.get_vmi10_area_ha(
+            vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
+            int(data_row[indices["lohkomuoto"]]),
+        )
         result.set_area(area_ha)
 
         # Area weight factors

@@ -127,6 +127,16 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "naturaaluekoodi": slice(141, 142),  # natura
     "fra_class": slice(116, 117),               # fraluo 117
 
+    # Operations / proposals
+    "hakkuu_tapa": slice(262, 263),
+    "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus": slice(268, 269),
+    "viljely": slice(270, 271),
+    "viljely_aika": slice(271, 272),
+    "muu_toimenpide": slice(274, 275),
+    "muu_toimenpide_aika": slice(275, 276),
+    "hakkuuehdotus": slice(276, 277),  # hakehd1
+
     # basal area components (0.1 m2 units)
     "ppa1": slice(284, 287),
     "ppa2": slice(288, 291),
