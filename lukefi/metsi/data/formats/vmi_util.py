@@ -854,3 +854,172 @@ def get_vmi10_area_ha(keskus: int, lohkomuoto: int) -> float:
         return VMI10_AREA_HA_TABLE[keskus][lohkomuoto]
     except KeyError as exc:
         raise KeyError(f'No VMI10 area_ha for keskus={keskus}, lohkomuoto={lohkomuoto}') from exc
+
+
+def determine_storey_for_vmi10_jakso_asema(asema_raw: str) -> Storey:
+    """
+    VMI10 jakson asema:
+      1 Vallitseva jakso
+      2 Ylispuusto
+      3 Jättöylispuusto
+      4 Verhopuusto
+      5 Kehityskelpoinen alikasvos
+      6 Kehityskelvoton alikasvos
+      7 Vaihtuva taimiaines
+    Source: VMI10_puusto_ositteet.txt :contentReference[oaicite:9]{index=9}
+
+    NOTE: This mapping is the one part I’m least certain about (your internal Storey has
+    OVER/SPARE/REMOTE/REMOVAL etc). Please verify with your domain colleague.
+    """
+    v = (asema_raw or "").strip()
+    if not v or v == ".":
+        return Storey.INDETERMINATE
+    if v == "1":
+        return Storey.DOMINANT
+    if v == "2":
+        return Storey.OVER
+    if v == "3":
+        return Storey.REMOVAL
+    if v == "4":
+        return Storey.SPARE
+    if v == "5":
+        return Storey.UNDER
+    if v == "6":
+        return Storey.REMOTE
+    if v == "7":
+        return Storey.INDETERMINATE
+    return Storey.INDETERMINATE
+
+
+def _parse_share_tenths(raw: str) -> float:
+    """Share is coded 0..10 meaning 0.0..1.0"""
+    s = get_or_default(parse_float((raw or "").strip()), 0.0)
+    return max(0.0, min(1.0, s / 10.0))
+
+
+def _parse_int0(raw: str) -> int:
+    return get_or_default(parse_int((raw or "").strip()), 0)
+
+
+def _parse_float0(raw: str) -> float:
+    return get_or_default(parse_float((raw or "").strip()), 0.0)
+
+
+def _vmi10_segment_age_years(d13_age_raw: str, age_inc_raw: str, fallback_age: float) -> float:
+    a = _parse_float0(d13_age_raw)
+    b = _parse_float0(age_inc_raw)
+    age = a + b
+    # per notes: if computed age == 0 -> use stand age
+    return fallback_age if age <= 0.0 else age
+
+
+def append_vmi10_strata_from_stand_row(
+    attr: dict[str, list],
+    indices: dict[str, slice],
+    stand_row: str,
+    stand_identifier: str,
+    stand_basal_area: float,
+):
+    """
+    Build up to 8 strata (2 segments × (main + up to 3 side species)) into TreeStrata SoA.
+
+    Implements rules in VMI10_puusto_ositteet.txt :contentReference[oaicite:11]{index=11}
+    """
+
+    # stand fallback age
+    fallback_age = _vmi10_segment_age_years(
+        stand_row[indices["metsikon_d13ika"]],
+        stand_row[indices["metsikon_ikalisays"]],
+        fallback_age=0.0,
+    )
+
+    jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
+    # notes: 1. jakso ppa = kuvion ppa - 2.jakson ppa :contentReference[oaicite:12]{index=12}
+    jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
+
+    def emit_stratum(
+        seg_no: int,
+        local_no: int,
+        species_code_raw: str,
+        share_raw: str,
+        seg_stems1000_raw: str,
+        seg_d_cm_raw: str,
+        seg_h_dm_raw: str,
+        seg_d13_age_raw: str,
+        seg_age_inc_raw: str,
+        seg_syntytapa_raw: str,
+        seg_asema_raw: str,
+        seg_ppa_total: float,
+    ):
+        species_code = (species_code_raw or "").strip()
+        if not species_code or species_code in (".", "0"):
+            return
+        share = _parse_share_tenths(share_raw)
+        if share <= 0.0:
+            return
+
+        species = vmi2internal.convert_species(species_code)
+
+        basal_area = seg_ppa_total * share
+        # *1000 per notes :contentReference[oaicite:13]{index=13}
+        stems_per_ha = _parse_float0(seg_stems1000_raw) * 1000.0 * share
+        mean_diameter = _parse_float0(seg_d_cm_raw)
+        mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m :contentReference[oaicite:14]{index=14}
+        age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
+
+        syntytapa = _parse_int0(seg_syntytapa_raw)  # NOTE: raw unless you already have a mapping
+        storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
+
+        identifier = f"{stand_identifier}_vmi10_{seg_no}_{local_no}"
+
+        values = {
+            "identifier": identifier,
+            "species": int(species),
+            "mean_diameter": mean_diameter,
+            "mean_height": mean_height,
+            "breast_height_age": age,      # (best available in VMI10)
+            "biological_age": age,
+            "stems_per_ha": stems_per_ha,
+            "basal_area": basal_area,
+            "origin": syntytapa,
+            "management_category": 0,
+            "saw_log_volume_reduction_factor": None,
+            "cutting_year": 0,
+            "age_when_10cm_diameter_at_breast_height": 0,
+            "tree_number": 0,
+            "stand_origin_relative_position": (0.0, 0.0, 0.0),
+            "lowest_living_branch_height": 0.0,
+            "storey": int(storey),
+            "sapling_stems_per_ha": 0.0,
+            "sapling_stratum": False,
+            "number_of_generated_trees": 0,
+        }
+
+        for k, v in values.items():
+            attr.setdefault(k, []).append(v)
+
+    # Segment configs
+    for seg_no in (1, 2):
+        ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
+
+        # base fields
+        asema = stand_row[indices[f"jakso{seg_no}_asema"]]
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
+        stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
+        d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
+        h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
+        d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
+        ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
+
+        # main + 3 side species
+        emit_stratum(seg_no, 1,
+                     stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
+                     stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
+                     stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+                     )
+        for j in (1, 2, 3):
+            emit_stratum(seg_no, 1 + j,
+                         stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
+                         stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
+                         stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+                         )

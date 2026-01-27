@@ -127,6 +127,45 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "naturaaluekoodi": slice(141, 142),  # natura
     "fra_class": slice(116, 117),               # fraluo 117
 
+
+    # Segment 2 basal area component (ppa)
+    "jakso2_ppa": slice(307, 309),  # same as j2ppa (cols 308-309)
+
+    # Segment 1 (jakso 1) — these are the “non-j2” fields starting from jakasema
+    "jakso1_asema": slice(200, 201),                 # jakasema (col 201)
+    "jakso1_syntytapa": slice(202, 203),             # syntapa (col 203)
+    "jakso1_paapuulaji": slice(203, 205),            # paaplaji (col 204-205)
+    "jakso1_paapuulaji_osuus": slice(205, 207),      # paaplajios (col 206-207)
+    "jakso1_sivulaji1": slice(207, 209),             # sivplaji1 (col 208-209)
+    "jakso1_sivulaji1_osuus": slice(209, 211),       # sivplaji1os (col 210-211)
+    "jakso1_sivulaji2": slice(211, 213),             # sivplaji2 (col 212-213)
+    "jakso1_sivulaji2_osuus": slice(213, 215),       # sivplaji2os (col 214-215)
+    "jakso1_sivulaji3": slice(215, 217),             # sivplaji3 (col 216-217)
+    "jakso1_sivulaji3_osuus": slice(217, 219),       # sivplaji3os (col 218-219)
+    "jakso1_kokonaisrunkoluku1000": slice(226, 228),  # rlkok (col 227-228)
+    "jakso1_keskilapimitta_cm": slice(231, 233),     # keskilpm (col 232-233)
+    "jakso1_keskipituus_dm": slice(233, 236),        # keskipit (col 234-236)
+    "jakso1_d13ika": slice(237, 240),                # d13ika (col 238-240)
+    "jakso1_ikalisays": slice(241, 243),             # ikalis (col 242-243)
+
+    # Segment 2 (jakso 2) — “j2*” fields
+    "jakso2_asema": slice(310, 311),                 # j2asema (col 311)
+    "jakso2_syntytapa": slice(312, 313),             # j2syntapa (col 313)
+    "jakso2_paapuulaji": slice(313, 315),            # j2paaplaji (col 314-315)
+    "jakso2_paapuulaji_osuus": slice(315, 317),      # j2paaplajios (col 316-317)
+    "jakso2_sivulaji1": slice(317, 319),             # j2sivplaji1 (col 318-319)
+    "jakso2_sivulaji1_osuus": slice(319, 321),       # j2sivplaji1os (col 320-321)
+    "jakso2_sivulaji2": slice(321, 323),             # j2sivplaji2 (col 322-323)
+    "jakso2_sivulaji2_osuus": slice(323, 325),       # j2sivplaji2os (col 324-325)
+    "jakso2_sivulaji3": slice(325, 327),             # j2sivplaji3 (col 326-327)
+    "jakso2_sivulaji3_osuus": slice(327, 329),       # j2sivplaji3os (col 328-329)
+    "jakso2_kokonaisrunkoluku1000": slice(336, 338),  # j2rlkok (col 337-338)
+    "jakso2_keskilapimitta_cm": slice(341, 343),     # j2keskilpm (col 342-343)
+    "jakso2_keskipituus_dm": slice(343, 346),        # j2keskipit (col 344-346)
+    "jakso2_d13ika": slice(347, 350),                # j2d13ika (col 348-350)
+    "jakso2_ikalisays": slice(351, 353),             # j2ikalis (col 352-353)
+
+
     # Operations / proposals
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
@@ -143,6 +182,9 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "ppa3": slice(292, 295),
     "ppa4": slice(296, 299),
     "ppa5": slice(300, 303),
+
+    "j2ppa": slice(307, 309),  # jakson 2 ppa
+    "j2asema": slice(311, 311),  # Jakson 2 asema
 }
 
 VMI10_TREE_INDICES: dict[str, slice] = {

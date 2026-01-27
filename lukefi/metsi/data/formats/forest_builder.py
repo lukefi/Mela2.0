@@ -579,11 +579,22 @@ class VMI10Builder(VMIBuilder):
         """
         result: dict[str, ForestStand] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
+        stratum_attrs: dict[str, dict[str, list]] = {}
 
         # Build stands
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
+
+            # Build strata from the same VMI10 stand row (puujaksot)
+            sattr = stratum_attrs.setdefault(stand.identifier, {})
+            vmi_util.append_vmi10_strata_from_stand_row(
+                sattr,
+                VMI10_STAND_INDICES,
+                row,
+                stand.identifier,
+                stand_basal_area=stand.basal_area or 0.0,
+            )
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
