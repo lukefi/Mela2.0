@@ -1,9 +1,11 @@
 from copy import copy
-from typing import Any, Optional, overload
+from dataclasses import dataclass
+from typing import Any, Optional, overload, override
 import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.enums.internal import Origin, Storey, TreeSpecies
 
 DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "identifier": np.dtype("U30"),
@@ -239,6 +241,34 @@ class VectorData():
         self.size = 0
 
 
+@dataclass
+class ReferenceTree:
+    identifier: str
+    tree_number: int
+    species: TreeSpecies
+    breast_height_diameter: float
+    height: float
+    measured_height: float
+    breast_height_age: float
+    biological_age: float
+    stems_per_ha: float
+    origin: Origin
+    management_category: int
+    saw_log_volume_reduction_factor: float
+    pruning_year: int
+    age_when_10cm_diameter_at_breast_height: int
+    stand_origin_relative_position: tuple[float, float]
+    lowest_living_branch_height: float
+    tree_category: str
+    storey: Storey
+    sapling: bool
+    tree_type: str
+    tuhon_ilmiasu: str
+    latvuskerros: float
+    basal_area: float
+    volume: float
+
+
 class ReferenceTrees(VectorData):
     identifier: npt.NDArray[np.str_]
     tree_number: npt.NDArray[np.int32]
@@ -262,6 +292,43 @@ class ReferenceTrees(VectorData):
 
     def __init__(self):
         super().__init__(DTYPES_TREE)
+
+    def __add__(self, other: "ReferenceTrees") -> "ReferenceTrees":
+        retval = ReferenceTrees()
+        for attribute_name in self.dtypes.keys():
+            setattr(retval, attribute_name, np.concat((getattr(self, attribute_name),
+                                                       getattr(other, attribute_name)), axis=0))
+        retval._recompute_size()
+        return retval
+
+    def get_tree(self, i: int) -> ReferenceTree:
+        return ReferenceTree(
+            self.identifier[i],
+            self.tree_number[i],
+            TreeSpecies(self.species[i]),
+            self.breast_height_diameter[i],
+            self.height[i],
+            self.measured_height[i],
+            self.breast_height_age[i],
+            self.biological_age[i],
+            self.stems_per_ha[i],
+            Origin(self.origin[i]),
+            self.management_category[i],
+            self.saw_log_volume_reduction_factor[i],
+            self.pruning_year[i],
+            self.age_when_10cm_diameter_at_breast_height[i],
+            (self.stand_origin_relative_position[i][0],
+             self.stand_origin_relative_position[i][1]),
+            self.lowest_living_branch_height[i],
+            self.tree_category[i],
+            Storey(self.storey[i]),
+            self.sapling[i],
+            self.tree_type[i],
+            self.tuhon_ilmiasu[i],
+            self.latvuskerros[i],
+            self.basal_area[i],
+            self.volume[i]
+        )
 
     def as_rst_row(self, i: int) -> list:
         return [
