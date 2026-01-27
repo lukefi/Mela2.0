@@ -75,6 +75,23 @@ def _calculate_g_from_trees(stems_per_ha, breast_height_diameter) -> float:
     return np.pi * np.sum(stems_per_ha * ((breast_height_diameter / 200) ** 2))
 
 
+def _determine_ages(stand: ForestStand,
+                    new_trees: ReferenceTrees,
+                    retention_trees_mask: npt.NDArray[np.bool_],
+                    tree_i: int,
+                    added_years: float) -> tuple[float, float]:
+    # if tree.biological_age is not None and tree.biological_age > 0:
+    # return tree.breast_height_age or 0, tree.biological_age
+
+    trees = stand.reference_trees
+    if trees.biological_age[tree_i] > 0:
+        return trees.breast_height_age[tree_i], trees.biological_age[tree_i]
+
+    # return ages(stand, tree, added_years, new_trees + retention_trees)
+
+    return ages(stand, new_trees + trees[retention_trees_mask], tree_i, added_years)
+
+
 def _adjust_retention_trees(stand: ForestStand,
                             new_trees: ReferenceTrees,
                             retention_trees_mask: npt.NDArray[np.bool_]):
