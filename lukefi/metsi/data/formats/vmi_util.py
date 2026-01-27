@@ -921,17 +921,11 @@ def append_vmi10_strata_from_stand_row(
     stand_basal_area: float,
 ):
     """
-    Build up to 8 strata (2 segments × (main + up to 3 side species)) into TreeStrata SoA.
-
-    Implements rules in VMI10_puusto_ositteet.txt :contentReference[oaicite:11]{index=11}
+    Build up to 8 strata (2 segments x (main + up to 3 side species)) into TreeStrata
     """
 
     # stand fallback age
-    fallback_age = _vmi10_segment_age_years(
-        stand_row[indices["metsikon_d13ika"]],
-        stand_row[indices["metsikon_ikalisays"]],
-        fallback_age=0.0,
-    )
+    fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
 
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
     # notes: 1. jakso ppa = kuvion ppa - 2.jakson ppa :contentReference[oaicite:12]{index=12}

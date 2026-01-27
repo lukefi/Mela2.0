@@ -607,7 +607,7 @@ class VMI10Builder(VMIBuilder):
 
         # Attach containers
         for stand_id, stand in result.items():
-            stand.tree_strata = TreeStrata().vectorize({})  # empty
+            stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
             stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
 
         return list(result.values())

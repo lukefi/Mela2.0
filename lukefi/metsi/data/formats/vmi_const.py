@@ -148,6 +148,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso1_d13ika": slice(237, 240),                # d13ika (col 238-240)
     "jakso1_ikalisays": slice(241, 243),             # ikalis (col 242-243)
 
+
     # Segment 2 (jakso 2) — “j2*” fields
     "jakso2_asema": slice(310, 311),                 # j2asema (col 311)
     "jakso2_syntytapa": slice(312, 313),             # j2syntapa (col 313)
@@ -165,6 +166,8 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso2_d13ika": slice(347, 350),                # j2d13ika (col 348-350)
     "jakso2_ikalisays": slice(351, 353),             # j2ikalis (col 352-353)
 
+
+    "metsikon_ika": slice(255, 258),  # metika (cols 256-258)
 
     # Operations / proposals
     "hakkuu_tapa": slice(262, 263),
