@@ -172,3 +172,11 @@ class Storey(MetsiEnum):
     SPARE = 4
     REMOTE = 5
     REMOVAL = 6
+
+
+class Origin(MetsiEnum):
+    UNKNOWN = 0
+    NATURAL_SEED = 1
+    NATURAL_SPROUT = 2
+    PLANTED = 3
+    SEEDED = 4
