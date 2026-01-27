@@ -1,32 +1,45 @@
 import ctypes as cts
-from pathlib import Path
-import math
-from lukefi.metsi.data.enums.internal import SoilPeatlandCategory, DrainageCategory, Origin
-from lukefi.metsi.data.model import ForestStand, ReferenceTree
+
+import numpy as np
+from lukefi.metsi.data.enums.internal import Origin, SoilPeatlandCategory, DrainageCategory
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.vector_model import ReferenceTree, ReferenceTrees
 
 # DLL_PATH = Path('lukefi', 'metsi', 'forestry', 'fortran', 'lib', 'ikaf.dll')
 DLL_PATH = '/dev/lib/ikaf.dll'
 DLL = cts.CDLL(DLL_PATH)
 
 
-def ages(stand: ForestStand, tree_i: int, added_years: float, trees_: list[ReferenceTree] = []) -> tuple[float, float]:
+def ages(stand: ForestStand,
+         trees_: ReferenceTrees,
+         tree: ReferenceTree,
+         added_years: float) -> tuple[float, float]:
 
     trees = trees_ if len(trees_) > 0 else stand.reference_trees
 
     # basal_area of larger trees
-    large = [t for t in trees if t.breast_height_diameter > tree.breast_height_diameter]
-    bal = sum([t.stems_per_ha * math.pi * ((t.breast_height_diameter / 200)**2) for t in large])
-    bal = bal + 0.5 * tree.stems_per_ha * math.pi * ((tree.breast_height_diameter / 200)**2)
+
+    # large = [t for t in trees if t.breast_height_diameter > tree.breast_height_diameter]
+    # bal = sum([t.stems_per_ha * math.pi * ((t.breast_height_diameter / 200)**2) for t in large])
+    # bal = bal + 0.5 * tree.stems_per_ha * math.pi * ((tree.breast_height_diameter / 200)**2)
+
+    large_mask = trees.breast_height_diameter > tree.breast_height_diameter
+    bal = np.pi * np.sum(trees.stems_per_ha[large_mask] * ((trees.breast_height_diameter[large_mask] / 200) ** 2))
+    bal = bal + 0.5 * tree.stems_per_ha * np.pi * ((tree.breast_height_diameter / 200) ** 2)
 
     # Dgm
-    Sd2 = sum([t.stems_per_ha * t.breast_height_diameter**2 for t in trees])
-    Sd3 = sum([t.stems_per_ha * t.breast_height_diameter**3 for t in trees])
-    dgm = 0 if Sd2 == 0 else Sd3 / Sd2
+    # sd2 = sum([t.stems_per_ha * t.breast_height_diameter ** 2 for t in trees])
+    # sd3 = sum([t.stems_per_ha * t.breast_height_diameter ** 3 for t in trees])
+
+    sd2 = np.sum(trees.stems_per_ha * trees.breast_height_diameter ** 2)
+    sd3 = np.sum(trees.stems_per_ha * trees.breast_height_diameter ** 3)
+
+    dgm = 0 if sd2 == 0 else sd3 / sd2
 
     # Model uses VMI7 classes
     if tree.species <= 8:
-        species = tree.species
-    elif tree.species.is_coniferous:
+        species = tree.species.value
+    elif tree.species.is_coniferous():
         species = 7
     else:
         species = 8
@@ -44,9 +57,9 @@ def ages(stand: ForestStand, tree_i: int, added_years: float, trees_: list[Refer
     rpl = cts.c_float(species)  # VMI7
     lpm = cts.c_float(tree.breast_height_diameter or 0.0)
     gy = cts.c_float(bal)
-    lampos = cts.c_float(stand.degree_days)
-    kmy = cts.c_float(stand.geo_location[2])
-    boni = cts.c_float(stand.site_type_category)  # VMI7 classification (same as internal)
+    lampos = cts.c_float(stand.degree_days or 0.0)
+    kmy = cts.c_float((stand.geo_location[2] if stand.geo_location is not None else 0.0) or 0.0)
+    boni = cts.c_float(stand.site_type_category or 0)  # VMI7 classification (same as internal)
     # keskid = cts.c_float(Sd3/Sd2)
     keskid = cts.c_float(dgm)
     rsynty = cts.c_float(origin)
