@@ -99,18 +99,11 @@ def _adjust_retention_trees(stand: ForestStand,
     # Basal area may increse if the basal area of the retention trees is greater than
     # basal area of the reference trees
 
-    # x*g_generated_not_retention + g_generated_retention + g_retention = G = g_generated
-    # x = (g_generated - g_generated_retention - g_retention)/g_generated_not_retention
-    #   = (g_generated_not_retention - g_retention)/g_generated_not_retention
-    # g_retention = calculate_g_from_trees(retention_trees_mask)
-
     trees = stand.reference_trees
 
     g_retention = _calculate_g_from_trees(
         trees.stems_per_ha[retention_trees_mask],
         trees.breast_height_diameter[retention_trees_mask])
-
-    # g_generated_not_retention_trees = calculate_g_from_trees([t for t in new_trees if t.management_category != 2])
 
     g_generated_not_retention_trees = _calculate_g_from_trees(
         new_trees.stems_per_ha[new_trees.management_category != 2],
@@ -153,13 +146,6 @@ def _adjust_retention_trees(stand: ForestStand,
                 new_trees.stems_per_ha[itree] = scale_factor_stratum * new_trees.stems_per_ha[itree]
 
     stand_tree_count = len(new_trees)
-    # for i, t in enumerate(retention_trees_mask):
-    #     t.identifier = "{}-{}-tree".format(stand.identifier, stand_tree_count + i + 1)
-    #     t.management_category = 2
-    #     t.storey = Storey.SPARE
-    #     breast_height_age, biological_age = determine_ages(stand, new_trees, retention_trees_mask, t, 10)
-    #     t.breast_height_age = round(breast_height_age, 1)
-    #     t.biological_age = round(biological_age, 1)
 
     for i in np.where(retention_trees_mask)[0]:
         trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
