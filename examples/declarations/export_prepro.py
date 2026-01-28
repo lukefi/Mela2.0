@@ -15,12 +15,10 @@ mela_decl = {
 
 mela = {
     'rst': mela_decl,
-    'rsts': mela_decl,
 }
 
 mela_and_default_csv = {
     'rst': mela_decl,
-    'rsts': mela_decl,
     'csv': default,
 }
 
@@ -28,9 +26,5 @@ default_csv = {
     'csv': default
 }
 
-csv_and_json = {
-    'csv': default,
-    'json': default
-}
 
-__all__ = ['mela', 'default_csv', 'mela_and_default_csv', 'csv_and_json']
+__all__ = ['mela', 'default_csv', 'mela_and_default_csv']
