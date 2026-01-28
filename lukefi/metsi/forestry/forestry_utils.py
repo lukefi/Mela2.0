@@ -159,6 +159,7 @@ def find_matching_storey_stratum_for_tree(
     same_species_strata, other_species_strata = split_list_by_predicate(
         same_storey_strata,
         lambda stratum: stratum.species == tree.species)
+
     # d.	Puu kohdistetaan ensisijaisesti oman puulajin ositteeseen.
     if len(same_species_strata) > 0:
         candidate_strata = same_species_strata
@@ -168,9 +169,9 @@ def find_matching_storey_stratum_for_tree(
         candidate_strata = []
 
     # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
-    #   jonka keskiläpimitta on lähinnä puun läpimittaa.
+    #       jonka keskiläpimitta on lähinnä puun läpimittaa.
     # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
-    #   R-koodissa kerroin = 3.
+    #       R-koodissa kerroin = 3.
 
     if len(candidate_strata) > 0:
         strata_with_diameter = filter(lambda stratum: stratum.has_diameter(), candidate_strata)
