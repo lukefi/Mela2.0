@@ -437,6 +437,7 @@ class VMI9Builder(VMIBuilder):
     def build(self) -> StandList:
         result: dict[str, ForestStand] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
+        stratum_attrs: dict[str, dict[str, list]] = {}
 
         for i, row in enumerate(self.forest_stands):
             idx = self._select_stand_indices(row)

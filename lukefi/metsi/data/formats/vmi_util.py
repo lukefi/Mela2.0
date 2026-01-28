@@ -987,7 +987,7 @@ def append_vmi10_strata_from_stand_row(
         for k, v in values.items():
             attr.setdefault(k, []).append(v)
 
-    # Segment configs
+    # Jaksot 1 ja 2
     for seg_no in (1, 2):
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
@@ -1012,3 +1012,109 @@ def append_vmi10_strata_from_stand_row(
                          stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
                          stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
                          )
+
+
+def append_vmi9_strata_from_stand_row(
+    attr: dict[str, list],
+    indices: dict[str, slice],
+    stand_row: str,
+    stand_identifier: str,
+    stand_basal_area: float,
+):
+    """
+    Build up to 6 strata (2 segments x (main + up to 2 side species)) into TreeStrata
+    """
+
+    # Stand fallback age (used if segment age is missing/0)
+    fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
+
+    jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
+    jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
+
+    def emit_stratum(
+        seg_no: int,
+        local_no: int,
+        species_code_raw: str,
+        share_raw: str,
+        seg_stems1000_raw: str,
+        seg_d_cm_raw: str,
+        seg_h_dm_raw: str,
+        seg_d13_age_raw: str,
+        seg_age_inc_raw: str,
+        seg_syntytapa_raw: str,
+        seg_asema_raw: str,
+        seg_ppa_total: float,
+    ):
+        species_code = (species_code_raw or "").strip()
+        if not species_code or species_code in (".", "0"):
+            return
+
+        share = _parse_share_tenths(share_raw)
+        if share <= 0.0:
+            return
+
+        species = vmi2internal.convert_species(species_code)
+
+        basal_area = seg_ppa_total * share
+        stems_per_ha = _parse_float0(seg_stems1000_raw) * 1000.0 * share
+        mean_diameter = _parse_float0(seg_d_cm_raw)
+        mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
+        age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
+
+        syntytapa = _parse_int0(seg_syntytapa_raw)  # keep raw code for now
+        storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)  # asema codes match
+
+        identifier = f"{stand_identifier}_vmi9_{seg_no}_{local_no}"
+
+        values = {
+            "identifier": identifier,
+            "species": int(species),
+            "mean_diameter": mean_diameter,
+            "mean_height": mean_height,
+            "breast_height_age": age,
+            "biological_age": age,
+            "stems_per_ha": stems_per_ha,
+            "basal_area": basal_area,
+            "origin": syntytapa,
+            "management_category": 0,
+            "saw_log_volume_reduction_factor": None,
+            "cutting_year": 0,
+            "age_when_10cm_diameter_at_breast_height": 0,
+            "tree_number": 0,
+            "stand_origin_relative_position": (0.0, 0.0, 0.0),
+            "lowest_living_branch_height": 0.0,
+            "storey": int(storey),
+            "sapling_stems_per_ha": 0.0,
+            "sapling_stratum": False,
+            "number_of_generated_trees": 0,
+        }
+
+        for k, v in values.items():
+            attr.setdefault(k, []).append(v)
+
+    # Jaksot 1 ja 2
+    for seg_no in (1, 2):
+        ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
+
+        asema = stand_row[indices[f"jakso{seg_no}_asema"]]
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
+        stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
+        d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
+        h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
+        d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
+        ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
+
+        emit_stratum(
+            seg_no, 1,
+            stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
+            stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
+            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+        )
+
+        for j in (1, 2):
+            emit_stratum(
+                seg_no, 1 + j,
+                stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
+                stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
+                stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+            )
