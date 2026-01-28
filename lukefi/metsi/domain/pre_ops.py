@@ -162,6 +162,37 @@ def _adjust_retention_trees(stand: ForestStand,
         trees.breast_height_age[i] = breast_height_age
         trees.biological_age[i] = biological_age
 
+def _adjust_ages(stand: ForestStand, trees: list[ReferenceTree]) ->list[TreeStratum]:
+    #adjust tree ages (from age model) by subtracting the difference between
+    # basal area weighted age of trees and age of stratum
+    
+    itree = -1
+    for s in stand.tree_strata:
+        if s.number_of_generated_trees is not None:
+            g = 0
+            agesum = 0
+            itreeages = itree
+            for i in range(s.number_of_generated_trees):
+                itree = itree + 1
+                if trees[itree].stems_per_ha > 0:
+                    gtree = trees[itree].stems_per_ha * math.pi*((trees[itree].breast_height_diameter/200)**2)
+                    agesum = agesum + gtree * trees[itree].breast_height_age
+                    g = g + gtree
+
+            mean_age = agesum/g if  g > 0 else 0
+            #age_diff = max(mean_age - s.get_breast_height_age(),0)
+            age_diff = mean_age - s.get_breast_height_age()
+            if age_diff != 0:
+                for i in range(s.number_of_generated_trees):
+                    itreeages = itreeages + 1
+                    if trees[itreeages].height > 1.3:
+                      #print(round(s.get_breast_height_age(),2), round(mean_age,2), round(age_diff,2), round(trees[itreeages].breast_height_age,2), 
+                      #  round(trees[itreeages].breast_height_age-age_diff,2),
+                      #  round(trees[itreeages].biological_age-age_diff,2),
+                      #  file=open("agetrees.txt","a"))
+                      trees[itreeages].breast_height_age = max(trees[itreeages].breast_height_age-age_diff,1)
+                      trees[itreeages].biological_age = max(trees[itreeages].biological_age-age_diff,1)
+    return
 
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
