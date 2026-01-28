@@ -866,10 +866,6 @@ def determine_storey_for_vmi10_jakso_asema(asema_raw: str) -> Storey:
       5 Kehityskelpoinen alikasvos
       6 Kehityskelvoton alikasvos
       7 Vaihtuva taimiaines
-    Source: VMI10_puusto_ositteet.txt :contentReference[oaicite:9]{index=9}
-
-    NOTE: This mapping is the one part I’m least certain about (your internal Storey has
-    OVER/SPARE/REMOTE/REMOVAL etc). Please verify with your domain colleague.
     """
     v = (asema_raw or "").strip()
     if not v or v == ".":
@@ -928,7 +924,6 @@ def append_vmi10_strata_from_stand_row(
     fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
 
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
-    # notes: 1. jakso ppa = kuvion ppa - 2.jakson ppa :contentReference[oaicite:12]{index=12}
     jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
 
     def emit_stratum(
