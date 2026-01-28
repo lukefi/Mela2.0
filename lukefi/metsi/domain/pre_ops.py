@@ -163,6 +163,11 @@ def _adjust_retention_trees(stand: ForestStand,
 
     for i in np.where(retention_trees_mask)[0]:
         trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
+        trees.management_category[i] = 2
+        trees.storey[i] = Storey.SPARE
+        breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
+        trees.breast_height_age[i] = breast_height_age
+        trees.biological_age[i] = biological_age
 
 
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
