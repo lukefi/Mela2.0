@@ -1,6 +1,5 @@
 """ Constant data indices of the app """
 
-# NOTE: pvm (date) location differs; fra_class exists only in PSUOMI but we map it for both (blank in ESUOMI).
 _VMI9_STAND_COMMON: dict[str, slice] = {
 
     "lohkomuoto": slice(8, 9),         # lohmuo  (col 9)
@@ -215,7 +214,6 @@ VMI10_TREE_INDICES: dict[str, slice] = {
     "age_increase": slice(95, 97),     # ikalis (v)
     "total_age": slice(97, 100),        # ika (v)
 
-    # damage
     "tuhon_ilmiasu": slice(83, 84),     # tuhilm
 }
 
@@ -243,7 +241,7 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "county": slice(63, 66),          # invalue (Maastotyöalue) — used as region code
     "forestry_centre": slice(66, 68),  # metkes
     "municipality": slice(68, 71),    # kunta
-    "kitukunta": slice(68, 71),       # VMI11 doesn't provide a separate kitukunta → using kunta but lets confirm this
+    "kitukunta": slice(68, 71),
 
     # Site / stand descriptors
     "height_above_sea_level": slice(82, 87),
@@ -329,7 +327,7 @@ VMI11_STRATUM_INDICES: dict[str, slice] = {
     "avg_diameter": slice(36, 38),
     "avg_height": slice(39, 42),
     "d13_age": slice(44, 47),
-    "biological_age": slice(47, 49),  # ikalis (age increase)
+    "biological_age": slice(47, 49),  # ikalis
     "basal_area": slice(50, 52),
 }
 

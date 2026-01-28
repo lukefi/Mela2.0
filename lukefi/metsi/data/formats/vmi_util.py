@@ -705,7 +705,7 @@ def determine_tree_type(source: str) -> Optional[str]:
 
 def parse_vmi_area_ha(raw: str) -> float:
     """
-    Not sure is this useful
+    Used in VMI9
     """
     s = (raw or "").strip()
     if not s:
