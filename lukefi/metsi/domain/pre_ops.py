@@ -89,7 +89,7 @@ def _determine_ages(stand: ForestStand,
 
     # return ages(stand, tree, added_years, new_trees + retention_trees)
 
-    return ages(stand, new_trees + trees[retention_trees_mask], tree_i, added_years)
+    return ages(stand, new_trees + trees[retention_trees_mask], trees.get_tree(tree_i), added_years)
 
 
 def _adjust_retention_trees(stand: ForestStand,
