@@ -391,6 +391,14 @@ class TreeStrata(VectorData):
     def __init__(self):
         super().__init__(DTYPES_STRATA)
 
+    def __add__(self, other: "TreeStrata") -> "TreeStrata":
+        retval = TreeStrata()
+        for attribute_name in self.dtypes.keys():
+            setattr(retval, attribute_name, np.concat((getattr(self, attribute_name),
+                                                       getattr(other, attribute_name)), axis=0))
+        retval._recompute_size()
+        return retval
+
     def as_internal_csv_row(self, i) -> list[str]:
         return [
             "stratum",
