@@ -12,6 +12,7 @@ from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
     VMI9_TREE_INDICES,
+    VMI9_STAND_COMMON,
     VMI10_STAND_INDICES,
     VMI10_TREE_INDICES,
     VMI11_STAND_INDICES,
@@ -397,10 +398,22 @@ class VMI9Builder(VMIBuilder):
         return None
 
     def _select_stand_indices(self, row: str) -> dict[str, slice]:
-        candidate = row[VMI9_STAND_INDICES_ESUOMI["date"]].strip()
-        if candidate.isdigit():
-            return VMI9_STAND_INDICES_ESUOMI
-        return VMI9_STAND_INDICES_PSUOMI
+        """
+        VMI9 has two fixed-width layouts (Etelä-Suomi and Pohjois-Suomi).
+        metsäkeskusjako (metkes):
+        0..10 => Etelä-Suomi
+        11..13 => Pohjois-Suomi
+        """
+        raw = row[VMI9_STAND_COMMON["forestry_centre"]].strip()  # metkes (cols 67-68)
+        try:
+            mk = int(raw)
+        except (ValueError, TypeError):
+            mk = None
+
+        if mk is not None:
+            return VMI9_STAND_INDICES_PSUOMI if 11 <= mk <= 13 else VMI9_STAND_INDICES_ESUOMI
+
+        raise MetsiException("Metsäkeskus tieto puuttuu")
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
 

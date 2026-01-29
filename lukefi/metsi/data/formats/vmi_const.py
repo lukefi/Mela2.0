@@ -1,6 +1,6 @@
 """ Constant data indices of the app """
 
-_VMI9_STAND_COMMON: dict[str, slice] = {
+VMI9_STAND_COMMON: dict[str, slice] = {
 
     "lohkomuoto": slice(8, 9),         # lohmuo  (col 9)
     "section_y": slice(2, 5),          # lohy    (col 3-5)
@@ -70,11 +70,11 @@ _VMI9_STAND_COMMON: dict[str, slice] = {
 }
 
 # Stand row indices – Etelä-Suomi (pvm at 45-50)
-VMI9_STAND_INDICES_ESUOMI = dict(_VMI9_STAND_COMMON)
+VMI9_STAND_INDICES_ESUOMI = dict(VMI9_STAND_COMMON)
 VMI9_STAND_INDICES_ESUOMI["date"] = slice(44, 50)  # pvm (col 45-50)
 
 # Stand row indices – Pohjois-Suomi (pvm at 76-81)
-VMI9_STAND_INDICES_PSUOMI = dict(_VMI9_STAND_COMMON)
+VMI9_STAND_INDICES_PSUOMI = dict(VMI9_STAND_COMMON)
 VMI9_STAND_INDICES_PSUOMI["date"] = slice(75, 81)  # pvm (col 76-81)
 
 
@@ -208,8 +208,8 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "test_area_number": slice(9, 11),
     "stand_number": slice(12, 13),  # kuvio
     "row_type": slice(13, 14),      # tielaji
-    "lat": slice(183, 190),  # pkoo
-    "lon": slice(190, 197),  # ikoo
+    "lat": slice(18, 25),  # pkoo
+    "lon": slice(25, 32),  # ikoo
     "osuusrel": slice(36, 38),
     "osuus12x": slice(38, 40),
     "osuus7m": slice(40, 42),
