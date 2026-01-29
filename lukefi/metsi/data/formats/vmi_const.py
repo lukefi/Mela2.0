@@ -35,6 +35,38 @@ _VMI9_STAND_COMMON: dict[str, slice] = {
     "ppa3": slice(211, 214),           # ppa3 (col 212-214)
     "ppa4": slice(0, 0),               # not present in VMI9
     "ppa5": slice(0, 0),               # not present in VMI9
+
+
+
+    "metsikon_ika": slice(184, 187),
+    "jakso1_asema": slice(140, 141),                    # jakasema 141
+    "jakso1_syntytapa": slice(142, 143),                # syntapa 143
+
+    "jakso1_kokonaisrunkoluku1000": slice(159, 161),    # rlkok 160-161
+    "jakso1_keskipituus_dm": slice(163, 166),           # keskipit 164-166
+    "jakso1_keskilapimitta_cm": slice(167, 169),        # keskilpm 168-169
+    "jakso1_d13ika": slice(169, 172),                   # d13ika 170-172
+    "jakso1_ikalisays": slice(173, 175),                # ikalis 174-175
+
+    "jakso1_paapuulaji": slice(143, 145),               # paaplaji 144-145
+    "jakso1_paapuulaji_osuus": slice(145, 147),         # paaplajios 146-147
+    "jakso1_sivulaji1": slice(147, 149),                # sivplaji1 148-149
+    "jakso1_sivulaji1_osuus": slice(149, 151),          # sivplaji1os 150-151
+    "jakso1_sivulaji2": slice(151, 153),                # sivplaji2 152-153
+    "jakso2_ppa": slice(217, 219),                      # j2ppa 218-219
+    "jakso2_asema": slice(220, 221),                    # j2asema 221
+    "jakso2_syntytapa": slice(222, 223),                # j2syntapa 223
+    "jakso2_kokonaisrunkoluku1000": slice(239, 241),    # j2rlkok 240-241
+    "jakso2_keskipituus_dm": slice(243, 246),           # j2keskipit 244-246
+    "jakso2_keskilapimitta_cm": slice(247, 249),        # j2keskilpm 248-249
+    "jakso2_d13ika": slice(249, 252),                   # j2d13ika 250-252
+    "jakso2_ikalisays": slice(253, 255),                # j2ikalis 254-255
+    "jakso2_paapuulaji": slice(223, 225),               # j2paaplaji 224-225
+    "jakso2_paapuulaji_osuus": slice(225, 227),         # j2paaplajios 226-227
+    "jakso2_sivulaji1": slice(227, 229),                # j2sivplaji1 228-229
+    "jakso2_sivulaji1_osuus": slice(229, 231),          # j2sivplaji1os 230-231
+    "jakso2_sivulaji2": slice(231, 233),                # j2sivplaji2 232-233
+
 }
 
 # Stand row indices – Etelä-Suomi (pvm at 45-50)

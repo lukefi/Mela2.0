@@ -444,6 +444,14 @@ class VMI9Builder(VMIBuilder):
             stand = self.convert_stand_entry(idx, row, i + 1)
             result[stand.identifier] = stand
 
+            sattr = stratum_attrs.setdefault(stand.identifier, {})
+            vmi_util.append_vmi9_strata_from_stand_row(
+                sattr,
+                idx,
+                row,
+                stand.identifier,
+                stand_basal_area=stand.basal_area or 0.0,
+            )
         # Trees
         if self.builder_flags.get("measured_trees", False):
             for row in self.reference_trees:
@@ -455,9 +463,8 @@ class VMI9Builder(VMIBuilder):
 
         out = StandList()
         for sid, stand in result.items():
-            stand.reference_trees = ReferenceTrees()
-            stand.reference_trees.vectorize(tree_attrs.get(sid, {}))
-            stand.tree_strata = TreeStrata()  # empty
+            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(sid, {}))
+            stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(sid, {}))
             out.append(stand)
 
         return out

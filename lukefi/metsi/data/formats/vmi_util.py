@@ -1061,8 +1061,8 @@ def append_vmi9_strata_from_stand_row(
         mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)  # keep raw code for now
-        storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)  # asema codes match
+        syntytapa = _parse_int0(seg_syntytapa_raw)
+        storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
 
         identifier = f"{stand_identifier}_vmi9_{seg_no}_{local_no}"
 
@@ -1104,17 +1104,36 @@ def append_vmi9_strata_from_stand_row(
         d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
         ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
 
+        # --- shares in tenths (0..10) ---
+        main_share_raw = stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]]
+        siv1_share_raw = stand_row[indices[f"jakso{seg_no}_sivulaji1_osuus"]]
+
+        main_t = _parse_int0(main_share_raw)
+        siv1_t = _parse_int0(siv1_share_raw)
+
+        # VMI9: siv2_share = 10 - main - siv1
+        siv2_t = max(0, 10 - main_t - siv1_t)
+
+        # Emit main
         emit_stratum(
             seg_no, 1,
             stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
-            stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
+            str(main_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
 
-        for j in (1, 2):
-            emit_stratum(
-                seg_no, 1 + j,
-                stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
-                stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
-                stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-            )
+        # Emit sivulaji1
+        emit_stratum(
+            seg_no, 2,
+            stand_row[indices[f"jakso{seg_no}_sivulaji1"]],
+            str(siv1_t),
+            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+        )
+
+        # Emit sivulaji2 with calculated osuus
+        emit_stratum(
+            seg_no, 3,
+            stand_row[indices[f"jakso{seg_no}_sivulaji2"]],
+            str(siv2_t),
+            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+        )
