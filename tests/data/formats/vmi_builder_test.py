@@ -15,14 +15,87 @@ class TestForestBuilder(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.vmi9_builder = ForestBuilderTestBench.vmi9_builder
+        cls.vmi10_builder = ForestBuilderTestBench.vmi10_builder
+        cls.vmi11_builder = ForestBuilderTestBench.vmi11_builder
         cls.vmi12_builder = ForestBuilderTestBench.vmi12_builder
         cls.vmi13_builder = ForestBuilderTestBench.vmi13_builder
 
+        cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
+        cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
+        cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
         cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
         cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
 
+        cls.vmi9_stands_ref_trees_false = ForestBuilderTestBench.vmi9_built({'measured_trees': False, 'strata': True})
+        cls.vmi10_stands_ref_trees_false = ForestBuilderTestBench.vmi10_built({'measured_trees': False, 'strata': True})
+        cls.vmi11_stands_ref_trees_false = ForestBuilderTestBench.vmi11_built({'measured_trees': False, 'strata': True})
         cls.vmi12_stands_ref_trees_false = ForestBuilderTestBench.vmi12_built({'measured_trees': False, 'strata': True})
         cls.vmi13_stands_ref_trees_false = ForestBuilderTestBench.vmi13_built({'measured_trees': False, 'strata': True})
+
+    def test_vmi9_init(self):
+        b = self.vmi9_builder()
+        # mini file should contain 4 stand rows (same as run tests)
+        self.assertEqual(3, len(b.forest_stands))
+        self.assertTrue(isinstance(b.reference_trees, list))
+        self.assertTrue(isinstance(b.tree_strata, list))
+
+    def test_vmi9_stands(self):
+        self.assertEqual(3, len(self.vmi9_stands))
+
+    def test_vmi9_stand_identifiers(self):
+        self.assertEqual('2-002-035-01-1', self.vmi9_stands[0].identifier)
+        self.assertEqual('2-002-040-08-1', self.vmi9_stands[1].identifier)
+
+    def test_vmi9_no_measured_trees_flag_means_no_reference_trees_attached(self):
+        for s in self.vmi9_stands_ref_trees_false:
+            self.assertEqual(0, s.reference_trees.size)
+
+    def test_vmi9_strata_generated_from_stand_rows(self):
+        for s in self.vmi9_stands:
+            self.assertGreaterEqual(s.tree_strata.size, 0)
+
+    def test_vmi10_init(self):
+        b = self.vmi10_builder()
+        self.assertEqual(3, len(b.forest_stands))
+        self.assertTrue(isinstance(b.reference_trees, list))
+        self.assertTrue(isinstance(b.tree_strata, list))
+
+    def test_vmi10_stands(self):
+        self.assertEqual(3, len(self.vmi10_stands))
+
+    def test_vmi10_stand_identifiers(self):
+        self.assertEqual('0-003-017-01-1', self.vmi10_stands[0].identifier)
+        self.assertEqual('0-005-017-08-1', self.vmi10_stands[1].identifier)
+
+    def test_vmi10_no_measured_trees_flag_means_no_reference_trees_attached(self):
+        for s in self.vmi10_stands_ref_trees_false:
+            self.assertEqual(0, s.reference_trees.size)
+
+    def test_vmi10_strata_generated_from_stand_rows(self):
+        for s in self.vmi10_stands:
+            self.assertGreaterEqual(s.tree_strata.size, 0)
+
+    def test_vmi11_init(self):
+        b = self.vmi11_builder()
+        self.assertEqual(3, len(b.forest_stands))
+        self.assertTrue(isinstance(b.reference_trees, list))
+        self.assertTrue(isinstance(b.tree_strata, list))
+
+    def test_vmi11_stands(self):
+        self.assertEqual(3, len(self.vmi11_stands))
+
+    def test_vmi11_stand_identifiers(self):
+        self.assertEqual('0-315-020-05-1', self.vmi11_stands[0].identifier)
+        self.assertEqual('0-316-021-02-1', self.vmi11_stands[1].identifier)
+
+    def test_vmi11_no_measured_trees_flag_means_no_reference_trees_attached(self):
+        for s in self.vmi11_stands_ref_trees_false:
+            self.assertEqual(0, s.reference_trees.size)
+
+    def test_vmi11_strata_flag_true_attaches_strata(self):
+        for s in self.vmi11_stands:
+            self.assertGreaterEqual(s.tree_strata.size, 0)
 
     def test_vmi12_init(self):
         vmi12_builder = self.vmi12_builder()

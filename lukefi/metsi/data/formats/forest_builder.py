@@ -638,10 +638,7 @@ class VMI11Builder(VMIBuilder):
         """Create a ForestStand out of given VMI11 data"""
         result = super().convert_stand_entry(indices, data_row, stand_id)
 
-        result.municipality_id = vmi_util.determine_municipality(
-            data_row[indices["municipality"]],
-            data_row[indices["kitukunta"]],
-        )
+        result.municipality_id = data_row[indices["municipality"]]
 
         result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
         result.start_year = result.year

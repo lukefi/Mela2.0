@@ -215,7 +215,6 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "county": slice(63, 66),          # invalue (Maastotyöalue) — used as region code
     "forestry_centre": slice(66, 68),  # metkes
     "municipality": slice(68, 71),    # kunta
-    "kitukunta": slice(68, 71),
     "height_above_sea_level": slice(82, 87),
     "degree_days": slice(87, 91),
     "owner_group": slice(92, 93),
