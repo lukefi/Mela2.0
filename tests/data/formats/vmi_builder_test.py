@@ -39,7 +39,7 @@ class TestForestBuilder(unittest.TestCase):
 
     def test_vmi12_stand_variables(self):
         # test data coincides with county 21
-        reference_area = round(vmi_const.vmi12_county_areas[21], 4)
+        reference_area = round(vmi_const.VMI12_COUNTY_AREAS[21], 4)
         self.assertEqual(False, self.vmi12_stands[0].auxiliary_stand)
         self.assertEqual(True, self.vmi12_stands[3].auxiliary_stand)
         self.assertEqual(reference_area, self.vmi12_stands[0].area)

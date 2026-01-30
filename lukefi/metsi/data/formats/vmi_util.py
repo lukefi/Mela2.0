@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
-from lukefi.metsi.data.formats.vmi_const import vmi12_county_areas, VMI10_AREA_HA_TABLE
+from lukefi.metsi.data.formats.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -104,22 +104,22 @@ def determine_drainage_feasibility(ojitus_tarve: str) -> bool:
 
 def determine_vmi12_area_ha(lohkomuoto: int, county: int) -> float:
     area_ha = 0.0
-    if county < 1 or county >= len(vmi12_county_areas):
+    if county < 1 or county >= len(VMI12_COUNTY_AREAS):
         raise IndexError
     if county < 17:
-        area_ha = vmi12_county_areas[(county - 1)]
+        area_ha = VMI12_COUNTY_AREAS[(county - 1)]
     elif county == 17 and lohkomuoto == 3:
-        area_ha = vmi12_county_areas[(county - 1)]
+        area_ha = VMI12_COUNTY_AREAS[(county - 1)]
     elif county == 17 and lohkomuoto == 4:
-        area_ha = vmi12_county_areas[county]
+        area_ha = VMI12_COUNTY_AREAS[county]
     elif county == 18:
-        area_ha = vmi12_county_areas[18]
+        area_ha = VMI12_COUNTY_AREAS[18]
     elif county == 19 and lohkomuoto == 4:
-        area_ha = vmi12_county_areas[19]
+        area_ha = VMI12_COUNTY_AREAS[19]
     elif county == 19 and lohkomuoto == 5:
-        area_ha = vmi12_county_areas[20]
+        area_ha = VMI12_COUNTY_AREAS[20]
     elif county == 21:
-        area_ha = vmi12_county_areas[21]
+        area_ha = VMI12_COUNTY_AREAS[21]
     return round(area_ha, 4)
 
 
@@ -851,7 +851,7 @@ def get_vmi10_area_ha(keskus: int, lohkomuoto: int) -> float:
     Returns area_ha for given keskus and lohkomuoto.
     """
     try:
-        return VMI10_AREA_HA_TABLE[keskus][lohkomuoto]
+        return VMI10_COUNTY_AREAS[keskus][lohkomuoto]
     except KeyError as exc:
         raise KeyError(f'No VMI10 area_ha for keskus={keskus}, lohkomuoto={lohkomuoto}') from exc
 

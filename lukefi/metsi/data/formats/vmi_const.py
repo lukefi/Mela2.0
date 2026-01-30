@@ -130,7 +130,6 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "muut_arvot": slice(140, 141),       # muuarvo
     "naturaaluekoodi": slice(141, 142),  # natura
     "fra_class": slice(116, 117),               # fraluo 117
-    "jakso2_ppa": slice(307, 309),  # same as j2ppa (cols 308-309)
     "jakso1_asema": slice(200, 201),                 # jakasema (col 201)
     "jakso1_syntytapa": slice(202, 203),             # syntapa (col 203)
     "jakso1_paapuulaji": slice(203, 205),            # paaplaji (col 204-205)
@@ -146,6 +145,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso1_keskipituus_dm": slice(233, 236),        # keskipit (col 234-236)
     "jakso1_d13ika": slice(237, 240),                # d13ika (col 238-240)
     "jakso1_ikalisays": slice(241, 243),             # ikalis (col 242-243)
+    "jakso2_ppa": slice(307, 309),                   # j2ppa (cols 308-309)
     "jakso2_asema": slice(310, 311),                 # j2asema (col 311)
     "jakso2_syntytapa": slice(312, 313),             # j2syntapa (col 313)
     "jakso2_paapuulaji": slice(313, 315),            # j2paaplaji (col 314-315)
@@ -175,8 +175,6 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "ppa3": slice(292, 295),
     "ppa4": slice(296, 299),
     "ppa5": slice(300, 303),
-    "j2ppa": slice(307, 309),  # jakson 2 ppa
-    "j2asema": slice(311, 311),  # Jakson 2 asema
 }
 
 VMI10_TREE_INDICES: dict[str, slice] = {
@@ -484,7 +482,7 @@ VMI13_STRATUM_INDICES: dict[str, int] = {
 }
 
 
-vmi12_county_areas = [
+VMI12_COUNTY_AREAS = [
     341.144731908512, 333.997181334169, 0.0, 342.095800524934, 344.973457199735, 342.790305010893,
     337.97691292876, 341.680159256802, 344.538163001294, 334.106632294352, 388.636152954809,
     384.104671280277, 387.185442744553, 380.530710444382, 387.55872063968, 391.846213895394,
@@ -501,7 +499,7 @@ species_other_deciduous = ['8', '9', 'B0', 'B1', 'B2', 'B3', 'B4', 'B5', 'B6', '
 species_other_coniferous = ['A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9']
 
 
-VMI10_AREA_HA_TABLE = {
+VMI10_COUNTY_AREAS = {
     0: {
         0: 132.35806,
     },

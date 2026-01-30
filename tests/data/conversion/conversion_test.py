@@ -117,19 +117,19 @@ class TestConversion(test_util.ConverterTestSuite):
 
         for county in range(1, 17):
             self.assertEqual(
-                round(vmi12_county_areas[county - 1], 4),
+                round(VMI12_COUNTY_AREAS[county - 1], 4),
                 vmi_util.determine_vmi12_area_ha(0, county))
 
         assertions = [
             ([2, 17], 0.0),
-            ([3, 17], round(vmi12_county_areas[16], 4)),
-            ([4, 17], round(vmi12_county_areas[17], 4)),
-            ([2, 18], round(vmi12_county_areas[18], 4)),
+            ([3, 17], round(VMI12_COUNTY_AREAS[16], 4)),
+            ([4, 17], round(VMI12_COUNTY_AREAS[17], 4)),
+            ([2, 18], round(VMI12_COUNTY_AREAS[18], 4)),
             ([2, 19], 0.0),
-            ([4, 19], round(vmi12_county_areas[19], 4)),
-            ([5, 19], round(vmi12_county_areas[20], 4)),
+            ([4, 19], round(VMI12_COUNTY_AREAS[19], 4)),
+            ([5, 19], round(VMI12_COUNTY_AREAS[20], 4)),
             ([5, 20], 0.0),
-            ([5, 21], round(vmi12_county_areas[21], 4)),
+            ([5, 21], round(VMI12_COUNTY_AREAS[21], 4)),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi12_area_ha)
 
@@ -146,7 +146,6 @@ class TestConversion(test_util.ConverterTestSuite):
             ([4, 2, 0], 342.975010960105),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi13_area_ha)
-
 
     def test_determine_owner_group(self):
         assertions = [
@@ -441,7 +440,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_tree_management_category)
 
-
     def test_determine_stratum_tree_height(self):
         assertions = [
             (['10'], 1.0),
@@ -469,12 +467,12 @@ class TestConversion(test_util.ConverterTestSuite):
             (['0', '0', 0], (0.0, 0.0)),
             (['0', '1', 0], (10.0, 1.0)),
             (['2', '1', 0], (3.0, 1.0)),
-            (['0','0', 1.0], (1.0, 0.0)),
-            (['0','0', 10.0], (22.0, 14.0)),
-            (['1','0', 10.0], (15.0, 14.0)),
-            (['1','1', 0.0], (2.0, 1.0)),
-            (['.',' ', 0.0], (0.0, 0.0)),
-            (['.',' ', 10.0], (22.0, 14.0)),
+            (['0', '0', 1.0], (1.0, 0.0)),
+            (['0', '0', 10.0], (22.0, 14.0)),
+            (['1', '0', 10.0], (15.0, 14.0)),
+            (['1', '1', 0.0], (2.0, 1.0)),
+            (['.', ' ', 0.0], (0.0, 0.0)),
+            (['.', ' ', 10.0], (22.0, 14.0)),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_stratum_age_values)
 
