@@ -821,6 +821,8 @@ class VMI12Builder(VMIBuilder):
                 indices,
                 True,  # VMI12 True
             )
+        else:
+            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
 
         # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
@@ -953,6 +955,8 @@ class VMI13Builder(VMIBuilder):
                 indices,
                 False,  # VMI13
             )
+        else:
+            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
 
         # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
