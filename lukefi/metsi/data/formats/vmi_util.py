@@ -926,9 +926,9 @@ def append_vmi10_strata_from_stand_row(
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
     jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
 
-    def emit_stratum(
-        seg_no: int,
-        local_no: int,
+    running_numb = 0
+
+    def emit_stratum_vmi10(
         species_code_raw: str,
         share_raw: str,
         seg_stems1000_raw: str,
@@ -940,6 +940,7 @@ def append_vmi10_strata_from_stand_row(
         seg_asema_raw: str,
         seg_ppa_total: float,
     ):
+        nonlocal running_numb
         species_code = (species_code_raw or "").strip()
         if not species_code or species_code in (".", "0"):
             return
@@ -959,7 +960,8 @@ def append_vmi10_strata_from_stand_row(
         syntytapa = _parse_int0(seg_syntytapa_raw)  # NOTE: raw unless you already have a mapping
         storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
 
-        identifier = f"{stand_identifier}_vmi10_{seg_no}_{local_no}"
+        running_numb += 1
+        identifier = f"{stand_identifier}_{running_numb}_stratum"
 
         values = {
             "identifier": identifier,
@@ -988,6 +990,7 @@ def append_vmi10_strata_from_stand_row(
             attr.setdefault(k, []).append(v)
 
     # Jaksot 1 ja 2
+
     for seg_no in (1, 2):
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
@@ -1001,17 +1004,15 @@ def append_vmi10_strata_from_stand_row(
         ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
 
         # main + 3 side species
-        emit_stratum(seg_no, 1,
-                     stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
-                     stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
-                     stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-                     )
+        emit_stratum_vmi10(stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
+                           stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
+                           stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+                           )
         for j in (1, 2, 3):
-            emit_stratum(seg_no, 1 + j,
-                         stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
-                         stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
-                         stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-                         )
+            emit_stratum_vmi10(stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
+                               stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
+                               stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
+                               )
 
 
 def append_vmi9_strata_from_stand_row(
@@ -1031,9 +1032,9 @@ def append_vmi9_strata_from_stand_row(
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
     jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
 
-    def emit_stratum(
-        seg_no: int,
-        local_no: int,
+    running_numb = 0
+
+    def emit_stratum_vmi9(
         species_code_raw: str,
         share_raw: str,
         seg_stems1000_raw: str,
@@ -1045,6 +1046,7 @@ def append_vmi9_strata_from_stand_row(
         seg_asema_raw: str,
         seg_ppa_total: float,
     ):
+        nonlocal running_numb
         species_code = (species_code_raw or "").strip()
         if not species_code or species_code in (".", "0"):
             return
@@ -1064,7 +1066,8 @@ def append_vmi9_strata_from_stand_row(
         syntytapa = _parse_int0(seg_syntytapa_raw)
         storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
 
-        identifier = f"{stand_identifier}_vmi9_{seg_no}_{local_no}"
+        running_numb += 1
+        identifier = f"{stand_identifier}_{running_numb}_stratum"
 
         values = {
             "identifier": identifier,
@@ -1115,24 +1118,21 @@ def append_vmi9_strata_from_stand_row(
         siv2_t = max(0, 10 - main_t - siv1_t)
 
         # Emit main
-        emit_stratum(
-            seg_no, 1,
+        emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
             str(main_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
 
         # Emit sivulaji1
-        emit_stratum(
-            seg_no, 2,
+        emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_sivulaji1"]],
             str(siv1_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
 
         # Emit sivulaji2 with calculated osuus
-        emit_stratum(
-            seg_no, 3,
+        emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_sivulaji2"]],
             str(siv2_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
