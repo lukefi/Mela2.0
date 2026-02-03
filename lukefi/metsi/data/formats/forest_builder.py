@@ -653,12 +653,20 @@ class VMI11Builder(VMIBuilder):
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
         result.region = util.parse_int(data_row[indices["county"]])
 
-        area_ha = util.get_or_default(util.parse_type(data_row[indices["area_ha"]], float), 0.0)
+        area_ha = vmi_util.determine_vmi11_area_ha(
+            vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
+            int(data_row[indices["lohkomuoto"]]),
+            data_row[indices["area_ha"]],
+            inventointitunnus=data_row[indices["inventointitunnus"]],
+            lohy_raw=data_row[indices["section_y"]],
+            ahvkeilaus=data_row[indices["ahvkeilaus"]],
+        )
+        result.set_area(area_ha)
+
         result.area_weight_factors = vmi_util.determine_area_factors(
             data_row[indices["osuus7m"]],
             data_row[indices["osuusrel"]],
         )
-        result.set_area(area_ha)
 
         lat = util.parse_type(data_row[indices["lat"]], float)
         lon = util.parse_type(data_row[indices["lon"]], float)

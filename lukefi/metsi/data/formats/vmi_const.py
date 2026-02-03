@@ -200,10 +200,12 @@ VMI10_TREE_INDICES: dict[str, slice] = {
 
 
 VMI11_STAND_INDICES: dict[str, slice] = {
+    "inventointitunnus": slice(0, 1),  # (K=kerta, P=pysyvä)
     "lohkomuoto": slice(1, 2),
     "section_y": slice(2, 5),
     "section_x": slice(5, 8),
     "test_area_number": slice(9, 11),
+    "ahvkeilaus": slice(11, 12),
     "stand_number": slice(12, 13),  # kuvio
     "row_type": slice(13, 14),      # tielaji
     "lat": slice(18, 25),  # pkoo
@@ -542,5 +544,56 @@ VMI10_COUNTY_AREAS = {
     },
     13: {
         4: 850.52940,
+    },
+}
+
+"""indeksit: metskeskusnumero, lohkomuoto. Määrittävät kuvion pinta-alan (palautuva arvo)"""
+VMI11_COUNTY_AREAS = {
+    0: {
+        300: 100.39,
+        400: 148.78,
+    },
+    1: {
+        1: 350.45,
+        2: 309.27,
+    },
+    2: {
+        2: 314.34,
+    },
+    3: {
+        2: 316.02,
+    },
+    4: {
+        2: 312.38,
+    },
+    5: {
+        2: 322.11,
+    },
+    6: {
+        2: 310.01,
+    },
+    7: {
+        1: 333.30,
+    },
+    8: {
+        1: 335.54,
+    },
+    9: {
+        1: 337.12,
+    },
+    10: {
+        1: 336.79,
+    },
+    11: {
+        3: 417.47,
+    },
+    12: {
+        1: 339.89,
+        3: 420.20,
+        4: 874.84,
+    },
+    13: {
+        4: 840.94,
+        5: 10308.80,
     },
 }

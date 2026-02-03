@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
-from lukefi.metsi.data.formats.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS
+from lukefi.metsi.data.formats.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS, VMI11_COUNTY_AREAS
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -961,14 +961,14 @@ def append_vmi10_strata_from_stand_row(
         storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
 
         running_numb += 1
-        identifier = f"{stand_identifier}_{running_numb}_stratum"
+        identifier = f"{stand_identifier}-{running_numb}-stratum"
 
         values = {
             "identifier": identifier,
             "species": int(species),
             "mean_diameter": mean_diameter,
             "mean_height": mean_height,
-            "breast_height_age": age,      # (best available in VMI10)
+            "breast_height_age": _parse_int0(seg_d13_age_raw),
             "biological_age": age,
             "stems_per_ha": stems_per_ha,
             "basal_area": basal_area,
@@ -1067,14 +1067,14 @@ def append_vmi9_strata_from_stand_row(
         storey = determine_storey_for_vmi10_jakso_asema(seg_asema_raw)
 
         running_numb += 1
-        identifier = f"{stand_identifier}_{running_numb}_stratum"
+        identifier = f"{stand_identifier}-{running_numb}-stratum"
 
         values = {
             "identifier": identifier,
             "species": int(species),
             "mean_diameter": mean_diameter,
             "mean_height": mean_height,
-            "breast_height_age": age,
+            "breast_height_age": _parse_int0(seg_d13_age_raw),
             "biological_age": age,
             "stems_per_ha": stems_per_ha,
             "basal_area": basal_area,
@@ -1137,3 +1137,71 @@ def append_vmi9_strata_from_stand_row(
             str(siv2_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
+
+
+def determine_vmi11_area_ha(
+    forestry_centre: int,
+    lohkomuoto: int,
+    eduala_raw: str,
+    inventointitunnus: str | None = None,
+    lohy_raw: str | None = None,
+    ahvkeilaus: str | None = None,
+) -> float:
+    """
+    Determine stand area_ha for VMI11.
+
+    Default:
+      - area_ha = eduala with 5 decimals
+
+    Lookup:
+      - Normal lohkomuoto osite in {1,2,3,4} -> lookup from VMI11_COUNTY_AREAS
+      - Ahvenanmaa special osite in {300,400} -> lookup from VMI11_COUNTY_AREAS (metkes=0 row)
+
+    Ahvenanmaa rules:
+      - inventointitunnus = P and ahvkeilaus = A => osite 300 => area 100.39
+      - inventointitunnus = P and ahvkeilaus = B => osite 400 => area 148.78
+      - inventointitunnus = K and lohy(1:1) = 3 => osite 300 => area 100.39
+      - inventointitunnus = K and lohy(1:1) = 4 => osite 400 => area 148.78
+    """
+    default_area_ha = parse_vmi_area_ha(eduala_raw)
+
+    inv = (inventointitunnus or "").strip().upper()
+    ak = (ahvkeilaus or "").strip().upper()
+    lohy_first = ((lohy_raw or "").strip()[:1] or "")
+
+    # --- Ahvenanmaa override: force lookup using metkes=0 and osite 300/400 ---
+    if inv == "P" and ak in ("A", "B"):
+        osite = 300 if ak == "A" else 400
+        return round(get_vmi11_area_ha(0, osite), 4)
+
+    if inv == "K" and lohy_first in ("3", "4"):
+        osite = 300 if lohy_first == "3" else 400
+        return round(get_vmi11_area_ha(0, osite), 4)
+
+    # --- Normal logic ---
+    osite = lohkomuoto
+    use_lookup = (1 <= osite <= 4) or (forestry_centre == 0)
+
+    if not use_lookup:
+        return round(default_area_ha, 4)
+
+    try:
+        return round(get_vmi11_area_ha(forestry_centre, osite), 4)
+    except KeyError as exc:
+        raise MetsiException(
+            f"No area_ha lookup value for VMI11: metkes={forestry_centre}, osite={osite}. "
+            f"inventointitunnus={inv!r}, lohy={lohy_raw!r}, ahvkeilaus={ak!r}, lohkomuoto={lohkomuoto}."
+        ) from exc
+
+
+def get_vmi11_area_ha(forestry_centre: int, osite: int) -> float:
+    """
+    VMI11 area lookup.
+    Returns area_ha for given metkes (forestry_centre) and osite (lohkomuoto / 300 / 400).
+    """
+    try:
+        return VMI11_COUNTY_AREAS[forestry_centre][osite]
+    except KeyError as exc:
+        raise KeyError(
+            f"No VMI11 area_ha for metkes={forestry_centre}, osite={osite}"
+        ) from exc
