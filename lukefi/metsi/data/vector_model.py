@@ -42,7 +42,8 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "tree_number": np.int32,
     "storey": np.int32,
     "sapling_stems_per_ha": np.float64,
-    "number_of_generated_trees": np.int32
+    "number_of_generated_trees": np.int32,
+    "asema": np.int16
 }
 
 
@@ -255,11 +256,6 @@ class ReferenceTree:
     stems_per_ha: float
     origin: Origin
     management_category: int
-    saw_log_volume_reduction_factor: float
-    pruning_year: int
-    age_when_10cm_diameter_at_breast_height: int
-    stand_origin_relative_position: tuple[float, float]
-    lowest_living_branch_height: float
     tree_category: str
     storey: Storey
     sapling: bool
@@ -316,12 +312,6 @@ class ReferenceTrees(VectorData):
             self.stems_per_ha[i],
             Origin(self.origin[i]),
             self.management_category[i],
-            self.saw_log_volume_reduction_factor[i],
-            self.pruning_year[i],
-            self.age_when_10cm_diameter_at_breast_height[i],
-            (self.stand_origin_relative_position[i][0],
-             self.stand_origin_relative_position[i][1]),
-            self.lowest_living_branch_height[i],
             self.tree_category[i],
             Storey(self.storey[i]),
             self.sapling[i],
@@ -375,6 +365,24 @@ class ReferenceTrees(VectorData):
         ]
 
 
+@dataclass
+class TreeStratum:
+    identifier: str
+    species: TreeSpecies
+    mean_diameter: float
+    mean_height: float
+    breast_height_age: float
+    biological_age: float
+    stems_per_ha: float
+    basal_area: float
+    origin: Origin
+    tree_number: int
+    storey: Storey
+    sapling_stems_per_ha: float
+    number_of_generated_trees: int
+    asema: int
+
+
 class TreeStrata(VectorData):
     identifier: npt.NDArray[np.str_]
     species: npt.NDArray[np.int32]
@@ -389,6 +397,7 @@ class TreeStrata(VectorData):
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     number_of_generated_trees: npt.NDArray[np.int32]
+    asema: npt.NDArray[np.int16]
 
     def __init__(self):
         super().__init__(DTYPES_STRATA)
@@ -400,6 +409,24 @@ class TreeStrata(VectorData):
                                                        getattr(other, attribute_name)), axis=0))
         retval._recompute_size()
         return retval
+
+    def get_stratum(self, i: int) -> TreeStratum:
+        return TreeStratum(
+            self.identifier[i],
+            TreeSpecies(self.species[i]),
+            self.mean_diameter[i],
+            self.mean_height[i],
+            self.breast_height_age[i],
+            self.biological_age[i],
+            self.stems_per_ha[i],
+            self.basal_area[i],
+            Origin(self.origin[i]),
+            self.tree_number[i],
+            Storey(self.storey[i]),
+            self.sapling_stems_per_ha[i],
+            self.number_of_generated_trees[i],
+            self.asema[i]
+        )
 
     def as_internal_csv_row(self, i) -> list[str]:
         return [
