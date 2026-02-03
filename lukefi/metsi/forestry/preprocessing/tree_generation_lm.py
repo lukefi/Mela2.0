@@ -3,7 +3,7 @@ from pathlib import Path
 from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import TreeStratum, ReferenceTree
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 
 lm_tree_generation_loaded = False  # pylint: disable=invalid-name
 # Pylint thinks all module scope variables are constants
@@ -21,7 +21,7 @@ def tree_generation_lm(
         stratum: TreeStratum,
         degree_days: float,
         stand_basal_area: float,
-        **params) -> list[ReferenceTree]:
+        **params) -> ReferenceTrees:
     global lm_tree_generation_loaded  # pylint: disable=global-statement # Not viable to change current implementation.
     dir_ = Path(__file__).parent.parent.resolve() / "r"
     growth_script_file = dir_ / "lm_tree_generation.R"
@@ -59,15 +59,22 @@ def tree_generation_lm(
         shdef=params.get('lm_shdef', 5),
         shinit=0.1)
 
-    trees = []
+    # trees = []
+    trees = ReferenceTrees(result_df.nrow)
     for i in range(result_df.nrow):
-        trees.append(ReferenceTree(
-            breast_height_diameter=result_df.rx2(9)[i],
-            stems_per_ha=result_df.rx2(10)[i],
-            height=result_df.rx2(11)[i],
-            species=stratum.species,
-            biological_age=stratum.biological_age,
-            sapling=result_df.rx2(11)[i] < 1.3
-        ))
+        # trees.append(ReferenceTree(
+        #     breast_height_diameter=result_df.rx2(9)[i],
+        #     stems_per_ha=result_df.rx2(10)[i],
+        #     height=result_df.rx2(11)[i],
+        #     species=stratum.species,
+        #     biological_age=stratum.biological_age,
+        #     sapling=result_df.rx2(11)[i] < 1.3
+        # ))
+        trees.breast_height_diameter[i] = result_df.rx2(9)[i]
+        trees.stems_per_ha[i] = result_df.rx2(10)[i]
+        trees.height[i] = result_df.rx2(11)[i]
+        trees.species[i] = stratum.species
+        trees.biological_age[i] = stratum.biological_age
+        trees.sapling[i] = result_df.rx2(11)[i] < 1.3
 
     return trees
