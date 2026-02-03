@@ -8,7 +8,7 @@
 """
 import math
 from typing import Optional
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 
 
 # ---- Weibull distribution model ----
@@ -32,7 +32,7 @@ def weibull_coeffs(diameter: float, basal_area: float, min_diameter: Optional[fl
 
 
 def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
-            min_diameter: Optional[float] = None) -> list[ReferenceTree]:
+            min_diameter: Optional[float] = None) -> ReferenceTrees:
     """ Computes Stems per hectare and diameter for given number of refernece trees.
         The values are driven from the Weibull distribution.
 
@@ -55,9 +55,10 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 
     f1 = 0.0
     xx = a
-    result = []
+    # result = []
+    result = ReferenceTrees(n_samples)
     # For each sample pick-up stems per hectare from Weibull distribution
-    for _ in range(1, n_samples + 1):
+    for i in range(1, n_samples + 1):
         xx = xx + interval
         computed_diameter = xx - (interval / 2.0)
         if height < 1.3:
@@ -74,33 +75,13 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
         stems = (12732.4 * basal_area) / math.pow(computed_diameter, 2.0)
         stems_per_sample = p * stems
 
-        reference_tree = ReferenceTree()
-        reference_tree.stems_per_ha = stems_per_sample
-        reference_tree.breast_height_diameter = computed_diameter
+        # reference_tree = ReferenceTree()
+        # reference_tree.stems_per_ha = stems_per_sample
+        # reference_tree.breast_height_diameter = computed_diameter
+        # result.append(reference_tree)
 
-        result.append(reference_tree)
-    return result
-
-
-# ---- Simple height distribution model ----
-
-# NOTE: Debricated, only for test purposes
-def simple_height_distribution(stratum: TreeStratum, n_trees: int) -> list[ReferenceTree]:
-    """ Generate N trees from tree stratum.
-
-    For a single tree, height and diameter are obtained from stratum.
-    The stem count for single reference tree is the fraction of stratums total stem count.
-    NOTE: that the stem count for all trees is even.
-    NOTE: for testing and alternative for sapling weibull distributions
-    """
-    stems_per_tree = stratum.stems_per_ha / n_trees
-    result = []
-    for _ in range(n_trees):
-        reference_tree = ReferenceTree()
-        reference_tree.height = stratum.mean_height
-        reference_tree.breast_height_diameter = stratum.mean_diameter
-        reference_tree.stems_per_ha = stems_per_tree
-        result.append(reference_tree)
+        result.stems_per_ha[i] = stems_per_sample
+        result.breast_height_diameter[i] = computed_diameter
     return result
 
 
@@ -139,10 +120,10 @@ def diameter_model_siipilehto(height_rt: float, height: float, diameter: float, 
 
 
 def predict_sapling_diameters(
-        reference_trees: list[ReferenceTree],
+        reference_trees: ReferenceTrees,
         height: float,
         diameter: float,
-        dominant_height: float) -> list[ReferenceTree]:
+        dominant_height: float) -> ReferenceTrees:
     """ Logic for predicting sapling diameters.
 
     Diameters are predicted via Valkonen's diameter height model or Siipilehto's diameter model.
@@ -153,24 +134,29 @@ def predict_sapling_diameters(
     diameter: Mean diameter of stratum (cm)
     return: Updated list of reference trees containing diameters (cm).
     """
-    for rt in reference_trees:
-        if rt.has_height_over_130_cm() and height > 1.3 and diameter:
+    # for rt in reference_trees:
+    for i in range(len(reference_trees)):
+        # if rt.has_height_over_130_cm() and height > 1.3 and diameter:
+        if reference_trees.height[i] > 1.3 and height > 1.3 and diameter:
             di = diameter_model_siipilehto(
-                rt.height,
+                reference_trees.height[i],  # rt.height,
                 height,
                 diameter,
                 dominant_height
             )
-        elif rt.height >= 1.3 and (height >= 1.3 or not diameter):
-            di = diameter_model_valkonen(rt.height)
+        # elif rt.height >= 1.3 and (height >= 1.3 or not diameter):
+        elif reference_trees.height[i] >= 1.3 and (height >= 1.3 and not diameter):
+            # di = diameter_model_valkonen(rt.height)
+            di = diameter_model_valkonen(reference_trees.height[i])
         else:
             # rt.height <= 1.3 and other cases
             di = 0.0
-        rt.breast_height_diameter = di
+        # rt.breast_height_diameter = di
+        reference_trees.breast_height_diameter[i] = di
     return reference_trees
 
 
-def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_trees: int) -> list[ReferenceTree]:
+def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_trees: int) -> ReferenceTrees:
     """Formulates weibull height distribution of sapling stratum and the number of stems of the trees
 
     References: Siipilehto, J. 2009, Modelling stand structure in young Scots pine dominated stands.
@@ -187,8 +173,8 @@ def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_
     if dominant_height <= height:
         dominant_height = 1.05 * height
 
-    Ph = 0
-    Nh = 0
+    Ph = 0.0
+    Nh = 0.0
 
     # Weibull parameters Generalized Linear Model (look Cao 2004)
     # With GLM model, fitting the distribution to treewise data and
@@ -223,22 +209,27 @@ def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_
     classN = 1 / float(n_trees)    # stem number from class border
     Nh = stem_count / float(n_trees)        # frequency
     classH = classN / 2          # for the class center
-    result = []
 
+    # result = []
+    result = ReferenceTrees(n_trees)
     for i in range(n_trees):
-        reference_tree = ReferenceTree()
+        # reference_tree = ReferenceTree()
         Ph = float(i + 1) * classN - classH         # class center
         # picking up height from the cumulative Weibull distribution. Analytical solution.
         hi = b * (-math.log(1.0 - Ph))**(1.0 / c) + a
-        reference_tree.height = round(hi, 2)
+        # reference_tree.height = round(hi, 2)
+        result.height[i] = round(hi, 2)
 
-        reference_tree.stems_per_ha = Nh
-        reference_tree.sapling = True
-        result.append(reference_tree)
+        # reference_tree.stems_per_ha = Nh
+        # reference_tree.sapling = True
+        # result.append(reference_tree)
+        result.stems_per_ha[i] = Nh
+        result.sapling[i] = True
+
     return result
 
 
-def sapling_height_distribution(stratum: TreeStratum, dominant_height: float, n_trees: int) -> list[ReferenceTree]:
+def sapling_height_distribution(stratum: TreeStratum, dominant_height: float, n_trees: int) -> ReferenceTrees:
     """Formulates height distribution of sapling stratum and predicts the diameters and the number of stems of the
     simulation trees
     References: Siipilehto, J. 2009, Modelling stand structure in young Scots pine dominated stands.
@@ -248,18 +239,19 @@ def sapling_height_distribution(stratum: TreeStratum, dominant_height: float, n_
     """
     if n_trees == 1:
         # single tree:
-        reference_tree = ReferenceTree()
-        reference_tree.breast_height_diameter = stratum.mean_diameter
-        reference_tree.height = stratum.mean_height
-        reference_tree.stems_per_ha = stratum.stems_per_ha
-        return [reference_tree]
+        # reference_tree = ReferenceTree()
+        # reference_tree.breast_height_diameter = stratum.mean_diameter
+        # reference_tree.height = stratum.mean_height
+        # reference_tree.stems_per_ha = stratum.stems_per_ha
+        # return [reference_tree]
+        retval = ReferenceTrees()
+        retval.vectorize({"breast_height_diameter": [stratum.mean_diameter],
+                          "height": [stratum.mean_height],
+                          "stems_per_ha": [stratum.stems_per_ha]})
+        return retval
+
     # more than one trees
-    result = weibull_sapling(
-        stratum.mean_height,
-        stratum.stems_per_ha,
-        dominant_height,
-        n_trees
-    )
+    result = weibull_sapling(stratum.mean_height, stratum.stems_per_ha, dominant_height, n_trees)
     dominant_height = 1.05 * stratum.mean_height
     return predict_sapling_diameters(
         result,
