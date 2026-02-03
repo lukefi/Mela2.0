@@ -54,9 +54,9 @@ class VectorData():
     dtypes: dict[str, npt.DTypeLike]
     size: int
 
-    def __init__(self, dtypes: dict[str, npt.DTypeLike]):
+    def __init__(self, dtypes: dict[str, npt.DTypeLike], size: int = 0):
         self.dtypes = dtypes
-        self.vectorize({})
+        self.vectorize({"identifier": [""] * size})
 
     def __len__(self):
         return self.size
@@ -288,8 +288,8 @@ class ReferenceTrees(VectorData):
     volume: npt.NDArray[np.float64]
     stratum: npt.NDArray[np.str_]
 
-    def __init__(self):
-        super().__init__(DTYPES_TREE)
+    def __init__(self, size: int = 0):
+        super().__init__(DTYPES_TREE, size)
 
     def __add__(self, other: "ReferenceTrees") -> "ReferenceTrees":
         retval = ReferenceTrees()
@@ -382,6 +382,13 @@ class TreeStratum:
     number_of_generated_trees: int
     asema: int
 
+    def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
+        if self.breast_height_age is not None and self.breast_height_age > 0.0:
+            return self.breast_height_age
+        if self.biological_age is not None and self.biological_age > 0.0:
+            new_breast_height_age = self.biological_age - subtrahend
+            return 0.0 if new_breast_height_age <= 0.0 else new_breast_height_age
+        return 0.0
 
 class TreeStrata(VectorData):
     identifier: npt.NDArray[np.str_]
@@ -399,8 +406,8 @@ class TreeStrata(VectorData):
     number_of_generated_trees: npt.NDArray[np.int32]
     asema: npt.NDArray[np.int16]
 
-    def __init__(self):
-        super().__init__(DTYPES_STRATA)
+    def __init__(self, size: int = 0):
+        super().__init__(DTYPES_STRATA, size)
 
     def __add__(self, other: "TreeStrata") -> "TreeStrata":
         retval = TreeStrata()
