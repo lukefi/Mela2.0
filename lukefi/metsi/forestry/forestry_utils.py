@@ -3,11 +3,7 @@ from collections.abc import Callable
 from typing import Optional
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.data.vector_model import (
-    ReferenceTrees as VectorReferenceTrees,
-    TreeStrata as VectorTreeStrata,
-)
+from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
 def calculate_basal_area(tree: ReferenceTree) -> float:
@@ -78,23 +74,23 @@ def find_matching_stratum_by_diameter_lm(
     candidate = min(
         strata,
         # R-koodin mukaisesti puuttuva dgm <- 0
-        key=lambda stratum: 0 if stratum.mean_diameter is None else abs(
+        key=lambda stratum: 0 if stratum.mean_diameter == 0 else abs(
             reference_tree.breast_height_diameter - stratum.mean_diameter),
         default=None
     )
     if candidate is None:
         return None
 
-    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter is not None else reference_tree.breast_height_diameter
+    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter is not None \
+        else reference_tree.breast_height_diameter
     lower = candidate_dgm / threshold
     upper = candidate_dgm * threshold
     if lower <= reference_tree.breast_height_diameter <= upper:
         return candidate
-    else:
-        return None
+    return None
 
 
-def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, list]:
+def split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """ Splits a list into two lists based on a predicate.
 
     :param items: list to be split
@@ -121,12 +117,12 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
     :return:
     """
     # e.	Jos koivulle ei ole oman puulajin ositetta, kohdistetaan se toisen koivulajin ositteeseen,
-    #   jos sellainen on.
+    #       jos sellainen on.
     # f.	Jos havupuulle ei ole olemassa oman puulajin ositetta, kohdistetaan se jonkin muun havupuun ositteeseen.
-    # g.	Jos lehtipuulle ei ole oman puulajin ositetta eikä koivulle koivuositetta, kohdistetaan se jonkun muun lehtipuun ositteeseen.
-    #   Koivuositteeseen ei kuitenkaan kohdisteta muita kuin koivuja.
+    # g.	Jos lehtipuulle ei ole oman puulajin ositetta eikä koivulle koivuositetta, kohdistetaan se jonkun muun
+    #       lehtipuun ositteeseen. Koivuositteeseen ei kuitenkaan kohdisteta muita kuin koivuja.
 
-    candidates = []
+    candidates: list[TreeStratum] = []
 
     if species.is_deciduous():
         if species == TreeSpecies.DOWNY_BIRCH:
@@ -148,14 +144,18 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
 
 def find_matching_storey_stratum_for_tree(
         tree: ReferenceTree,
-        strata: list[TreeStratum],
-        diameter_threshold=3) -> Optional[TreeStratum]:
+        strata: TreeStrata,
+        diameter_threshold=3) -> Optional[str]:
     # a.	Tarkista, että puu on inventoinnissa mitattu (puutyypit vaihtelee inventointien välillä)
-    #   ja se on elävä (elävillä puilla puuluokka on numeerinen).
-    if not tree.is_measured_type() or not tree.is_living():
+    #       ja se on elävä (elävillä puilla puuluokka on numeerinen).
+    if tree.tree_type not in ("", "V", "Y", "U", "S", "T", "N", " ") or \
+            tree.tree_category not in ("", "0", "1", "3", "4", "5", "6", "7", "8", "9"):
         return None
 
-    same_storey_strata = [stratum for stratum in strata if storey_match(stratum, tree)]
+    same_storey_strata = [
+        strata.get_stratum(i) for i in range(
+            len(strata)) if storey_match(
+            strata.get_stratum(i), tree)]
     same_species_strata, other_species_strata = split_list_by_predicate(
         same_storey_strata,
         lambda stratum: stratum.species == tree.species)
@@ -174,29 +174,30 @@ def find_matching_storey_stratum_for_tree(
     #       R-koodissa kerroin = 3.
 
     if len(candidate_strata) > 0:
-        strata_with_diameter = filter(lambda stratum: stratum.has_diameter(), candidate_strata)
         selected_stratum = find_matching_stratum_by_diameter_lm(tree, candidate_strata, diameter_threshold)
     else:
         selected_stratum = None
 
-    return selected_stratum
+    return selected_stratum.identifier if selected_stratum is not None else None
 
 
 def storey_match(stratum: TreeStratum, tree: ReferenceTree):
     # b.	Puu voidaan kohdistaa vain ositteeseen jonka jaksotieto vastaa puun latvuskerrostietoa.
     # c.	Jättöpuu (latvuskerroskoodi kirjain) voidaan kohdistaa vain jättöylispuujaksoon
-    #   (koodit F ja G), ja jättöpuujaksoon voidaan kohdistaa vain jättöpuita.
-    #   Vallitsevan jakson ja alikasvoksen jättöpuut jäävät aina kohdentamatta, koska
-    #   VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
+    #       (koodit F ja G), ja jättöpuujaksoon voidaan kohdistaa vain jättöpuita.
+    #       Vallitsevan jakson ja alikasvoksen jättöpuut jäävät aina kohdentamatta, koska
+    #       VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
 
     # |puu$latker=="E") { # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
     if tree.latvuskerros == "5":
-        return stratum.asema == 5 or stratum.asema == 6 or stratum.asema == 9
-    elif tree.latvuskerros == "6" or tree.latvuskerros == "7":  # ylispuujakso, ei jättöpuu
-        return stratum.asema == 2 or stratum.asema == 4
-    elif tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
+        # return stratum.asema == 5 or stratum.asema == 6 or stratum.asema == 9
+        return stratum.asema in (5, 6, 9)
+    # if tree.latvuskerros == "6" or tree.latvuskerros == "7":  # ylispuujakso, ei jättöpuu
+    if tree.latvuskerros in ("6", "7"):
+        # return stratum.asema == 2 or stratum.asema == 4
+        return stratum.asema in (2, 4)
+    if tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
         return stratum.asema == 3
-    elif tree.latvuskerros in ("2", "3", "4"):  # valitseva jakso
+    if tree.latvuskerros in ("2", "3", "4"):  # valitseva jakso
         return stratum.asema <= 1
-    else:
-        return False
+    return False
