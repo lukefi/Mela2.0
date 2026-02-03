@@ -252,11 +252,12 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                 print()
                 raise e
 
-            stand_tree_count = len(new_trees)
-            for i in range(len(stratum_trees)):
-                stratum_trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
+            if stratum_trees is not None:
+                stand_tree_count = len(new_trees)
+                for i in range(len(stratum_trees)):
+                    stratum_trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
 
-            new_trees = new_trees + stratum_trees
+                new_trees = new_trees + stratum_trees
 
         # lisätään irralliset säästöpuut
         if add_retention_trees:
