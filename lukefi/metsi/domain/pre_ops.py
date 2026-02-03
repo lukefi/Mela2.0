@@ -213,25 +213,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     for i, stand in enumerate(stands):
         print(f"\rGenerating trees for stand {stand.identifier}    {i}/{len(stands)}", end="")
 
-        # retention_trees = []
-        # stand_trees = sorted(stand.reference_trees_pre_vec, key=lambda tree: tree.identifier)
-
-        # for tree in stand_trees:
-        #     stratum = find_matching_storey_stratum_for_tree(tree,
-        #                                                     stand.tree_strata,
-        #                                                     stratum_association_diameter_threshold)
-        #     if stratum is None:
-        #         if add_retention_trees and tree.management_category == 2 and tree.tree_type in (
-        #                 None, "V", "Y", "U", "S", "T", "N", " ") and tree.is_living():
-        #             # ositteisiin kuulumattomat säästöpuut
-        #             retention_trees.append(tree)
-        #         continue
-
-        #     if stratum.__dict__.get('_trees') is not None:
-        #         stratum._trees.append(tree)
-        #     else:
-        #         stratum._trees = [tree]
-
         tree_ordering = np.argsort(stand.reference_trees.identifier)
 
         stand.reference_trees = stand.reference_trees[tree_ordering]
@@ -251,33 +232,12 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                 trees.tree_type, ("", "V", "Y", "U", "S", "T", "N", " ")) & np.isin(
                 trees.tree_category, ("", "0", "1", "3", "7"))
 
-        # stand.tree_strata.sort(key=lambda stratum: stratum.identifier)
-
         stratum_ordering = np.argsort(stand.tree_strata.identifier)
         stand.tree_strata = stand.tree_strata[stratum_ordering]
         strata = stand.tree_strata
 
         # new_trees = []
         new_trees = ReferenceTrees()
-
-        # for stratum in stand.tree_strata:
-        #     stratum_trees = []
-        #     try:
-        #         stratum_trees = tree_generation.reference_trees_from_tree_strata(stratum, **operation_params)
-        #     except Exception as e:
-        #         print(
-        #             f"\nError generating trees for stratum {
-        #                 stratum.identifier} with diameter {
-        #                 stratum.mean_diameter}, height {
-        #                 stratum.mean_height}, basal_area {
-        #                 stratum.basal_area}")
-        #         print()
-        #         raise e
-
-        #     stand_tree_count = len(new_trees)
-        #     for i, tree in enumerate(stratum_trees):
-        #         tree.identifier = "{}-{}-tree".format(stand.identifier, stand_tree_count + i + 1)
-        #         new_trees.append(tree)
 
         for stratum in (strata.get_stratum(i) for i in range(len(strata))):
             try:
@@ -302,13 +262,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         if add_retention_trees:
             _adjust_retention_trees(stand, new_trees, retention_trees_mask)
         if operation_params.get('age_model', False):
-            # for t in new_trees:
-            #     if t.breast_height_diameter > 0:
-            #         breast_height_age, biological_age = ages(stand, t, 10, new_trees + retention_trees)
-            #         t.breast_height_age = round(breast_height_age, 1)
-            #         t.biological_age = round(biological_age, 1)
-            # adjust_ages(stand, new_trees)
-
             for i in range(len(new_trees)):
                 if new_trees.breast_height_diameter[i] > 0:
                     breast_height_age, biological_age = ages(
@@ -316,11 +269,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                     new_trees.breast_height_age[i] = round(breast_height_age, 1)
                     new_trees.biological_age[i] = round(biological_age, 1)
             _adjust_ages(stand, new_trees)
-
-        # for t in np.where(retention_trees_mask)[0]:
-        #     new_trees.append(t)
-        #     new_stratum = generate_stratum_from_retention_tree(t, stand.identifier, len(stand.tree_strata))
-        #     stand.tree_strata.append(new_stratum)
 
         retention_trees = trees[retention_trees_mask]
         new_trees = new_trees + retention_trees
