@@ -139,7 +139,7 @@ def _adjust_retention_trees(stand: ForestStand,
 
         if g_stratum_scaled < 1 and g_stratum <= 1:
             scale_factor_stratum = 1
-        elif g_stratum_scaled < 1 and g_stratum > 1:
+        elif g_stratum_scaled < 1 < g_stratum:
             if g_stratum_retention == 0:
                 scale_factor_stratum = 1 / g_stratum
             elif g_stratum_retention < 1:
