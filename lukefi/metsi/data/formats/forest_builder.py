@@ -55,7 +55,8 @@ def _append_stratum_row(
     basal_area = util.parse_type(row[indices["basal_area"]], float)
     tree_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
-
+    asema = util.parse_type(row[indices["stratum_rank"]], int)
+    
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
 
@@ -73,6 +74,7 @@ def _append_stratum_row(
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
+        "asema": asema
     }
 
     # Always append in DTYPES_STRATA order
