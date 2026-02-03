@@ -1,6 +1,6 @@
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Optional, overload, override
+from typing import Any, Optional, overload
 import numpy as np
 import numpy.typing as npt
 
