@@ -1,6 +1,6 @@
 """ Module contains tree generation logic that uses distribution based tree generation models
 (see. distributions module) """
-from enum import Enum
+from enum import StrEnum
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ReferenceTree, TreeStratum
@@ -16,7 +16,7 @@ from lukefi.metsi.data.vector_model import (
 )
 
 
-class TreeStrategy(Enum):
+class TreeStrategy(StrEnum):
     WEIBULL_DISTRIBUTION = 'weibull_distribution'
     LM_TREES = 'LM_TREES'
     HEIGHT_DISTRIBUTION = 'HEIGHT_DISTRIBUTION'
@@ -82,7 +82,7 @@ def trees_from_sapling_height_distribution(stratum: TreeStratum, **params) -> li
         params.get('n_trees', 0))
 
 
-def solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> str:
+def solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> TreeStrategy:
     """ Solves the strategy of tree generation for given stratum """
 
     if stratum.has_height_over_130_cm():
