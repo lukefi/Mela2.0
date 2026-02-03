@@ -52,6 +52,7 @@ class TreeStratum():
     sapling_stems_per_ha: Optional[float] = None
     storey: Optional[Storey] = None
     number_of_generated_trees: Optional[int] = None
+    asema: Optional[int] = None
 
     def __hash__(self):
         return id(self)
