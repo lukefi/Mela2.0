@@ -25,6 +25,8 @@ class MetsiConfiguration(SimpleNamespace):
     strata = True
     strata_origin = StrataOrigin.INVENTORY
     multiprocessing = False
+    preprocessing_output_file = "preprocessing_result"
+    simulation_output_file = "simulation_results"
 
     def __init__(self, **kwargs):
         """Initialize the configuration with defaults and user-provided values."""
@@ -48,7 +50,9 @@ class MetsiConfiguration(SimpleNamespace):
             'target_directory': str,
             'measured_trees': bool,
             'strata': bool,
-            'multiprocessing': bool
+            'multiprocessing': bool,
+            'preprocessing_output_file': str,
+            'simulation_output_file': str,
         }
         config_enums: dict[str, type[StringConfigEnum] | type[IntConfigEnum]] = {
             'run_modes': RunMode,
