@@ -59,17 +59,8 @@ def tree_generation_lm(
         shdef=params.get('lm_shdef', 5),
         shinit=0.1)
 
-    # trees = []
     trees = ReferenceTrees(result_df.nrow)
     for i in range(result_df.nrow):
-        # trees.append(ReferenceTree(
-        #     breast_height_diameter=result_df.rx2(9)[i],
-        #     stems_per_ha=result_df.rx2(10)[i],
-        #     height=result_df.rx2(11)[i],
-        #     species=stratum.species,
-        #     biological_age=stratum.biological_age,
-        #     sapling=result_df.rx2(11)[i] < 1.3
-        # ))
         trees.breast_height_diameter[i] = result_df.rx2(9)[i]
         trees.stems_per_ha[i] = result_df.rx2(10)[i]
         trees.height[i] = result_df.rx2(11)[i]

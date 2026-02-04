@@ -18,9 +18,7 @@ class TreeStrategy(StrEnum):
 def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum) -> ReferenceTrees:
     """ For all given trees inflates the common variables from stratum. """
     stratum.number_of_generated_trees = len(reference_trees)
-    # for i, reference_tree in enumerate(reference_trees):
     for i in range(len(reference_trees)):
-        # reference_tree.stand = stratum.stand
         reference_trees.species[i] = stratum.species
         reference_trees.breast_height_age[i] = 0.0 if stratum.number_of_generated_trees == 1 \
             else stratum.get_breast_height_age()
@@ -45,18 +43,13 @@ def _trees_from_weibull(stratum: TreeStratum, n_trees: int) -> ReferenceTrees:
     result = distributions.weibull(n_trees, stratum.mean_diameter, stratum.basal_area, stratum.mean_height)
 
     # height
-    # for reference_tree in result:
     for i in range(len(result)):
-        # height = naslund_height(reference_tree.breast_height_diameter, stratum.species)
-        # reference_tree.height = 0.0 if height is None else height
         height = naslund_height(result.breast_height_diameter[i], stratum.species)
         result.height[i] = 0.0 if height is None else height
 
     # height correction
     h_scalar = naslund_correction(stratum.species, stratum.mean_diameter, stratum.mean_height)
-    # for reference_tree in result:
     for i in range(len(result)):
-        # reference_tree.height = round(h_scalar * reference_tree.height, 2)
         result.height[i] = round(h_scalar * result.height[i], 2)
 
     return result
@@ -115,7 +108,6 @@ def reference_trees_from_tree_stratum(stratum: TreeStratum, **params) -> Optiona
     else:
         raise UserWarning(f"Unable to generate reference trees from stratum {stratum.identifier}")
 
-    # result = [rt for rt in result if round(rt.stems_per_ha, 2) > 0.0]
     enough_stems = result.stems_per_ha > 0.005
     result = result[enough_stems]
 
