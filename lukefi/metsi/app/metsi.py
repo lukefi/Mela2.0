@@ -18,7 +18,7 @@ from lukefi.metsi.app.file_io import (
     read_stands_from_file,
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
-from lukefi.metsi.sim.simulator import simulate_alternatives
+from lukefi.metsi.sim.simulator import simulate_alternatives, delete_existing_export_files
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 
@@ -47,6 +47,8 @@ def _simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]
 
 def main() -> int:
     cli_arguments = parse_cli_arguments(sys.argv[1:])
+    force_yes = bool(cli_arguments.pop("y", False))
+
     control_file = \
         MetsiConfiguration.control_file if cli_arguments["control_file"] is None else cli_arguments['control_file']
     try:
@@ -58,7 +60,14 @@ def main() -> int:
         app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
         prepare_target_directory(app_config.target_directory)
         print_logline("Reading input...")
-
+        should_continue = delete_existing_export_files(
+            target_directory=app_config.target_directory,
+            control=control_structure,
+            preprocessing_base_name=app_config.preprocessing_output_file or "preprocessing_result",
+            force_yes=force_yes,
+        )
+        if not should_continue:
+            return 0
         db: sqlite3.Connection | None = None
         if RunMode.SIMULATE in app_config.run_modes:
             print_logline("Initializing output database")

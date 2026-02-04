@@ -122,6 +122,12 @@ def parse_cli_arguments(args: list[str]) -> dict:
     parser.add_argument('input_path', help='Application input file or directory')
     parser.add_argument('target_directory', help='Directory path for program output')
     parser.add_argument('control_file', nargs='?', help='Application control declaration file')
+    parser.add_argument(
+        '--y',
+        action='store_true',
+        help='If output files already exist, delete them and continue without prompting.'
+    )
+
     return parser.parse_args(args).__dict__
 
 
