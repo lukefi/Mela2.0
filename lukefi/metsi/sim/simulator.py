@@ -1,13 +1,11 @@
 from copy import copy
 import sqlite3
-from pathlib import Path
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.app.utils import MetsiException
 
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
@@ -55,55 +53,3 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
         retval = [payload]
 
     return retval
-
-
-def delete_existing_export_files(
-    target_directory: str,
-    control: dict,
-    preprocessing_base_name: str,
-    force_yes: bool,
-) -> bool:
-    """
-    Checks whether export_prepro output files already exist (csv/rst).
-    If they exist:
-      - if force_yes: delete and continue
-      - else prompt user y/n
-    Returns True if execution should continue, False if it should exit.
-    """
-    export_decl = control.get("export_prepro")
-    if not export_decl:
-        return True  # nothing will be written
-
-    # Only consider formats declared in export_prepro
-    formats = list(export_decl.keys())
-
-    td = Path(target_directory)
-
-    candidates: list[Path] = []
-    for fmt in formats:
-        candidates.append(td / f"{preprocessing_base_name}.{fmt}")
-        if fmt == "rst":
-            # rst_writer() may also write this file (avoid appending in repeated runs)
-            candidates.append(td / "c-variables.par")
-
-    existing = [p for p in candidates if p.is_file()]
-    if not existing:
-        return True
-
-    if not force_yes:
-        print("Output file(s) already exist:")
-        for p in existing:
-            print(f"  - {p}")
-        answer = input("Do you want to delete them and continue? (y/n): ").strip().lower()
-        if answer not in ("y", "yes"):
-            print("Aborting (no files were deleted).")
-            return False
-
-    # delete
-    for p in existing:
-        try:
-            p.unlink()
-        except OSError as e:
-            raise MetsiException(f"Unable to delete existing output file: {p}") from e
-
-    return True

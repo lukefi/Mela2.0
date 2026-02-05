@@ -16,14 +16,14 @@ class TestAppIO(unittest.TestCase):
         self.assertEqual('input.dat', result['input_path'])
         self.assertEqual('out', result['target_directory'])
         self.assertEqual('control.py', result['control_file'])
-        self.assertFalse(result['y'])
+        self.assertFalse(result['delete'])
 
     def test_control_configurations(self):
         args = ['cli_input', 'cli_output', 'cli_control.py']
         cli_args = parse_cli_arguments(args)
 
         # y is CLI-only flag and must not go into app config
-        cli_args.pop("y", None)
+        cli_args.pop("delete", None)
         control_args = {
             'run_modes': ['preprocess',
                           'simulate'],

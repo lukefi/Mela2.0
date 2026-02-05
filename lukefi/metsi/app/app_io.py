@@ -123,8 +123,9 @@ def parse_cli_arguments(args: list[str]) -> dict:
     parser.add_argument('target_directory', help='Directory path for program output')
     parser.add_argument('control_file', nargs='?', help='Application control declaration file')
     parser.add_argument(
-        '--y',
+        '--d', '--delete',
         action='store_true',
+        dest='delete',
         help='If output files already exist, delete them and continue without prompting.'
     )
 
