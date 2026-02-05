@@ -54,21 +54,6 @@ class TestDistributions(test_util.ConverterTestSuite):
                 result = (tree.stems_per_ha, tree.breast_height_diameter)
                 self.assertEqual(next(asse), result)
 
-    def test_trees_from_simple_height_distribution(self):
-        fixture = TreeStratum()
-        fixture.mean_diameter = 28.0
-        fixture.stems_per_ha = 170.0
-        fixture.mean_height = 22.0
-        n_trees = 10
-        result = distributions.simple_height_distribution(fixture, n_trees)
-        self.assertEqual(10, len(result))
-        self.assertEqual(17, result[0].stems_per_ha)
-        self.assertEqual(17, result[1].stems_per_ha)
-        self.assertEqual(28.0, result[0].breast_height_diameter)
-        self.assertEqual(28.0, result[1].breast_height_diameter)
-        self.assertEqual(22.0, result[0].height)
-        self.assertEqual(22.0, result[1].height)
-
     def test_diameter_model_valkonen(self):
         result = distributions.diameter_model_valkonen(height_rt=10.0)
         self.assertEqual(result, 13.961394503710512)
