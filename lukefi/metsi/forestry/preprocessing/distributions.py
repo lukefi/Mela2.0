@@ -58,7 +58,7 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
     # result = []
     result = ReferenceTrees(n_samples)
     # For each sample pick-up stems per hectare from Weibull distribution
-    for i in range(1, n_samples + 1):
+    for i in range(n_samples):
         xx = xx + interval
         computed_diameter = xx - (interval / 2.0)
         if height < 1.3:
