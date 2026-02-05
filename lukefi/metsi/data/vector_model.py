@@ -18,7 +18,7 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "biological_age": np.float64,
     "stems_per_ha": np.float64,
     "origin": np.int32,
-    "management_category": np.int32,
+    "management_category": np.float64,
     "tree_category": np.str_,
     "storey": np.int32,
     "sapling": np.bool_,
@@ -255,7 +255,7 @@ class ReferenceTree:
     biological_age: float
     stems_per_ha: float
     origin: Origin
-    management_category: int
+    management_category: float
     tree_category: str
     storey: Storey
     sapling: bool
@@ -277,7 +277,7 @@ class ReferenceTrees(VectorData):
     biological_age: npt.NDArray[np.float64]
     stems_per_ha: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
-    management_category: npt.NDArray[np.int32]
+    management_category: npt.NDArray[np.float64]
     tree_category: npt.NDArray[np.str_]
     storey: npt.NDArray[np.int32]
     sapling: npt.NDArray[np.bool_]
