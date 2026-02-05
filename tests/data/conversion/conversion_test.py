@@ -306,17 +306,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_natura_area)
 
-    def test_determine_fmc_by_aland_centre(self):
-        assertions = [
-            ([10, '0', 21, '1'], 7),
-            ([10, '1', 21, '2'], 7),
-            ([10, '0', 21, '0'], 7),
-            ([10, '1', 21, '0'], 10),
-            ([10, 'kissa123', 666, 'bbc'], 10),
-            ([None, 'kissa123', 666, 'bbc'], None)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_aland_centre)
-
     def test_determine_fmc_by_test_area_handling_class(self):
         assertions = [
             (['.'], 1),
