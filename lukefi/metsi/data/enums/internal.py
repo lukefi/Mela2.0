@@ -11,6 +11,7 @@ class TreeSpecies(MetsiEnum):
     """This list is formed by combining VMI and Forest centre species
     and listing all the distinct ones. UNKNOWN (38) is not part of either list,
     but can be assigned to in case the source data species is unexpected."""
+    UNSET = -1
     PINE = 1
     SPRUCE = 2
     SILVER_BIRCH = 3  # rauduskoivu
@@ -165,6 +166,7 @@ class DrainageCategory(MetsiEnum):
 
 
 class Storey(MetsiEnum):
+    UNSET = -1
     INDETERMINATE = 0
     DOMINANT = 1
     UNDER = 2
@@ -175,6 +177,7 @@ class Storey(MetsiEnum):
 
 
 class Origin(MetsiEnum):
+    UNSET = -1
     UNKNOWN = 0
     NATURAL_SEED = 1
     NATURAL_SPROUT = 2
