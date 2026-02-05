@@ -241,7 +241,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         for stratum in (strata.get_stratum(i) for i in range(len(strata))):
             try:
-                stratum_trees = tree_generation.reference_trees_from_tree_stratum(stratum, **operation_params)
+                stratum_trees = tree_generation.reference_trees_from_tree_stratum(stand, stratum, **operation_params)
             except Exception as e:
                 print(
                     f"\nError generating trees for stratum {
