@@ -534,7 +534,7 @@ class VMI10Builder(VMIBuilder):
         result.fertilization_year = None  # value missing in VMI10 source
 
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus"]],
+            data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
 
@@ -675,7 +675,7 @@ class VMI11Builder(VMIBuilder):
 
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus"]],
+            data_row[indices["maanmuokkaus_aika"]],
             result.year,
         )
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
@@ -702,6 +702,18 @@ class VMI11Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]],
         )
+
+        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+            result.forest_management_category = vmi_util.determine_forest_management_category(
+                result.land_use_category,
+                result.forestry_centre_id,
+                data_row,
+                result.owner_category,
+                indices,
+                False,  # VMI12 True
+            )
+        else:
+            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
 
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
@@ -780,7 +792,7 @@ class VMI12Builder(VMIBuilder):
         result.set_geo_location(lat, lon, height, "EPSG:2393")
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus"]],
+            data_row[indices["maanmuokkaus_aika"]],
             result.year)
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
             data_row[indices["muu_toimenpide"]],
@@ -915,7 +927,7 @@ class VMI13Builder(VMIBuilder):
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
         result.fertilization_year = None  # value missing in VMI12 source
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus"]],
+            data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(

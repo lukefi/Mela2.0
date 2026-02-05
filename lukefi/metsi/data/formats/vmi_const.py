@@ -164,7 +164,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "metsikon_ika": slice(255, 258),  # metika (cols 256-258)
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
-    "maanmuokkaus": slice(268, 269),
+    "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
     "muu_toimenpide": slice(274, 275),
@@ -244,12 +244,13 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "vallitsevanjakson_ikalisays": slice(250, 252),
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
-    "maanmuokkaus": slice(268, 269),
+    "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
     "muu_toimenpide": slice(274, 275),
     "muu_toimenpide_aika": slice(275, 276),
     "hakkuuehdotus": slice(276, 277),  # hakehd1
+    "koealan_kasittelyluokka": slice(304, 307),  # Koealan käsittelyluokka
 }
 
 
@@ -337,7 +338,7 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "vallitsevanjakson_ikalisays": slice(250, 252),
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
-    "maanmuokkaus": slice(268, 269),
+    "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
     "muu_toimenpide": slice(274, 275),
@@ -425,7 +426,7 @@ VMI13_STAND_INDICES: dict[str, int] = {
     "vallitsevanjaksonika": 95,
     "hakkuu_tapa": 102,
     "hakkuu_aika": 103,
-    "maanmuokkaus": 108,
+    "maanmuokkaus_aika": 109,
     "viljely": 110,
     "viljely_aika": 111,
     "muu_toimenpide": 113,
