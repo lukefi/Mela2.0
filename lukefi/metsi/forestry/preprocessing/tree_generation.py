@@ -2,6 +2,7 @@
 (see. distributions module) """
 from enum import StrEnum
 from typing import Optional
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing import distributions
 from lukefi.metsi.forestry.preprocessing.naslund import naslund_height, naslund_correction
@@ -74,13 +75,14 @@ def _solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> T
         if stratum.mean_diameter > 0.0 and stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
             return TreeStrategy.HEIGHT_DISTRIBUTION
         return TreeStrategy.SKIP
+
     # small trees
     if stratum.mean_height > 0.0 and stratum.sapling_stratum:
         return TreeStrategy.HEIGHT_DISTRIBUTION
     return TreeStrategy.SKIP
 
 
-def reference_trees_from_tree_stratum(stratum: TreeStratum, **params) -> Optional[ReferenceTrees]:
+def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, **params) -> Optional[ReferenceTrees]:
     """ Composes N number of reference trees based on values of the stratum.
 
     The tree generation strategies: weibull distribution, lm_trees and height distribution.
@@ -99,9 +101,11 @@ def reference_trees_from_tree_stratum(stratum: TreeStratum, **params) -> Optiona
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
-        result = _trees_from_weibull(stratum, **params)
+        result = _trees_from_weibull(stratum, params["n_trees"])
     elif strategy == TreeStrategy.LM_TREES:
-        result = tree_generation_lm(stratum, stratum.stand.degree_days, stratum.stand.basal_area, **params)
+        assert stand.degree_days is not None
+        assert stand.basal_area is not None
+        result = tree_generation_lm(stratum, stand.degree_days, stand.basal_area, **params)
     elif strategy == TreeStrategy.SKIP:
         print(f"\nStratum {stratum.identifier} has no height or diameter usable for generating trees")
         return None
