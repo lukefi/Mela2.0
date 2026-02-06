@@ -367,20 +367,20 @@ class ReferenceTrees(VectorData):
 
 @dataclass
 class TreeStratum:
-    identifier: str
-    species: TreeSpecies
-    mean_diameter: float
-    mean_height: float
-    breast_height_age: float
-    biological_age: float
-    stems_per_ha: float
-    basal_area: float
-    origin: Origin
-    tree_number: int
-    storey: Storey
-    sapling_stems_per_ha: float
-    number_of_generated_trees: int
-    asema: int
+    identifier: str = ""
+    species: TreeSpecies = TreeSpecies.UNSET
+    mean_diameter: float = 0.0
+    mean_height: float = 0.0
+    breast_height_age: float = 0.0
+    biological_age: float = 0.0
+    stems_per_ha: float = 0.0
+    basal_area: float = 0.0
+    origin: Origin = Origin.UNSET
+    tree_number: int = 0
+    storey: Storey = Storey.UNSET
+    sapling_stems_per_ha: float = 0.0
+    number_of_generated_trees: int = 0
+    asema: int = 0
 
     def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
         if self.breast_height_age is not None and self.breast_height_age > 0.0:
