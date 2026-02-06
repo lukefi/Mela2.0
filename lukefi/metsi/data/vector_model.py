@@ -246,25 +246,25 @@ class VectorData():
 
 @dataclass
 class ReferenceTree:
-    identifier: str
-    tree_number: int
-    species: TreeSpecies
-    breast_height_diameter: float
-    height: float
-    measured_height: float
-    breast_height_age: float
-    biological_age: float
-    stems_per_ha: float
-    origin: Origin
-    management_category: float
-    tree_category: str
-    storey: Storey
-    sapling: bool
-    tree_type: str
-    tuhon_ilmiasu: str
-    latvuskerros: float
-    basal_area: float
-    volume: float
+    identifier: str = ""
+    tree_number: int = -1
+    species: TreeSpecies = TreeSpecies.UNSET
+    breast_height_diameter: float = 0.0
+    height: float = 0.0
+    measured_height: float = 0.0
+    breast_height_age: float = 0.0
+    biological_age: float = 0.0
+    stems_per_ha: float = 0.0
+    origin: Origin = Origin.UNSET
+    management_category: float = 0.0
+    tree_category: str = ""
+    storey: Storey = Storey.UNSET
+    sapling: bool = False
+    tree_type: str = ""
+    tuhon_ilmiasu: str = ""
+    latvuskerros: str = ""
+    basal_area: float = 0.0
+    volume: float = 0.0
 
 
 class ReferenceTrees(VectorData):
