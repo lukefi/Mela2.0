@@ -3,14 +3,17 @@ import unittest
 from collections import namedtuple
 
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum as TreeStratum_
-from lukefi.metsi.data.model import TreeStratum,ForestStand
+from lukefi.metsi.data.model import TreeStratum, ForestStand
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.forestry.preprocessing import tree_generation
 
 
 class TestTreeGeneration(unittest.TestCase):
 
-    Input = namedtuple("Input", "species diameter basal_area mean_height breast_height_age biological_age stand stems_per_ha sapling_stems_per_ha")
+    Input = namedtuple(
+        "Input",
+        "species diameter basal_area mean_height breast_height_age biological_age stand stems_per_ha "\
+            "sapling_stems_per_ha")
 
     def create_test_stratums(self, inputs):
         data = []
@@ -28,7 +31,6 @@ class TestTreeGeneration(unittest.TestCase):
             data.append(stratum)
         return data
 
-
     def test_trees_from_weibull(self):
         fixture = TreeStratum_(mean_diameter=28.0, basal_area=27.0, mean_height=22.0, species=TreeSpecies.PINE)
         # fixture.mean_diameter = 28.0
@@ -45,7 +47,7 @@ class TestTreeGeneration(unittest.TestCase):
     def test_finalize_trees(self):
         n_trees = 4
         stratum = TreeStratum_(species=TreeSpecies(1), breast_height_age=25.0, biological_age=32.0)
-        
+
         reference_trees = ReferenceTrees(n_trees)
         result = tree_generation._finalize_trees(reference_trees, stratum)
         self.assertEqual(1, result.species[0])
@@ -59,7 +61,6 @@ class TestTreeGeneration(unittest.TestCase):
         # also test the inflating of TreeStratum.number_of_generated_trees
         self.assertEqual(stratum.number_of_generated_trees, n_trees)
 
-
     def test_solve_tree_generation_strategy(self):
         strata = [
             TreeStratum_(mean_diameter=10.0, basal_area=33.0, mean_height=8.0),
@@ -67,7 +68,7 @@ class TestTreeGeneration(unittest.TestCase):
             TreeStratum_(mean_height=1.2, sapling_stems_per_ha=111.0, sapling_stratum=True),
             TreeStratum_()
         ]
-        
+
         expected_values = [
             tree_generation.TreeStrategy.WEIBULL_DISTRIBUTION,
             tree_generation.TreeStrategy.HEIGHT_DISTRIBUTION,
@@ -86,7 +87,7 @@ class TestTreeGeneration(unittest.TestCase):
 
         test_data = [
             TreeStratum_(
-                species=TreeSpecies.PINE, 
+                species=TreeSpecies.PINE,
                 mean_diameter=28.0,
                 basal_area=27.0,
                 mean_height=22.0,
@@ -105,41 +106,41 @@ class TestTreeGeneration(unittest.TestCase):
             ),
             TreeStratum_(species=TreeSpecies.PINE)
         ]
-        
+
         expected_results = [
             # n_trees=10;
             # ForestStand=stand;
             # species=1;
             [10, stand, TreeSpecies.PINE,
-            # diameter=14.67;
-            # height=17.83;
-            # stems_per_ha=1.94;
-            # breast_height_age=15;
-            # biological_age=16;
-            14.67, 17.4, 1.94, 15, 16, # result[0]
-            # diameter=17.14;
-            # height=19.08;
-            # stems_per_ha=15.42;
-            # breast_height_age=15;
-            # biological_age=16;
-            17.14, 18.61, 15.42, 15, 16], # result[1]
+             # diameter=14.67;
+             # height=17.83;
+             # stems_per_ha=1.94;
+             # breast_height_age=15;
+             # biological_age=16;
+             14.67, 17.4, 1.94, 15, 16,  # result[0]
+             # diameter=17.14;
+             # height=19.08;
+             # stems_per_ha=15.42;
+             # breast_height_age=15;
+             # biological_age=16;
+             17.14, 18.61, 15.42, 15, 16],  # result[1]
             # n_trees=10;
             # ForestStand=stand;
             # species=1;
             [10, stand, TreeSpecies.PINE,
-            # diameter=28.0;
-            # height=22.0;
-            # stems_per_ha=9.9;
-            # breast_height_age=15;
-            # biological_age=16;
-            22.27, 18.36, 9.9, 15, 16, # result[0]
-            # diameter=28.0;
-            # height=22.0;
-            # stems_per_ha=9.9;
-            # breast_height_age=15;
-            # biological_age=16;
-            26.18, 19.92, 9.9, 15, 16], # result[1]
-            [] # Skip case
+             # diameter=28.0;
+             # height=22.0;
+             # stems_per_ha=9.9;
+             # breast_height_age=15;
+             # biological_age=16;
+             22.27, 18.36, 9.9, 15, 16,  # result[0]
+             # diameter=28.0;
+             # height=22.0;
+             # stems_per_ha=9.9;
+             # breast_height_age=15;
+             # biological_age=16;
+             26.18, 19.92, 9.9, 15, 16],  # result[1]
+            []  # Skip case
         ]
 
         # Derive results
@@ -174,7 +175,7 @@ class TestTreeGeneration(unittest.TestCase):
         # Test data generation
         stand = ForestStand()
         stand.identifier = "0-023-002-02-1"
-        
+
         test_data = [
             TreeStratum_(
                 species=TreeSpecies.PINE,
@@ -216,8 +217,8 @@ class TestTreeGeneration(unittest.TestCase):
             if n_reference_trees == 1:
                 self.assertEqual(asse[1], result[0].stand)
                 self.assertEqual(asse[2], result[0].species)
-                self.assertEqual(asse[3], round(result[0].breast_height_diameter,2))
-                self.assertEqual(asse[4], round(result[0].height,2))
-                self.assertEqual(asse[5], round(result[0].stems_per_ha,2))
+                self.assertEqual(asse[3], round(result[0].breast_height_diameter, 2))
+                self.assertEqual(asse[4], round(result[0].height, 2))
+                self.assertEqual(asse[5], round(result[0].stems_per_ha, 2))
                 self.assertEqual(asse[6], result[0].breast_height_age)
                 self.assertEqual(asse[7], result[0].biological_age)
