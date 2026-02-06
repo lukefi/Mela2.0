@@ -445,6 +445,10 @@ class VMI9Builder(VMIBuilder):
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
+        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
+            data_row[indices["maanmuokkaus_aika"]],
+            result.year
+        )
         return result
 
     def build(self) -> StandList:
@@ -533,11 +537,6 @@ class VMI10Builder(VMIBuilder):
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
         result.fertilization_year = None  # value missing in VMI10 source
 
-        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
-            result.year
-        )
-
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
             data_row[indices["muu_toimenpide"]],
             data_row[indices["muu_toimenpide_aika"]],
@@ -565,6 +564,10 @@ class VMI10Builder(VMIBuilder):
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
+        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
+            data_row[indices["maanmuokkaus_aika"]],
+            result.year
+        )
         return result
 
     def build(self) -> StandList:

@@ -35,13 +35,9 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "ppa3": slice(211, 214),           # ppa3 (col 212-214)
     "ppa4": slice(0, 0),               # not present in VMI9
     "ppa5": slice(0, 0),               # not present in VMI9
-
-
-
     "metsikon_ika": slice(184, 187),
     "jakso1_asema": slice(140, 141),                    # jakasema 141
     "jakso1_syntytapa": slice(142, 143),                # syntapa 143
-
     "jakso1_kokonaisrunkoluku1000": slice(159, 161),    # rlkok 160-161
     "jakso1_keskipituus_dm": slice(163, 166),           # keskipit 164-166
     "jakso1_keskilapimitta_cm": slice(167, 169),        # keskilpm 168-169
@@ -53,6 +49,7 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "jakso1_sivulaji1": slice(147, 149),                # sivplaji1 148-149
     "jakso1_sivulaji1_osuus": slice(149, 151),          # sivplaji1os 150-151
     "jakso1_sivulaji2": slice(151, 153),                # sivplaji2 152-153
+    "maanmuokkaus_aika": slice(194, 194),               # maakasaika
     "jakso2_ppa": slice(217, 219),                      # j2ppa 218-219
     "jakso2_asema": slice(220, 221),                    # j2asema 221
     "jakso2_syntytapa": slice(222, 223),                # j2syntapa 223

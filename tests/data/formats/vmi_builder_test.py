@@ -171,8 +171,7 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(False, self.vmi12_stands[1].drainage_feasibility)
         # '', 2018 -> None
         self.assertEqual(None, self.vmi12_stands[0].soil_surface_preparation_year)
-        # '0', 2018 -> 2018
-        self.assertEqual(2018, self.vmi12_stands[1].soil_surface_preparation_year)
+        self.assertEqual(None, self.vmi12_stands[1].soil_surface_preparation_year)
         # hakkuuehdotus is '  '
         self.assertEqual(False, self.vmi12_stands[0].natural_regeneration_feasibility)
         # hakkuuehdotus is '0 '
@@ -393,7 +392,7 @@ class TestForestBuilder(unittest.TestCase):
         # ojitus_tarve is '0'
         self.assertEqual(False, self.vmi13_stands[1].drainage_feasibility)
         self.assertEqual(None, self.vmi13_stands[0].soil_surface_preparation_year)
-        self.assertEqual(2018, self.vmi13_stands[1].soil_surface_preparation_year)
+        self.assertEqual(None, self.vmi13_stands[1].soil_surface_preparation_year)
         # hakkuuehdotus is '.'
         self.assertEqual(False, self.vmi13_stands[0].natural_regeneration_feasibility)
         # hakkuuehdotus is '.'
