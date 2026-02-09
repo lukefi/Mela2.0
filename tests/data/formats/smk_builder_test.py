@@ -54,8 +54,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual('15', self.smk_stands[1].identifier)
 
     def test_smk_builder_stand_variables(self):
-        self.assertEqual(None, self.smk_stands[0].management_unit_id)
-        self.assertEqual(None, self.smk_stands[1].management_unit_id)
         self.assertEqual(2020, self.smk_stands[0].year)
         self.assertEqual(2020, self.smk_stands[1].year)
         self.assertEqual(0.28, self.smk_stands[0].area)
@@ -221,8 +219,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(self.gpkg_stands[1].identifier, 41652748)
 
     def test_smk_builder_stand_variables(self):
-        self.assertEqual(None, self.gpkg_stands[0].management_unit_id)
-        self.assertEqual(None, self.gpkg_stands[1].management_unit_id)
         self.assertEqual(2021, self.gpkg_stands[0].year)
         self.assertEqual(2021, self.gpkg_stands[1].year)
         self.assertEqual(4.264, self.gpkg_stands[0].area)

@@ -26,7 +26,6 @@ def create_database_tables(db: sqlite3.Connection):
             node TEXT,
             identifier TEXT,
             year INTEGER,
-            management_unit_id INTEGER,
             stand_id INTEGER,
             area REAL,
             area_weight REAL,

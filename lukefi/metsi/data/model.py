@@ -347,9 +347,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     # unique identifier for entity within its domain
     identifier: str = ""
 
-    management_unit_id: Optional[int] = None
-    # default to management unit id unless overriden
-    stand_id: Optional[int] = management_unit_id
+    stand_id: Optional[int] = None
 
     area: float = 0.0
     # default to area_ha, unless overridden
@@ -431,11 +429,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     def relative_year(self):
         return self.relative_time
 
-    def set_identifiers(self, stand_id: Optional[int], management_unit_id: Optional[int] = None):
+    def set_identifiers(self, stand_id: Optional[int]):
         self.stand_id = stand_id
-        self.management_unit_id = (
-            stand_id if management_unit_id is None else management_unit_id
-        )
 
     def set_area(self, area_ha: float | None):
         if area_ha is None:
@@ -468,49 +463,48 @@ class ForestStand(Finalizable, ComputationalUnit):
         return len(self.tree_strata) > 0
 
     def from_row(self, row):
-        self.management_unit_id = conv(row[0], int)
-        self.year = conv(row[1], int)
+        self.year = conv(row[0], int)
         self.start_year = self.year
-        self.area = conv(row[2], float) or 0.0
-        self.area_weight = conv(row[3], float) or 0.0
+        self.area = conv(row[1], float) or 0.0
+        self.area_weight = conv(row[2], float) or 0.0
         self.geo_location = (
+            conv(row[3], float),
             conv(row[4], float),
             conv(row[5], float),
-            conv(row[6], float),
-            conv(row[7], str)
+            conv(row[6], str)
         )
-        self.degree_days = conv(row[8], float)
-        self.owner_category = conv(row[9], OwnerCategory)
-        self.land_use_category = conv(row[10], LandUseCategory)
-        self.soil_peatland_category = conv(row[11], SoilPeatlandCategory)
-        self.site_type_category = conv(row[12], SiteType)
-        self.tax_class_reduction = conv(row[13], int)
-        self.tax_class = conv(row[14], int)
-        self.drainage_category = conv(row[15], DrainageCategory)
-        self.drainage_feasibility = (row[16] == "True") if row[16] != "None" else None
-        self.drainage_year = conv(row[17], int)
-        self.fertilization_year = conv(row[18], int)
-        self.soil_surface_preparation_year = conv(row[19], int)
-        self.natural_regeneration_feasibility = (row[20] == "True") if row[20] != "None" else None
-        self.regeneration_area_cleaning_year = conv(row[21], int)
-        self.development_class = conv(row[22], int)
-        self.artificial_regeneration_year = conv(row[23], int)
-        self.young_stand_tending_year = conv(row[24], int)
-        self.pruning_year = conv(row[25], int)
-        self.cutting_year = conv(row[26], int)
-        self.forestry_centre_id = conv(row[27], int)
-        self.forest_management_category = conv(row[28], int)
-        self.method_of_last_cutting = conv(row[29], int)
-        self.municipality_id = conv(row[30], int)
-        self.fra_category = conv(row[31], str)
-        self.land_use_category_detail = conv(row[32], str)
-        self.auxiliary_stand = row[33] == "True"
-        self.area_weight_factors = (conv(row[34], float) or 0.0, conv(row[35], float) or 0.0)
-        self.stand_id = conv(row[36], int)
-        self.basal_area = conv(row[37], float)
-        self.dominant_storey_age = conv(row[38], float)
-        self.main_tree_species_dominant_storey = conv(row[39], TreeSpecies)
-        self.region = conv(row[40], int)
+        self.degree_days = conv(row[7], float)
+        self.owner_category = conv(row[8], OwnerCategory)
+        self.land_use_category = conv(row[9], LandUseCategory)
+        self.soil_peatland_category = conv(row[10], SoilPeatlandCategory)
+        self.site_type_category = conv(row[11], SiteType)
+        self.tax_class_reduction = conv(row[12], int)
+        self.tax_class = conv(row[13], int)
+        self.drainage_category = conv(row[14], DrainageCategory)
+        self.drainage_feasibility = (row[15] == "True") if row[15] != "None" else None
+        self.drainage_year = conv(row[16], int)
+        self.fertilization_year = conv(row[17], int)
+        self.soil_surface_preparation_year = conv(row[18], int)
+        self.natural_regeneration_feasibility = (row[19] == "True") if row[19] != "None" else None
+        self.regeneration_area_cleaning_year = conv(row[20], int)
+        self.development_class = conv(row[21], int)
+        self.artificial_regeneration_year = conv(row[22], int)
+        self.young_stand_tending_year = conv(row[23], int)
+        self.pruning_year = conv(row[24], int)
+        self.cutting_year = conv(row[25], int)
+        self.forestry_centre_id = conv(row[26], int)
+        self.forest_management_category = conv(row[27], int)
+        self.method_of_last_cutting = conv(row[28], int)
+        self.municipality_id = conv(row[29], int)
+        self.fra_category = conv(row[30], str)
+        self.land_use_category_detail = conv(row[31], str)
+        self.auxiliary_stand = row[32] == "True"
+        self.area_weight_factors = (conv(row[33], float) or 0.0, conv(row[34], float) or 0.0)
+        self.stand_id = conv(row[35], int)
+        self.basal_area = conv(row[36], float)
+        self.dominant_storey_age = conv(row[37], float)
+        self.main_tree_species_dominant_storey = conv(row[38], TreeSpecies)
+        self.region = conv(row[39], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -542,13 +536,12 @@ class ForestStand(Finalizable, ComputationalUnit):
             """--sql
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
                 self.identifier,
                 self.year,
-                self.management_unit_id,
                 self.stand_id,
                 self.area,
                 self.area_weight,
@@ -718,7 +711,6 @@ def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]]
 
 def stand_as_rst_row(stand: ForestStand):
     return [
-        stand.management_unit_id,
         stand.year,
         stand.area,
         stand.area_weight,
@@ -757,7 +749,6 @@ def stand_as_rst_row(stand: ForestStand):
 
 def stand_as_internal_row(stand: ForestStand):
     return [
-        stand.management_unit_id,
         stand.year,
         stand.area,
         stand.area_weight,

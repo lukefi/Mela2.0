@@ -619,7 +619,6 @@ class XMLBuilder(ForestCentreBuilder):
     def convert_stand_entry(self, entry: ET.Element) -> ForestStand:
         stand_basic_data = smk_util.parse_stand_basic_data(entry)
         stand = ForestStand()
-        stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(stand_basic_data.StandBasicDataDate)  # RST record 2
         stand.start_year = stand.year
         stand.set_area(util.parse_type(stand_basic_data.Area, float))  # RST record 3 and 4
@@ -686,7 +685,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
         :return: ForestStand object
         """
         stand = ForestStand()
-        stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(entry.date)  # RST record 2
         stand.start_year = stand.year
         stand.set_area(entry.area - entry.areadecrease)  # RST record 3 and 4
