@@ -370,7 +370,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
-    pruning_year: Optional[int] = None
     cutting_year: Optional[int] = None
     forestry_centre_id: Optional[int] = None
     forest_management_category: Optional[int | float] = None
@@ -485,21 +484,20 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.development_class = conv(row[18], int)
         self.artificial_regeneration_year = conv(row[19], int)
         self.young_stand_tending_year = conv(row[20], int)
-        self.pruning_year = conv(row[21], int)
-        self.cutting_year = conv(row[22], int)
-        self.forestry_centre_id = conv(row[23], int)
-        self.forest_management_category = conv(row[24], int)
-        self.method_of_last_cutting = conv(row[25], int)
-        self.municipality_id = conv(row[26], int)
-        self.fra_category = conv(row[27], str)
-        self.land_use_category_detail = conv(row[28], str)
-        self.auxiliary_stand = row[29] == "True"
-        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
-        self.stand_id = conv(row[32], int)
-        self.basal_area = conv(row[33], float)
-        self.dominant_storey_age = conv(row[34], float)
-        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
-        self.region = conv(row[36], int)
+        self.cutting_year = conv(row[21], int)
+        self.forestry_centre_id = conv(row[22], int)
+        self.forest_management_category = conv(row[23], int)
+        self.method_of_last_cutting = conv(row[24], int)
+        self.municipality_id = conv(row[25], int)
+        self.fra_category = conv(row[26], str)
+        self.land_use_category_detail = conv(row[27], str)
+        self.auxiliary_stand = row[28] == "True"
+        self.area_weight_factors = (conv(row[29], float) or 0.0, conv(row[30], float) or 0.0)
+        self.stand_id = conv(row[31], int)
+        self.basal_area = conv(row[32], float)
+        self.dominant_storey_age = conv(row[33], float)
+        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.region = conv(row[35], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -531,7 +529,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             """--sql
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
@@ -555,7 +553,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.development_class,
                 self.artificial_regeneration_year,
                 self.young_stand_tending_year,
-                self.pruning_year,
                 self.cutting_year,
                 self.forestry_centre_id,
                 self.forest_management_category,
@@ -726,7 +723,6 @@ def stand_as_rst_row(stand: ForestStand):
         stand.development_class,
         stand.artificial_regeneration_year,
         stand.young_stand_tending_year,
-        stand.pruning_year,
         stand.cutting_year,
         stand.forestry_centre_id,
         stand.forest_management_category,
@@ -761,7 +757,6 @@ def stand_as_internal_row(stand: ForestStand):
         stand.development_class,
         stand.artificial_regeneration_year,
         stand.young_stand_tending_year,
-        stand.pruning_year,
         stand.cutting_year,
         stand.forestry_centre_id,
         stand.forest_management_category,

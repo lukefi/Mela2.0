@@ -45,7 +45,6 @@ def create_database_tables(db: sqlite3.Connection):
             development_class INTEGER,
             artificial_regeneration_year INTEGER,
             young_stand_tending_year INTEGER,
-            pruning_year INTEGER,
             cutting_year INTEGER,
             forestry_centre_id INTEGER,
             forest_management_category REAL,

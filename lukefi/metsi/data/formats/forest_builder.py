@@ -608,7 +608,8 @@ class XMLBuilder(ForestCentreBuilder):
             elif oper_type in (930, 940):
                 stand.drainage_year = oper_year  # RST record 19
             elif oper_type in (970,):
-                stand.pruning_year = oper_year  # RST record 27
+                # stand.pruning_year = oper_year  # RST record 27
+                pass
             else:
                 print_logline(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
                 # raise UserWarning(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')

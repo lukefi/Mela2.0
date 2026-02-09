@@ -78,20 +78,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_clearing_of_reform_sector_year)
 
-    def test_determinate_pruning_year(self):
-        assertions = [
-            (['3', '-', 2020], None),
-            (['3', '.', 2020], None),
-            (['3', '0', 2020], 2020),
-            (['3', '1', 2020], 2019),
-            (['3', '2', 2020], 2017),
-            (['3', '3', 2020], 2013),
-            (['3', '4', 2020], None),
-            (['1', '0', 2020], None),
-            (['kissa123', '0', 2020], None)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_pruning_year)
-
     def test_drainage_year(self):
         assertions = [
             (['10', 2020], 2010),
