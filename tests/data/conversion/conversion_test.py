@@ -101,17 +101,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_drainage_year)
 
-    def test_determine_drainage_feasibility(self):
-        assertions = [
-            (['1'], True),
-            (['2'], True),
-            (['3'], True),
-            (['4'], False),
-            (['kissa123'], False),
-            ([123], False)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_drainage_feasibility)
-
     def test_determine_vmi12_area_ha(self):
         self.assertRaises(IndexError, vmi_util.determine_vmi12_area_ha, -1, -1)
 
@@ -146,7 +135,6 @@ class TestConversion(test_util.ConverterTestSuite):
             ([4, 2, 0], 342.975010960105),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi13_area_ha)
-
 
     def test_determine_owner_group(self):
         assertions = [
@@ -441,7 +429,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_tree_management_category)
 
-
     def test_determine_stratum_tree_height(self):
         assertions = [
             (['10'], 1.0),
@@ -469,12 +456,12 @@ class TestConversion(test_util.ConverterTestSuite):
             (['0', '0', 0], (0.0, 0.0)),
             (['0', '1', 0], (10.0, 1.0)),
             (['2', '1', 0], (3.0, 1.0)),
-            (['0','0', 1.0], (1.0, 0.0)),
-            (['0','0', 10.0], (22.0, 14.0)),
-            (['1','0', 10.0], (15.0, 14.0)),
-            (['1','1', 0.0], (2.0, 1.0)),
-            (['.',' ', 0.0], (0.0, 0.0)),
-            (['.',' ', 10.0], (22.0, 14.0)),
+            (['0', '0', 1.0], (1.0, 0.0)),
+            (['0', '0', 10.0], (22.0, 14.0)),
+            (['1', '0', 10.0], (15.0, 14.0)),
+            (['1', '1', 0.0], (2.0, 1.0)),
+            (['.', ' ', 0.0], (0.0, 0.0)),
+            (['.', ' ', 10.0], (22.0, 14.0)),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_stratum_age_values)
 

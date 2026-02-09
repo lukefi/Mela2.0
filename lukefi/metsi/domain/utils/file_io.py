@@ -37,7 +37,6 @@ def create_database_tables(db: sqlite3.Connection):
             tax_class_reduction INTEGER,
             tax_class INTEGER,
             drainage_category INTEGER,
-            drainage_feasibility INTEGER(1),
             drainage_year INTEGER,
             fertilization_year INTEGER,
             soil_surface_preparation_year INTEGER,

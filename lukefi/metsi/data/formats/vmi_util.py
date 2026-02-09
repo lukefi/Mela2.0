@@ -96,10 +96,6 @@ def determine_drainage_year(sourcevalue: str, year: int) -> Optional[int]:
         return None
 
 
-def determine_drainage_feasibility(ojitus_tarve: str) -> bool:
-    return ojitus_tarve in ('1', '2', '3')
-
-
 def determine_vmi12_area_ha(lohkomuoto: int, county: int) -> float:
     area_ha = 0.0
     if county < 1 or county >= len(vmi12_county_areas):

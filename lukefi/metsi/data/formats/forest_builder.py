@@ -317,7 +317,6 @@ class VMIBuilder(ForestBuilder):
         result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
             data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
-        result.drainage_feasibility = vmi_util.determine_drainage_feasibility(data_row[indices["ojitus_tarve"]])
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.forest_management_category = vmi_util.determine_forest_management_category(
             result.land_use_category,
@@ -634,7 +633,6 @@ class XMLBuilder(ForestCentreBuilder):
         stand.tax_class_reduction = 0  # RST record 14
         stand.tax_class = 0  # RST record 15
         stand.drainage_category = fc2internal.convert_drainage_category(stand_basic_data.DrainageState)  # RST record 16
-        stand.drainage_feasibility = True  # RST record 17
         # RST record 18 is '0' by default
         operations = smk_util.parse_stand_operations(entry, target_operations='past')
         stand = self.set_stand_operations(stand, operations)  # RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
@@ -706,7 +704,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stand.drainage_category = fc2internal.convert_to_internal(
             util.parse_type(entry.drainagestate, int, str),
             fc2internal.convert_drainage_category)  # RST record 16
-        stand.drainage_feasibility = True  # RST record 17
 
         stand.development_class = smk_util.parse_development_class(
             util.parse_type(entry.developmentclass, str))  # RST record 24

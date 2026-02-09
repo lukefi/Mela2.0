@@ -29,7 +29,6 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.site_type_category = SiteType(1)
         self.stand.tax_class_reduction = 0
         self.stand.drainage_category = DrainageCategory(2)
-        self.stand.drainage_feasibility = bool(0)
         self.stand.drainage_year = 0
         self.stand.fertilization_year = 0
         self.stand.soil_surface_preparation_year = 2023

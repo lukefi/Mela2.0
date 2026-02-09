@@ -89,10 +89,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(None, self.vmi12_stands[0].fertilization_year)
         # value not available in VMI12 source
         self.assertEqual(None, self.vmi12_stands[1].fertilization_year)
-        # ojitus_tarve is ' '
-        self.assertEqual(False, self.vmi12_stands[0].drainage_feasibility)
-        # ojitus_tarve is '0'
-        self.assertEqual(False, self.vmi12_stands[1].drainage_feasibility)
         # '', 2018 -> None
         self.assertEqual(None, self.vmi12_stands[0].soil_surface_preparation_year)
         # '0', 2018 -> 2018
@@ -307,9 +303,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(None, self.vmi13_stands[0].fertilization_year)
         # value not available in VMI13 source
         self.assertEqual(None, self.vmi13_stands[1].fertilization_year)
-        self.assertEqual(False, self.vmi13_stands[0].drainage_feasibility)
-        # ojitus_tarve is '0'
-        self.assertEqual(False, self.vmi13_stands[1].drainage_feasibility)
         self.assertEqual(None, self.vmi13_stands[0].soil_surface_preparation_year)
         self.assertEqual(2018, self.vmi13_stands[1].soil_surface_preparation_year)
 

@@ -86,9 +86,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(DrainageCategory.TRANSFORMED_MIRE, self.smk_stands[0].drainage_category)
         # st:DrainageState '9' -> 5
         self.assertEqual(DrainageCategory.TRANSFORMED_MIRE, self.smk_stands[1].drainage_category)
-        # Drainage feasibility default value True
-        self.assertEqual(True, self.smk_stands[0].drainage_feasibility)
-        self.assertEqual(True, self.smk_stands[1].drainage_feasibility)
         self.assertEqual(None, self.smk_stands[0].drainage_year)
         self.assertEqual(None, self.smk_stands[1].drainage_year)
         self.assertEqual(None, self.smk_stands[0].fertilization_year)
@@ -236,9 +233,7 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].tax_class)
         self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL, self.gpkg_stands[0].drainage_category)
         self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL, self.gpkg_stands[1].drainage_category)
-        # Drainage feasibility default value True
-        self.assertEqual(True, self.gpkg_stands[0].drainage_feasibility)
-        self.assertEqual(True, self.gpkg_stands[1].drainage_feasibility)
+
         self.assertEqual(None, self.gpkg_stands[0].drainage_year)
         self.assertEqual(None, self.gpkg_stands[1].drainage_year)
         self.assertEqual(None, self.gpkg_stands[0].fertilization_year)

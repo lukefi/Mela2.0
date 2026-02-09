@@ -362,7 +362,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     tax_class_reduction: Optional[int] = None
     tax_class: Optional[int] = None
     drainage_category: Optional[DrainageCategory] = None
-    drainage_feasibility: Optional[bool] = None
     drainage_year: Optional[int] = None
     fertilization_year: Optional[int] = None
     soil_surface_preparation_year: Optional[int] = None
@@ -478,29 +477,29 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.tax_class_reduction = conv(row[11], int)
         self.tax_class = conv(row[12], int)
         self.drainage_category = conv(row[13], DrainageCategory)
-        self.drainage_feasibility = (row[14] == "True") if row[14] != "None" else None
-        self.drainage_year = conv(row[15], int)
-        self.fertilization_year = conv(row[16], int)
-        self.soil_surface_preparation_year = conv(row[17], int)
-        self.regeneration_area_cleaning_year = conv(row[18], int)
-        self.development_class = conv(row[19], int)
-        self.artificial_regeneration_year = conv(row[20], int)
-        self.young_stand_tending_year = conv(row[21], int)
-        self.pruning_year = conv(row[22], int)
-        self.cutting_year = conv(row[23], int)
-        self.forestry_centre_id = conv(row[24], int)
-        self.forest_management_category = conv(row[25], int)
-        self.method_of_last_cutting = conv(row[26], int)
-        self.municipality_id = conv(row[27], int)
-        self.fra_category = conv(row[28], str)
-        self.land_use_category_detail = conv(row[29], str)
-        self.auxiliary_stand = row[30] == "True"
-        self.area_weight_factors = (conv(row[31], float) or 0.0, conv(row[32], float) or 0.0)
-        self.stand_id = conv(row[33], int)
-        self.basal_area = conv(row[34], float)
-        self.dominant_storey_age = conv(row[35], float)
-        self.main_tree_species_dominant_storey = conv(row[36], TreeSpecies)
-        self.region = conv(row[37], int)
+
+        self.drainage_year = conv(row[14], int)
+        self.fertilization_year = conv(row[15], int)
+        self.soil_surface_preparation_year = conv(row[16], int)
+        self.regeneration_area_cleaning_year = conv(row[17], int)
+        self.development_class = conv(row[18], int)
+        self.artificial_regeneration_year = conv(row[19], int)
+        self.young_stand_tending_year = conv(row[20], int)
+        self.pruning_year = conv(row[21], int)
+        self.cutting_year = conv(row[22], int)
+        self.forestry_centre_id = conv(row[23], int)
+        self.forest_management_category = conv(row[24], int)
+        self.method_of_last_cutting = conv(row[25], int)
+        self.municipality_id = conv(row[26], int)
+        self.fra_category = conv(row[27], str)
+        self.land_use_category_detail = conv(row[28], str)
+        self.auxiliary_stand = row[29] == "True"
+        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
+        self.stand_id = conv(row[32], int)
+        self.basal_area = conv(row[33], float)
+        self.dominant_storey_age = conv(row[34], float)
+        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
+        self.region = conv(row[36], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -532,7 +531,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             """--sql
             INSERT INTO stands
             VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 node,
@@ -549,7 +548,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.tax_class_reduction,
                 self.tax_class,
                 self.drainage_category,
-                self.drainage_feasibility,
                 self.drainage_year,
                 self.fertilization_year,
                 self.soil_surface_preparation_year,
@@ -719,12 +717,11 @@ def stand_as_rst_row(stand: ForestStand):
         stand.tax_class_reduction,
         stand.tax_class,
         stand.drainage_category,
-        stand.drainage_feasibility,
+
         None,
         stand.drainage_year,
         stand.fertilization_year,
         stand.soil_surface_preparation_year,
-
         stand.regeneration_area_cleaning_year,
         stand.development_class,
         stand.artificial_regeneration_year,
@@ -756,7 +753,6 @@ def stand_as_internal_row(stand: ForestStand):
         stand.tax_class_reduction,
         stand.tax_class,
         stand.drainage_category,
-        stand.drainage_feasibility,
         stand.drainage_year,
         stand.fertilization_year,
         stand.soil_surface_preparation_year,
