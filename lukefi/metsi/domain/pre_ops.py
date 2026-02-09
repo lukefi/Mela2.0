@@ -92,18 +92,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_area_weight(stands: StandList, **operation_params):
-    """ Scales area weight of a stand.
-
-        Especially necessary for VMI tree generation cases.
-        Should be used as precesing operation before the generation of reference trees.
-    """
-    _ = operation_params
-    for stand in stands:
-        stand.area_weight = stand.area_weight * stand.area_weight_factors[1]
-    return stands
-
-
 def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -> StandList:
     """ Preprocessing operation for converting the current coordinate system to target system
 
@@ -126,5 +114,4 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 __all__ = ['preproc_filter',
            'compute_location_metadata',
            'generate_reference_trees',
-           'scale_area_weight',
            'convert_coordinates']

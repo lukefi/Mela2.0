@@ -10,7 +10,6 @@ control_structure = {
 
     "preprocessing_operations": [
         preproc_filter,
-        scale_area_weight,
         generate_reference_trees
     ],
 

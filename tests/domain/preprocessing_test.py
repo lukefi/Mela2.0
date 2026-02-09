@@ -41,13 +41,6 @@ class PreprocessingTest(unittest.TestCase):
         self.assertEqual("xxx-1-tree", trees.identifier[0])
         self.assertEqual(10237.96, trees.stems_per_ha[0])
         self.assertEqual(1138.02, trees.stems_per_ha[1])
-        # area_weight should remain 0.0 as before
-        self.assertEqual(0.0, result_stand.area_weight)
-
-    def test_scale_area_weight(self):
-        stand = ForestStand(area_weight=100.0, area_weight_factors=(0.0, 1.2))
-        result = preprocessing.scale_area_weight([stand])
-        self.assertEqual(result[0].area_weight, 120.0)
 
     def test_coordinate_conversion_operation(self):
         dummy_float = 0.0
