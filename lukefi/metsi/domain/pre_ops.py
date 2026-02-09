@@ -60,8 +60,6 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
             stand.sea_effect = wi.sea
         if stand.lake_effect is None:
             stand.lake_effect = wi.lake
-        if stand.monthly_temperatures is None:
-            stand.monthly_temperatures = wi.temp
         if stand.monthly_rainfall is None:
             stand.monthly_rainfall = wi.rain
 

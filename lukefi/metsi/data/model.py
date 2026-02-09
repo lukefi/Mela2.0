@@ -387,7 +387,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
 
-    monthly_temperatures: Optional[list[float]] = None
     monthly_rainfall: Optional[list[float]] = None
     sea_effect: Optional[float] = None
     lake_effect: Optional[float] = None
