@@ -328,7 +328,6 @@ class VMIBuilder(ForestBuilder):
         result.municipality_id = vmi_util.determine_municipality(
             data_row[indices["municipality"]],
             data_row[indices["kitukunta"]])
-        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
         result.region = util.parse_int(data_row[indices["county"]])
@@ -639,7 +638,6 @@ class XMLBuilder(ForestCentreBuilder):
         # RST record 18 is '0' by default
         operations = smk_util.parse_stand_operations(entry, target_operations='past')
         stand = self.set_stand_operations(stand, operations)  # RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
-        stand.natural_regeneration_feasibility = False  # RST record 22
         stand.development_class = smk_util.parse_development_class(0)  # RST record 24
         stand.forestry_centre_id = None  # RST record 29
         stand.forest_management_category = smk_util.parse_forest_management_category(
@@ -709,8 +707,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
             util.parse_type(entry.drainagestate, int, str),
             fc2internal.convert_drainage_category)  # RST record 16
         stand.drainage_feasibility = True  # RST record 17
-        # RST record 18 is '0' by default
-        stand.natural_regeneration_feasibility = False  # RST record 22
+
         stand.development_class = smk_util.parse_development_class(
             util.parse_type(entry.developmentclass, str))  # RST record 24
         stand.forestry_centre_id = None  # RST record 29

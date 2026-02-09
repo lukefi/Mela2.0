@@ -41,7 +41,7 @@ def create_database_tables(db: sqlite3.Connection):
             drainage_year INTEGER,
             fertilization_year INTEGER,
             soil_surface_preparation_year INTEGER,
-            natural_regeneration_feasibility INTEGER(1),
+
             regeneration_area_cleaning_year INTEGER,
             development_class INTEGER,
             artificial_regeneration_year INTEGER,

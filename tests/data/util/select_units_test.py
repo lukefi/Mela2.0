@@ -33,7 +33,6 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.drainage_year = 0
         self.stand.fertilization_year = 0
         self.stand.soil_surface_preparation_year = 2023
-        self.stand.natural_regeneration_feasibility = bool(0)
         self.stand.regeneration_area_cleaning_year = 0
         self.stand.young_stand_tending_year = 0
         self.stand.pruning_year = 0

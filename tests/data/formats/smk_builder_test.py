@@ -95,9 +95,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(None, self.smk_stands[1].fertilization_year)
         self.assertEqual(None, self.smk_stands[0].soil_surface_preparation_year)
         self.assertEqual(None, self.smk_stands[1].soil_surface_preparation_year)
-        # Natural regeneration feasibility default value False
-        self.assertEqual(False, self.smk_stands[0].natural_regeneration_feasibility)
-        self.assertEqual(False, self.smk_stands[1].natural_regeneration_feasibility)
         self.assertEqual(None, self.smk_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.smk_stands[1].regeneration_area_cleaning_year)
         # Development class default value 0
@@ -248,9 +245,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].fertilization_year)
         self.assertEqual(None, self.gpkg_stands[0].soil_surface_preparation_year)
         self.assertEqual(None, self.gpkg_stands[1].soil_surface_preparation_year)
-        # Natural regeneration feasibility default value False
-        self.assertEqual(False, self.gpkg_stands[0].natural_regeneration_feasibility)
-        self.assertEqual(False, self.gpkg_stands[1].natural_regeneration_feasibility)
         self.assertEqual(None, self.gpkg_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.gpkg_stands[1].regeneration_area_cleaning_year)
         # Development class default value 0
