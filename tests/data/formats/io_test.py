@@ -154,29 +154,4 @@ class IoUtilsTest(ConverterTestSuite):
                 stands_expected[key] = None
                 stands_actual[key] = None
 
-            def pretty_type(v):
-                return type(v).__name__
-
-            def diff_mapping(a: dict, b: dict):
-                diffs = []
-                for k in sorted(set(a.keys()) | set(b.keys())):
-                    va = a.get(k, "<MISSING>")
-                    vb = b.get(k, "<MISSING>")
-                    if va != vb:
-                        diffs.append((k, va, vb, pretty_type(va), pretty_type(vb)))
-                return diffs
-
-            # ignore containers at top-level
-            for k in ("reference_trees", "tree_strata"):
-                if k in stands_expected:
-                    stands_expected[k] = None
-                if k in stands_actual:
-                    stands_actual[k] = None
-
-            diffs = diff_mapping(stands_expected, stands_actual)
-
-            print("diff count:", len(diffs))
-            for k, va, vb, ta, tb in diffs[:80]:
-                print(f"{k}: expected={va!r} ({ta}), actual={vb!r} ({tb})")
-
             self.assertTrue(stands_expected == stands_actual)
