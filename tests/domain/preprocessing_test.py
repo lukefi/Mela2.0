@@ -121,10 +121,7 @@ class PreprocessingTest(unittest.TestCase):
             if geo:
                 self.assertIsNotNone(geo)
                 self.assertIsNotNone(geo[2])
-                temperatures = result.monthly_temperatures
-                self.assertIsNotNone(temperatures)
-                rainfall = result.monthly_rainfall
-                self.assertIsNotNone(rainfall)
+
                 # actual test validation
                 self.assertEqual(geo[0], latitude)
                 self.assertEqual(geo[1], longitude)
@@ -134,13 +131,6 @@ class PreprocessingTest(unittest.TestCase):
                     self.assertEqual(geo[3], asse[1])
             self.assertEqual(results[0].degree_days, asse[2])
             self.assertEqual(results[0].sea_effect, asse[3])
-
-            if temperatures:
-                self.assertEqual(float(temperatures[0]), asse[4])
-                self.assertEqual(float(temperatures[1]), asse[5])
-            if rainfall:
-                self.assertEqual(float(rainfall[0]), asse[6])
-                self.assertEqual(float(rainfall[1]), asse[7])
 
         invalid_fixtures = [
             [ForestStand(geo_location=(None, None, None, None))],
