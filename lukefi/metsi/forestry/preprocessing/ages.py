@@ -6,7 +6,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTree, ReferenceTrees
 
 # DLL_PATH = Path('lukefi', 'metsi', 'forestry', 'fortran', 'lib', 'ikaf.dll')
-DLL_PATH = '/dev/lib/ikaf.dll'
+DLL_PATH = 'lukefi/metsi/forestry/fortran/lib/ikaf.dll'
 DLL = cts.CDLL(DLL_PATH)
 
 
