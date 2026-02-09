@@ -218,6 +218,7 @@ class ReferenceTree():
     sapling: bool = False
     storey: Optional[Storey] = None
     tree_type: Optional[str] = None
+    latvuskerros: Optional[str] = None
 
     # VMI tuhon ilmiasu
     tuhon_ilmiasu: Optional[str] = None

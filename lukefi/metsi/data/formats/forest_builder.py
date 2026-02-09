@@ -121,7 +121,8 @@ def _append_tree_row(
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
-
+    latvuskerros = row[indices["latvuskerros"]]
+    
     basal_area = None
     volume = None
 
@@ -144,6 +145,7 @@ def _append_tree_row(
         "tuhon_ilmiasu": tuhon_ilmiasu,
         "basal_area": basal_area,
         "volume": volume,
+        "latvuskerros": latvuskerros
     }
 
     for key in DTYPES_TREE:
