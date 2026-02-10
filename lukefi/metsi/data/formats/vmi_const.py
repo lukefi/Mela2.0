@@ -19,6 +19,7 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "municipality": slice(68, 71),     # kunta (col 69-71)
     "owner_group": slice(81, 82),      # omiryh (col 82)
     "degree_days": slice(87, 91),      # lamsum1 (col 88-91)
+    "suojametsakoodi": slice(97, 98),   # suojamet (col 98)
     "fra_class": slice(99, 100),       # fraluo (col 100) in PSUOMI, blank in ESUOMI
     "land_category": slice(100, 101),  # maaluo (col 101)
     "land_category_detail": slice(101, 102),  # maaluotar (col 102)
@@ -29,7 +30,6 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "ojitus_tarve": slice(129, 130),    # ojitar (col 130)
     "tax_class": slice(132, 133),       # veroluo (col 133)
     "tax_class_reduction": slice(133, 134),  # verotar (col 134)
-    "suojametsakoodi": slice(97, 98),   # suojamet (col 98)
     "ppa1": slice(203, 206),           # ppa1 (col 204-206)
     "ppa2": slice(207, 210),           # ppa2 (col 208-210)
     "ppa3": slice(211, 214),           # ppa3 (col 212-214)
@@ -123,9 +123,12 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "ojitus_tarve": slice(130, 131),    # ojitar
     "tax_class": slice(132, 133),       # veroluo
     "tax_class_reduction": slice(133, 134),  # verotar
+    "puuntuotannon_rajoitus": slice(135, 138),
+    "puuntuotannon_rajoitus_tarkenne": slice(138, 139),
     "suojametsakoodi": slice(139, 140),  # suojamet
     "muut_arvot": slice(140, 141),       # muuarvo
     "naturaaluekoodi": slice(141, 142),  # natura
+    "ahvenanmaan_markkinahakkuualue": slice(149, 150),
     "fra_class": slice(116, 117),               # fraluo 117
     "jakso1_asema": slice(200, 201),                 # jakasema (col 201)
     "jakso1_syntytapa": slice(202, 203),             # syntapa (col 203)
