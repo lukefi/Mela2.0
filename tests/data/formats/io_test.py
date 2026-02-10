@@ -123,7 +123,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "basal_area",
                               "origin",
                               "management_category",
-                              "saw_log_volume_reduction_factor",
                               "cutting_year",
                               "age_when_10cm_diameter_at_breast_height",
                               "tree_number",

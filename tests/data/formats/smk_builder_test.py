@@ -152,8 +152,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(vec0.basal_area[0]))
         self.assertEqual(5.2, vec0.basal_area[1])
 
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
         self.assertEqual(-1, vec0.cutting_year[0])
         self.assertEqual(-1, vec0.cutting_year[1])
 
@@ -289,9 +287,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(32, vec0.biological_age[1])
         self.assertEqual(13.56, vec0.basal_area[0])
         self.assertEqual(7.16, vec0.basal_area[1])
-
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
 
         self.assertEqual(-1, vec0.cutting_year[0])
         self.assertEqual(-1, vec0.cutting_year[1])

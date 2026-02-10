@@ -46,7 +46,6 @@ class TreeStratum():
     breast_height_age: Optional[float] = None
     biological_age: Optional[float] = None  # age in years
     basal_area: Optional[float] = None  # stratum basal area
-    saw_log_volume_reduction_factor: Optional[float] = None
     cutting_year: Optional[int] = None
     age_when_10cm_diameter_at_breast_height: Optional[int] = None
     tree_number: Optional[int] = None
@@ -170,7 +169,6 @@ class TreeStratum():
             str(self.breast_height_age),
             str(self.biological_age),
             str(self.basal_area),
-            str(self.saw_log_volume_reduction_factor),
             str(self.cutting_year),
             str(self.age_when_10cm_diameter_at_breast_height),
             str(self.tree_number),
@@ -195,19 +193,18 @@ class TreeStratum():
         result.breast_height_age = conv(row[7], float)
         result.biological_age = conv(row[8], float)
         result.basal_area = conv(row[9], float)
-        result.saw_log_volume_reduction_factor = conv(row[10], float)
-        result.cutting_year = conv(row[11], int)
-        result.age_when_10cm_diameter_at_breast_height = conv(row[12], int)
-        result.tree_number = conv(row[13], int)
+        result.cutting_year = conv(row[10], int)
+        result.age_when_10cm_diameter_at_breast_height = conv(row[11], int)
+        result.tree_number = conv(row[12], int)
         result.stand_origin_relative_position = (
+            conv(row[13], float) or 0.0,
             conv(row[14], float) or 0.0,
-            conv(row[15], float) or 0.0,
-            conv(row[16], float) or 0.0
+            conv(row[15], float) or 0.0
         )
-        result.management_category = conv(row[17], int)
-        result.sapling_stems_per_ha = conv(row[18], float)
-        result.sapling_stratum = row[19] == "True"
-        result.storey = Storey(int(row[20])) if row[20] != "None" else None
+        result.management_category = conv(row[16], int)
+        result.sapling_stems_per_ha = conv(row[17], float)
+        result.sapling_stratum = row[18] == "True"
+        result.storey = Storey(int(row[19])) if row[19] != "None" else None
         return result
 
 
@@ -606,7 +603,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO strata
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -621,7 +618,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.tree_strata.basal_area[i],
                     int(self.tree_strata.origin[i]),
                     int(self.tree_strata.management_category[i]),
-                    self.tree_strata.saw_log_volume_reduction_factor[i],
                     int(self.tree_strata.cutting_year[i]),
                     int(self.tree_strata.age_when_10cm_diameter_at_breast_height[i]),
                     int(self.tree_strata.tree_number[i]),

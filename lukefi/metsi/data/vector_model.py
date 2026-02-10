@@ -42,7 +42,6 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "basal_area": np.float64,
     "origin": np.int32,
     "management_category": np.int32,
-    "saw_log_volume_reduction_factor": np.float64,
     "cutting_year": np.int32,
     "age_when_10cm_diameter_at_breast_height": np.int16,
     "tree_number": np.int32,
@@ -340,7 +339,6 @@ class TreeStrata(VectorData):
     basal_area: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
     management_category: npt.NDArray[np.int32]
-    saw_log_volume_reduction_factor: npt.NDArray[np.float64]
     cutting_year: npt.NDArray[np.int32]
     age_when_10cm_diameter_at_breast_height: npt.NDArray[np.int16]
     tree_number: npt.NDArray[np.int32]
@@ -365,7 +363,6 @@ class TreeStrata(VectorData):
             str(self.breast_height_age[i]),
             str(self.biological_age[i]),
             str(self.basal_area[i]),
-            str(self.saw_log_volume_reduction_factor[i]),
             str(self.cutting_year[i]),
             str(self.age_when_10cm_diameter_at_breast_height[i]),
             str(self.tree_number[i]),

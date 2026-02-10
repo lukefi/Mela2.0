@@ -59,7 +59,6 @@ def _append_stratum_row(
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
     management_category = 1
-    saw_log_volume_reduction_factor = -1.0
     cutting_year = 0
     age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
@@ -76,7 +75,6 @@ def _append_stratum_row(
         "basal_area": basal_area,
         "origin": origin,
         "management_category": management_category,
-        "saw_log_volume_reduction_factor": saw_log_volume_reduction_factor,
         "cutting_year": cutting_year,
         "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
         "tree_number": tree_number,
@@ -230,7 +228,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "basal_area": basal_area,
         "origin": None,
         "management_category": None,
-        "saw_log_volume_reduction_factor": None,
         "cutting_year": None,
         "age_when_10cm_diameter_at_breast_height": None,
         "tree_number": tree_number,
