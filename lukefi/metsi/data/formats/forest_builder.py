@@ -60,7 +60,6 @@ def _append_stratum_row(
     # Defaults / placeholders (match DTYPES_STRATA fields)
     management_category = 1
     cutting_year = 0
-    age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
     number_of_generated_trees = None
 
@@ -76,7 +75,6 @@ def _append_stratum_row(
         "origin": origin,
         "management_category": management_category,
         "cutting_year": cutting_year,
-        "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
         "tree_number": tree_number,
         "stand_origin_relative_position": stand_origin_relative_position,
         "storey": storey,
@@ -229,7 +227,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "origin": None,
         "management_category": None,
         "cutting_year": None,
-        "age_when_10cm_diameter_at_breast_height": None,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "storey": util.parse_type(rowj.storey, int),

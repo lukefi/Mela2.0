@@ -124,7 +124,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "origin",
                               "management_category",
                               "cutting_year",
-                              "age_when_10cm_diameter_at_breast_height",
                               "tree_number",
                               "stand_origin_relative_position",
                               "storey",

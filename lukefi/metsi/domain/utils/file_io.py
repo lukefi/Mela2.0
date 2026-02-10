@@ -113,7 +113,6 @@ def create_database_tables(db: sqlite3.Connection):
             origin INTEGER,
             management_category INTEGER,
             cutting_year INTEGER,
-            age_when_10cm_diameter_at_breast_height INTEGER,
             tree_number INTEGER,
             stand_origin_relative_position TEXT,
             storey INTEGER,

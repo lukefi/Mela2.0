@@ -155,9 +155,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(-1, vec0.cutting_year[0])
         self.assertEqual(-1, vec0.cutting_year[1])
 
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
-
         self.assertEqual(1, vec0.tree_number[0])
         self.assertEqual(2, vec0.tree_number[1])
 
@@ -291,8 +288,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(-1, vec0.cutting_year[0])
         self.assertEqual(-1, vec0.cutting_year[1])
 
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
         self.assertEqual(1, vec0.tree_number[0])
         self.assertEqual(2, vec0.tree_number[1])
         np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
