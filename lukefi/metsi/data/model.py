@@ -48,9 +48,7 @@ class TreeStratum():
     basal_area: Optional[float] = None  # stratum basal area
     cutting_year: Optional[int] = None
     tree_number: Optional[int] = None
-    # Angle from plot origin, distance (m) to plot origin, height difference (m) with plot origin
-    stand_origin_relative_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    management_category: Optional[int] = None
+
     # sapling stem count within a hectare
     sapling_stems_per_ha: Optional[float] = None
     storey: Optional[Storey] = None
@@ -169,10 +167,6 @@ class TreeStratum():
             str(self.basal_area),
             str(self.cutting_year),
             str(self.tree_number),
-            str(self.stand_origin_relative_position[0]),
-            str(self.stand_origin_relative_position[1]),
-            str(self.stand_origin_relative_position[2]),
-            str(self.management_category),
             str(self.sapling_stems_per_ha),
             str(self.storey)
         ]
@@ -191,14 +185,9 @@ class TreeStratum():
         result.basal_area = conv(row[9], float)
         result.cutting_year = conv(row[10], int)
         result.tree_number = conv(row[11], int)
-        result.stand_origin_relative_position = (
-            conv(row[12], float) or 0.0,
-            conv(row[13], float) or 0.0,
-            conv(row[14], float) or 0.0
-        )
-        result.management_category = conv(row[15], int)
-        result.sapling_stems_per_ha = conv(row[16], float)
-        result.storey = Storey(int(row[17])) if row[17] != "None" else None
+
+        result.sapling_stems_per_ha = conv(row[12], float)
+        result.storey = Storey(int(row[13])) if row[13] != "None" else None
         return result
 
 
@@ -597,7 +586,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO strata
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -611,12 +600,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.tree_strata.stems_per_ha[i],
                     self.tree_strata.basal_area[i],
                     int(self.tree_strata.origin[i]),
-                    int(self.tree_strata.management_category[i]),
                     int(self.tree_strata.cutting_year[i]),
                     int(self.tree_strata.tree_number[i]),
-                    f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
-                    f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
-                    f"{self.tree_strata.stand_origin_relative_position[i][2]})",
                     int(self.tree_strata.storey[i]),
                     self.tree_strata.sapling_stems_per_ha[i],
                     int(self.tree_strata.number_of_generated_trees[i])

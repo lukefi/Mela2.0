@@ -19,7 +19,6 @@ class TestForestDataModel(unittest.TestCase):
 
             age_when_10cm_diameter_at_breast_height=0,
             origin=1,
-            stand_origin_relative_position=(0.0, 0.0, 0.0),
             management_category=1,
             sapling=True)
         fixture = TreeStratum(

@@ -209,7 +209,6 @@ def stand_location_converter(target):
 def mela_stratum(stratum):
     """Convert a TreeStratum so that enumerated category variables are converted to Mela value space"""
     result = copy(stratum)
-    result.stand_origin_relative_position = copy(stratum.stand_origin_relative_position)
     return apply_mappers(result, *default_mela_stratum_mappers)
 
 

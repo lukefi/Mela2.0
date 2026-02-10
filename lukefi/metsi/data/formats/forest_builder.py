@@ -57,9 +57,7 @@ def _append_stratum_row(
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
-    management_category = 1
     cutting_year = 0
-    stand_origin_relative_position = (0.0, 0.0, 0.0)
     number_of_generated_trees = None
 
     values = {
@@ -72,10 +70,8 @@ def _append_stratum_row(
         "stems_per_ha": stems_per_ha,
         "basal_area": basal_area,
         "origin": origin,
-        "management_category": management_category,
         "cutting_year": cutting_year,
         "tree_number": tree_number,
-        "stand_origin_relative_position": stand_origin_relative_position,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
@@ -192,7 +188,6 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "basal_area": basal_area,
         "origin": 0,
         "tree_number": tree_number,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
         "number_of_generated_trees": None,
@@ -222,10 +217,8 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "biological_age": util.parse_type(rowj.age, float),
         "basal_area": basal_area,
         "origin": None,
-        "management_category": None,
         "cutting_year": None,
         "tree_number": tree_number,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
         "number_of_generated_trees": None,
@@ -593,9 +586,7 @@ class XMLBuilder(ForestCentreBuilder):
                 stand.fertilization_year = oper_year  # RST record 20
             elif oper_type in (930, 940):
                 stand.drainage_year = oper_year  # RST record 19
-            elif oper_type in (970,):
-                # stand.pruning_year = oper_year  # RST record 27
-                pass
+
             else:
                 print_logline(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
                 # raise UserWarning(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')

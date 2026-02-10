@@ -41,10 +41,8 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "stems_per_ha": np.float64,
     "basal_area": np.float64,
     "origin": np.int32,
-    "management_category": np.int32,
     "cutting_year": np.int32,
     "tree_number": np.int32,
-    "stand_origin_relative_position": np.dtype((np.float64, (3,))),
     "storey": np.int32,
     "sapling_stems_per_ha": np.float64,
     "number_of_generated_trees": np.int32
@@ -336,10 +334,8 @@ class TreeStrata(VectorData):
     stems_per_ha: npt.NDArray[np.float64]
     basal_area: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
-    management_category: npt.NDArray[np.int32]
     cutting_year: npt.NDArray[np.int32]
     tree_number: npt.NDArray[np.int32]
-    stand_origin_relative_position: npt.NDArray[np.float64]
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     number_of_generated_trees: npt.NDArray[np.int32]
@@ -361,10 +357,6 @@ class TreeStrata(VectorData):
             str(self.basal_area[i]),
             str(self.cutting_year[i]),
             str(self.tree_number[i]),
-            str(self.stand_origin_relative_position[i, 0]),
-            str(self.stand_origin_relative_position[i, 1]),
-            str(self.stand_origin_relative_position[i, 2]),
-            str(self.management_category[i]),
             str(self.sapling_stems_per_ha[i]),
             str(self.storey[i])
         ]
