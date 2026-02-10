@@ -273,7 +273,6 @@ def generate_reference_trees(
 
     start_idx = int(stand.reference_trees.size)
     for s_idx in range(strata_vec.size):
-        # Skip empty / invalid strata early if you want
         trees_for_stratum = _generate_trees_for_stratum(
             stand,
             strata_vec,

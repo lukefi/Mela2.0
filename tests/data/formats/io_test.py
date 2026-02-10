@@ -128,7 +128,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "age_when_10cm_diameter_at_breast_height",
                               "tree_number",
                               "stand_origin_relative_position",
-                              "lowest_living_branch_height",
                               "storey",
                               "sapling_stems_per_ha",
                               "number_of_generated_trees"]:

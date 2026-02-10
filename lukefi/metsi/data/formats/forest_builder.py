@@ -63,7 +63,6 @@ def _append_stratum_row(
     cutting_year = 0
     age_when_10cm_diameter_at_breast_height = 0
     stand_origin_relative_position = (0.0, 0.0, 0.0)
-    lowest_living_branch_height = 0.0
     number_of_generated_trees = None
 
     values = {
@@ -82,7 +81,6 @@ def _append_stratum_row(
         "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
         "tree_number": tree_number,
         "stand_origin_relative_position": stand_origin_relative_position,
-        "lowest_living_branch_height": lowest_living_branch_height,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "sapling_stratum": sapling_stratum,
@@ -201,7 +199,6 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "origin": 0,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": None,
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
         "sapling_stratum": False,
@@ -238,7 +235,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "age_when_10cm_diameter_at_breast_height": None,
         "tree_number": tree_number,
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": None,
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
         "sapling_stratum": False,

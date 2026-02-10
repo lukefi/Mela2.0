@@ -47,7 +47,6 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "age_when_10cm_diameter_at_breast_height": np.int16,
     "tree_number": np.int32,
     "stand_origin_relative_position": np.dtype((np.float64, (3,))),
-    "lowest_living_branch_height": np.float64,
     "storey": np.int32,
     "sapling_stems_per_ha": np.float64,
     "sapling_stratum": np.bool_,
@@ -346,7 +345,6 @@ class TreeStrata(VectorData):
     age_when_10cm_diameter_at_breast_height: npt.NDArray[np.int16]
     tree_number: npt.NDArray[np.int32]
     stand_origin_relative_position: npt.NDArray[np.float64]
-    lowest_living_branch_height: npt.NDArray[np.float64]
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     sapling_stratum: npt.NDArray[np.bool_]
@@ -374,7 +372,6 @@ class TreeStrata(VectorData):
             str(self.stand_origin_relative_position[i, 0]),
             str(self.stand_origin_relative_position[i, 1]),
             str(self.stand_origin_relative_position[i, 2]),
-            str(self.lowest_living_branch_height[i]),
             str(self.management_category[i]),
             str(self.sapling_stems_per_ha[i]),
             str(self.sapling_stratum[i]),

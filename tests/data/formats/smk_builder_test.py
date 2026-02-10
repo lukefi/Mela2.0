@@ -166,9 +166,6 @@ class TestXMLBuilder(unittest.TestCase):
         np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
         np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
 
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
-
         self.assertEqual(-1, vec0.management_category[0])
         self.assertEqual(-1, vec0.management_category[1])
 
@@ -306,8 +303,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
         np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
 
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
         self.assertEqual(-1, vec0.management_category[0])
         self.assertEqual(-1, vec0.management_category[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[0])

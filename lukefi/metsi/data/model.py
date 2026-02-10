@@ -52,7 +52,6 @@ class TreeStratum():
     tree_number: Optional[int] = None
     # Angle from plot origin, distance (m) to plot origin, height difference (m) with plot origin
     stand_origin_relative_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
-    lowest_living_branch_height: Optional[float] = None
     management_category: Optional[int] = None
     # sapling stem count within a hectare
     sapling_stems_per_ha: Optional[float] = None
@@ -178,7 +177,6 @@ class TreeStratum():
             str(self.stand_origin_relative_position[0]),
             str(self.stand_origin_relative_position[1]),
             str(self.stand_origin_relative_position[2]),
-            str(self.lowest_living_branch_height),
             str(self.management_category),
             str(self.sapling_stems_per_ha),
             str(self.sapling_stratum),
@@ -206,11 +204,10 @@ class TreeStratum():
             conv(row[15], float) or 0.0,
             conv(row[16], float) or 0.0
         )
-        result.lowest_living_branch_height = conv(row[17], float)
-        result.management_category = conv(row[18], int)
-        result.sapling_stems_per_ha = conv(row[19], float)
-        result.sapling_stratum = row[20] == "True"
-        result.storey = Storey(int(row[21])) if row[21] != "None" else None
+        result.management_category = conv(row[17], int)
+        result.sapling_stems_per_ha = conv(row[18], float)
+        result.sapling_stratum = row[19] == "True"
+        result.storey = Storey(int(row[20])) if row[20] != "None" else None
         return result
 
 
@@ -631,7 +628,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
                     f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
                     f"{self.tree_strata.stand_origin_relative_position[i][2]})",
-                    self.tree_strata.lowest_living_branch_height[i],
                     int(self.tree_strata.storey[i]),
                     self.tree_strata.sapling_stems_per_ha[i],
                     bool(self.tree_strata.sapling_stratum[i]),
