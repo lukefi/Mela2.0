@@ -42,7 +42,6 @@ def _append_stratum_row(
     sapling_stems_per_ha = util.get_or_default(
         util.parse_type(row[indices["sapling_stems_per_ha"]], float), 0.0
     )
-    sapling_stratum = sapling_stems_per_ha > 0
 
     mean_diameter = util.parse_type(row[indices["avg_diameter"]], float)
     mean_height = vmi_util.determine_stratum_tree_height(row[indices["avg_height"]])
@@ -79,7 +78,6 @@ def _append_stratum_row(
         "stand_origin_relative_position": stand_origin_relative_position,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
-        "sapling_stratum": sapling_stratum,
         "number_of_generated_trees": number_of_generated_trees,
     }
 
@@ -197,7 +195,6 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
-        "sapling_stratum": False,
         "number_of_generated_trees": None,
     }
 
@@ -231,7 +228,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "stand_origin_relative_position": (0.0, 0.0, 0.0),
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
-        "sapling_stratum": False,
         "number_of_generated_trees": None,
     }
 

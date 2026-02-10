@@ -25,7 +25,6 @@ class PreprocessingTest(unittest.TestCase):
                 "basal_area": [250.0],
                 "stems_per_ha": [None],
                 "biological_age": [10.0],
-                "sapling_stratum": [False],
             }
         )
 

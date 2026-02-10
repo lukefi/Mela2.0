@@ -89,14 +89,14 @@ def solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> st
         # big trees
         if stratum.has_diameter() and stratum.has_height() and stratum.has_basal_area() and method == 'weibull':
             return TreeStrategy.WEIBULL_DISTRIBUTION.value
-        if not stratum.sapling_stratum and stratum.has_diameter() \
+        if stratum.has_diameter() \
                 and (stratum.has_basal_area() or stratum.has_stems_per_ha()) and method == 'lm':
             return TreeStrategy.LM_TREES.value
         if stratum.has_diameter() and stratum.has_height() and stratum.has_stems_per_ha():
             return TreeStrategy.HEIGHT_DISTRIBUTION.value
         return TreeStrategy.SKIP.value
     # small trees
-    if stratum.has_height() and stratum.sapling_stratum:
+    if stratum.has_height():
         return TreeStrategy.HEIGHT_DISTRIBUTION.value
     return TreeStrategy.SKIP.value
 
@@ -183,7 +183,6 @@ def _generate_trees_for_stratum(
     s.sapling_stems_per_ha = float(
         strata_vec.sapling_stems_per_ha[s_idx]) if not np.isnan(
         strata_vec.sapling_stems_per_ha[s_idx]) else None
-    s.sapling_stratum = bool(strata_vec.sapling_stratum[s_idx])
     s.storey = None  # or convert from int if you keep Storey in SoA
     # etc. for fields you actually use in tree_generation
 

@@ -47,7 +47,6 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "stand_origin_relative_position": np.dtype((np.float64, (3,))),
     "storey": np.int32,
     "sapling_stems_per_ha": np.float64,
-    "sapling_stratum": np.bool_,
     "number_of_generated_trees": np.int32
 }
 
@@ -343,7 +342,6 @@ class TreeStrata(VectorData):
     stand_origin_relative_position: npt.NDArray[np.float64]
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
-    sapling_stratum: npt.NDArray[np.bool_]
     number_of_generated_trees: npt.NDArray[np.int32]
 
     def __init__(self):
@@ -368,6 +366,5 @@ class TreeStrata(VectorData):
             str(self.stand_origin_relative_position[i, 2]),
             str(self.management_category[i]),
             str(self.sapling_stems_per_ha[i]),
-            str(self.sapling_stratum[i]),
             str(self.storey[i])
         ]

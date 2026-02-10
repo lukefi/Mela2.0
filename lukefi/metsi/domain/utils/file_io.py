@@ -117,7 +117,6 @@ def create_database_tables(db: sqlite3.Connection):
             stand_origin_relative_position TEXT,
             storey INTEGER,
             sapling_stems_per_ha REAL,
-            sapling_stratum INTEGER(1),
             number_of_generated_trees INTEGER,
             PRIMARY KEY (node, identifier),
             FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand))

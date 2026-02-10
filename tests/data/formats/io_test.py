@@ -134,7 +134,7 @@ class IoUtilsTest(ConverterTestSuite):
                         getattr(stand.tree_strata, attribute),
                         getattr(stands_from_csv[i].tree_strata, attribute), True))
 
-            for attribute in ["identifier", "sapling_stratum"]:
+            for attribute in ["identifier"]:
                 self.assertTrue(
                     np.array_equal(
                         getattr(stand.tree_strata, attribute),

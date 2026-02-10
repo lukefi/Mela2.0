@@ -53,7 +53,6 @@ class TreeStratum():
     management_category: Optional[int] = None
     # sapling stem count within a hectare
     sapling_stems_per_ha: Optional[float] = None
-    sapling_stratum: bool = False  # this reference tree represents saplings
     storey: Optional[Storey] = None
     number_of_generated_trees: Optional[int] = None
 
@@ -175,7 +174,6 @@ class TreeStratum():
             str(self.stand_origin_relative_position[2]),
             str(self.management_category),
             str(self.sapling_stems_per_ha),
-            str(self.sapling_stratum),
             str(self.storey)
         ]
 
@@ -200,8 +198,7 @@ class TreeStratum():
         )
         result.management_category = conv(row[15], int)
         result.sapling_stems_per_ha = conv(row[16], float)
-        result.sapling_stratum = row[17] == "True"
-        result.storey = Storey(int(row[18])) if row[18] != "None" else None
+        result.storey = Storey(int(row[17])) if row[17] != "None" else None
         return result
 
 
@@ -600,7 +597,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO strata
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -622,7 +619,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     f"{self.tree_strata.stand_origin_relative_position[i][2]})",
                     int(self.tree_strata.storey[i]),
                     self.tree_strata.sapling_stems_per_ha[i],
-                    bool(self.tree_strata.sapling_stratum[i]),
                     int(self.tree_strata.number_of_generated_trees[i])
                 )
             )
