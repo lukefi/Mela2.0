@@ -115,7 +115,7 @@ class VectorData():
         str_default = ""
         float_default = np.nan
         bool_default = False
-        tuple_default = (np.nan, np.nan, np.nan)
+        tuple_default = (0.0, 0.0, 0.0)
         object_default = None
         retval: Any
 
