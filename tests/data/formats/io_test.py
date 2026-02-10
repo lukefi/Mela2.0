@@ -122,7 +122,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "basal_area",
                               "origin",
-                              "cutting_year",
                               "tree_number",
                               "storey",
                               "sapling_stems_per_ha",

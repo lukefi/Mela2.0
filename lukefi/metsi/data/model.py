@@ -46,7 +46,6 @@ class TreeStratum():
     breast_height_age: Optional[float] = None
     biological_age: Optional[float] = None  # age in years
     basal_area: Optional[float] = None  # stratum basal area
-    cutting_year: Optional[int] = None
     tree_number: Optional[int] = None
 
     # sapling stem count within a hectare
@@ -165,7 +164,6 @@ class TreeStratum():
             str(self.breast_height_age),
             str(self.biological_age),
             str(self.basal_area),
-            str(self.cutting_year),
             str(self.tree_number),
             str(self.sapling_stems_per_ha),
             str(self.storey)
@@ -183,11 +181,10 @@ class TreeStratum():
         result.breast_height_age = conv(row[7], float)
         result.biological_age = conv(row[8], float)
         result.basal_area = conv(row[9], float)
-        result.cutting_year = conv(row[10], int)
-        result.tree_number = conv(row[11], int)
+        result.tree_number = conv(row[10], int)
 
-        result.sapling_stems_per_ha = conv(row[12], float)
-        result.storey = Storey(int(row[13])) if row[13] != "None" else None
+        result.sapling_stems_per_ha = conv(row[11], float)
+        result.storey = Storey(int(row[12])) if row[12] != "None" else None
         return result
 
 
@@ -586,7 +583,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO strata
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -600,7 +597,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.tree_strata.stems_per_ha[i],
                     self.tree_strata.basal_area[i],
                     int(self.tree_strata.origin[i]),
-                    int(self.tree_strata.cutting_year[i]),
                     int(self.tree_strata.tree_number[i]),
                     int(self.tree_strata.storey[i]),
                     self.tree_strata.sapling_stems_per_ha[i],

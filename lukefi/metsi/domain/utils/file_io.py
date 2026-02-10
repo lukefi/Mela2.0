@@ -111,7 +111,6 @@ def create_database_tables(db: sqlite3.Connection):
             stems_per_ha REAL,
             basal_area REAL,
             origin INTEGER,
-            cutting_year INTEGER,
             tree_number INTEGER,
             storey INTEGER,
             sapling_stems_per_ha REAL,
