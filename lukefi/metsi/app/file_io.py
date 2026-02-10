@@ -178,18 +178,16 @@ def delete_existing_export_files(
     force_delete: bool,
 ) -> bool:
     """
-    Checks whether export_prepro output files already exist (csv/rst).
+    Checks whether export_prepro output files or database already exist (csv/rst/db).
     If they exist:
       - if force_delete: delete and continue
       - else prompt user y/n
     Returns True if execution should continue, False if it should exit.
     """
-
-    if not export_prepro:
-        return True  # nothing will be written
-
-    # Only consider formats declared in export_prepro
-    formats = list(export_prepro.keys())
+    formats = []
+    if export_prepro:
+        # Only consider formats declared in export_prepro
+        formats = list(export_prepro.keys())
 
     td = Path(target_directory)
 
