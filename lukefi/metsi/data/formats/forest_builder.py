@@ -309,11 +309,20 @@ class VMIBuilder(ForestBuilder):
                 print("warning: VMI row not addressable: ")
                 print("    " + str(row))
 
+    @abstractmethod
     def classify_row(self, row: Any) -> str | None:
         """
         Return 'stand', 'stratum', 'tree' or None.
         Default mapping assumes: 1=stand, 2=stratum, 3=tree.
         Subclasses override if their semantics differ (e.g., VMI10).
+        """
+        ...
+
+    def _classify_row(self, row: Any) -> str | None:
+        """
+        Helper for the default mapping:
+          1 = stand, 2 = stratum, 3 = tree.
+        Used by VMI12/VMI13 (and maybe others).
         """
         row_type = self.find_row_type(row)
         if row_type == 1:
@@ -852,6 +861,9 @@ class VMI12Builder(VMIBuilder):
         """Return VMI12 data type of the row"""
         return int(row[13])
 
+    def classify_row(self, row: str) -> str | None:
+        return self._classify_row(row)
+
     def build(self) -> StandList:
         """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
@@ -981,6 +993,9 @@ class VMI13Builder(VMIBuilder):
         # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
+
+    def classify_row(self, row: str) -> str | None:
+        return self._classify_row(row)
 
     def build(self) -> StandList:
         """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
