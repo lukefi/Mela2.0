@@ -81,7 +81,6 @@ def create_database_tables(db: sqlite3.Connection):
             stems_per_ha REAL,
             origin INTEGER,
             management_category INTEGER,
-            age_when_10cm_diameter_at_breast_height INTEGER,
             lowest_living_branch_height REAL,
             tree_category TEXT,
             storey INTEGER,

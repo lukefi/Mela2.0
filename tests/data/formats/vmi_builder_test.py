@@ -183,7 +183,6 @@ class TestForestBuilder(unittest.TestCase):
         # diameter 20.7, area factors 1.0
         self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
 
         self.assertEqual(1, trees.tree_number[i])
@@ -355,7 +354,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(trees.measured_height[i]))
         self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
 
         self.assertEqual(1, trees.tree_number[i])

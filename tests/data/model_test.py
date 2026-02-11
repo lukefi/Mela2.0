@@ -17,7 +17,6 @@ class TestForestDataModel(unittest.TestCase):
             breast_height_age=10.0,
             biological_age=12.0,
 
-            age_when_10cm_diameter_at_breast_height=0,
             origin=1,
             management_category=1,
             sapling=True)

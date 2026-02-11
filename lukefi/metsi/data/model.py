@@ -135,8 +135,6 @@ class TreeStratum():
         result.height = self.mean_height
         result.breast_height_age = self.breast_height_age
         result.biological_age = self.biological_age
-        result.saw_log_volume_reduction_factor = -1.0
-        result.age_when_10cm_diameter_at_breast_height = 0
         result.origin = self.origin
         result.management_category = 1
         result.sapling = True
@@ -206,9 +204,7 @@ class ReferenceTree():
     # age in years when reached 1.3 m height
     breast_height_age: Optional[float] = None
     biological_age: Optional[float] = None  # age in years
-    saw_log_volume_reduction_factor: Optional[float] = None  # value between 0.0-1.0
-    # age when reached 10 cm diameter at 1.3 m height. Hard variable to name...
-    age_when_10cm_diameter_at_breast_height: Optional[int] = None
+
     # 0-3; natural, seeded, planted, supplementary planted
     origin: Optional[int] = None
     # default is the order of appearance (or in sample plot)
@@ -283,15 +279,14 @@ class ReferenceTree():
         result.measured_height = conv(row[7], float)
         result.breast_height_age = conv(row[8], float)
         result.biological_age = conv(row[9], float)
-        result.age_when_10cm_diameter_at_breast_height = conv(row[10], int)
-        result.tree_number = conv(row[11], int)
-        result.lowest_living_branch_height = conv(row[12], float)
-        result.management_category = conv(row[13], int)
-        result.tree_category = conv(row[14], str)
-        result.sapling = row[15] == "True"
-        result.storey = Storey(int(row[16])) if row[16] != 'None' else None
-        result.tree_type = conv(row[17], str)
-        result.tuhon_ilmiasu = conv(row[18], str)
+        result.tree_number = conv(row[10], int)
+        result.lowest_living_branch_height = conv(row[11], float)
+        result.management_category = conv(row[12], int)
+        result.tree_category = conv(row[13], str)
+        result.sapling = row[14] == "True"
+        result.storey = Storey(int(row[15])) if row[15] != 'None' else None
+        result.tree_type = conv(row[16], str)
+        result.tuhon_ilmiasu = conv(row[17], str)
         return result
 
 
@@ -534,7 +529,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -550,7 +545,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.reference_trees.stems_per_ha[i],
                     int(self.reference_trees.origin[i]),
                     int(self.reference_trees.management_category[i]),
-                    int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
                     self.reference_trees.lowest_living_branch_height[i],
                     self.reference_trees.tree_category[i],
                     int(self.reference_trees.storey[i]),
