@@ -10,8 +10,6 @@ control_structure = {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         "strata_origin": 2,
         "run_modes": ["preprocess", "export_prepro", "simulate"],
-        "preprocessing_output_file": "preprocessing_results",
-        "simulation_output_file": "simulation_results"
     },
     "preprocessing_operations": [
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees

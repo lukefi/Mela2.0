@@ -9,8 +9,6 @@ control_structure = {
     "app_configuration": {
         "state_format": "xml",
         "run_modes": ["preprocess", "simulate"],
-        "preprocessing_output_file": "preprocessing_results",
-        "simulation_output_file": "simulation_results"
     },
     "preprocessing_operations": [
         generate_reference_trees,

@@ -12,6 +12,8 @@ control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         "run_modes": ["preprocess", "export_prepro", "simulate"],
+        "preprocessing_output_file": "preprocessing_results",
+        "simulation_output_file": "simulation_results"
     },
     "preprocessing_operations": [
         scale_area_weight,
