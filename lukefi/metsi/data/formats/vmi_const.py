@@ -50,7 +50,7 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "jakso1_sivulaji1_osuus": slice(149, 151),          # sivplaji1os 150-151
     "jakso1_sivulaji2": slice(151, 153),                # sivplaji2 152-153
     "maanmuokkaus_aika": slice(194, 194),               # maakasaika
-    "basal_area": slice(216, 217),                      # kuvppa, kuvion ppa
+    "basal_area": slice(215, 217),                      # kuvppa, kuvion ppa
     "jakso2_ppa": slice(217, 219),                      # j2ppa 218-219
     "jakso2_asema": slice(220, 221),                    # j2asema 221
     "jakso2_syntytapa": slice(222, 223),                # j2syntapa 223
@@ -176,7 +176,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "ppa3": slice(292, 295),
     "ppa4": slice(296, 299),
     "ppa5": slice(300, 303),
-    "basal_area": slice(306, 307),                  # kuvppa, kuvion ppa
+    "basal_area": slice(305, 307),                  # kuvppa, kuvion ppa
 }
 
 VMI10_TREE_INDICES: dict[str, slice] = {
