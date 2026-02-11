@@ -116,7 +116,6 @@ def _append_tree_row(
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
-    saw_log_volume_reduction_factor = None
     age_when_10cm_diameter_at_breast_height = 0
 
     lowest_living_branch_height = (
@@ -144,7 +143,6 @@ def _append_tree_row(
         "stems_per_ha": stems_per_ha,
         "origin": origin,
         "management_category": management_category,
-        "saw_log_volume_reduction_factor": saw_log_volume_reduction_factor,
         "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
         "lowest_living_branch_height": lowest_living_branch_height,
         "tree_category": tree_category,

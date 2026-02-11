@@ -236,9 +236,6 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     rt = copy(result.reference_trees)
 
     if rt.size:
-        if rt.saw_log_volume_reduction_factor is not None:
-            rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
-            np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
 
         if rt.species is not None:
             # np.where returns a new array anyway, so original won't be mutated

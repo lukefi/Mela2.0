@@ -283,16 +283,15 @@ class ReferenceTree():
         result.measured_height = conv(row[7], float)
         result.breast_height_age = conv(row[8], float)
         result.biological_age = conv(row[9], float)
-        result.saw_log_volume_reduction_factor = conv(row[10], float)
-        result.age_when_10cm_diameter_at_breast_height = conv(row[11], int)
-        result.tree_number = conv(row[12], int)
-        result.lowest_living_branch_height = conv(row[13], float)
-        result.management_category = conv(row[14], int)
-        result.tree_category = conv(row[15], str)
-        result.sapling = row[16] == "True"
-        result.storey = Storey(int(row[17])) if row[17] != 'None' else None
-        result.tree_type = conv(row[18], str)
-        result.tuhon_ilmiasu = conv(row[19], str)
+        result.age_when_10cm_diameter_at_breast_height = conv(row[10], int)
+        result.tree_number = conv(row[11], int)
+        result.lowest_living_branch_height = conv(row[12], float)
+        result.management_category = conv(row[13], int)
+        result.tree_category = conv(row[14], str)
+        result.sapling = row[15] == "True"
+        result.storey = Storey(int(row[16])) if row[16] != 'None' else None
+        result.tree_type = conv(row[17], str)
+        result.tuhon_ilmiasu = conv(row[18], str)
         return result
 
 
@@ -535,7 +534,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -551,7 +550,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.reference_trees.stems_per_ha[i],
                     int(self.reference_trees.origin[i]),
                     int(self.reference_trees.management_category[i]),
-                    self.reference_trees.saw_log_volume_reduction_factor[i],
                     int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
                     self.reference_trees.lowest_living_branch_height[i],
                     self.reference_trees.tree_category[i],
