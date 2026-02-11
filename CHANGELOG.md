@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.12] - 2026-02-11
+
+### Added
+
+- Option to change output file name.
+- Prompting confirmation if outputfiles alreade exists #MELA2-127
+
 ## [0.4.11] - 2026-01-28
 
 ### Changed
