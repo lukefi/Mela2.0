@@ -9,14 +9,15 @@ from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.runners import evaluate_sequence
 
 
-def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList) -> None:
+def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList,
+                        base_name: str = "preprocessing_result") -> None:
     output_formats = list(decl.keys())
     print_logline(f"Writing all preprocessed data to directory '{target_directory}'")
     for output_format in output_formats:
         operations: Optional[list[Callable[[StandList], StandList]]] = decl[output_format].get('operations', None)
         operation_params: Optional[dict[Callable, Any]] = decl[output_format].get('operation_params', None)
         additional_varnames: Optional[list[str]] = decl[output_format].get('additional_variables', None)
-        file_name = f"preprocessing_result.{output_format}"
+        file_name = f"{base_name}.{output_format}"
         filepaths = determine_file_path(target_directory, file_name)
         if operations is not None:
             operation_chain = simple_processable_chain(operations, operation_params or {})

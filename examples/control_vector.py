@@ -9,7 +9,7 @@ control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         "strata_origin": 2,
-        "run_modes": ["preprocess", "export_prepro", "simulate"]
+        "run_modes": ["preprocess", "export_prepro", "simulate"],
     },
     "preprocessing_operations": [
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees

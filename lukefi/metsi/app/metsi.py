@@ -16,6 +16,7 @@ from lukefi.metsi.app.file_io import (
     init_sqlite_database,
     prepare_target_directory,
     read_stands_from_file,
+    delete_existing_export_files,
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.simulator import simulate_alternatives
@@ -33,7 +34,8 @@ def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) ->
 def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
-        export_preprocessed(config.target_directory, control['export_prepro'], data)
+        export_preprocessed(config.target_directory, control['export_prepro'], data,
+                            base_name=config.preprocessing_output_file)
     else:
         print_logline("Declaration for 'export_prerocessed' not found from control.")
         print_logline("Skipping export of preprocessing results.")
@@ -46,6 +48,8 @@ def _simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]
 
 def main() -> int:
     cli_arguments = parse_cli_arguments(sys.argv[1:])
+    force_delete = bool(cli_arguments.pop("delete", False))
+
     control_file = \
         MetsiConfiguration.control_file if cli_arguments["control_file"] is None else cli_arguments['control_file']
     try:
@@ -57,11 +61,21 @@ def main() -> int:
         app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
         prepare_target_directory(app_config.target_directory)
         print_logline("Reading input...")
-
+        should_continue = delete_existing_export_files(
+            target_directory=app_config.target_directory,
+            export_prepro=control_structure.get("export_prepro"),
+            preprocessing_base_name=app_config.preprocessing_output_file,
+            simulation_base_name=app_config.simulation_output_file,
+            force_delete=force_delete,
+        )
+        if not should_continue:
+            return 0
         db: sqlite3.Connection | None = None
         if RunMode.SIMULATE in app_config.run_modes:
             print_logline("Initializing output database")
-            db = init_sqlite_database(f"{app_config.target_directory}/simulation_results.db")
+            db_base = app_config.simulation_output_file or "simulation_results"
+            db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
+            db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
             create_database_tables(db)
 
         if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:

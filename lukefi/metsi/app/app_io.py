@@ -25,6 +25,8 @@ class MetsiConfiguration(SimpleNamespace):
     strata = True
     strata_origin = StrataOrigin.INVENTORY
     multiprocessing = False
+    preprocessing_output_file = "preprocessing_result"
+    simulation_output_file = "simulation_results"
 
     def __init__(self, **kwargs):
         """Initialize the configuration with defaults and user-provided values."""
@@ -48,7 +50,9 @@ class MetsiConfiguration(SimpleNamespace):
             'target_directory': str,
             'measured_trees': bool,
             'strata': bool,
-            'multiprocessing': bool
+            'multiprocessing': bool,
+            'preprocessing_output_file': str,
+            'simulation_output_file': str,
         }
         config_enums: dict[str, type[StringConfigEnum] | type[IntConfigEnum]] = {
             'run_modes': RunMode,
@@ -118,6 +122,13 @@ def parse_cli_arguments(args: list[str]) -> dict:
     parser.add_argument('input_path', help='Application input file or directory')
     parser.add_argument('target_directory', help='Directory path for program output')
     parser.add_argument('control_file', nargs='?', help='Application control declaration file')
+    parser.add_argument(
+        '-d', '-delete',
+        action='store_true',
+        dest='delete',
+        help='If output files already exist, delete them and continue without prompting.'
+    )
+
     return parser.parse_args(args).__dict__
 
 
