@@ -316,7 +316,6 @@ class VMIBuilder(ForestBuilder):
         Default mapping assumes: 1=stand, 2=stratum, 3=tree.
         Subclasses override if their semantics differ (e.g., VMI10).
         """
-        ...
 
     def _classify_row(self, row: Any) -> str | None:
         """
