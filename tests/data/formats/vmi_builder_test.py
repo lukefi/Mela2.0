@@ -189,12 +189,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
 
-        # 3-element array
-        np.testing.assert_array_equal(
-            trees.stand_origin_relative_position[i],
-            np.array([0.0, 0.0, 0.0])
-        )
-
         self.assertEqual(1, trees.tree_number[i])
 
         # None -> np.nan
@@ -368,11 +362,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(0, trees.pruning_year[i])
         self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
-
-        np.testing.assert_array_equal(
-            trees.stand_origin_relative_position[i],
-            np.array([0.0, 0.0, 0.0])
-        )
 
         self.assertEqual(1, trees.tree_number[i])
 

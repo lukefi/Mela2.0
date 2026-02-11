@@ -96,7 +96,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "management_category",
                               "saw_log_volume_reduction_factor",
                               "age_when_10cm_diameter_at_breast_height",
-                              "stand_origin_relative_position",
                               "lowest_living_branch_height",
                               "storey"]:
                 self.assertTrue(

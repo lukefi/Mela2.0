@@ -215,7 +215,6 @@ def mela_stratum(stratum):
 def mela_tree(tree: ReferenceTree) -> ReferenceTree:
     """Convert a ReferenceTree so that enumerated category variables are converted to Mela value space"""
     result = copy(tree)
-    result.stand_origin_relative_position = copy(tree.stand_origin_relative_position)
     return apply_mappers(result, *default_mela_tree_mappers)
 
 

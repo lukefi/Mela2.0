@@ -314,9 +314,6 @@ def generate_reference_trees(
             attr_dict["saw_log_volume_reduction_factor"].append(np.nan)
             attr_dict["pruning_year"].append(0)
             attr_dict["age_when_10cm_diameter_at_breast_height"].append(-1)
-            attr_dict["stand_origin_relative_position"].append(
-                (0.0, 0.0, 0.0)
-            )
             attr_dict["lowest_living_branch_height"].append(np.nan)
             attr_dict["tree_category"].append("")  # or "reference", up to you
             attr_dict["storey"].append(-1 if t.storey is None else int(t.storey))

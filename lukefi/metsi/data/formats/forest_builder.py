@@ -119,7 +119,6 @@ def _append_tree_row(
     saw_log_volume_reduction_factor = None
     pruning_year = 0
     age_when_10cm_diameter_at_breast_height = 0
-    stand_origin_relative_position = (0.0, 0.0, 0.0)
 
     lowest_living_branch_height = (
         util.get_or_default(util.parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
@@ -149,7 +148,6 @@ def _append_tree_row(
         "saw_log_volume_reduction_factor": saw_log_volume_reduction_factor,
         "pruning_year": pruning_year,
         "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
-        "stand_origin_relative_position": stand_origin_relative_position,
         "lowest_living_branch_height": lowest_living_branch_height,
         "tree_category": tree_category,
         "storey": storey,

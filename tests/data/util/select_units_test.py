@@ -61,7 +61,6 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.saw_log_volume_reduction_factor = np.repeat(0.0, self.trees.size)
         self.trees.pruning_year = np.repeat(0, self.trees.size)
         self.trees.age_when_10cm_diameter_at_breast_height = np.repeat(0, self.trees.size)
-        self.trees.stand_origin_relative_position = np.repeat(np.asarray([[0.0, 0.0, 0.0]]), self.trees.size, axis=0)
         self.trees.lowest_living_branch_height = np.repeat(0.0, self.trees.size)
         self.trees.tree_category = np.repeat("", self.trees.size)
         self.trees.storey = np.repeat(0, self.trees.size)

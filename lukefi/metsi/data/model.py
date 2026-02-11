@@ -139,7 +139,6 @@ class TreeStratum():
         result.pruning_year = 0
         result.age_when_10cm_diameter_at_breast_height = 0
         result.origin = self.origin
-        result.stand_origin_relative_position = (0.0, 0.0, 0.0)
         result.management_category = 1
         result.sapling = True
         return result
@@ -216,8 +215,7 @@ class ReferenceTree():
     origin: Optional[int] = None
     # default is the order of appearance (or in sample plot)
     tree_number: Optional[int] = None
-    # Angle from plot origin, distance (m) to plot origin, height difference (m) with plot origin
-    stand_origin_relative_position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+
     lowest_living_branch_height: Optional[float] = None  # meters
     management_category: Optional[int] = None
 
@@ -291,18 +289,13 @@ class ReferenceTree():
         result.pruning_year = conv(row[11], int) or 0
         result.age_when_10cm_diameter_at_breast_height = conv(row[12], int)
         result.tree_number = conv(row[13], int)
-        result.stand_origin_relative_position = (
-            conv(row[14], float) or 0.0,
-            conv(row[15], float) or 0.0,
-            conv(row[16], float) or 0.0,
-        )
-        result.lowest_living_branch_height = conv(row[17], float)
-        result.management_category = conv(row[18], int)
-        result.tree_category = conv(row[19], str)
-        result.sapling = row[20] == "True"
-        result.storey = Storey(int(row[21])) if row[21] != 'None' else None
-        result.tree_type = conv(row[22], str)
-        result.tuhon_ilmiasu = conv(row[23], str)
+        result.lowest_living_branch_height = conv(row[14], float)
+        result.management_category = conv(row[15], int)
+        result.tree_category = conv(row[16], str)
+        result.sapling = row[17] == "True"
+        result.storey = Storey(int(row[18])) if row[18] != 'None' else None
+        result.tree_type = conv(row[19], str)
+        result.tuhon_ilmiasu = conv(row[20], str)
         return result
 
 
@@ -545,7 +538,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -564,9 +557,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.reference_trees.saw_log_volume_reduction_factor[i],
                     int(self.reference_trees.pruning_year[i]),
                     int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
-                    f"({self.reference_trees.stand_origin_relative_position[i][0]}, "
-                    f"{self.reference_trees.stand_origin_relative_position[i][1]}, "
-                    f"{self.reference_trees.stand_origin_relative_position[i][2]})",
                     self.reference_trees.lowest_living_branch_height[i],
                     self.reference_trees.tree_category[i],
                     int(self.reference_trees.storey[i]),
