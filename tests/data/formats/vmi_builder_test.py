@@ -190,7 +190,6 @@ class TestForestBuilder(unittest.TestCase):
         # None -> np.nan
         self.assertTrue(np.isnan(trees.breast_height_age[i]))
         self.assertTrue(np.isnan(trees.biological_age[i]))
-        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
 
         self.assertEqual(1, trees.management_category[i])
         self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
@@ -360,7 +359,6 @@ class TestForestBuilder(unittest.TestCase):
 
         self.assertTrue(np.isnan(trees.breast_height_age[i]))
         self.assertTrue(np.isnan(trees.biological_age[i]))
-        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
 
         self.assertEqual(1, trees.management_category[i])
         self.assertEqual(Storey.DOMINANT.value, trees.storey[i])

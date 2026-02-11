@@ -210,7 +210,6 @@ class ReferenceTree():
     # default is the order of appearance (or in sample plot)
     tree_number: Optional[int] = None
 
-    lowest_living_branch_height: Optional[float] = None  # meters
     management_category: Optional[int] = None
 
     # VMI tree_category for living/dead/otherwise unusable tree
@@ -280,13 +279,12 @@ class ReferenceTree():
         result.breast_height_age = conv(row[8], float)
         result.biological_age = conv(row[9], float)
         result.tree_number = conv(row[10], int)
-        result.lowest_living_branch_height = conv(row[11], float)
-        result.management_category = conv(row[12], int)
-        result.tree_category = conv(row[13], str)
-        result.sapling = row[14] == "True"
-        result.storey = Storey(int(row[15])) if row[15] != 'None' else None
-        result.tree_type = conv(row[16], str)
-        result.tuhon_ilmiasu = conv(row[17], str)
+        result.management_category = conv(row[11], int)
+        result.tree_category = conv(row[12], str)
+        result.sapling = row[13] == "True"
+        result.storey = Storey(int(row[14])) if row[14] != 'None' else None
+        result.tree_type = conv(row[15], str)
+        result.tuhon_ilmiasu = conv(row[16], str)
         return result
 
 
@@ -529,7 +527,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -545,7 +543,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     self.reference_trees.stems_per_ha[i],
                     int(self.reference_trees.origin[i]),
                     int(self.reference_trees.management_category[i]),
-                    self.reference_trees.lowest_living_branch_height[i],
                     self.reference_trees.tree_category[i],
                     int(self.reference_trees.storey[i]),
                     bool(self.reference_trees.sapling[i]),

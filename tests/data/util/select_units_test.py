@@ -58,7 +58,6 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.stems_per_ha = np.ascontiguousarray(pd_trees.f, dtype=np.float64)
         self.trees.origin = np.repeat(0, self.trees.size)
         self.trees.management_category = np.ascontiguousarray(pd_trees.manag_cat, np.int32)
-        self.trees.lowest_living_branch_height = np.repeat(0.0, self.trees.size)
         self.trees.tree_category = np.repeat("", self.trees.size)
         self.trees.storey = np.repeat(0, self.trees.size)
         self.trees.sapling = np.repeat(False, self.trees.size)

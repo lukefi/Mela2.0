@@ -94,7 +94,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "origin",
                               "management_category",
-                              "lowest_living_branch_height",
                               "storey"]:
                 self.assertTrue(
                     np.array_equal(
