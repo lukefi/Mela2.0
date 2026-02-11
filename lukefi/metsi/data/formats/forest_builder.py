@@ -447,7 +447,7 @@ class VMI9Builder(VMIBuilder):
             result.year
         )
         result.region = util.parse_int(data_row[indices["county"]])
-        result.basal_area = util.basal_from_ppa(data_row, indices)
+        result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
@@ -541,7 +541,7 @@ class VMI10Builder(VMIBuilder):
             data_row[indices["osuusrel"]],
         )
 
-        result.basal_area = util.basal_from_ppa(data_row, indices)
+        result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
         result.fertilization_year = None  # value missing in VMI10 source
 
