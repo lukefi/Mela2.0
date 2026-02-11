@@ -82,7 +82,6 @@ def create_database_tables(db: sqlite3.Connection):
             origin INTEGER,
             management_category INTEGER,
             saw_log_volume_reduction_factor REAL,
-            pruning_year INTEGER,
             age_when_10cm_diameter_at_breast_height INTEGER,
             lowest_living_branch_height REAL,
             tree_category TEXT,

@@ -18,7 +18,6 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "origin": np.int32,
     "management_category": np.int32,
     "saw_log_volume_reduction_factor": np.float64,
-    "pruning_year": np.int16,
     "age_when_10cm_diameter_at_breast_height": np.int16,
     "lowest_living_branch_height": np.float64,
     "tree_category": np.str_,
@@ -256,7 +255,6 @@ class ReferenceTrees(VectorData):
     origin: npt.NDArray[np.int32]
     management_category: npt.NDArray[np.int32]
     saw_log_volume_reduction_factor: npt.NDArray[np.float64]
-    pruning_year: npt.NDArray[np.int16]
     age_when_10cm_diameter_at_breast_height: npt.NDArray[np.int16]
     lowest_living_branch_height: npt.NDArray[np.float64]
     tree_category: npt.NDArray[np.str_]
@@ -280,7 +278,6 @@ class ReferenceTrees(VectorData):
             self.breast_height_age[i],
             self.biological_age[i],
             self.saw_log_volume_reduction_factor[i],
-            self.pruning_year[i],
             self.age_when_10cm_diameter_at_breast_height[i],
             self.origin[i],
             self.tree_number[i],
@@ -302,7 +299,6 @@ class ReferenceTrees(VectorData):
             str(self.breast_height_age[i]),
             str(self.biological_age[i]),
             str(self.saw_log_volume_reduction_factor[i]),
-            str(self.pruning_year[i]),
             str(self.age_when_10cm_diameter_at_breast_height[i]),
             str(self.tree_number[i]),
             str(self.lowest_living_branch_height[i]),
