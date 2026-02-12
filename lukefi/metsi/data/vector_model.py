@@ -402,6 +402,9 @@ class TreeStrata(VectorData):
         retval._recompute_size()
         return retval
 
+    def __repr__(self) -> str:
+        return f"TreeStrata(size={self.size})"
+
     def get_stratum(self, i: int) -> TreeStratum:
         return TreeStratum(
             self.identifier[i],
