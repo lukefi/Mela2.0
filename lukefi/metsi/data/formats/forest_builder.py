@@ -309,14 +309,6 @@ class VMIBuilder(ForestBuilder):
                 print("warning: VMI row not addressable: ")
                 print("    " + str(row))
 
-    @abstractmethod
-    def classify_row(self, row: Any) -> str | None:
-        """
-        Return 'stand', 'stratum', 'tree' or None.
-        Default mapping assumes: 1=stand, 2=stratum, 3=tree.
-        Subclasses override if their semantics differ (e.g., VMI10).
-        """
-
     def _classify_row(self, row: Any) -> str | None:
         """
         Helper for the default mapping:
@@ -382,6 +374,10 @@ class VMIBuilder(ForestBuilder):
     def build(self) -> StandList:
         ...
 
+    @abstractmethod
+    def classify_row(self, row: Any) -> str | None:
+        ...
+
 
 class VMI9Builder(VMIBuilder):
     """VMI9 specific builder implementation"""
@@ -412,16 +408,12 @@ class VMI9Builder(VMIBuilder):
         0..10 => Etelä-Suomi
         11..13 => Pohjois-Suomi
         """
-        raw = row[VMI9_STAND_COMMON["forestry_centre"]].strip()  # metkes (cols 67-68)
-        try:
-            mk = int(raw)
-        except (ValueError, TypeError):
-            mk = None
 
-        if mk is not None:
-            return VMI9_STAND_INDICES_PSUOMI if 11 <= mk <= 13 else VMI9_STAND_INDICES_ESUOMI
+        forestry_centre = util.parse_int(row[VMI9_STAND_COMMON["forestry_centre"]].strip())
+        if forestry_centre is None:
+            raise MetsiException("Forestry_centre information is missing")
 
-        raise MetsiException("Metsäkeskus tieto puuttuu")
+        return VMI9_STAND_INDICES_PSUOMI if 11 <= forestry_centre <= 13 else VMI9_STAND_INDICES_ESUOMI
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
 
