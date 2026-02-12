@@ -106,13 +106,15 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'osuus': robjects.FloatVector([osuus for osuus in species_proportions])
     }
 
-    source_trees = stratum.__dict__.get('_trees', [])
+    # source_trees = stratum.__dict__.get('_trees', [])
+    source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.identifier]
 
     tree_data = {
-        'lpm': robjects.FloatVector([tree.breast_height_diameter or robjects.NA_Real for tree in source_trees]),
-        'height': robjects.FloatVector([robjects.NA_Real if tree.tuhon_ilmiasu in ('2', '61', '62', '71', '72')
-                                        else (tree.measured_height or robjects.NA_Real) for tree in source_trees]),
-        'lkm': robjects.FloatVector([tree.stems_per_ha or robjects.NA_Real for tree in source_trees])
+        # 'lpm': robjects.FloatVector([tree.breast_height_diameter or robjects.NA_Real for tree in source_trees]),
+        'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
+        'height': robjects.FloatVector([robjects.NA_Real if source_trees.tuhon_ilmiasu[i] in ('2', '61', '62', '71', '72')
+                                        else (source_trees.measured_height[i]) for i in range(len(source_trees))]),
+        'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(len(source_trees))])
     }
 
     gos_div = params.get('lm_gos_div', 1)
