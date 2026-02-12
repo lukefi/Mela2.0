@@ -50,6 +50,7 @@ class TreeSpecies(MetsiEnum):
     POPLAR = 36
     HAZEL = 37
     UNKNOWN = 38
+    TREELESS = 0
 
     def is_deciduous(self):
         return self in DECIDUOUS_SPECIES

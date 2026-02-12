@@ -9,7 +9,9 @@ from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.domain.utils.filter import applyfilter
+from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
+from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
+from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
 from lukefi.metsi.forestry.preprocessing import tree_generation
 from lukefi.metsi.forestry.preprocessing.ages import ages
@@ -17,11 +19,23 @@ from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_lo
 from lukefi.metsi.forestry.preprocessing.tree_generation_validation import create_stratum_tree_comparison_set, debug_output_row_from_comparison_set
 
 
-def preproc_filter(stands: StandList, **operation_params) -> StandList:
+def filter_stands(stands: StandList, **operation_params) -> StandList:
     command: str
-    predicate: Callable[..., bool]
+    predicate: Callable[[ForestStand], bool]
     for command, predicate in operation_params.items():
-        stands = applyfilter(stands, command, predicate)
+        stands = filter_stands_(stands, command, predicate)
+    return stands
+
+
+def filter_trees(stands: StandList, **operation_params) -> StandList:
+    mask = operation_params["mask"]
+    stands = filter_trees_(stands, mask)
+    return stands
+
+
+def filter_strata(stands: StandList, **operation_params) -> StandList:
+    mask = operation_params["mask"]
+    stands = filter_strata_(stands, mask)
     return stands
 
 
@@ -210,8 +224,8 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
     stratum_association_diameter_threshold = operation_params.get('stratum_association_diameter_threshold', 3)
 
-    for i, stand in enumerate(stands):
-        print(f"\rGenerating trees for stand {stand.identifier}    {i}/{len(stands)}", end="")
+    for j, stand in enumerate(stands):
+        print(f"\rGenerating trees for stand {stand.identifier}    {j}/{len(stands)}", end="")
 
         tree_ordering = np.argsort(stand.reference_trees.identifier)
 
@@ -239,9 +253,10 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         # new_trees = []
         new_trees = ReferenceTrees()
 
-        for stratum in (strata.get_stratum(i) for i in range(len(strata))):
+        for k, stratum in enumerate(strata.get_stratum(i) for i in range(len(strata))):
             try:
                 stratum_trees = tree_generation.reference_trees_from_tree_stratum(stand, stratum, **operation_params)
+                strata.number_of_generated_trees[k] = stratum.number_of_generated_trees
             except Exception as e:
                 print(
                     f"\nError generating trees for stratum {
@@ -275,7 +290,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         new_trees = new_trees + retention_trees
 
         # inline generate_stratum_from_retention_tree
-        new_strata = TreeStrata()
+        new_strata = TreeStrata(retention_trees.size)
         new_strata.tree_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
         new_strata.identifier = np.asarray([
             stand.identifier +
@@ -293,7 +308,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         new_strata.basal_area = retention_trees.stems_per_ha * np.pi * \
             ((retention_trees.breast_height_diameter / 200) ** 2)
         new_strata.number_of_generated_trees = np.repeat(1, len(retention_trees))
-        new_strata.size = retention_trees.size
 
         stand.tree_strata = stand.tree_strata + new_strata
         stand.reference_trees = new_trees
@@ -319,6 +333,9 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
 
     for stand in stands:
         assert stand.land_use_category is not None
+
+        if stand.land_use_category not in (LandUseCategory.FOREST, LandUseCategory.SCRUB_LAND):
+            continue
 
         trees = stand.reference_trees
         bhd_positive = trees.breast_height_diameter > 0
@@ -352,6 +369,9 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
 
     for stand in stands:
         assert stand.land_use_category is not None
+
+        if stand.land_use_category not in (LandUseCategory.FOREST, LandUseCategory.SCRUB_LAND):
+            continue
 
         trees = stand.reference_trees
         is_retained = trees.management_category == 2
@@ -463,10 +483,13 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
     _ = operation_params
     for stand in stands:
         trees = stand.reference_trees
-        smaller_diameter = (4.5 <= trees.breast_height_diameter < 9.5) & (0 < stand.area_weight_factors[0] < 1)
-        larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
-        trees.stems_per_ha[smaller_diameter] = trees.stems_per_ha[smaller_diameter] / stand.area_weight_factors[0]
-        trees.stems_per_ha[larger_diameter] = trees.stems_per_ha[larger_diameter] / stand.area_weight_factors[1]
+        if len(trees) > 0:
+            smaller_diameter = ((4.5 <= trees.breast_height_diameter) & 
+                                (trees.breast_height_diameter < 9.5) & 
+                                (0 < stand.area_weight_factors[0] < 1))
+            larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
+            trees.stems_per_ha[smaller_diameter] = trees.stems_per_ha[smaller_diameter] / stand.area_weight_factors[0]
+            trees.stems_per_ha[larger_diameter] = trees.stems_per_ha[larger_diameter] / stand.area_weight_factors[1]
 
     return stands
 
@@ -490,7 +513,9 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
     return stands
 
 
-__all__ = ['preproc_filter',
+__all__ = ['filter_stands',
+           'filter_trees',
+           'filter_strata',
            'compute_location_metadata',
            'generate_reference_trees',
            'scale_area_weight',

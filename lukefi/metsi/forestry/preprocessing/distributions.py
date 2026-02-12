@@ -238,12 +238,6 @@ def sapling_height_distribution(stratum: TreeStratum, dominant_height: float, n_
     return: Given number of trees containing breast height diameter (cm), height (m) and stems per hectar
     """
     if n_trees == 1:
-        # single tree:
-        # reference_tree = ReferenceTree()
-        # reference_tree.breast_height_diameter = stratum.mean_diameter
-        # reference_tree.height = stratum.mean_height
-        # reference_tree.stems_per_ha = stratum.stems_per_ha
-        # return [reference_tree]
         retval = ReferenceTrees()
         retval.vectorize({"breast_height_diameter": [stratum.mean_diameter],
                           "height": [stratum.mean_height],

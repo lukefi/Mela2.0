@@ -112,7 +112,7 @@ def _append_tree_row(
 
     stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
 
-    origin = 0
+    origin = vmi2internal.convert_origin(row[indices["origin"]])
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 

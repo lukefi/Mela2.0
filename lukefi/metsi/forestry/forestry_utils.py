@@ -67,9 +67,9 @@ def find_matching_stratum_by_diameter_lm(
     """
 
     # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
-    #   jonka keskiläpimitta on lähinnä puun läpimittaa.
+    #       jonka keskiläpimitta on lähinnä puun läpimittaa.
     # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
-    #   R-koodissa kerroin = 3.
+    #       R-koodissa kerroin = 3.
 
     candidate = min(
         strata,
@@ -153,9 +153,9 @@ def find_matching_storey_stratum_for_tree(
         return None
 
     same_storey_strata = [
-        strata.get_stratum(i) for i in range(
-            len(strata)) if storey_match(
-            strata.get_stratum(i), tree)]
+        strata.get_stratum(i) for i in range(len(strata))
+        if storey_match(strata.get_stratum(i), tree)
+    ]
     same_species_strata, other_species_strata = split_list_by_predicate(
         same_storey_strata,
         lambda stratum: stratum.species == tree.species)

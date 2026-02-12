@@ -2,6 +2,7 @@
 (see. distributions module) """
 from enum import StrEnum
 from typing import Optional
+from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing import distributions
@@ -16,20 +17,29 @@ class TreeStrategy(StrEnum):
     SKIP = 'skip_tree_generation'
 
 
-def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum) -> ReferenceTrees:
+def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_scale: float) -> ReferenceTrees:
     """ For all given trees inflates the common variables from stratum. """
-    stratum.number_of_generated_trees = len(reference_trees)
-    for i in range(len(reference_trees)):
-        reference_trees.species[i] = stratum.species
-        reference_trees.breast_height_age[i] = 0.0 if stratum.number_of_generated_trees == 1 \
-            else stratum.get_breast_height_age()
+    n_trees = len(reference_trees)
+    stratum.number_of_generated_trees = n_trees
+
+    for i in range(n_trees):
+        # reference_tree.stand = stratum.stand
+        reference_trees.species[i] = stratum.species if reference_trees.species[i] in (
+            TreeSpecies.UNKNOWN, TreeSpecies.UNSET, TreeSpecies.TREELESS) else reference_trees.species[i]
+        reference_trees.breast_height_age[i] = max(stratum.get_breast_height_age(), 1) if \
+            reference_trees.height[i] > 1.3 else 0.0
         reference_trees.biological_age[i] = stratum.biological_age
-        if reference_trees.breast_height_age[i] == 0.0 and reference_trees.breast_height_diameter[i] > 0.0:
-            reference_trees.breast_height_age[i] = 1.0
         reference_trees.tree_number[i] = i + 1
-        reference_trees.stems_per_ha[i] = round(reference_trees.stems_per_ha[i], 2)
+        reference_trees.stems_per_ha[i] = round(ng_scale * reference_trees.stems_per_ha[i], 2)
         reference_trees.breast_height_diameter[i] = round(reference_trees.breast_height_diameter[i], 2)
+        if reference_trees.height[i] > 1.3:
+            reference_trees.breast_height_diameter[i] = max(reference_trees.breast_height_diameter[i], 0.1)
         reference_trees.height[i] = round(reference_trees.height[i], 2)
+        retained = stratum.asema == 3
+        reference_trees.management_category[i] = 2 if retained else 1
+        reference_trees.storey[i] = Storey.SPARE if retained else stratum.storey
+        reference_trees.origin[i] = stratum.origin
+
     return reference_trees
 
 
@@ -61,23 +71,34 @@ def _trees_from_sapling_height_distribution(stratum: TreeStratum, n_trees: int) 
     return distributions.sapling_height_distribution(stratum, 0.0, n_trees)
 
 
-def _solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> TreeStrategy:
+def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, method='weibull') -> TreeStrategy:
     """ Solves the strategy of tree generation for given stratum """
+
+    if method == 'lm' and stratum.asema in (7, 8):
+        return TreeStrategy.SKIP
 
     if stratum.mean_height > 1.3:
         # big trees
-        if stratum.mean_diameter > 0.0 and stratum.mean_height > 0.0 and stratum.basal_area > 0.0 and \
-                method == 'weibull':
+        if (stratum.mean_diameter > 0.0 and stratum.mean_height >
+                0.0 and stratum.basal_area > 0.0 and method == 'weibull'):
             return TreeStrategy.WEIBULL_DISTRIBUTION
-        if not stratum.sapling_stratum and stratum.mean_diameter > 0.0 \
-                and (stratum.basal_area > 0.0 or stratum.stems_per_ha > 0.0) and method == 'lm':
+        if stand.land_use_category == 2 and stratum.basal_area > 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
-        if stratum.mean_diameter > 0.0 and stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
+        if all([
+            stratum.basal_area == 0.0,
+            stratum.stems_per_ha > 0.0,
+            2.0 > stratum.mean_height > 0.0,
+            method == 'lm'
+        ]):
+            return TreeStrategy.HEIGHT_DISTRIBUTION
+        if stratum.mean_diameter > 0.0 and stratum.basal_area > 0.0 and method == 'lm':
+            return TreeStrategy.LM_TREES
+        if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
             return TreeStrategy.HEIGHT_DISTRIBUTION
         return TreeStrategy.SKIP
 
     # small trees
-    if stratum.mean_height > 0.0 and stratum.sapling_stratum:
+    if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
         return TreeStrategy.HEIGHT_DISTRIBUTION
     return TreeStrategy.SKIP
 
@@ -97,7 +118,7 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     :return: list of reference trees derived from given stratum.
     """
     result: ReferenceTrees
-    strategy = _solve_tree_generation_strategy(stratum, params.get('method', 'weibull'))
+    strategy = _solve_tree_generation_strategy(stand, stratum, params.get('method', 'weibull'))
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
@@ -105,7 +126,7 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     elif strategy == TreeStrategy.LM_TREES:
         assert stand.degree_days is not None
         assert stand.basal_area is not None
-        result = tree_generation_lm(stratum, stand.degree_days, stand.basal_area, **params)
+        result = tree_generation_lm(stand, stratum, **params)
     elif strategy == TreeStrategy.SKIP:
         print(f"\nStratum {stratum.identifier} has no height or diameter usable for generating trees")
         return None
@@ -115,4 +136,4 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     enough_stems = result.stems_per_ha > 0.005
     result = result[enough_stems]
 
-    return _finalize_trees(result, stratum)
+    return _finalize_trees(result, stratum, params.get('ng_scale_factor', 1))

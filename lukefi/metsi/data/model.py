@@ -211,7 +211,7 @@ class ReferenceTree():
     # default is the order of appearance (or in sample plot)
     tree_number: Optional[int] = None
     # Angle from plot origin, distance (m) to plot origin, height difference (m) with plot origin
-    management_category: Optional[float] = None
+    management_category: Optional[int] = None
 
     # VMI tree_category for living/dead/otherwise unusable tree
     tree_category: Optional[str] = None
@@ -281,7 +281,7 @@ class ReferenceTree():
         result.breast_height_age = conv(row[8], float)
         result.biological_age = conv(row[9], float)
         result.tree_number = conv(row[13], int)
-        result.management_category = conv(row[18], float)
+        result.management_category = conv(row[18], int)
         result.tree_category = conv(row[19], str)
         result.sapling = row[20] == "True"
         result.storey = Storey(int(row[21])) if row[21] != 'None' else None
