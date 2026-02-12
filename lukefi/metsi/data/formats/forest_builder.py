@@ -138,7 +138,6 @@ def _append_tree_row(
         row[indices["measured_height"]],
         conversion_factor=measured_height_conversion_factor,
     )
-    # Stems/ha differs between VMI12 and VMI13 (so pass flag from builder)
     stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
 
     origin = 0
@@ -338,11 +337,9 @@ class VMIBuilder(ForestBuilder):
         """Create a ForestStand out of given VMI type 1 data row using given data indices and order number"""
         result = ForestStand()
 
-        # Identifiers
         result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
         result.set_identifiers(stand_id)
 
-        # Climate / owner / FRA
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
         result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
 
@@ -353,6 +350,7 @@ class VMIBuilder(ForestBuilder):
         result.land_use_category_detail = data_row[indices["land_category_detail"]]
         result.site_type_category = vmi2internal.convert_site_type_category(
             data_row[indices["kasvupaikkatunnus"]].strip())
+
         result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
             data_row[indices["paatyyppi"]].strip())
 
@@ -469,7 +467,7 @@ class VMI9Builder(VMIBuilder):
                 stand.identifier,
                 stand_basal_area=stand.basal_area or 0.0,
             )
-        # Trees
+
         if self.builder_flags.get("measured_trees", False):
             for row in self.reference_trees:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
@@ -535,7 +533,7 @@ class VMI10Builder(VMIBuilder):
 
         result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
-        result.fertilization_year = None  # value missing in VMI10 source
+        result.fertilization_year = None
 
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
             data_row[indices["muu_toimenpide"]],
@@ -558,7 +556,6 @@ class VMI10Builder(VMIBuilder):
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
 
-        # Geo location
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
@@ -573,18 +570,15 @@ class VMI10Builder(VMIBuilder):
     def build(self) -> StandList:
         """
         Populate a list of ForestStand with associated ReferenceTrees.
-        Strata are intentionally left empty for VMI10.
         """
         result: dict[str, ForestStand] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
         stratum_attrs: dict[str, dict[str, list]] = {}
 
-        # Build stands
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
 
-            # Build strata from the same VMI10 stand row (puujaksot)
             sattr = stratum_attrs.setdefault(stand.identifier, {})
             vmi_util.append_vmi10_strata_from_stand_row(
                 sattr,
@@ -594,7 +588,6 @@ class VMI10Builder(VMIBuilder):
                 stand_basal_area=stand.basal_area or 0.0,
             )
 
-        # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
@@ -603,7 +596,6 @@ class VMI10Builder(VMIBuilder):
                 attr_dict = tree_attrs.setdefault(stand_id, {})
                 vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row)
 
-        # Attach containers
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
             stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
@@ -713,10 +705,10 @@ class VMI11Builder(VMIBuilder):
                 data_row,
                 result.owner_category,
                 indices,
-                False,  # VMI12 True
+                False,
             )
         else:
-            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
+            result.forest_management_category = 1
 
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
@@ -839,12 +831,11 @@ class VMI12Builder(VMIBuilder):
                 data_row,
                 result.owner_category,
                 indices,
-                True,  # VMI12 True
+                True,
             )
         else:
-            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
+            result.forest_management_category = 1
 
-        # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
@@ -859,16 +850,13 @@ class VMI12Builder(VMIBuilder):
         """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
         """
         result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts
         strata_attrs: dict[str, dict[str, list]] = {}
         tree_attrs: dict[str, dict[str, list]] = {}
 
-        # Build stands
         for i, row in enumerate(self.forest_stands):
             stand = self.convert_stand_entry(VMI12_STAND_INDICES, row, i + 1)
             result[stand.identifier] = stand
 
-        # Strata → TreeStrata SoA
         if self.builder_flags.get('strata', False):
 
             for row in self.tree_strata:
@@ -876,14 +864,12 @@ class VMI12Builder(VMIBuilder):
                 attr_dict = strata_attrs.setdefault(stand_identifier, {})
                 _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row)
 
-        # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
                 _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi12=True)
 
-        # Attach SoA containers to stands
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
             stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
@@ -909,7 +895,7 @@ class VMI13Builder(VMIBuilder):
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
         """Create a ForestStand out of given VMI13 type 1 data row using given data indices and order number"""
-        # Fixed conversions
+
         result = super().convert_stand_entry(indices, data_row, stand_id)
         result.year = vmi_util.parse_vmi13_date(data_row[indices["date"]]).year
         result.start_year = result.year
@@ -976,12 +962,11 @@ class VMI13Builder(VMIBuilder):
                 data_row,
                 result.owner_category,
                 indices,
-                False,  # VMI13
+                False,
             )
         else:
-            result.forest_management_category = 1  # using same fallback than determine_forest_management_category
+            result.forest_management_category = 1
 
-        # Declared conversions
         result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
