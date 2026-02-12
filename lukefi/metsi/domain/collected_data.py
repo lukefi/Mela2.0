@@ -30,7 +30,7 @@ class RemovedTrees(CollectedData):
                 """
                 INSERT INTO removed_trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node_str,
@@ -41,7 +41,6 @@ class RemovedTrees(CollectedData):
                     self.removed_trees.breast_height_diameter[i],
                     self.removed_trees.height[i],
                     self.removed_trees.stems_per_ha[i],
-                    int(self.removed_trees.origin[i]),
-                    self.removed_trees.tree_type[i],
+                    int(self.removed_trees.origin[i])
                 )
             )
