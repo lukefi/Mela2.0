@@ -46,13 +46,3 @@ def convert_str_to_type[T:(int, float, str, OwnerCategory, LandUseCategory, Soil
     if issubclass(ret_type, IntEnum):
         return ret_type(int(value))
     return ret_type(value)
-
-
-def basal_from_ppa(data_row: str, indices) -> float:
-    # Basal area from ppa1..ppa5 (0.1 m2 units)
-    ppas = []
-    for k in ("ppa1", "ppa2", "ppa3", "ppa4", "ppa5"):
-
-        ppas.append(get_or_default(parse_type(data_row[indices[k]], float), 0.0))
-
-    return sum(ppas) / 10.0
