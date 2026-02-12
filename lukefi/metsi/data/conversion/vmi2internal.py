@@ -163,6 +163,10 @@ def convert_site_type_category(code: str) -> Optional[SiteType]:
 def convert_soil_peatland_category(code: str) -> Optional[SoilPeatlandCategory]:
     if is_empty_vmi_str(code):
         return None
+
+    if code == '0':
+        return None
+
     vmi_category = VmiSoilPeatlandCategory(code)
     return _soil_peatland_map.get(vmi_category)
 
