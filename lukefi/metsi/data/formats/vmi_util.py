@@ -544,8 +544,7 @@ def determine_tree_type(source: str) -> Optional[str]:
 
 
 def determine_fmc_by_test_area_handling_class(test_area_handling_class: str) -> int:
-    # Metsähallituksen rajoitukset;
-    fmc = 1  # MH, ei rajoituksia
+    fmc = 1
     if test_area_handling_class != '.':
         if test_area_handling_class == '1':
             fmc = 1
@@ -611,9 +610,6 @@ def parse_forestry_centre(forestry_centre: str) -> int:
 
 
 def parse_vmi_area_ha(raw: str) -> float:
-    """
-    Used in VMI9
-    """
     s = (raw or "").strip()
     if not s:
         return 0.0
@@ -626,15 +622,15 @@ def parse_vmi_area_ha(raw: str) -> float:
         return get_or_default(parse_type(s, float), 0.0)
 
 
-def get_vmi10_area_ha(keskus: int, lohkomuoto: int) -> float:
+def get_vmi10_area_ha(forestry_centre: int, lohkomuoto: int) -> float:
     """
     VMI10 area lookup.
-    Returns area_ha for given keskus and lohkomuoto.
+    Returns area_ha for given forestry_centre and lohkomuoto.
     """
     try:
-        return VMI10_COUNTY_AREAS[keskus][lohkomuoto]
+        return VMI10_COUNTY_AREAS[forestry_centre][lohkomuoto]
     except KeyError as exc:
-        raise KeyError(f'No VMI10 area_ha for keskus={keskus}, lohkomuoto={lohkomuoto}') from exc
+        raise KeyError(f'No VMI10 area_ha for keskus={forestry_centre}, lohkomuoto={lohkomuoto}') from exc
 
 
 def get_vmi11_area_ha(forestry_centre: int, osite: int) -> float:
@@ -820,17 +816,15 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
 
     # Heights are in dm -> meters via /10
     height = determine_tree_height(row[indices["height"]], conversion_factor=10.0)
-    measured_height = None  # not present in this VMI10 layout
+    measured_height = None
 
     lowest_living_branch_height = (
         get_or_default(parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
     )
 
-    # Ages: VMI10 provides d13ika and ika directly
     breast_height_age = parse_type(row[indices["d13_age"]], float)
     biological_age = parse_type(row[indices["total_age"]], float)
 
-    # Keep the same simple stems-per-ha estimator as VMI13 (safe default)
     stems_per_ha = determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -918,7 +912,7 @@ def _vmi10_segment_age_years(d13_age_raw: str, age_inc_raw: str, fallback_age: f
     a = _parse_float0(d13_age_raw)
     b = _parse_float0(age_inc_raw)
     age = a + b
-    # per notes: if computed age == 0 -> use stand age
+
     return fallback_age if age <= 0.0 else age
 
 
@@ -933,7 +927,6 @@ def append_vmi10_strata_from_stand_row(
     Build up to 8 strata (2 segments x (main + up to 3 side species)) into TreeStrata
     """
 
-    # stand fallback age
     fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
 
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
@@ -964,13 +957,12 @@ def append_vmi10_strata_from_stand_row(
         species = vmi2internal.convert_species(species_code)
 
         basal_area = seg_ppa_total * share
-        # *1000 per notes :contentReference[oaicite:13]{index=13}
         stems_per_ha = _parse_float0(seg_stems1000_raw) * 1000.0 * share
         mean_diameter = _parse_float0(seg_d_cm_raw)
-        mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m :contentReference[oaicite:14]{index=14}
+        mean_height = _parse_float0(seg_h_dm_raw) / 10.0
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)  # NOTE: raw unless you already have a mapping
+        syntytapa = _parse_int0(seg_syntytapa_raw)
         storey = determine_storey_for_segment(seg_asema_raw)
 
         running_numb += 1
@@ -1002,12 +994,9 @@ def append_vmi10_strata_from_stand_row(
         for k, v in values.items():
             attr.setdefault(k, []).append(v)
 
-    # Jaksot 1 ja 2
-
     for seg_no in (1, 2):
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
-        # base fields
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
         synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
@@ -1016,7 +1005,6 @@ def append_vmi10_strata_from_stand_row(
         d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
         ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
 
-        # main + 3 side species
         emit_stratum_vmi10(stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
                            stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
                            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
@@ -1039,7 +1027,6 @@ def append_vmi9_strata_from_stand_row(
     Build up to 6 strata (2 segments x (main + up to 2 side species)) into TreeStrata
     """
 
-    # Stand fallback age (used if segment age is missing/0)
     fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
 
     jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
@@ -1108,7 +1095,6 @@ def append_vmi9_strata_from_stand_row(
         for k, v in values.items():
             attr.setdefault(k, []).append(v)
 
-    # Jaksot 1 ja 2
     for seg_no in (1, 2):
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
@@ -1120,31 +1106,26 @@ def append_vmi9_strata_from_stand_row(
         d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
         ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
 
-        # --- shares in tenths (0..10) ---
         main_share_raw = stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]]
         siv1_share_raw = stand_row[indices[f"jakso{seg_no}_sivulaji1_osuus"]]
 
         main_t = _parse_int0(main_share_raw)
         siv1_t = _parse_int0(siv1_share_raw)
 
-        # VMI9: siv2_share = 10 - main - siv1
         siv2_t = max(0, 10 - main_t - siv1_t)
 
-        # Emit main
         emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
             str(main_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
 
-        # Emit sivulaji1
         emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_sivulaji1"]],
             str(siv1_t),
             stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
         )
 
-        # Emit sivulaji2 with calculated osuus
         emit_stratum_vmi9(
             stand_row[indices[f"jakso{seg_no}_sivulaji2"]],
             str(siv2_t),
@@ -1182,7 +1163,6 @@ def determine_vmi11_area_ha(
     ak = (ahvkeilaus or "").strip().upper()
     lohy_first = ((lohy_raw or "").strip()[:1] or "")
 
-    # --- Ahvenanmaa override: force lookup using metkes=0 and osite 300/400 ---
     if inv == "P" and ak in ("A", "B"):
         osite = 300 if ak == "A" else 400
         return round(get_vmi11_area_ha(0, osite), 4)
@@ -1191,7 +1171,6 @@ def determine_vmi11_area_ha(
         osite = 300 if lohy_first == "3" else 400
         return round(get_vmi11_area_ha(0, osite), 4)
 
-    # --- Normal logic ---
     osite = lohkomuoto
     use_lookup = (1 <= osite <= 4) or (forestry_centre == 0)
 
