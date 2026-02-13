@@ -168,8 +168,8 @@ def _adjust_retention_trees(stand: ForestStand,
 
     stand_tree_count = len(new_trees)
 
-    for i in np.where(retention_trees_mask)[0]:
-        trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
+    for j, i in enumerate(np.where(retention_trees_mask)[0]):
+        trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + j + 1}-tree"
         trees.management_category[i] = 2
         trees.storey[i] = Storey.SPARE
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
@@ -275,7 +275,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                 new_trees = new_trees + stratum_trees
 
         # lisätään irralliset säästöpuut
-        if add_retention_trees:
+        if add_retention_trees and np.any(retention_trees_mask):
             _adjust_retention_trees(stand, new_trees, retention_trees_mask)
         if operation_params.get('age_model', False):
             for i in range(len(new_trees)):
