@@ -27,7 +27,7 @@ def ages(stand: ForestStand,
     # Model uses VMI7 classes
     if tree.species <= 8:
         species = tree.species.value
-    elif tree.species.is_coniferous():
+    elif tree.species.is_coniferous:
         species = 7
     else:
         species = 8

@@ -121,7 +121,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
                                         if source_trees.tuhon_ilmiasu[i] in ('2', '61', '62', '71', '72') or
                                         source_trees.measured_height[i] == 0
                                         else (source_trees.measured_height[i]) for i in range(len(source_trees))]),
-        'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(len(source_trees))])
+        'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or
+                                     robjects.NA_Real for i in range(len(source_trees))])
     }
 
     gos_div = params.get('lm_gos_div', 1)
@@ -163,7 +164,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     retval = ReferenceTrees(result_df.nrow)
 
     for i in range(result_df.nrow):
-        treespe= SPECIES_LM2INT[int(result_df.rx2(9)[i]) - 1] if stand_land_use_cat == 1 else result_df.rx2(9)[i]
+        treespe = SPECIES_LM2INT[int(result_df.rx2(9)[i]) - 1] if stand_land_use_cat == 1 else result_df.rx2(9)[i]
         retval.breast_height_diameter[i] = result_df.rx2(10)[i]
         retval.stems_per_ha[i] = result_df.rx2(index_stems)[i]
         retval.height[i] = result_df.rx2(13)[i]

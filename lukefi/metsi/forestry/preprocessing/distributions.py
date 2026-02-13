@@ -145,7 +145,7 @@ def predict_sapling_diameters(
                 dominant_height
             )
         # elif rt.height >= 1.3 and (height >= 1.3 or not diameter):
-        elif reference_trees.height[i] >= 1.3 and (height >= 1.3 or not (diameter > 0)):
+        elif reference_trees.height[i] >= 1.3 and (height >= 1.3 or diameter <= 0):
             # di = diameter_model_valkonen(rt.height)
             di = diameter_model_valkonen(reference_trees.height[i])
         else:

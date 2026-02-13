@@ -1,7 +1,7 @@
 from typing import Any
 
 
-spe_proportions: list[dict[str, Any]] = [ 
+SPE_PROPORTIONS: list[dict[str, Any]] = [
     { "type" : "MetsaHarvaTaimikko", "spe" : 1, "maakunta" : 1, "proportions" : [0.774592490037506,0.00837513674011564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
     { "type" : "MetsaHarvaTaimikko", "spe" : 2, "maakunta" : 1, "proportions" : [0.0443154750077586,0.959875666159097,0.00320182933290945,0.0120369128516929,0.00167650214592275,0.0116808148269574,0,0.0436468951180258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
     { "type" : "MetsaHarvaTaimikko", "spe" : 3, "maakunta" : 1, "proportions" : [0,0.0123910984848485,0.836420175260839,0.0505397727272727,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
@@ -745,7 +745,7 @@ def get_spe_proportions(land_use_class: int, county: int, development_class: int
         if not taimikko and dgm > 15:
             strtype = "MetsaVart"
 
-    proportions: list[list[float]] = [x["proportions"] for x in spe_proportions
+    proportions: list[list[float]] = [x["proportions"] for x in SPE_PROPORTIONS
                                       if x["type"] == strtype and x["maakunta"] == county and x["spe"] == spelm]
     if len(proportions) == 0:
       proportions = [[0] * 31]

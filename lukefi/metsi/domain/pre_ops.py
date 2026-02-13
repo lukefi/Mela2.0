@@ -485,8 +485,8 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
     for stand in stands:
         trees = stand.reference_trees
         if len(trees) > 0:
-            smaller_diameter = ((4.5 <= trees.breast_height_diameter) & 
-                                (trees.breast_height_diameter < 9.5) & 
+            smaller_diameter = ((4.5 <= trees.breast_height_diameter) &
+                                (trees.breast_height_diameter < 9.5) &
                                 (0 < stand.area_weight_factors[0] < 1))
             larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
             trees.stems_per_ha[smaller_diameter] = trees.stems_per_ha[smaller_diameter] / stand.area_weight_factors[0]
