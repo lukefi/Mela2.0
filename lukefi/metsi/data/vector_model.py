@@ -35,12 +35,12 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
 DTYPES_STRATA: dict[str, DTypeDeclaration] = {
     "identifier": (np.dtype("U30"), ""),
     "species": (np.int32, -1),
-    "mean_diameter": (np.float64, 0.0),
+    "mean_diameter": (np.float64, -1),
     "mean_height": (np.float64, 0.0),
     "breast_height_age": (np.float64, 0.0),
     "biological_age": (np.float64, 0.0),
     "stems_per_ha": (np.float64, 0.0),
-    "basal_area": (np.float64, 0.0),
+    "basal_area": (np.float64, -1),
     "origin": (np.int32, -1),
     "tree_number": (np.int32, -1),
     "storey": (np.int32, -1),
@@ -353,12 +353,12 @@ class ReferenceTrees(VectorData):
 class TreeStratum:
     identifier: str = ""
     species: TreeSpecies = TreeSpecies.UNSET
-    mean_diameter: float = 0.0
+    mean_diameter: float = -1
     mean_height: float = 0.0
     breast_height_age: float = 0.0
     biological_age: float = 0.0
     stems_per_ha: float = 0.0
-    basal_area: float = 0.0
+    basal_area: float = -1
     origin: Origin = Origin.UNSET
     tree_number: int = 0
     storey: Storey = Storey.UNSET
