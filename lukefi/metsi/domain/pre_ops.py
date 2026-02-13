@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
-from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
@@ -14,9 +14,8 @@ from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
 from lukefi.metsi.forestry.preprocessing import tree_generation
-from lukefi.metsi.forestry.preprocessing.ages import ages
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj
-from lukefi.metsi.forestry.preprocessing.tree_generation_validation import create_stratum_tree_comparison_set, debug_output_row_from_comparison_set
+from lukefi.metsi.forestry.preprocessing.py_ages import ages
+from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
 
 
 def filter_stands(stands: StandList, **operation_params) -> StandList:
