@@ -18,8 +18,6 @@ class TestForestBuilderSnapshots(unittest.TestCase):
         cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
         cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
         cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
-
-        # (Optional) if you also want snapshots for 12/13:
         cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
         cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
 
@@ -32,7 +30,6 @@ class TestForestBuilderSnapshots(unittest.TestCase):
     def test_snapshot_vmi11(self):
         assert_snapshot(self, name="vmi11", stands=self.vmi11_stands)
 
-    # Optional:
     def test_snapshot_vmi12(self):
         assert_snapshot(self, name="vmi12", stands=self.vmi12_stands)
 
