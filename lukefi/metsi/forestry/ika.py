@@ -771,11 +771,7 @@ def ages(rpl: float,
 
     i = int(boni)
 
-    # if i > 7:
-    #   i = 7
     i = min(i, 7)
-    # if i < 1:
-    #   i = 1
     i = max(i, 1)
 
     # Lehtojen mallit vain alentamattomissa kuusikoissa
