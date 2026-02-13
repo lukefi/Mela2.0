@@ -328,7 +328,7 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
         county = 30
 
     # basal area sums by species an land use classes (index 0 = forest land, 1 = scrub land)
-    ba_sums = np.asarray([[0] * max(TreeSpecies), [0] * max(TreeSpecies)])
+    ba_sums = np.asarray([[0.0] * max(TreeSpecies), [0.0] * max(TreeSpecies)], dtype=np.float64)
     ba_sum_ret = 0  # retention trees
 
     for stand in stands:
@@ -343,6 +343,8 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
         is_not_retained = ~is_retained
 
         for species in TreeSpecies:
+            if species in (TreeSpecies.UNSET, TreeSpecies.TREELESS):
+                continue
             mask1 = bhd_positive & is_not_retained & (trees.species == species)
             mask2 = bhd_positive & is_retained & (trees.species == species)
 
