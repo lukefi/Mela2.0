@@ -137,7 +137,7 @@ def predict_sapling_diameters(
     # for rt in reference_trees:
     for i in range(len(reference_trees)):
         # if rt.has_height_over_130_cm() and height > 1.3 and diameter:
-        if reference_trees.height[i] > 1.3 and height > 1.3 and diameter:
+        if reference_trees.height[i] > 1.3 and height > 1.3 and diameter > 0:
             di = diameter_model_siipilehto(
                 reference_trees.height[i],  # rt.height,
                 height,
@@ -145,7 +145,7 @@ def predict_sapling_diameters(
                 dominant_height
             )
         # elif rt.height >= 1.3 and (height >= 1.3 or not diameter):
-        elif reference_trees.height[i] >= 1.3 and (height >= 1.3 or not diameter):
+        elif reference_trees.height[i] >= 1.3 and (height >= 1.3 or not (diameter > 0)):
             # di = diameter_model_valkonen(rt.height)
             di = diameter_model_valkonen(reference_trees.height[i])
         else:
