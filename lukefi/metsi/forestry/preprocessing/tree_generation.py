@@ -91,7 +91,7 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
             method == 'lm'
         ]):
             return TreeStrategy.HEIGHT_DISTRIBUTION
-        if stratum.mean_diameter > 0.0 and stratum.basal_area > 0.0 and method == 'lm':
+        if stratum.mean_diameter > 0.0 and stratum.basal_area >= 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
         if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
             return TreeStrategy.HEIGHT_DISTRIBUTION
