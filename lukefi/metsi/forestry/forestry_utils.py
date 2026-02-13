@@ -74,14 +74,14 @@ def find_matching_stratum_by_diameter_lm(
     candidate = min(
         strata,
         # R-koodin mukaisesti puuttuva dgm <- 0
-        key=lambda stratum: 0 if stratum.mean_diameter == 0 else abs(
+        key=lambda stratum: 0 if stratum.mean_diameter == -1 else abs(
             reference_tree.breast_height_diameter - stratum.mean_diameter),
         default=None
     )
     if candidate is None:
         return None
 
-    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter is not None \
+    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter != -1 \
         else reference_tree.breast_height_diameter
     lower = candidate_dgm / threshold
     upper = candidate_dgm * threshold
