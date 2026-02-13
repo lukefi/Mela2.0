@@ -55,7 +55,6 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 
     f1 = 0.0
     xx = a
-    # result = []
     result = ReferenceTrees(n_samples)
     # For each sample pick-up stems per hectare from Weibull distribution
     for i in range(n_samples):
@@ -74,11 +73,6 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 
         stems = (12732.4 * basal_area) / math.pow(computed_diameter, 2.0)
         stems_per_sample = p * stems
-
-        # reference_tree = ReferenceTree()
-        # reference_tree.stems_per_ha = stems_per_sample
-        # reference_tree.breast_height_diameter = computed_diameter
-        # result.append(reference_tree)
 
         result.stems_per_ha[i] = stems_per_sample
         result.breast_height_diameter[i] = computed_diameter
@@ -134,24 +128,18 @@ def predict_sapling_diameters(
     diameter: Mean diameter of stratum (cm)
     return: Updated list of reference trees containing diameters (cm).
     """
-    # for rt in reference_trees:
     for i in range(len(reference_trees)):
-        # if rt.has_height_over_130_cm() and height > 1.3 and diameter:
         if reference_trees.height[i] > 1.3 and height > 1.3 and diameter > 0:
             di = diameter_model_siipilehto(
-                reference_trees.height[i],  # rt.height,
+                reference_trees.height[i],
                 height,
                 diameter,
                 dominant_height
             )
-        # elif rt.height >= 1.3 and (height >= 1.3 or not diameter):
         elif reference_trees.height[i] >= 1.3 and (height >= 1.3 or diameter <= 0):
-            # di = diameter_model_valkonen(rt.height)
             di = diameter_model_valkonen(reference_trees.height[i])
         else:
-            # rt.height <= 1.3 and other cases
             di = 0.0
-        # rt.breast_height_diameter = di
         reference_trees.breast_height_diameter[i] = di
     return reference_trees
 
@@ -210,19 +198,13 @@ def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_
     Nh = stem_count / float(n_trees)        # frequency
     classH = classN / 2          # for the class center
 
-    # result = []
     result = ReferenceTrees(n_trees)
     for i in range(n_trees):
-        # reference_tree = ReferenceTree()
         Ph = float(i + 1) * classN - classH         # class center
         # picking up height from the cumulative Weibull distribution. Analytical solution.
         hi = b * (-math.log(1.0 - Ph))**(1.0 / c) + a
-        # reference_tree.height = round(hi, 2)
         result.height[i] = round(hi, 2)
 
-        # reference_tree.stems_per_ha = Nh
-        # reference_tree.sapling = True
-        # result.append(reference_tree)
         result.stems_per_ha[i] = Nh
         result.sapling[i] = True
 
