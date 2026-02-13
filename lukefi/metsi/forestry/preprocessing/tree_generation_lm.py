@@ -1,15 +1,16 @@
 from pathlib import Path
 import math
+from typing import Any
 from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
-from lukefi.metsi.forestry.preprocessing.DHkertoimet import DHCoeff
-from lukefi.metsi.forestry.preprocessing.DGMean_kitumaa import DGMean_kitumaa
+from lukefi.metsi.forestry.preprocessing.dhkertoimet import DHCOEFF
+from lukefi.metsi.forestry.preprocessing.dgmean_kitumaa import DGMEAN_KITUMAA
 
-species_int2lm = [
+SPECIES_INT2LM = [
     # Mänty 1, Kuusi 2, Rkoivu 3, Hkoivu 4,Haapa 5,Hleppä 6, Tleppä 7, Muu
     # havupuu 20, Muu lehtipuu 30, Douglaskuusi -> Muu kuusi 16,
     1, 2, 3, 4, 5, 6, 7, 20, 30, 16,
@@ -26,10 +27,10 @@ species_int2lm = [
     13, 16, 17, 19, 21, 25, 31, 30
 ]
 
-species_lm2int = [
+SPECIES_LM2INT: list[TreeSpecies] = [
     # Mänty, kuusi, koivu, hkoivu, haapa, hleppä, tleppä, pihlaja, raita, puuton
     TreeSpecies(1), TreeSpecies(2), TreeSpecies(3), TreeSpecies(4), TreeSpecies(5), TreeSpecies(6), TreeSpecies(7),
-    TreeSpecies(18), TreeSpecies(20), None,
+    TreeSpecies(18), TreeSpecies(20), TreeSpecies.TREELESS,
     # kontorta, sembra, muu mänty, lehtikuusi, pihta, muu kuusi, tuija, kataja, marjakuusi, muu havupuu
     TreeSpecies(12), TreeSpecies(22), TreeSpecies(31), TreeSpecies(14), TreeSpecies(19), TreeSpecies(32),
     TreeSpecies(33), TreeSpecies(11), TreeSpecies(34), TreeSpecies(8),
@@ -69,13 +70,13 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     nos = stratum.stems_per_ha
     gos = stratum.basal_area
 
-    spevmi = species_int2lm[stratum.species.value - 1]
+    spevmi = SPECIES_INT2LM[stratum.species.value - 1]
     # kitumaalle keskiläpimitta taulukosta
     if stand_land_use_cat == 2:
-        dgmean = next(
-            (item for item in DGMean_kitumaa if item["maakunta"] == stand_county and item["species"] == spevmi), {
-                "maakunta": 0, "species": 0, "DGM": 0})
-        dgm = dgmean["DGM"]
+        dgmean: dict[str, Any] = next(
+            (item for item in DGMEAN_KITUMAA if item["maakunta"] == stand_county and item["species"] == spevmi), {
+                "maakunta": 0, "species": 0, "DGM": 0.0})
+        dgm: float = dgmean["DGM"]
     else:
         dgm = stratum.mean_diameter
 
@@ -90,7 +91,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     }
 
     dhcoeffs = next(
-        (item for item in DHCoeff
+        (item for item in DHCOEFF
          if item["maakunta"] == stand_county and
          item["maalk"] == stand_land_use_cat and
          item["puulaji"] == spevmi),
@@ -99,11 +100,15 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     dhcoeffs_vec = robjects.FloatVector([dhcoeffs["dfactor"], dhcoeffs["hfactor"]]) if dhcoeffs["dfactor"] is not None \
         else None
 
+    assert stand_land_use_cat is not None
+    assert stand_county is not None
+    assert stand_development_class is not None
+
     species_proportions = get_spe_proportions(stand_land_use_cat, stand_county, stand_development_class,
                                               stratum.asema, stratum.mean_diameter, stratum.stems_per_ha, spevmi)
     proportions_data = {
-        'puulaji': robjects.FloatVector([i for i in range(1, len(species_proportions) + 1)]),
-        'osuus': robjects.FloatVector([osuus for osuus in species_proportions])
+        'puulaji': robjects.FloatVector(list(range(1, len(species_proportions) + 1))),
+        'osuus': robjects.FloatVector(species_proportions)
     }
 
     # source_trees = stratum.__dict__.get('_trees', [])
@@ -158,7 +163,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     retval = ReferenceTrees(result_df.nrow)
 
     for i in range(result_df.nrow):
-        treespe: int = species_lm2int[int(result_df.rx2(9)[i]) - 1] if stand_land_use_cat == 1 else result_df.rx2(9)[i]
+        treespe= SPECIES_LM2INT[int(result_df.rx2(9)[i]) - 1] if stand_land_use_cat == 1 else result_df.rx2(9)[i]
         retval.breast_height_diameter[i] = result_df.rx2(10)[i]
         retval.stems_per_ha[i] = result_df.rx2(index_stems)[i]
         retval.height[i] = result_df.rx2(13)[i]

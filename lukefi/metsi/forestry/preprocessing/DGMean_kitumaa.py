@@ -1,4 +1,7 @@
-DGMean_kitumaa = [
+from typing import Any
+
+
+DGMEAN_KITUMAA: list[dict[str, Any]] = [
 {"maakunta": 1, "species": 1, "DGM": 22.1480752501731},
 {"maakunta": 1, "species": 2, "DGM": 17.8543317737318},
 {"maakunta": 1, "species": 3, "DGM": 12.6428810461903},

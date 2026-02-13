@@ -1,4 +1,7 @@
-spe_proportions = [ 
+from typing import Any
+
+
+spe_proportions: list[dict[str, Any]] = [ 
     { "type" : "MetsaHarvaTaimikko", "spe" : 1, "maakunta" : 1, "proportions" : [0.774592490037506,0.00837513674011564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
     { "type" : "MetsaHarvaTaimikko", "spe" : 2, "maakunta" : 1, "proportions" : [0.0443154750077586,0.959875666159097,0.00320182933290945,0.0120369128516929,0.00167650214592275,0.0116808148269574,0,0.0436468951180258,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
     { "type" : "MetsaHarvaTaimikko", "spe" : 3, "maakunta" : 1, "proportions" : [0,0.0123910984848485,0.836420175260839,0.0505397727272727,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
@@ -720,35 +723,32 @@ spe_proportions = [
     { "type" : "MetsaVart", "spe" : 5, "maakunta" : 30, "proportions" : [0,0,0,0,0.326290624095663,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
 ]
 
-def get_spe_proportions(land_use_class:int, county:int, development_class:int,
-                        asema:int, dgm:float, stems:int, spelm:int)->list[float]:
-    
+
+def get_spe_proportions(land_use_class: int, county: int, development_class: int,
+                        asema: int, dgm: float, stems: float, spelm: int) -> list[float]:
+
     strtype = ""
-#    strtype = "X"
-    
+
     # kitumaa
     if land_use_class == 2:
         strtype = "Kitumaa"
     elif land_use_class == 1:
-        taimikko = (development_class in (2,3) and asema in (0,1)) or \
-                   (asema in (5,6) and stems > 0) or \
-                   asema == 9
+        taimikko = ((development_class in (2, 3) and asema in (0, 1)) or
+                    (asema in (5, 6) and stems > 0) or
+                    asema == 9)
         if taimikko and stems >= 3000 and dgm > 0:
             strtype = "MetsaTiheaTaimikko"
         if taimikko and stems < 3000 and dgm > 0:
             strtype = "MetsaHarvaTaimikko"
-        if not taimikko  and dgm > 0:
+        if not taimikko and dgm > 0:
             strtype = "MetsaKeskim"
-        if not taimikko  and dgm > 15:
+        if not taimikko and dgm > 15:
             strtype = "MetsaVart"
 
-#    print(strtype, file=open("ppa0_stratum.txt","a"), end = " ")
-#    print(strtype, land_use_class, county, development_class,
-#          asema, dgm, stems, spelm, file = open("ggg0.out","a"))
-
-    proportions = [x["proportions"] for x in spe_proportions if x["type"]==strtype and x["maakunta"]==county and x["spe"]==spelm] 
+    proportions: list[list[float]] = [x["proportions"] for x in spe_proportions
+                                      if x["type"] == strtype and x["maakunta"] == county and x["spe"] == spelm]
     if len(proportions) == 0:
-      proportions = [[0]*31]
+      proportions = [[0] * 31]
 
     return proportions[0]
     

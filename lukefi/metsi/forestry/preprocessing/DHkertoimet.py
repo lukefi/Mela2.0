@@ -1,4 +1,4 @@
-DHCoeff = [
+DHCOEFF = [
 {"maakunta": 1, "maalk": 1, "puulaji": 1, "dfactor": 1.07603587210178, "hfactor": 0.985716953873634},
 {"maakunta": 1, "maalk": 1, "puulaji": 2, "dfactor": 0.994199439883232, "hfactor": 0.916557684540749},
 {"maakunta": 1, "maalk": 1, "puulaji": 3, "dfactor": 1.10998220741749, "hfactor": 1.01466841995716},
