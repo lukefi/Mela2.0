@@ -9,6 +9,35 @@ from lukefi.metsi.data.enums.internal import (
     OwnerCategory
 )
 from tests.data.test_util import ForestBuilderTestBench
+from tests.data.snapshot_util import assert_snapshot
+
+
+class TestForestBuilderSnapshots(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
+        cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
+        cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
+
+        # (Optional) if you also want snapshots for 12/13:
+        cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
+        cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
+
+    def test_snapshot_vmi9(self):
+        assert_snapshot(self, name="vmi9", stands=self.vmi9_stands)
+
+    def test_snapshot_vmi10(self):
+        assert_snapshot(self, name="vmi10", stands=self.vmi10_stands)
+
+    def test_snapshot_vmi11(self):
+        assert_snapshot(self, name="vmi11", stands=self.vmi11_stands)
+
+    # Optional:
+    def test_snapshot_vmi12(self):
+        assert_snapshot(self, name="vmi12", stands=self.vmi12_stands)
+
+    def test_snapshot_vmi13(self):
+        assert_snapshot(self, name="vmi13", stands=self.vmi13_stands)
 
 
 class TestForestBuilder(unittest.TestCase):
