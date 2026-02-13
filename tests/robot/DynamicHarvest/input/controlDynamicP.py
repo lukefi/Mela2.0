@@ -6,7 +6,8 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
-
+from examples.declarations.export_prepro import mela_and_default_csv
+from user_events import Harvest20percent
 
 control_structure = {
     "app_configuration": {
@@ -48,13 +49,14 @@ control_structure = {
                             },
                             tags={"third_type"},
                         ),
+                        Harvest20percent()
                     ]),
                 ])
             ]
         )
     ],
     "transition": Transition(grow_acta_fn),
-    "end_condition": ForestCondition(lambda x: x.computational_unit.year >= 2050),
+    "end_condition": ForestCondition(lambda x: x.computational_unit.relative_time > 30),
     "post_processing": {
         "operation_params": {
             do_nothing: [
@@ -65,9 +67,7 @@ control_structure = {
             do_nothing
         ]
     },
-    'export_prepro': {
-        'csv': {},
-    }
+    'export_prepro': mela_and_default_csv
 }
 
 __all__ = ['control_structure']
