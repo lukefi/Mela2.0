@@ -88,10 +88,6 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
 
 
 def _calculate_g_from_trees(stems_per_ha, breast_height_diameter) -> float:
-    # G = sum(list(map(lambda t: t.stems_per_ha * math.pi*((t.breast_height_diameter/200)**2), trees)))
-    # G = sum([t.stems_per_ha * math.pi * ((t.breast_height_diameter / 200)**2) for t in trees])
-    # return G
-
     return np.pi * np.sum(stems_per_ha * ((breast_height_diameter / 200) ** 2))
 
 
@@ -100,15 +96,9 @@ def _determine_ages(stand: ForestStand,
                     retention_trees_mask: npt.NDArray[np.bool_],
                     tree_i: int,
                     added_years: float) -> tuple[float, float]:
-    # if tree.biological_age is not None and tree.biological_age > 0:
-    # return tree.breast_height_age or 0, tree.biological_age
-
     trees = stand.reference_trees
     if trees.biological_age[tree_i] > 0:
         return trees.breast_height_age[tree_i], trees.biological_age[tree_i]
-
-    # return ages(stand, tree, added_years, new_trees + retention_trees)
-
     return ages(stand, new_trees + trees[retention_trees_mask], trees.get_tree(tree_i), added_years)
 
 
@@ -196,7 +186,6 @@ def _adjust_ages(stand: ForestStand, trees: ReferenceTrees):
 
             mean_age = agesum / g if g > 0 else 0
 
-            # inline TreeStratum.get_breast_heigh_age with subtrahend = 12.0
             breast_height_age = 0.0
             if strata.breast_height_age[i] > 0.0:
                 breast_height_age = strata.breast_height_age[i]
@@ -249,7 +238,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         stand.tree_strata = stand.tree_strata[stratum_ordering]
         strata = stand.tree_strata
 
-        # new_trees = []
         new_trees = ReferenceTrees()
 
         for k, stratum in enumerate(strata.get_stratum(i) for i in range(len(strata))):
@@ -288,7 +276,6 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         retention_trees = trees[retention_trees_mask]
         new_trees = new_trees + retention_trees
 
-        # inline generate_stratum_from_retention_tree
         new_strata = TreeStrata(retention_trees.size)
         new_strata.tree_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
         new_strata.identifier = np.asarray([
