@@ -67,7 +67,6 @@ DECIDUOUS_SPECIES = [
     TreeSpecies.COMMON_ALDER,
     TreeSpecies.OTHER_DECIDUOUS,
     TreeSpecies.EUROPEAN_WHITE_ELM,
-    TreeSpecies.LARCH,
     TreeSpecies.SMALL_LEAVED_LIME,
     TreeSpecies.WILLOW,
     TreeSpecies.MOUNTAIN_ASH,
