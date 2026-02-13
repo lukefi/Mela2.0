@@ -71,6 +71,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     gos = stratum.basal_area
 
     spevmi = SPECIES_INT2LM[stratum.species.value - 1]
+
     # kitumaalle keskiläpimitta taulukosta
     if stand_land_use_cat == 2:
         dgmean: dict[str, Any] = next(
@@ -111,11 +112,9 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'osuus': robjects.FloatVector(species_proportions)
     }
 
-    # source_trees = stratum.__dict__.get('_trees', [])
     source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.identifier]
 
     tree_data = {
-        # 'lpm': robjects.FloatVector([tree.breast_height_diameter or robjects.NA_Real for tree in source_trees]),
         'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
         'height': robjects.FloatVector([robjects.NA_Real
                                         if source_trees.tuhon_ilmiasu[i] in ('2', '61', '62', '71', '72') or
@@ -126,11 +125,13 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     }
 
     gos_div = params.get('lm_gos_div', 1)
+
     # pyydetty max kuvauspuiden lkm
     ntrees_max = params.get('lm_n_trees', params.get('n_trees', 10))
 
     # ppa:han perustuva kuvauspuiden lkm
     ntrees = 2 if stratum.basal_area is None else min(max(math.floor(stratum.basal_area / gos_div), 2), ntrees_max)
+
     # jos kuvauspuiden lkm tyyppi on "param", käytetään annettua, ei ppasta laskettua määrää
     ntrees = ntrees_max if params.get('lm_n_trees_mode', 'param') == 'param' else ntrees
 
