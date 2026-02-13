@@ -23,17 +23,20 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     stratum.number_of_generated_trees = n_trees
 
     for i in range(n_trees):
-        # reference_tree.stand = stratum.stand
         reference_trees.species[i] = stratum.species if reference_trees.species[i] in (
             TreeSpecies.UNKNOWN, TreeSpecies.UNSET, TreeSpecies.TREELESS) else reference_trees.species[i]
+
         reference_trees.breast_height_age[i] = max(stratum.get_breast_height_age(), 1) if \
             reference_trees.height[i] > 1.3 else 0.0
+
         reference_trees.biological_age[i] = stratum.biological_age
         reference_trees.tree_number[i] = i + 1
         reference_trees.stems_per_ha[i] = round(ng_scale * reference_trees.stems_per_ha[i], 2)
         reference_trees.breast_height_diameter[i] = round(reference_trees.breast_height_diameter[i], 2)
+
         if reference_trees.height[i] > 1.3:
             reference_trees.breast_height_diameter[i] = max(reference_trees.breast_height_diameter[i], 0.1)
+
         reference_trees.height[i] = round(reference_trees.height[i], 2)
         retained = stratum.asema == 3
         reference_trees.management_category[i] = 2 if retained else 1
@@ -82,8 +85,10 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
         if (stratum.mean_diameter > 0.0 and stratum.mean_height >
                 0.0 and stratum.basal_area > 0.0 and method == 'weibull'):
             return TreeStrategy.WEIBULL_DISTRIBUTION
+
         if stand.land_use_category == 2 and stratum.basal_area > 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
+
         if all([
             stratum.basal_area == 0.0,
             stratum.stems_per_ha > 0.0,
@@ -91,15 +96,19 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
             method == 'lm'
         ]):
             return TreeStrategy.HEIGHT_DISTRIBUTION
+
         if stratum.mean_diameter > 0.0 and stratum.basal_area >= 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
+
         if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
             return TreeStrategy.HEIGHT_DISTRIBUTION
+
         return TreeStrategy.SKIP
 
     # small trees
     if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
         return TreeStrategy.HEIGHT_DISTRIBUTION
+
     return TreeStrategy.SKIP
 
 
@@ -119,17 +128,22 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     """
     result: ReferenceTrees
     strategy = _solve_tree_generation_strategy(stand, stratum, params.get('method', 'weibull'))
+
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
+
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
         result = _trees_from_weibull(stratum, params["n_trees"])
+
     elif strategy == TreeStrategy.LM_TREES:
         assert stand.degree_days is not None
         assert stand.basal_area is not None
         result = tree_generation_lm(stand, stratum, **params)
+
     elif strategy == TreeStrategy.SKIP:
         print(f"\nStratum {stratum.identifier} has no height or diameter usable for generating trees")
         return None
+
     else:
         raise UserWarning(f"Unable to generate reference trees from stratum {stratum.identifier}")
 
