@@ -25,7 +25,7 @@ def _safe_str(x: Any) -> str:
 def stand_to_snapshot_row(s: ForestStand) -> list[str]:
     """
     Produce a stable stand row.
-    We store enum values (ints) rather than enum reprs to avoid churn. ForestStand fields
+    Store enum values as ints.
     """
     lat = s.geo_location[0] if s.geo_location else None
     lon = s.geo_location[1] if s.geo_location else None
@@ -145,6 +145,6 @@ def assert_snapshot(testcase, *, name: str, stands: Iterable[ForestStand]) -> No
         )
         testcase.fail(
             f"Snapshot mismatch for '{name}'.\n\n"
-            f"If the change is intended, run with --update-snapshots to regenerate.\n\n"
+            f"If the change is intended, run: pytest --update-snapshots to regenerate references.\n\n"
             f"Diff:\n{diff}\n"
         )
