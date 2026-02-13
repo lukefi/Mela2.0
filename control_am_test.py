@@ -23,10 +23,10 @@ control_structure = {
         filter_trees,
         scale_trees_by_area_weight_factors,
         generate_reference_trees,
-        # scale_basal_area_at_county_level,
-        # update_strata_to_match_trees,
-        # area_ha_to_1000ha,
-        # convert_coordinates
+        scale_basal_area_at_county_level,
+        update_strata_to_match_trees,
+        area_ha_to_1000ha,
+        convert_coordinates
     ],
     "preprocessing_params": {
         filter_stands: [
