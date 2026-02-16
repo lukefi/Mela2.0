@@ -4,7 +4,7 @@ import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 import sqlite3
-from typing import Any
+from typing import Any, Optional
 from lukefi.metsi.data.formats.forest_builder import VMI13Builder, VMI12Builder, XMLBuilder, GeoPackageBuilder
 from lukefi.metsi.data.formats.io_utils import (
     stands_to_csv_content,
@@ -168,3 +168,56 @@ def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
             raise MetsiException(f"Unable to delete existing database file {file_path}") from e
     db = sqlite3.connect(file_path)
     return db
+
+
+def delete_existing_export_files(
+    target_directory: str,
+    export_prepro: Optional[dict],
+    preprocessing_base_name: str,
+    simulation_base_name: str,
+    force_delete: bool,
+) -> bool:
+    """
+    Checks whether export_prepro output files or database already exist (csv/rst/db).
+    If they exist:
+      - if force_delete: delete and continue
+      - else prompt user y/n
+    Returns True if execution should continue, False if it should exit.
+    """
+    formats = []
+    if export_prepro:
+        # Only consider formats declared in export_prepro
+        formats = list(export_prepro.keys())
+
+    td = Path(target_directory)
+
+    candidates: list[Path] = []
+    candidates.append(td / f"{simulation_base_name}.db")
+
+    for fmt in formats:
+        candidates.append(td / f"{preprocessing_base_name}.{fmt}")
+        if fmt == "rst":
+            # rst_writer() may also write this file (avoid appending in repeated runs)
+            candidates.append(td / "c-variables.par")
+
+    existing = [p for p in candidates if p.is_file()]
+    if not existing:
+        return True
+
+    if not force_delete:
+        print("Output file(s) already exist:")
+        for p in existing:
+            print(f"  - {p}")
+        answer = input("Do you want to delete them and continue? (y/n): ").strip().lower()
+        if answer not in ("y", "yes"):
+            print("Aborting (no files were deleted).")
+            return False
+
+    # delete
+    for p in existing:
+        try:
+            p.unlink()
+        except OSError as e:
+            raise MetsiException(f"Unable to delete existing output file: {p}") from e
+
+    return True

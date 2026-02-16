@@ -5,12 +5,15 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
+from examples.declarations.export_prepro import mela_decl
 
 
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
-        "run_modes": ["preprocess", "export_prepro", "simulate"]
+        "run_modes": ["preprocess", "export_prepro", "simulate"],
+        "preprocessing_output_file": "preprocessing_results",
+        "simulation_output_file": "simulation_results"
     },
     "preprocessing_operations": [
         scale_area_weight,
@@ -59,6 +62,7 @@ control_structure = {
     },
     'export_prepro': {
         'csv': {},
+        'rst': mela_decl
     }
 }
 
