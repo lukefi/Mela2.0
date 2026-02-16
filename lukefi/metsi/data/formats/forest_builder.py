@@ -56,7 +56,7 @@ def _append_stratum_row(
     tree_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
     asema = util.parse_type(row[indices["stratum_rank"]], int)
-    
+
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
 
@@ -122,7 +122,7 @@ def _append_tree_row(
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
     latvuskerros = row[indices["latvuskerros"]]
-    
+
     basal_area = None
     volume = None
 
