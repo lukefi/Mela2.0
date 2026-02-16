@@ -53,6 +53,8 @@ def _solve_vmi13_county_areas(county: int, lohkomuoto: int, lohkotarkenne: int) 
     if county == 16 and lohkomuoto == 1 and lohkotarkenne == 0:
         return 435.0433276
     if county == 17 and lohkotarkenne == 0:
+        if lohkomuoto == 1:
+            return 435.0433276
         if lohkomuoto == 3:
             return 457.7258227
         if lohkomuoto == 4:
