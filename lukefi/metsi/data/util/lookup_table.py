@@ -1,7 +1,8 @@
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Generic, Mapping, Sequence, TypeVar
-import pandas as pd
+import csv
 
 T = TypeVar("T")  # e.g. ForestStand
 
@@ -28,34 +29,46 @@ class LookupTable(Generic[T]):
     transforms: Mapping[str, Callable[[Any], Any]] | None = None
     value_cast: Callable[[str], Any] = int
 
-    # Cached, built once
     _index: Dict[tuple[str, ...], str] = field(default_factory=dict, init=False, repr=False)
     _loaded: bool = field(default=False, init=False, repr=False)
+    _load_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
 
     def _is_it_loaded(self) -> None:
         if self._loaded:
             return
 
-        csv_p = Path(self.csv_path).resolve()
-        df = pd.read_csv(csv_p, dtype=str)
+        with self._load_lock:
+            if self._loaded:
+                return
 
-        if df.empty:
-            raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
+            csv_p = Path(self.csv_path).resolve()
+            idx: Dict[tuple[str, ...], str] = {}
 
-        missing = [c for c in list(self.key_columns) + [self.value_column] if c not in df.columns]
-        if missing:
-            raise ValueError(f"CSV {csv_p} is missing required column(s) {missing!r}.")
+            with csv_p.open(newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                if reader.fieldnames is None:
+                    raise ValueError(f"Lookup CSV {csv_p} is missing a header row.")
 
-        # Build dict: (k1,k2,k3) -> value
-        idx: Dict[tuple[str, ...], str] = {}
-        for _, row in df.iterrows():
-            key = tuple(str(row[c]) for c in self.key_columns)
-            if key in idx:
-                raise ValueError(f"Ambiguous rows in CSV {csv_p} for keys {key}.")
-            idx[key] = str(row[self.value_column])
+                required = set(self.key_columns) | {self.value_column}
+                missing = [c for c in required if c not in reader.fieldnames]
+                if missing:
+                    raise ValueError(f"CSV {csv_p} is missing required column(s) {missing!r}.")
 
-        self._index = idx
-        self._loaded = True
+                row_count = 0
+                for row in reader:
+                    row_count += 1
+                    key = tuple(str(row[c]) for c in self.key_columns)
+
+                    if key in idx:
+                        raise ValueError(f"Ambiguous rows in CSV {csv_p} for keys {key}.")
+
+                    idx[key] = str(row[self.value_column])
+
+            if row_count == 0:
+                raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
+
+            self._index = idx
+            self._loaded = True
 
     def __call__(self, stand: T) -> Any:
         self._is_it_loaded()
