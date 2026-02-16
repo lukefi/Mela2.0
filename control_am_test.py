@@ -1,5 +1,4 @@
 import numpy as np
-from lukefi.metsi.data.vectorize import vectorize
 from lukefi.metsi.domain.pre_ops import (
     area_ha_to_1000ha,
     convert_coordinates,
@@ -18,7 +17,6 @@ control_structure = {
         "run_modes": ["preprocess", "export_prepro"]
     },
     "preprocessing_operations": [
-        vectorize,
         filter_stands,
         filter_trees,
         scale_trees_by_area_weight_factors,

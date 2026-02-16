@@ -1,7 +1,6 @@
 import math
 from collections.abc import Callable
-from typing import Optional
-import numpy as np
+from typing import Iterable, Optional
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
