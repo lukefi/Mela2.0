@@ -54,7 +54,7 @@ def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: Tree
 def find_matching_stratum_by_diameter_lm(
         reference_tree: ReferenceTree,
         strata: Iterable[TreeStratum],
-        threshold=3) -> Optional[TreeStratum]:
+        threshold: float = 3.0) -> Optional[TreeStratum]:
     """
     Find the stratum that has the closest diameter to the reference tree diameter by factor of difference, where the
     reference tree diameter is between the stratum mean diameter divided by threshold and multiplied by threshold.
@@ -144,7 +144,7 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
 def find_matching_storey_stratum_for_tree(
         tree: ReferenceTree,
         strata: TreeStrata,
-        diameter_threshold=3) -> Optional[str]:
+        diameter_threshold: float = 3.0) -> Optional[str]:
     # a.	Tarkista, että puu on inventoinnissa mitattu (puutyypit vaihtelee inventointien välillä)
     #       ja se on elävä (elävillä puilla puuluokka on numeerinen).
     if tree.tree_type not in ("", "V", "Y", "U", "S", "T", "N", " ") or \
