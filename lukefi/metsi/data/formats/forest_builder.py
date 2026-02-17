@@ -57,7 +57,6 @@ def _append_stratum_row(
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
-    cutting_year = 0
     number_of_generated_trees = None
 
     values = {
@@ -70,7 +69,6 @@ def _append_stratum_row(
         "stems_per_ha": stems_per_ha,
         "basal_area": basal_area,
         "origin": origin,
-        "cutting_year": cutting_year,
         "tree_number": tree_number,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
@@ -203,7 +201,6 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "biological_age": util.parse_type(rowj.age, float),
         "basal_area": basal_area,
         "origin": None,
-        "cutting_year": None,
         "tree_number": tree_number,
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
