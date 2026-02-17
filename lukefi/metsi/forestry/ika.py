@@ -816,7 +816,7 @@ def ages(rpl: float,
     if iplaji == 2 and synty == 1 and i == 4:
         isynty = 1
 
-    y = [B[(isynty, iplaji, i, ivero)][k] for k in range(14)]
+    y = B[(isynty, iplaji, i, ivero)]
     hajo = y[13]
 
     nz = y.count(0)
@@ -932,7 +932,7 @@ def agesuo(rpl: float,
     if ojitil > 2:
         iojitil = int(ojitil) - 2
 
-    y = [B_SUO[(iplaji, i, iojitil)][k] for k in range(14)]
+    y = B_SUO[(iplaji, i, iojitil)]
 
     hajo = y[13]
 
