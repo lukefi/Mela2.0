@@ -74,21 +74,31 @@ class LookupTable(Generic[T]):
         self._is_it_loaded()
 
         key_parts: list[str] = []
-        for col in self.key_columns:
-            raw = getattr(stand, col)
-            if self.transforms and col in self.transforms:
-                raw = self.transforms[col](raw)
-            key_parts.append(str(raw))
+        debug_pairs: list[tuple[str, Any, Any]] = []
 
-        key = tuple(key_parts)
+        for col in self.key_columns:
+            original = getattr(stand, col)
+
+            if self.transforms and col in self.transforms:
+                transformed = self.transforms[col](original)
+            else:
+                transformed = original
+
+            key_parts.append(str(transformed))
+            debug_pairs.append((col, original, transformed))
 
         try:
-            raw_value = self._index[key]
+            raw_value = self._index[tuple(key_parts)]
         except KeyError as e:
             csv_p = Path(self.csv_path).resolve()
+
+            details = ", ".join(
+                f"{col}=original:{orig!r} -> transformed:{trans!r}"
+                for col, orig, trans in debug_pairs
+            )
+
             raise ValueError(
-                f"No matching row in CSV {csv_p} for keys: "
-                + ", ".join(f"{k}={v!r}" for k, v in zip(self.key_columns, key_parts))
+                f"No matching row in CSV {csv_p} for keys: {details}"
             ) from e
 
         try:
