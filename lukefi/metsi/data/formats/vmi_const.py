@@ -8,8 +8,8 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "test_area_number": slice(10, 12),  # koeala  (col 11-12)
     "stand_number": slice(12, 13),     # kuvio   (col 13)
     "row_type": slice(13, 14),         # tielaji (col 14)
-    "lat": slice(18, 25),              # pkoonim (col 19-25)
-    "lon": slice(25, 32),              # ikoonim (col 26-32)
+    "lat": slice(306, 313),              # pkoonim
+    "lon": slice(313, 320),              # ikoonim
     "height_above_sea_level": slice(82, 87),  # korkeus dm (col 83-87)
     "area_ha": slice(50, 59),          # eduala (col 51-59)
     "osuusrel": slice(36, 38),         # osuusrel (col 37-38)
@@ -104,8 +104,8 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "test_area_number": slice(9, 11),   # koeala
     "stand_number": slice(12, 13),      # kuvio
     "row_type": slice(13, 14),          # tielaji (row type)
-    "lat": slice(18, 25),               # pkoonim
-    "lon": slice(25, 32),               # ikoonim
+    "lat": slice(183, 190),               # pkoonim
+    "lon": slice(190, 197),               # ikoonim
     "height_above_sea_level": slice(82, 87),  # korkeus (dm)
     "osuusrel": slice(36, 38),          # osuusrel
     "osuus7m": slice(40, 42),           # osuus7m
@@ -210,8 +210,8 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "ahvkeilaus": slice(11, 12),
     "stand_number": slice(12, 13),  # kuvio
     "row_type": slice(13, 14),      # tielaji
-    "lat": slice(18, 25),  # pkoo
-    "lon": slice(25, 32),  # ikoo
+    "lat": slice(183, 190),               # pkoonim
+    "lon": slice(190, 197),               # ikoonim
     "osuusrel": slice(36, 38),
     "osuus12x": slice(38, 40),
     "osuus7m": slice(40, 42),
@@ -305,8 +305,8 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "test_area_number": slice(9, 11),
     "stand_number": slice(12, 13),
     "row_type": slice(13, 14),
-    "lat": slice(18, 25),
-    "lon": slice(25, 32),
+    "lat": slice(183, 190),               # pkoonim
+    "lon": slice(190, 197),               # ikoonim
     "osuus9m": slice(36, 38),
     "osuus5m": slice(38, 40),
     "municipality": slice(45, 48),
@@ -400,7 +400,7 @@ VMI13_STAND_INDICES: dict[str, int] = {
     "test_area_number": 5,
     "stand_number": 6,
     "lohkotarkenne": 7,
-    "date": 9,
+    "date": 9,  # vvvvkkpp
     "osuus9m": 14,
     "osuus4m": 15,
     "county": 17,
@@ -408,8 +408,8 @@ VMI13_STAND_INDICES: dict[str, int] = {
     "municipality": 19,
     "kitukunta": 20,
     "owner_group": 24,
-    "lat": 26,
-    "lon": 27,
+    "lat": 28,
+    "lon": 29,
     "height_above_sea_level": 30,
     "degree_days": 31,
     "land_category": 40,

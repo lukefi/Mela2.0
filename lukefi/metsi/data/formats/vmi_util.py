@@ -599,12 +599,21 @@ def convert_vmi12_approximate_geolocation(lat_source: str, lon_source: str) -> t
 
 def parse_vmi12_date(date_string: str) -> dt:
     """Generate a datetime entry out of VMI12 date source format ddmmyy"""
-    return dt.strptime(date_string, '%d%m%y')
+    parsed = dt.strptime(date_string, '%d%m%y')
+    return _apply_growth_inc_logic(parsed)
 
 
 def parse_vmi13_date(date_string: str) -> dt:
     """Generate a datetime entry out of VMI13 date source format yyyymmdd"""
-    return dt.strptime(date_string, '%Y%m%d')
+    parsed = dt.strptime(date_string, '%Y%m%d')
+    return _apply_growth_inc_logic(parsed)
+
+
+def _apply_growth_inc_logic(date_obj: dt) -> dt:
+    """If month >= 7, increment year by 1. (yearly growth is over)"""
+    if date_obj.month >= 7:
+        return date_obj.replace(year=date_obj.year + 1)
+    return date_obj
 
 
 def parse_forestry_centre(forestry_centre: str) -> int:
