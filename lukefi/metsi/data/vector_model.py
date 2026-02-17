@@ -14,7 +14,7 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "tree_number": (np.int32, -1),
     "species": (np.int32, -1),
     "breast_height_diameter": (np.float64, 0.0),
-    "height": (np.float64, 0.0),
+    "height": (np.float64, np.nan),
     "measured_height": (np.float64, np.nan),
     "breast_height_age": (np.float64, np.nan),
     "biological_age": (np.float64, np.nan),
@@ -230,7 +230,7 @@ class ReferenceTree:
     tree_number: int = -1
     species: TreeSpecies = TreeSpecies.UNSET
     breast_height_diameter: float = 0.0
-    height: float = 0.0
+    height: Optional[float] = None
     measured_height: Optional[float] = None
     breast_height_age: Optional[float] = None
     biological_age: Optional[float] = None
@@ -289,7 +289,7 @@ class ReferenceTrees(VectorData):
             self.tree_number[i],
             TreeSpecies(self.species[i]),
             self.breast_height_diameter[i],
-            self.height[i],
+            self.height[i] if not np.isnan(self.height[i]) else None,
             self.measured_height[i] if not np.isnan(self.measured_height[i]) else None,
             self.breast_height_age[i] if not np.isnan(self.breast_height_age[i]) else None,
             self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
