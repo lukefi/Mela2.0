@@ -54,7 +54,7 @@ def _trees_from_weibull(stratum: TreeStratum, n_trees: int) -> ReferenceTrees:
     The height is derived with Näslund height prediction model.
     """
     # stems_per_ha and diameter
-    result = distributions.weibull(n_trees, stratum.mean_diameter, stratum.basal_area, stratum.mean_height)
+    result = distributions.weibull(n_trees, stratum.mean_diameter, stratum.basal_area or 0.0, stratum.mean_height)
 
     # height
     for i in range(len(result)):
@@ -83,10 +83,11 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
     if stratum.mean_height > 1.3:
         # big trees
         if (stratum.mean_diameter > 0.0 and stratum.mean_height >
-                0.0 and stratum.basal_area > 0.0 and method == 'weibull'):
+                0.0 and stratum.basal_area is not None and stratum.basal_area > 0.0 and method == 'weibull'):
             return TreeStrategy.WEIBULL_DISTRIBUTION
 
-        if stand.land_use_category == 2 and stratum.basal_area > 0.0 and method == 'lm':
+        if stand.land_use_category == 2 and stratum.basal_area is not None and stratum.basal_area > 0.0 and \
+                method == 'lm':
             return TreeStrategy.LM_TREES
 
         if all([
@@ -97,7 +98,8 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
         ]):
             return TreeStrategy.HEIGHT_DISTRIBUTION
 
-        if stratum.mean_diameter > 0.0 and stratum.basal_area >= 0.0 and method == 'lm':
+        if stratum.mean_diameter > 0.0 and stratum.basal_area is not None and stratum.basal_area >= 0.0 and \
+                method == 'lm':
             return TreeStrategy.LM_TREES
 
         if stratum.mean_height > 0.0 and stratum.stems_per_ha > 0.0:
