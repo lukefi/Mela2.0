@@ -15,9 +15,9 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "species": (np.int32, -1),
     "breast_height_diameter": (np.float64, 0.0),
     "height": (np.float64, 0.0),
-    "measured_height": (np.float64, 0.0),
-    "breast_height_age": (np.float64, 0.0),
-    "biological_age": (np.float64, 0.0),
+    "measured_height": (np.float64, np.nan),
+    "breast_height_age": (np.float64, np.nan),
+    "biological_age": (np.float64, np.nan),
     "stems_per_ha": (np.float64, 0.0),
     "origin": (np.int32, -1),
     "management_category": (np.int32, -1),
@@ -37,10 +37,10 @@ DTYPES_STRATA: dict[str, DTypeDeclaration] = {
     "species": (np.int32, -1),
     "mean_diameter": (np.float64, -1),
     "mean_height": (np.float64, 0.0),
-    "breast_height_age": (np.float64, 0.0),
-    "biological_age": (np.float64, 0.0),
+    "breast_height_age": (np.float64, np.nan),
+    "biological_age": (np.float64, np.nan),
     "stems_per_ha": (np.float64, 0.0),
-    "basal_area": (np.float64, -1),
+    "basal_area": (np.float64, np.nan),
     "origin": (np.int32, -1),
     "tree_number": (np.int32, -1),
     "storey": (np.int32, -1),
@@ -231,9 +231,9 @@ class ReferenceTree:
     species: TreeSpecies = TreeSpecies.UNSET
     breast_height_diameter: float = 0.0
     height: float = 0.0
-    measured_height: float = 0.0
-    breast_height_age: float = 0.0
-    biological_age: float = 0.0
+    measured_height: Optional[float] = None
+    breast_height_age: Optional[float] = None
+    biological_age: Optional[float] = None
     stems_per_ha: float = 0.0
     origin: Origin = Origin.UNSET
     management_category: int = -1
@@ -290,9 +290,9 @@ class ReferenceTrees(VectorData):
             TreeSpecies(self.species[i]),
             self.breast_height_diameter[i],
             self.height[i],
-            self.measured_height[i],
-            self.breast_height_age[i],
-            self.biological_age[i],
+            self.measured_height[i] if not np.isnan(self.measured_height[i]) else None,
+            self.breast_height_age[i] if not np.isnan(self.breast_height_age[i]) else None,
+            self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
             self.stems_per_ha[i],
             Origin(self.origin[i]),
             self.management_category[i],
@@ -355,10 +355,10 @@ class TreeStratum:
     species: TreeSpecies = TreeSpecies.UNSET
     mean_diameter: float = -1
     mean_height: float = 0.0
-    breast_height_age: float = 0.0
-    biological_age: float = 0.0
+    breast_height_age: Optional[float] = None
+    biological_age: Optional[float] = None
     stems_per_ha: float = 0.0
-    basal_area: float = -1
+    basal_area: Optional[float] = None
     origin: Origin = Origin.UNSET
     tree_number: int = 0
     storey: Storey = Storey.UNSET
@@ -411,10 +411,10 @@ class TreeStrata(VectorData):
             TreeSpecies(self.species[i]),
             self.mean_diameter[i],
             self.mean_height[i],
-            self.breast_height_age[i],
-            self.biological_age[i],
+            self.breast_height_age[i] if not np.isnan(self.breast_height_age[i]) else None,
+            self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
             self.stems_per_ha[i],
-            self.basal_area[i],
+            self.basal_area[i] if not np.isnan(self.basal_area[i]) else None,
             Origin(self.origin[i]),
             self.tree_number[i],
             Storey(self.storey[i]),
