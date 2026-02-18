@@ -1,4 +1,4 @@
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
+from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 
 
 control_structure = {
@@ -7,6 +7,7 @@ control_structure = {
         "run_modes": ["preprocess", "export_prepro"]
     },
     "preprocessing_operations": [
+        scale_area_weight,
         generate_reference_trees,
         preproc_filter,
     ],

@@ -22,6 +22,7 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.stand_id = 3
         self.stand.year = 2022
         self.stand.area = 2.81114
+        self.stand.area_weight = 2.81114
         self.stand.geo_location = (6643.59, 274.542, 11.080000, None)
         self.stand.owner_category = OwnerCategory(0)
         self.stand.land_use_category = LandUseCategory(1)

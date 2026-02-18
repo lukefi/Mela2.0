@@ -28,6 +28,7 @@ def create_database_tables(db: sqlite3.Connection):
             year INTEGER,
             stand_id INTEGER,
             area REAL,
+            area_weight REAL,
             geo_location TEXT,
             degree_days REAL,
             owner_category INTEGER,

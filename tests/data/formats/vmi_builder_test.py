@@ -46,7 +46,9 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(reference_area, self.vmi12_stands[1].area)
         # auxiliary stand area should be 0
         self.assertEqual(0.0, self.vmi12_stands[3].area)
-
+        self.assertEqual(reference_area, self.vmi12_stands[0].area_weight)
+        self.assertEqual(reference_area, self.vmi12_stands[1].area_weight)
+        self.assertAlmostEqual(reference_area, self.vmi12_stands[3].area_weight)
         # lat 6656996, lon 3102608, height
         self.assertEqual((6652133.0, 3246174.0, None, 'EPSG:2393'), self.vmi12_stands[0].geo_location)
         # lat 6675011, lon 3118967, height 124
@@ -251,6 +253,9 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(reference_area, self.vmi13_stands[1].area)
         # auxiliary stand area should be 0
         self.assertEqual(0.0, self.vmi13_stands[2].area)
+        self.assertEqual(reference_area, self.vmi13_stands[0].area_weight)
+        self.assertEqual(reference_area, self.vmi13_stands[1].area_weight)
+        self.assertEqual(reference_area, self.vmi13_stands[2].area_weight)
         # lat 5514200.0, lon 493729.0, height None
         self.assertEqual((5514200.0, 493729.0, None, 'EPSG:3067'), self.vmi13_stands[0].geo_location)
         # lat 6671298.0, lon 1385598.0, height 124.0

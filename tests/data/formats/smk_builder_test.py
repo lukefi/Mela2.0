@@ -196,6 +196,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(2021, self.gpkg_stands[1].year)
         self.assertEqual(4.264, self.gpkg_stands[0].area)
         self.assertEqual(0.284, self.gpkg_stands[1].area)
+        self.assertEqual(4.264, self.gpkg_stands[0].area_weight)
+        self.assertEqual(0.284, self.gpkg_stands[1].area_weight)
         self.assertEqual((294543.42, 7089696.1, None, 'EPSG:3067'), self.gpkg_stands[0].geo_location)
         self.assertEqual((294302.15, 7089724.98, None, 'EPSG:3067'), self.gpkg_stands[1].geo_location)
         self.assertEqual(None, self.gpkg_stands[0].degree_days)

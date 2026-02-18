@@ -1,13 +1,13 @@
+from user_events import Harvest20percent
+from examples.declarations.export_prepro import mela_and_default_csv
+from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.sim_configuration import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.treatment import do_nothing
-from examples.declarations.export_prepro import mela_and_default_csv
-from user_events import Harvest20percent
+from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 
 control_structure = {
     "app_configuration": {
@@ -16,6 +16,7 @@ control_structure = {
         "run_modes": ["preprocess", "export_prepro", "simulate"]
     },
     "preprocessing_operations": [
+        scale_area_weight,
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
         preproc_filter,
     ],

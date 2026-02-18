@@ -70,6 +70,7 @@ class TestExpOps(unittest.TestCase):
 
         stand = ForestStand(
             geo_location=(6654200, 102598, 0.0, "EPSG:3067"),
+            area_weight=100.0,
             auxiliary_stand=True,
         )
 

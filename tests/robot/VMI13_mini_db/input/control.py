@@ -1,7 +1,7 @@
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.events import GrowActa, GrowMetsi
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
+from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.operations import do_nothing
@@ -15,6 +15,7 @@ control_structure = {
         "run_modes": ["preprocess", "simulate"]
     },
     "preprocessing_operations": [
+        scale_area_weight,
         generate_reference_trees,
         preproc_filter,
     ],
