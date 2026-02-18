@@ -108,6 +108,7 @@ def _append_tree_row(
     attr: dict[str, list],
     indices,
     row,
+    is_vmi11: bool = False,
     is_vmi12: bool = False,
     height_conversion_factor: float = 100.0,
     measured_height_conversion_factor: float = 10.0,
@@ -126,7 +127,10 @@ def _append_tree_row(
 
     tree_category = tc_enum.value if tc_enum else None
 
-    breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
+    if is_vmi11:
+        breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
+    else:
+        breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
 
     breast_height_age, biological_age = vmi_util.determine_tree_age_values(
         row[indices["d13_age"]],
@@ -757,6 +761,7 @@ class VMI11Builder(VMIBuilder):
                     attr_dict,
                     VMI11_TREE_INDICES,
                     row,
+                    is_vmi11=True,
                     is_vmi12=False,
                     height_conversion_factor=10.0,            # VMI11 pituus is in dm
                     measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
@@ -891,7 +896,7 @@ class VMI12Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi12=True)
+                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi11=False, is_vmi12=True)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -1027,7 +1032,7 @@ class VMI13Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row, is_vmi12=False)
+                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row, is_vmi11=False, is_vmi12=False)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
