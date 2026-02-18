@@ -64,6 +64,8 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "jakso2_sivulaji1": slice(227, 229),                # j2sivplaji1 228-229
     "jakso2_sivulaji1_osuus": slice(229, 231),          # j2sivplaji1os 230-231
     "jakso2_sivulaji2": slice(231, 233),                # j2sivplaji2 232-233
+    "lat_measured": slice(306, 313),
+    "lon_measured": slice(313, 320),
 
 }
 
@@ -131,6 +133,8 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "naturaaluekoodi": slice(141, 142),  # natura
     "ahvenanmaan_markkinahakkuualue": slice(149, 150),
     "fra_class": slice(116, 117),               # fraluo 117
+    "lat_measured": slice(183, 190),
+    "lon_measured": slice(190, 197),
     "jakso1_asema": slice(200, 201),                 # jakasema (col 201)
     "jakso1_syntytapa": slice(202, 203),             # syntapa (col 203)
     "jakso1_paapuulaji": slice(203, 205),            # paaplaji (col 204-205)
@@ -239,6 +243,8 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "muut_arvot": slice(140, 141),
     "naturaaluekoodi": slice(141, 142),
     "ahvenanmaan_markkinahakkuualue": slice(149, 150),
+    "lat_measured": slice(183, 190),
+    "lon_measured": slice(190, 197),
     "kehitysluokka": slice(201, 202),
     "main_tree_species_dominant_storey": slice(202, 204),
     "pohjapintaala": slice(228, 230),  # kuvppa
@@ -334,6 +340,8 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "muut_arvot": slice(140, 141),
     "naturaaluekoodi": slice(141, 142),
     "ahvenanmaan_markkinahakkuualue": slice(149, 150),
+    "lat_measured": slice(183, 190),
+    "lon_measured": slice(190, 197),
     "kehitysluokka": slice(201, 202),
     "main_tree_species_dominant_storey": slice(202, 204),
     "vallitsevanjakson_d13ika": slice(247, 250),
@@ -410,6 +418,8 @@ VMI13_STAND_INDICES: dict[str, int] = {
     "owner_group": 24,
     "lat": 26,
     "lon": 27,
+    "lat_measured": 28,
+    "lon_measured": 29,
     "height_above_sea_level": 30,
     "degree_days": 31,
     "land_category": 40,

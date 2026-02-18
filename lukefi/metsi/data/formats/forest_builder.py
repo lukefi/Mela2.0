@@ -440,6 +440,10 @@ class VMI9Builder(VMIBuilder):
         result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
+        if not lat:
+            lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
+        if not lon:
+            lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
@@ -558,6 +562,10 @@ class VMI10Builder(VMIBuilder):
 
         lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
+        if not lat:
+            lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
+        if not lon:
+            lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
 
@@ -665,6 +673,10 @@ class VMI11Builder(VMIBuilder):
 
         lat = util.parse_type(data_row[indices["lat"]], float)
         lon = util.parse_type(data_row[indices["lon"]], float)
+        if not lat:
+            lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
+        if not lon:
+            lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
         height = vmi_util.transform_vmi12_height_above_sea_level(data_row[indices["height_above_sea_level"]])
         result.set_geo_location(lat, lon, height, "EPSG:2393")
 
@@ -783,6 +795,10 @@ class VMI12Builder(VMIBuilder):
         result.set_area(area_ha)
         lat = util.parse_type(data_row[indices["lat"]], float)
         lon = util.parse_type(data_row[indices["lon"]], float)
+        if not lat:
+            lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
+        if not lon:
+            lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
         height = vmi_util.transform_vmi12_height_above_sea_level(data_row[indices["height_above_sea_level"]])
         result.set_geo_location(lat, lon, height, "EPSG:2393")
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
@@ -914,6 +930,10 @@ class VMI13Builder(VMIBuilder):
         result.set_area(area_ha)
         lat = util.parse_type(data_row[indices["lat"]], float)
         lon = util.parse_type(data_row[indices["lon"]], float)
+        if not lat:
+            lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
+        if not lon:
+            lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
         height = vmi_util.transform_vmi13_height_above_sea_level(data_row[indices["height_above_sea_level"]])
         result.set_geo_location(lat, lon, height)
         result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
