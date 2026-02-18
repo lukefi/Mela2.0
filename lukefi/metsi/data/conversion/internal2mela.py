@@ -1,6 +1,7 @@
 from copy import copy
 import numpy as np
-from lukefi.metsi.data.model import ForestStand, ReferenceTree
+from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.mela import (
     MelaOwnerCategory,
     MelaSiteTypeCategory,
@@ -180,10 +181,55 @@ def owner_mapper(target):
     return target
 
 
+# Faster species conversion
+_MAX_INTERNAL_SPECIES = max(s.value for s in TreeSpecies)
+_DEFAULT_MELA_SPECIES = MelaTreeSpecies.OTHER_DECIDUOUS.value
+_SPECIES_LUT = np.full((_MAX_INTERNAL_SPECIES + 1,), _DEFAULT_MELA_SPECIES, dtype=np.int32)
+for internal_species, mela_species in species_map.items():
+    _SPECIES_LUT[int(internal_species.value)] = int(mela_species.value)
+
+
 def species_mapper(target):
     """in-place mapping from internal tree species to mela tree species"""
     target.species = species_map.get(target.species, MelaTreeSpecies.OTHER_DECIDUOUS)
     return target
+
+
+def mela_trees(trees: ReferenceTrees) -> ReferenceTrees:
+    """
+    Convert SoA ReferenceTrees so that enumerated category variables are converted to Mela value space.
+
+    """
+    rt = copy(trees)
+
+    if rt.size == 0:
+        return rt
+
+    # --- Tree level sanitization (previously in mela_stand) ---
+    if rt.saw_log_volume_reduction_factor is not None:
+        rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
+        np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
+
+    # --- Species conversion: internal TreeSpecies int -> MELA int ---
+    if rt.species is not None:
+        src = rt.species
+
+        # Keep behavior consistent with current mela_stand: -1 -> 0 before/after mapping.
+        # (RST/classifier-specific convention) :contentReference[oaicite:9]{index=9}
+        missing_mask = (src == -1)
+
+        # Clip to LUT domain to avoid index errors if unexpected values appear.
+        clipped = np.clip(src, 0, _MAX_INTERNAL_SPECIES).astype(np.int32, copy=False)
+        mapped = _SPECIES_LUT[clipped]
+
+        # Apply the old convention for missing
+        if np.any(missing_mask):
+            mapped = mapped.copy()
+            mapped[missing_mask] = 0
+
+        rt.species = mapped.astype(np.int32, copy=False)
+
+    return rt
 
 
 def stand_location_converter(target):
@@ -213,13 +259,6 @@ def mela_stratum(stratum):
     return apply_mappers(result, *default_mela_stratum_mappers)
 
 
-def mela_tree(tree: ReferenceTree) -> ReferenceTree:
-    """Convert a ReferenceTree so that enumerated category variables are converted to Mela value space"""
-    result = copy(tree)
-    result.stand_origin_relative_position = copy(tree.stand_origin_relative_position)
-    return apply_mappers(result, *default_mela_tree_mappers)
-
-
 def mela_stand(stand: ForestStand) -> ForestStand:
     """Convert a ForestStand so that enumerated category variables are converted to Mela value space"""
     result = copy(stand)
@@ -234,19 +273,7 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     result.municipality_id = (-1 if result.municipality_id is None
                               else result.municipality_id)
 
-    # tree level
-    rt = copy(result.reference_trees)
-
-    if rt.size:
-        if rt.saw_log_volume_reduction_factor is not None:
-            rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
-            np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
-
-        if rt.species is not None:
-            # np.where returns a new array anyway, so original won't be mutated
-            rt.species = np.where(rt.species == -1, 0, rt.species).astype(np.int32, copy=False)
-
-    result.reference_trees = rt
+    result.reference_trees = mela_trees(result.reference_trees)
 
     return result
 
