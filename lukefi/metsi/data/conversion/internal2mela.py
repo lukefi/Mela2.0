@@ -159,8 +159,9 @@ def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
 
     try:
         vmi_enum = VmiTreeCategory(raw.upper())
-    except ValueError:
-        raise ValueError(f"Unknown VMI tree_category: {raw}")
+
+    except ValueError as exc:
+        raise ValueError(f'Unknown VMI tree_category: {raw}') from exc
 
     return TREE_CATEGORY_MAP.get(vmi_enum)
 
@@ -257,7 +258,7 @@ def mela_trees(trees: ReferenceTrees) -> ReferenceTrees:
 
         # Keep behavior consistent with current mela_stand: -1 -> 0 before/after mapping.
         # (RST/classifier-specific convention) :contentReference[oaicite:9]{index=9}
-        missing_mask = (src == -1)
+        missing_mask = src == -1
 
         # Clip to LUT domain to avoid index errors if unexpected values appear.
         clipped = np.clip(src, 0, _MAX_INTERNAL_SPECIES).astype(np.int32, copy=False)
