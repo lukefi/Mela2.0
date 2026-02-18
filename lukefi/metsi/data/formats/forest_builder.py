@@ -27,6 +27,7 @@ from lukefi.metsi.data.formats.vmi_const import (
 )
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.conversion import vmi2internal, fc2internal
+from lukefi.metsi.data.conversion.internal2mela import map_vmi_tree_category
 from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata, DTYPES_TREE, DTYPES_STRATA
@@ -120,7 +121,10 @@ def _append_tree_row(
     tree_number = util.parse_type(row[indices["tree_number"]], int)
 
     species = vmi2internal.convert_species(row[indices["species"]])
-    tree_category = row[indices["tree_category"]]
+    raw_tc = row[indices["tree_category"]]
+    tc_enum = map_vmi_tree_category(raw_tc)
+
+    tree_category = tc_enum.value if tc_enum else None
 
     breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
 
