@@ -1,12 +1,13 @@
-from dataclasses import dataclass
+import threading
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Generic, Mapping, Sequence, TypeVar
-import pandas as pd
+import csv
 
 T = TypeVar("T")  # e.g. ForestStand
 
 
-@dataclass(frozen=True)
+@dataclass
 class LookupTable(Generic[T]):
     """
     Generic CSV-backed lookup.
@@ -28,26 +29,76 @@ class LookupTable(Generic[T]):
     transforms: Mapping[str, Callable[[Any], Any]] | None = None
     value_cast: Callable[[str], Any] = int
 
+    _index: Dict[tuple[str, ...], str] = field(default_factory=dict, init=False, repr=False)
+    _loaded: bool = field(default=False, init=False, repr=False)
+    _load_lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False)
+
+    def _is_it_loaded(self) -> None:
+        if self._loaded:
+            return
+
+        with self._load_lock:
+            if self._loaded:
+                return
+
+            csv_p = Path(self.csv_path).resolve()
+            idx: Dict[tuple[str, ...], str] = {}
+
+            with csv_p.open(newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                if reader.fieldnames is None:
+                    raise ValueError(f"Lookup CSV {csv_p} is missing a header row.")
+
+                required = set(self.key_columns) | {self.value_column}
+                missing = [c for c in required if c not in reader.fieldnames]
+                if missing:
+                    raise ValueError(f"CSV {csv_p} is missing required column(s) {missing!r}.")
+
+                row_count = 0
+                for row in reader:
+                    row_count += 1
+                    key = tuple(str(row[c]) for c in self.key_columns)
+
+                    if key in idx:
+                        raise ValueError(f"Ambiguous rows in CSV {csv_p} for keys {key}.")
+
+                    idx[key] = str(row[self.value_column])
+
+            if row_count == 0:
+                raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
+
+            self._index = idx
+            self._loaded = True
+
     def __call__(self, stand: T) -> Any:
-        # Build key_values from stand attributes (optionally transformed)
-        key_values: Dict[str, Any] = {}
+        self._is_it_loaded()
+
+        key_parts: list[str] = []
+        debug_pairs: list[tuple[str, Any, Any]] = []
+
         for col in self.key_columns:
+            original = getattr(stand, col)
 
-            raw = getattr(stand, col)
             if self.transforms and col in self.transforms:
-                raw = self.transforms[col](raw)
+                transformed = self.transforms[col](original)
+            else:
+                transformed = original
 
-            key_values[col] = raw
+            key_parts.append(str(transformed))
+            debug_pairs.append((col, original, transformed))
 
-        row = self._find_matching_row(key_values)
-
-        # Get and cast the value column
         try:
-            raw_value = row[self.value_column]
+            raw_value = self._index[tuple(key_parts)]
         except KeyError as e:
             csv_p = Path(self.csv_path).resolve()
+
+            details = ", ".join(
+                f"{col}=original:{orig!r} -> transformed:{trans!r}"
+                for col, orig, trans in debug_pairs
+            )
+
             raise ValueError(
-                f"Lookup CSV {csv_p} is missing value column {self.value_column!r}."
+                f"No matching row in CSV {csv_p} for keys: {details}"
             ) from e
 
         try:
@@ -57,40 +108,3 @@ class LookupTable(Generic[T]):
                 f"Could not convert value {raw_value!r} from column {self.value_column!r} "
                 f"in CSV {self.csv_path!r} using {self.value_cast}."
             ) from e
-
-    def _find_matching_row(self, key_values: Mapping[str, Any]) -> Dict[str, Any]:
-
-        csv_p = Path(self.csv_path).resolve()
-        df = pd.read_csv(csv_p, dtype=str)  # ensure consistent string comparison
-
-        if df.empty:
-            raise ValueError(f"Lookup CSV {csv_p} has no data rows.")
-
-        # Ensure all key columns exist
-        missing_cols = [col for col in key_values if col not in df.columns]
-        if missing_cols:
-            raise ValueError(
-                f"CSV {csv_p} is missing required key column(s) {missing_cols!r}."
-            )
-
-        # Build query mask
-        mask = pd.Series(True, index=df.index)
-        for col, key_val in key_values.items():
-            mask &= (df[col] == str(key_val))
-
-        filtered = df[mask]
-
-        if filtered.empty:
-            raise ValueError(
-                f"No matching row in CSV {csv_p} for keys: "
-                + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
-            )
-
-        if len(filtered) > 1:
-            raise ValueError(
-                f"Ambiguous rows in CSV {csv_p} for keys: "
-                + ", ".join(f"{k}={v!r}" for k, v in key_values.items())
-            )
-
-        row = filtered.iloc[0].to_dict()
-        return {str(k): v for k, v in row.items()}
