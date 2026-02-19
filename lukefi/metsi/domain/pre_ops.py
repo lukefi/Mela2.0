@@ -298,6 +298,9 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         stand.tree_strata = stand.tree_strata + new_strata
         stand.reference_trees = new_trees
 
+        if operation_params.get("delete_strata", False):
+            stand.tree_strata = TreeStrata()
+
     return stands
 
 
