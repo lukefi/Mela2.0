@@ -141,6 +141,7 @@ class TestForestDataModel(unittest.TestCase):
         fixture = ForestStand()
         fixture.set_area(1.0)
         self.assertEqual(1.0, fixture.area)
+        self.assertEqual(1.0, fixture.area_weight)
 
     def test_set_geo_location(self):
         fixture = ForestStand()
