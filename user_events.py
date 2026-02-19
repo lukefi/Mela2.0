@@ -260,7 +260,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             return 0.1 * _min_number_of_stems_after_thinning(stand)
 
         def s_conifer_bias(stand: ForestStand, trees) -> np.ndarray:
-            fert = (stand.site_type_category or 0)
+            fert = stand.site_type_category.value if stand.site_type_category is not None else 0
             if fert == 3:
                 # include both spruce (2) and pine (1)
                 return (trees.species == 1) | (trees.species == 2)
