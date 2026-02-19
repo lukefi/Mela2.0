@@ -641,7 +641,7 @@ def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]]
 
 def stand_as_rst_row(stand: ForestStand):
     return [
-        stand.identifier,
+        stand.stand_id,
         stand.year,
         stand.area,
         stand.area_weight,
