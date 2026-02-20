@@ -280,13 +280,13 @@ class ReferenceTree():
         result.measured_height = conv(row[7], float)
         result.breast_height_age = conv(row[8], float)
         result.biological_age = conv(row[9], float)
-        result.tree_number = conv(row[13], int)
-        result.management_category = conv(row[18], int)
-        result.tree_category = conv(row[19], str)
-        result.sapling = row[20] == "True"
-        result.storey = Storey(int(row[21])) if row[21] != 'None' else None
-        result.tree_type = conv(row[22], str)
-        result.tuhon_ilmiasu = conv(row[23], str)
+        result.tree_number = conv(row[10], int)
+        result.management_category = conv(row[11], int)
+        result.tree_category = conv(row[12], str)
+        result.sapling = row[13] == "True"
+        result.storey = Storey(int(row[14])) if row[14] != 'None' else None
+        result.tree_type = conv(row[15], str)
+        result.tuhon_ilmiasu = conv(row[16], str)
         return result
 
 
@@ -414,7 +414,6 @@ class ForestStand(Finalizable, ComputationalUnit):
         return len(self.tree_strata) > 0
 
     def from_row(self, row):
-
         self.year = conv(row[0], int)
         self.start_year = self.year
         self.area = conv(row[1], float) or 0.0
@@ -426,35 +425,36 @@ class ForestStand(Finalizable, ComputationalUnit):
             conv(row[5], float),
             conv(row[6], str)
         )
-        self.degree_days = conv(row[8], float)
-        self.owner_category = conv(row[9], OwnerCategory)
-        self.land_use_category = conv(row[10], LandUseCategory)
-        self.soil_peatland_category = conv(row[11], SoilPeatlandCategory)
-        self.site_type_category = conv(row[12], SiteType)
-        self.tax_class_reduction = conv(row[13], int)
-        self.tax_class = conv(row[14], int)
-        self.drainage_category = conv(row[15], DrainageCategory)
-        self.drainage_year = conv(row[17], int)
-        self.fertilization_year = conv(row[18], int)
-        self.soil_surface_preparation_year = conv(row[19], int)
-        self.regeneration_area_cleaning_year = conv(row[21], int)
-        self.development_class = conv(row[22], int)
-        self.artificial_regeneration_year = conv(row[23], int)
-        self.young_stand_tending_year = conv(row[24], int)
-        self.cutting_year = conv(row[26], int)
-        self.forestry_centre_id = conv(row[27], int)
-        self.forest_management_category = conv(row[28], float)
-        self.method_of_last_cutting = conv(row[29], int)
-        self.municipality_id = conv(row[30], int)
-        self.fra_category = conv(row[31], str)
-        self.land_use_category_detail = conv(row[32], str)
-        self.auxiliary_stand = row[33] == "True"
-        self.area_weight_factors = (conv(row[34], float) or 0.0, conv(row[35], float) or 0.0)
-        self.stand_id = conv(row[36], int)
-        self.basal_area = conv(row[37], float)
-        self.dominant_storey_age = conv(row[38], float)
-        self.main_tree_species_dominant_storey = conv(row[39], TreeSpecies)
-        self.region = conv(row[40], int)
+        self.degree_days = conv(row[7], float)
+        self.owner_category = conv(row[8], OwnerCategory)
+        self.land_use_category = conv(row[9], LandUseCategory)
+        self.soil_peatland_category = conv(row[10], SoilPeatlandCategory)
+        self.site_type_category = conv(row[11], SiteType)
+        self.tax_class_reduction = conv(row[12], int)
+        self.tax_class = conv(row[13], int)
+        self.drainage_category = conv(row[14], DrainageCategory)
+
+        self.drainage_year = conv(row[15], int)
+        self.fertilization_year = conv(row[16], int)
+        self.soil_surface_preparation_year = conv(row[17], int)
+        self.regeneration_area_cleaning_year = conv(row[18], int)
+        self.development_class = conv(row[19], int)
+        self.artificial_regeneration_year = conv(row[20], int)
+        self.young_stand_tending_year = conv(row[21], int)
+        self.cutting_year = conv(row[22], int)
+        self.forestry_centre_id = conv(row[23], int)
+        self.forest_management_category = conv(row[24], float)
+        self.method_of_last_cutting = conv(row[25], int)
+        self.municipality_id = conv(row[26], int)
+        self.fra_category = conv(row[27], str)
+        self.land_use_category_detail = conv(row[28], str)
+        self.auxiliary_stand = row[29] == "True"
+        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
+        self.stand_id = conv(row[32], int)
+        self.basal_area = conv(row[33], float)
+        self.dominant_storey_age = conv(row[34], float)
+        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
+        self.region = conv(row[36], int)
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
