@@ -2,7 +2,6 @@ from collections.abc import Callable
 from typing import Any
 
 import numpy as np
-import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
 from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
@@ -13,9 +12,10 @@ from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
 from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
-from lukefi.metsi.forestry.preprocessing import tree_generation
 from lukefi.metsi.forestry.preprocessing.py_ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
+from lukefi.metsi.forestry.preprocessing.tree_generation import (
+    adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 
 
 def filter_stands(stands: StandList, **operation_params) -> StandList:
@@ -87,123 +87,6 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
-def _calculate_g_from_trees(stems_per_ha, breast_height_diameter) -> float:
-    return np.pi * np.sum(stems_per_ha * ((breast_height_diameter / 200) ** 2))
-
-
-def _determine_ages(stand: ForestStand,
-                    new_trees: ReferenceTrees,
-                    retention_trees_mask: npt.NDArray[np.bool_],
-                    tree_i: int,
-                    added_years: float) -> tuple[float, float]:
-    trees = stand.reference_trees
-    if trees.biological_age[tree_i] > 0:
-        return trees.breast_height_age[tree_i], trees.biological_age[tree_i]
-    return ages(stand, new_trees + trees[retention_trees_mask], trees.get_tree(tree_i), added_years)
-
-
-def _adjust_retention_trees(stand: ForestStand,
-                            new_trees: ReferenceTrees,
-                            retention_trees_mask: npt.NDArray[np.bool_]):
-    # Scales the stem counts so that basal area does not increase
-    # Basal area may increse if the basal area of the retention trees is greater than
-    # basal area of the reference trees
-
-    trees = stand.reference_trees
-
-    g_retention = _calculate_g_from_trees(
-        trees.stems_per_ha[retention_trees_mask],
-        trees.breast_height_diameter[retention_trees_mask])
-
-    g_generated_not_retention_trees = _calculate_g_from_trees(
-        new_trees.stems_per_ha[new_trees.management_category != 2],
-        new_trees.breast_height_diameter[new_trees.management_category != 2])
-
-    scale_factor_stand = max((g_generated_not_retention_trees - g_retention) / g_generated_not_retention_trees, 0) \
-        if g_generated_not_retention_trees > 0.0 else 1
-
-    # skaalauksessa jätetään kuhunkin ositteeseen min(1, ositteen kuvauaspuiden  ppa) m2/ha
-    # säästöpuite ei skaalata
-    itree = -1
-    for i_stratum in range(len(stand.tree_strata)):
-        scale_factor_stratum = scale_factor_stand
-
-        g_stratum = 0
-        g_stratum_retention = 0
-        itree0 = itree
-        for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
-            itree = itree + 1
-            g_stratum = g_stratum + new_trees.stems_per_ha[itree] * \
-                np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
-            if new_trees.management_category[itree] == 2:
-                g_stratum_retention = g_stratum_retention + \
-                    new_trees.stems_per_ha[itree] * np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
-        g_stratum_scaled = scale_factor_stratum * g_stratum
-
-        if g_stratum_scaled < 1 and g_stratum <= 1:
-            scale_factor_stratum = 1
-        elif g_stratum_scaled < 1 < g_stratum:
-            if g_stratum_retention == 0:
-                scale_factor_stratum = 1 / g_stratum
-            elif g_stratum_retention < 1:
-                scale_factor_stratum = (1 - g_stratum_retention) / g_stratum
-            else:
-                scale_factor_stratum = 0
-
-        for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
-            itree = itree0 + i + 1
-            if new_trees.management_category[itree] != 2:
-                new_trees.stems_per_ha[itree] = scale_factor_stratum * new_trees.stems_per_ha[itree]
-
-    stand_tree_count = len(new_trees)
-
-    for j, i in enumerate(np.where(retention_trees_mask)[0]):
-        trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + j + 1}-tree"
-        trees.management_category[i] = 2
-        trees.storey[i] = Storey.SPARE
-        breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
-        trees.breast_height_age[i] = breast_height_age
-        trees.biological_age[i] = biological_age
-
-
-def _adjust_ages(stand: ForestStand, trees: ReferenceTrees):
-    # adjust tree ages (from age model) by subtracting the difference between
-    # basal area weighted age of trees and age of stratum
-
-    itree = -1
-    strata = stand.tree_strata
-    for i in range(len(strata)):
-        if strata.number_of_generated_trees[i] > 0:
-            g = 0
-            agesum = 0
-            itreeages = itree
-            for _ in range(strata.number_of_generated_trees[i]):
-                itree = itree + 1
-                if trees.stems_per_ha[itree] > 0:
-                    gtree = trees.stems_per_ha[itree] * np.pi * ((trees.breast_height_diameter[itree] / 200)**2)
-                    agesum = agesum + gtree * trees.breast_height_age[itree]
-                    g = g + gtree
-
-            mean_age = agesum / g if g > 0 else 0
-
-            breast_height_age = 0.0
-            if strata.breast_height_age[i] > 0.0:
-                breast_height_age = strata.breast_height_age[i]
-            elif strata.biological_age[i] > 0.0:
-                breast_height_age = max(strata.biological_age[i] - 12.0, 0.0)
-            else:
-                breast_height_age = 0.0
-
-            age_diff = mean_age - breast_height_age
-
-            if age_diff != 0:
-                for _ in range(strata.number_of_generated_trees[i]):
-                    itreeages = itreeages + 1
-                    if trees.height[itreeages] > 1.3:
-                        trees.breast_height_age[itreeages] = max(trees.breast_height_age[itreeages] - age_diff, 1)
-                        trees.biological_age[itreeages] = max(trees.biological_age[itreeages] - age_diff, 1)
-
-
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
@@ -242,7 +125,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         for k, stratum in enumerate(strata.get_stratum(i) for i in range(len(strata))):
             try:
-                stratum_trees = tree_generation.reference_trees_from_tree_stratum(stand, stratum, **operation_params)
+                stratum_trees = reference_trees_from_tree_stratum(stand, stratum, **operation_params)
                 strata.number_of_generated_trees[k] = stratum.number_of_generated_trees
             except Exception as e:
                 print(
@@ -263,7 +146,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         # lisätään irralliset säästöpuut
         if add_retention_trees and np.any(retention_trees_mask):
-            _adjust_retention_trees(stand, new_trees, retention_trees_mask)
+            adjust_retention_trees(stand, new_trees, retention_trees_mask)
         if operation_params.get('age_model', False):
             for i in range(len(new_trees)):
                 if new_trees.breast_height_diameter[i] > 0:
@@ -271,7 +154,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
                         stand, new_trees + stand.reference_trees[retention_trees_mask], new_trees.get_tree(i), 10)
                     new_trees.breast_height_age[i] = round(breast_height_age, 1)
                     new_trees.biological_age[i] = round(biological_age, 1)
-            _adjust_ages(stand, new_trees)
+            adjust_ages(stand, new_trees)
 
         retention_trees = trees[retention_trees_mask]
         new_trees = new_trees + retention_trees
