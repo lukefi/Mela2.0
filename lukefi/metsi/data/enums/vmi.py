@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class VmiSpecies(Enum):
+    TREELESS = "0"
     PINE = "1"
     SPRUCE = "2"
     SILVER_BIRCH = "3"
@@ -32,7 +33,6 @@ class VmiSpecies(Enum):
     BIRD_CHERRY = "B8"
     MAPLE = "B9"
     HAZEL = "C1"
-    TREELESS = "0"
     UNKNOWN = None
 
     @classmethod

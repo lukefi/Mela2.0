@@ -12,6 +12,7 @@ class TreeSpecies(MetsiEnum):
     and listing all the distinct ones. UNKNOWN (38) is not part of either list,
     but can be assigned to in case the source data species is unexpected."""
     UNSET = -1
+    TREELESS = 0
     PINE = 1
     SPRUCE = 2
     SILVER_BIRCH = 3  # rauduskoivu
@@ -50,7 +51,6 @@ class TreeSpecies(MetsiEnum):
     POPLAR = 36
     HAZEL = 37
     UNKNOWN = 38
-    TREELESS = 0
 
     def is_deciduous(self):
         return self in DECIDUOUS_SPECIES
