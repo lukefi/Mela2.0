@@ -5,7 +5,7 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
-from examples.declarations.export_prepro import mela_decl
+from examples.declarations.export_prepro import mela_decl, sqlite_decl
 
 
 control_structure = {
@@ -13,7 +13,8 @@ control_structure = {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         "run_modes": ["preprocess", "export_prepro", "simulate"],
         "preprocessing_output_file": "preprocessing_results",
-        "simulation_output_file": "simulation_results"
+        "simulation_output_file": "simulation_results",
+        "sqlite_decl": sqlite_decl,
     },
     "preprocessing_operations": [
         scale_area_weight,

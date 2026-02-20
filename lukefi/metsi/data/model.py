@@ -1,4 +1,5 @@
 from copy import copy
+from enum import Enum
 import dataclasses
 import sqlite3
 from typing import Optional, override
@@ -11,6 +12,7 @@ from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, Si
                                               TreeSpecies, DrainageCategory, Storey)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
 
@@ -405,6 +407,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
 
+    sqlite_decl: Optional[dict] = None
+
     def __eq__(self, other):
         return id(self) == id(other)
 
@@ -512,6 +516,36 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.main_tree_species_dominant_storey = conv(row[39], TreeSpecies)
         self.region = conv(row[40], int)
 
+    @staticmethod
+    def _sql_value(v):
+        if v is None:
+            return None
+        if isinstance(v, Enum):
+            return v.value
+        # numpy scalar -> python scalar
+        if isinstance(v, (np.generic,)):
+            return v.item()
+        # tuples / arrays that is store as TEXT
+        if isinstance(v, (tuple, list)):
+            return str(tuple(v))
+        # numpy array row [x,y,z] -> (x, y, z)
+        if isinstance(v, np.ndarray):
+            return str(tuple(v.tolist()))
+        # for bool as bool
+        return v
+
+    @classmethod
+    def _decl_cols(cls, table: str, default: list[str]) -> list[str]:
+        decl = cls.sqlite_decl
+        if not decl:
+            return default
+        return list(decl.get(table, default))
+
+    @classmethod
+    def set_sqlite_decl(cls, decl: Optional[dict]) -> None:
+        """ User's db output list are stored here """
+        cls.sqlite_decl = decl
+
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
         stand = cls()
@@ -538,126 +572,55 @@ class ForestStand(Finalizable, ComputationalUnit):
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
 
-        cur.execute(
-            """--sql
-            INSERT INTO stands
-            VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """,
-            (
-                node,
-                self.identifier,
-                self.year,
-                self.management_unit_id,
-                self.stand_id,
-                self.area,
-                self.area_weight,
-                str(self.geo_location),
-                self.degree_days,
-                self.owner_category,
-                self.land_use_category,
-                self.soil_peatland_category,
-                self.site_type_category,
-                self.tax_class_reduction,
-                self.tax_class,
-                self.drainage_category,
-                self.drainage_feasibility,
-                self.drainage_year,
-                self.fertilization_year,
-                self.soil_surface_preparation_year,
-                self.natural_regeneration_feasibility,
-                self.regeneration_area_cleaning_year,
-                self.development_class,
-                self.artificial_regeneration_year,
-                self.young_stand_tending_year,
-                self.pruning_year,
-                self.cutting_year,
-                self.forestry_centre_id,
-                self.forest_management_category,
-                self.method_of_last_cutting,
-                self.municipality_id,
-                self.dominant_storey_age,
-                str(self.area_weight_factors),
-                self.fra_category,
-                self.land_use_category_detail,
-                self.auxiliary_stand,
-                self.sea_effect,
-                self.lake_effect,
-                self.basal_area,
-                self.main_tree_species_dominant_storey,
-                self.dominant_height_dominant_storey,
-                self.region))
-        for i in range(self.reference_trees.size):
-            cur.execute(
-                """--sql
-                INSERT INTO trees
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    node,
-                    self.identifier,
-                    self.reference_trees.identifier[i],
-                    int(self.reference_trees.tree_number[i]),
-                    int(self.reference_trees.species[i]),
-                    self.reference_trees.breast_height_diameter[i],
-                    self.reference_trees.height[i],
-                    self.reference_trees.measured_height[i],
-                    self.reference_trees.breast_height_age[i],
-                    self.reference_trees.biological_age[i],
-                    self.reference_trees.stems_per_ha[i],
-                    int(self.reference_trees.origin[i]),
-                    int(self.reference_trees.management_category[i]),
-                    self.reference_trees.saw_log_volume_reduction_factor[i],
-                    int(self.reference_trees.pruning_year[i]),
-                    int(self.reference_trees.age_when_10cm_diameter_at_breast_height[i]),
-                    f"({self.reference_trees.stand_origin_relative_position[i][0]}, "
-                    f"{self.reference_trees.stand_origin_relative_position[i][1]}, "
-                    f"{self.reference_trees.stand_origin_relative_position[i][2]})",
-                    self.reference_trees.lowest_living_branch_height[i],
-                    self.reference_trees.tree_category[i],
-                    int(self.reference_trees.storey[i]),
-                    bool(self.reference_trees.sapling[i]),
-                    self.reference_trees.tree_type[i],
-                    self.reference_trees.tuhon_ilmiasu[i],
-                    self.reference_trees.basal_area[i],
-                    self.reference_trees.volume[i]
-                )
-            )
-        for i in range(self.tree_strata.size):
+        stand_cols = self._decl_cols("stands", list(STANDS_TYPES.keys()))
+        stand_insert_cols = ["node", "identifier"] + stand_cols
+        stand_values = [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in stand_cols]
 
+        cur.execute(
+            f"INSERT INTO stands ({', '.join(stand_insert_cols)}) VALUES ({', '.join(['?'] * len(stand_insert_cols))})",
+            tuple(stand_values),
+        )
+
+        tree_cols = self._decl_cols("trees", list(TREES_TYPES.keys()))
+        tree_insert_cols = ["node", "stand", "identifier"] + tree_cols
+        for i in range(self.reference_trees.size):
+            row = []
+            for c in tree_cols:
+                val = getattr(self.reference_trees, c)[i]
+                # stand_origin_relative_position is shape (N,3) and should become TEXT tuple
+                if c == "stand_origin_relative_position":
+                    val = self.reference_trees.stand_origin_relative_position[i]
+                row.append(self._sql_value(val))
+
+            tree_values = [node, self.identifier, self.reference_trees.identifier[i]] + row
             cur.execute(
-                """--sql
-                INSERT INTO strata
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    node,
-                    self.identifier,
-                    self.tree_strata.identifier[i],
-                    int(self.tree_strata.species[i]),
-                    self.tree_strata.mean_diameter[i],
-                    self.tree_strata.mean_height[i],
-                    self.tree_strata.breast_height_age[i],
-                    self.tree_strata.biological_age[i],
-                    self.tree_strata.stems_per_ha[i],
-                    self.tree_strata.basal_area[i],
-                    int(self.tree_strata.origin[i]),
-                    int(self.tree_strata.management_category[i]),
-                    self.tree_strata.saw_log_volume_reduction_factor[i],
-                    int(self.tree_strata.cutting_year[i]),
-                    int(self.tree_strata.age_when_10cm_diameter_at_breast_height[i]),
-                    int(self.tree_strata.tree_number[i]),
-                    f"({self.tree_strata.stand_origin_relative_position[i][0]}, "
-                    f"{self.tree_strata.stand_origin_relative_position[i][1]}, "
-                    f"{self.tree_strata.stand_origin_relative_position[i][2]})",
-                    self.tree_strata.lowest_living_branch_height[i],
-                    int(self.tree_strata.storey[i]),
-                    self.tree_strata.sapling_stems_per_ha[i],
-                    bool(self.tree_strata.sapling_stratum[i]),
-                    int(self.tree_strata.number_of_generated_trees[i])
-                )
+                f"INSERT INTO trees ({
+                    ', '.join(tree_insert_cols)}) VALUES ({
+                    ', '.join(
+                        ['?'] *
+                        len(tree_insert_cols))})",
+                tuple(tree_values),
+            )
+
+        strata_cols = self._decl_cols("strata", list(STRATA_TYPES.keys()))
+        strata_insert_cols = ["node", "stand", "identifier"] + strata_cols
+
+        for i in range(self.tree_strata.size):
+            row = []
+            for c in strata_cols:
+                val = getattr(self.tree_strata, c)[i]
+                if c == "stand_origin_relative_position":
+                    val = self.tree_strata.stand_origin_relative_position[i]
+                row.append(self._sql_value(val))
+
+            strata_values = [node, self.identifier, self.tree_strata.identifier[i]] + row
+            cur.execute(
+                f"INSERT INTO strata ({
+                    ', '.join(strata_insert_cols)}) VALUES ({
+                    ', '.join(
+                        ['?'] *
+                        len(strata_insert_cols))})",
+                tuple(strata_values),
             )
 
     def update_aggregates(self):

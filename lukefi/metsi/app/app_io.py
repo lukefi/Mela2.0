@@ -53,6 +53,7 @@ class MetsiConfiguration(SimpleNamespace):
             'multiprocessing': bool,
             'preprocessing_output_file': str,
             'simulation_output_file': str,
+            'sqlite_decl': str,
         }
         config_enums: dict[str, type[StringConfigEnum] | type[IntConfigEnum]] = {
             'run_modes': RunMode,

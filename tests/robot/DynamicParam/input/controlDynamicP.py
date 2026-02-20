@@ -7,12 +7,13 @@ from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
 from user_events import FirstThinningMineralSoils
-
+from examples.declarations.export_prepro import sqlite_decl
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
-        "run_modes": ["preprocess", "export_prepro", "simulate"]
+        "run_modes": ["preprocess", "export_prepro", "simulate"],
+        "sqlite_decl": sqlite_decl,
     },
     "preprocessing_operations": [
         scale_area_weight,
@@ -69,7 +70,8 @@ control_structure = {
     },
     'export_prepro': {
         'csv': {},
-    }
+    },
+
 }
 
 __all__ = ['control_structure']
