@@ -25,7 +25,6 @@ class PreprocessingTest(unittest.TestCase):
                 "basal_area": [250.0],
                 "stems_per_ha": [None],
                 "biological_age": [10.0],
-                "sapling_stratum": [False],
             }
         )
 
@@ -41,7 +40,7 @@ class PreprocessingTest(unittest.TestCase):
         self.assertEqual("xxx-1-tree", trees.identifier[0])
         self.assertEqual(10237.96, trees.stems_per_ha[0])
         self.assertEqual(1138.02, trees.stems_per_ha[1])
-        # area_weight should remain 0.0 as before
+
         self.assertEqual(0.0, result_stand.area_weight)
 
     def test_scale_area_weight(self):
@@ -128,10 +127,7 @@ class PreprocessingTest(unittest.TestCase):
             if geo:
                 self.assertIsNotNone(geo)
                 self.assertIsNotNone(geo[2])
-                temperatures = result.monthly_temperatures
-                self.assertIsNotNone(temperatures)
-                rainfall = result.monthly_rainfall
-                self.assertIsNotNone(rainfall)
+
                 # actual test validation
                 self.assertEqual(geo[0], latitude)
                 self.assertEqual(geo[1], longitude)
@@ -141,13 +137,6 @@ class PreprocessingTest(unittest.TestCase):
                     self.assertEqual(geo[3], asse[1])
             self.assertEqual(results[0].degree_days, asse[2])
             self.assertEqual(results[0].sea_effect, asse[3])
-
-            if temperatures:
-                self.assertEqual(float(temperatures[0]), asse[4])
-                self.assertEqual(float(temperatures[1]), asse[5])
-            if rainfall:
-                self.assertEqual(float(rainfall[0]), asse[6])
-                self.assertEqual(float(rainfall[1]), asse[7])
 
         invalid_fixtures = [
             [ForestStand(geo_location=(None, None, None, None))],

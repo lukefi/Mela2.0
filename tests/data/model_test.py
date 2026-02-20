@@ -16,11 +16,8 @@ class TestForestDataModel(unittest.TestCase):
             height=2.0,
             breast_height_age=10.0,
             biological_age=12.0,
-            saw_log_volume_reduction_factor=-1.0,
-            pruning_year=0,
-            age_when_10cm_diameter_at_breast_height=0,
+
             origin=1,
-            stand_origin_relative_position=(0.0, 0.0, 0.0),
             management_category=1,
             sapling=True)
         fixture = TreeStratum(
@@ -139,7 +136,6 @@ class TestForestDataModel(unittest.TestCase):
         fixture = ForestStand()
         fixture.set_area(1.0)
         self.assertEqual(1.0, fixture.area)
-        self.assertEqual(1.0, fixture.area_weight)
 
     def test_set_area_with_weight(self):
         fixture = ForestStand()
@@ -165,10 +161,10 @@ class TestForestDataModel(unittest.TestCase):
             self.assertRaises(Exception, lambda: fixture.set_geo_location(*i))
 
     def test_convert_csv_stand_row_with_missing_altitude(self):
-        row = "stand;12345;1;2018;436.0;436.0;6834156.23;429291.91;None;EPSG:3067;1019.0;" \
+        row = "stand;12345;2018;436.0;436.0;6834156.23;429291.91;None;EPSG:3067;1019.0;" \
               "4;1;2;" \
-              "3;0;3;8;True;1984;None;2018;False;None;0;None;None;" \
-              "None;None;10;1;None;12;1;0;False;1.0;1.0;1;10;51;None;None"
+              "3;0;3;8;1984;None;2018;None;0;None;None;" \
+              "None;10;1;None;12;1;0;False;1.0;1.0;1;10;51;None;None"
         row = row.split(';')
         stand = ForestStand.from_csv_row(row)
 

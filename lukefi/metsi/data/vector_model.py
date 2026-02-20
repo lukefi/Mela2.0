@@ -17,11 +17,6 @@ DTYPES_TREE: dict[str, npt.DTypeLike] = {
     "stems_per_ha": np.float64,
     "origin": np.int32,
     "management_category": np.int32,
-    "saw_log_volume_reduction_factor": np.float64,
-    "pruning_year": np.int16,
-    "age_when_10cm_diameter_at_breast_height": np.int16,
-    "stand_origin_relative_position": np.dtype((np.float64, (3,))),
-    "lowest_living_branch_height": np.float64,
     "tree_category": np.str_,
     "storey": np.int32,
     "sapling": np.bool_,
@@ -41,16 +36,9 @@ DTYPES_STRATA: dict[str, npt.DTypeLike] = {
     "stems_per_ha": np.float64,
     "basal_area": np.float64,
     "origin": np.int32,
-    "management_category": np.int32,
-    "saw_log_volume_reduction_factor": np.float64,
-    "cutting_year": np.int32,
-    "age_when_10cm_diameter_at_breast_height": np.int16,
     "tree_number": np.int32,
-    "stand_origin_relative_position": np.dtype((np.float64, (3,))),
-    "lowest_living_branch_height": np.float64,
     "storey": np.int32,
     "sapling_stems_per_ha": np.float64,
-    "sapling_stratum": np.bool_,
     "number_of_generated_trees": np.int32
 }
 
@@ -263,11 +251,6 @@ class ReferenceTrees(VectorData):
     stems_per_ha: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
     management_category: npt.NDArray[np.int32]
-    saw_log_volume_reduction_factor: npt.NDArray[np.float64]
-    pruning_year: npt.NDArray[np.int16]
-    age_when_10cm_diameter_at_breast_height: npt.NDArray[np.int16]
-    stand_origin_relative_position: npt.NDArray[np.float64]
-    lowest_living_branch_height: npt.NDArray[np.float64]
     tree_category: npt.NDArray[np.str_]
     storey: npt.NDArray[np.int32]
     sapling: npt.NDArray[np.bool_]
@@ -288,15 +271,15 @@ class ReferenceTrees(VectorData):
             self.height[i],
             self.breast_height_age[i],
             self.biological_age[i],
-            self.saw_log_volume_reduction_factor[i],
-            self.pruning_year[i],
-            self.age_when_10cm_diameter_at_breast_height[i],
+            None,
+            None,
+            None,
             self.origin[i],
             self.tree_number[i],
-            self.stand_origin_relative_position[i, 0],
-            self.stand_origin_relative_position[i, 1],
-            self.stand_origin_relative_position[i, 2],
-            self.lowest_living_branch_height[i],
+            None,
+            None,
+            None,
+            None,
             self.management_category[i],
             None,
         ]
@@ -313,14 +296,7 @@ class ReferenceTrees(VectorData):
             str(self.measured_height[i]),
             str(self.breast_height_age[i]),
             str(self.biological_age[i]),
-            str(self.saw_log_volume_reduction_factor[i]),
-            str(self.pruning_year[i]),
-            str(self.age_when_10cm_diameter_at_breast_height[i]),
             str(self.tree_number[i]),
-            str(self.stand_origin_relative_position[i, 0]),
-            str(self.stand_origin_relative_position[i, 1]),
-            str(self.stand_origin_relative_position[i, 2]),
-            str(self.lowest_living_branch_height[i]),
             str(self.management_category[i]),
             str(self.tree_category[i]),
             str(self.sapling[i]),
@@ -340,16 +316,9 @@ class TreeStrata(VectorData):
     stems_per_ha: npt.NDArray[np.float64]
     basal_area: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
-    management_category: npt.NDArray[np.int32]
-    saw_log_volume_reduction_factor: npt.NDArray[np.float64]
-    cutting_year: npt.NDArray[np.int32]
-    age_when_10cm_diameter_at_breast_height: npt.NDArray[np.int16]
     tree_number: npt.NDArray[np.int32]
-    stand_origin_relative_position: npt.NDArray[np.float64]
-    lowest_living_branch_height: npt.NDArray[np.float64]
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
-    sapling_stratum: npt.NDArray[np.bool_]
     number_of_generated_trees: npt.NDArray[np.int32]
 
     def __init__(self):
@@ -367,16 +336,7 @@ class TreeStrata(VectorData):
             str(self.breast_height_age[i]),
             str(self.biological_age[i]),
             str(self.basal_area[i]),
-            str(self.saw_log_volume_reduction_factor[i]),
-            str(self.cutting_year[i]),
-            str(self.age_when_10cm_diameter_at_breast_height[i]),
             str(self.tree_number[i]),
-            str(self.stand_origin_relative_position[i, 0]),
-            str(self.stand_origin_relative_position[i, 1]),
-            str(self.stand_origin_relative_position[i, 2]),
-            str(self.lowest_living_branch_height[i]),
-            str(self.management_category[i]),
             str(self.sapling_stems_per_ha[i]),
-            str(self.sapling_stratum[i]),
             str(self.storey[i])
         ]

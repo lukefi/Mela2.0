@@ -412,10 +412,54 @@ class PlantingPines(Event[ForestStand]):
                          file_parameters=file_parameters)
 
 
+class Harvest20percent(Event[ForestStand]):
+    """ Harvest 20% from all trees """
+
+    def __init__(self,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None,
+                 **kw) -> None:
+
+        tree_selection = {
+            "target": SelectionTarget("relative", "stems_per_ha", 0.2),
+            "sets": [
+                SelectionSet[ForestStand, ReferenceTrees](
+                    lambda _, t: np.ones(t.size, dtype=bool),
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    profile_x=[0, 1],
+                    profile_y=[0.2, 0.2],
+                    profile_xmode="relative",
+                )
+            ],
+        }
+
+        params = parameters or {}
+        event_params = {
+            "tree_selection": tree_selection,
+            "cutting_method": MelaMethodOfTheLastCutting.THINNING.value,
+            "select_from_all": True
+        } | params
+
+        super().__init__(
+            treatment=cutting,
+            static_parameters=event_params,
+            preconditions=preconditions,
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            **kw
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
     "FirstThinningMineralSoils",
     "PlantingPines",
     "MarkRetentionTrees",
+    "Harvest20percent"
 ]

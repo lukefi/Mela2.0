@@ -1,10 +1,10 @@
+from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.domain.events import GrowActa
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.forestry_types import ForestOpPayload
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
-from lukefi.metsi.domain.events import GrowActa
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 
 
 def do_a_thing(x):

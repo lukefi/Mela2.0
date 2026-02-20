@@ -1,13 +1,14 @@
+from user_events import Harvest20percent, FirstThinningMineralSoils
+from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.sim_configuration import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.treatment import do_nothing
-from user_events import FirstThinningMineralSoils
-from examples.declarations.export_prepro import sqlite_decl
+from examples.declarations.export_prepro import mela_and_default_csv, sqlite_decl
+
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
@@ -50,6 +51,7 @@ control_structure = {
                             },
                             tags={"third_type"},
                         ),
+                        Harvest20percent(),
                         FirstThinningMineralSoils()
                     ]),
                 ])
@@ -57,7 +59,7 @@ control_structure = {
         )
     ],
     "transition": Transition(grow_acta_fn),
-    "end_condition": ForestCondition(lambda x: x.computational_unit.year >= 2050),
+    "end_condition": ForestCondition(lambda x: x.computational_unit.relative_time > 30),
     "post_processing": {
         "operation_params": {
             do_nothing: [
@@ -69,8 +71,9 @@ control_structure = {
         ]
     },
     'export_prepro': {
-        'csv': {},
+        'csv': mela_and_default_csv,
     },
+
 
 }
 

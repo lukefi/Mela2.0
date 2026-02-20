@@ -74,30 +74,12 @@ def determine_clearing_of_reform_sector_year(other_method: str, year_adjustment_
     return None
 
 
-def determine_pruning_year(other_method: str, year_adjustment_class: str, year: int) -> Optional[int]:
-    """Determine the year of pruning when "other method" matches with the correct class in VMI terms"""
-    if other_method == '3':
-        if year_adjustment_class == "0":
-            return year
-        if year_adjustment_class == "1":
-            return year - 1
-        if year_adjustment_class == "2":
-            return year - 3
-        if year_adjustment_class == "3":
-            return year - 7
-    return None
-
-
 def determine_drainage_year(sourcevalue: str, year: int) -> Optional[int]:
     try:
         value = int(sourcevalue)
         return year - value
     except (TypeError, ValueError):
         return None
-
-
-def determine_drainage_feasibility(ojitus_tarve: str) -> bool:
-    return ojitus_tarve in ('1', '2', '3')
 
 
 def determine_vmi12_area_ha(lohkomuoto: int, county: int) -> float:

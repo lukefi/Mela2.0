@@ -209,14 +209,12 @@ def stand_location_converter(target):
 def mela_stratum(stratum):
     """Convert a TreeStratum so that enumerated category variables are converted to Mela value space"""
     result = copy(stratum)
-    result.stand_origin_relative_position = copy(stratum.stand_origin_relative_position)
     return apply_mappers(result, *default_mela_stratum_mappers)
 
 
 def mela_tree(tree: ReferenceTree) -> ReferenceTree:
     """Convert a ReferenceTree so that enumerated category variables are converted to Mela value space"""
     result = copy(tree)
-    result.stand_origin_relative_position = copy(tree.stand_origin_relative_position)
     return apply_mappers(result, *default_mela_tree_mappers)
 
 
@@ -238,9 +236,6 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     rt = copy(result.reference_trees)
 
     if rt.size:
-        if rt.saw_log_volume_reduction_factor is not None:
-            rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
-            np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
 
         if rt.species is not None:
             # np.where returns a new array anyway, so original won't be mutated

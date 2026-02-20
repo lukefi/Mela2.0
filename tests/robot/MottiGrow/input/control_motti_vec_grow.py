@@ -3,8 +3,8 @@ from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
     generate_reference_trees,
-    preproc_filter,
-    scale_area_weight)
+    scale_area_weight,
+    preproc_filter)
 from lukefi.metsi.domain.events import GrowMotti
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import do_nothing

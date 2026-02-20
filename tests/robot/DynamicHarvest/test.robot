@@ -32,3 +32,7 @@ Stratum Table Should Match Reference
 Tree Table Should Match Reference
     [Tags]    simulation
     Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
+
+Removed_tree Table Should Match Reference
+    [Tags]    simulation
+    Removed_tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}

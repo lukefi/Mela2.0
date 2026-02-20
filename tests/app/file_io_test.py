@@ -69,7 +69,6 @@ class TestFileReading(unittest.TestCase):
                 "stems_per_ha": 500.0,
                 "mean_diameter": 8.0,
                 "mean_height": 6.0,
-                "sapling_stratum": False,
             }
         ])
 

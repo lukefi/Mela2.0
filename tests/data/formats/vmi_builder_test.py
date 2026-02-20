@@ -49,7 +49,6 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(reference_area, self.vmi12_stands[0].area_weight)
         self.assertEqual(reference_area, self.vmi12_stands[1].area_weight)
         self.assertAlmostEqual(reference_area, self.vmi12_stands[3].area_weight)
-
         # lat 6656996, lon 3102608, height
         self.assertEqual((6652133.0, 3246174.0, None, 'EPSG:2393'), self.vmi12_stands[0].geo_location)
         # lat 6675011, lon 3118967, height 124
@@ -92,18 +91,11 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(None, self.vmi12_stands[0].fertilization_year)
         # value not available in VMI12 source
         self.assertEqual(None, self.vmi12_stands[1].fertilization_year)
-        # ojitus_tarve is ' '
-        self.assertEqual(False, self.vmi12_stands[0].drainage_feasibility)
-        # ojitus_tarve is '0'
-        self.assertEqual(False, self.vmi12_stands[1].drainage_feasibility)
         # '', 2018 -> None
         self.assertEqual(None, self.vmi12_stands[0].soil_surface_preparation_year)
         # '0', 2018 -> 2018
         self.assertEqual(2018, self.vmi12_stands[1].soil_surface_preparation_year)
-        # hakkuuehdotus is '  '
-        self.assertEqual(False, self.vmi12_stands[0].natural_regeneration_feasibility)
-        # hakkuuehdotus is '0 '
-        self.assertEqual(False, self.vmi12_stands[1].natural_regeneration_feasibility)
+
         # muu_toimenpide is ' '
         # muu_toimenpide_aika is ' '
         # date is 020618
@@ -193,24 +185,13 @@ class TestForestBuilder(unittest.TestCase):
         # diameter 20.7, area factors 1.0
         self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        # No source value -> None -> np.nan in SoA
-        self.assertTrue(np.isnan(trees.saw_log_volume_reduction_factor[i]))
-        self.assertEqual(0, trees.pruning_year[i])
-        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
-
-        # 3-element array
-        np.testing.assert_array_equal(
-            trees.stand_origin_relative_position[i],
-            np.array([0.0, 0.0, 0.0])
-        )
 
         self.assertEqual(1, trees.tree_number[i])
 
         # None -> np.nan
         self.assertTrue(np.isnan(trees.breast_height_age[i]))
         self.assertTrue(np.isnan(trees.biological_age[i]))
-        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
 
         self.assertEqual(1, trees.management_category[i])
         self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
@@ -316,15 +297,9 @@ class TestForestBuilder(unittest.TestCase):
         self.assertEqual(None, self.vmi13_stands[0].fertilization_year)
         # value not available in VMI13 source
         self.assertEqual(None, self.vmi13_stands[1].fertilization_year)
-        self.assertEqual(False, self.vmi13_stands[0].drainage_feasibility)
-        # ojitus_tarve is '0'
-        self.assertEqual(False, self.vmi13_stands[1].drainage_feasibility)
         self.assertEqual(None, self.vmi13_stands[0].soil_surface_preparation_year)
         self.assertEqual(2018, self.vmi13_stands[1].soil_surface_preparation_year)
-        # hakkuuehdotus is '.'
-        self.assertEqual(False, self.vmi13_stands[0].natural_regeneration_feasibility)
-        # hakkuuehdotus is '.'
-        self.assertEqual(False, self.vmi13_stands[1].natural_regeneration_feasibility)
+
         # muu_toimenpide is '.'
         # muu_toimenpide_aika is '0'
         # date is '20200522'
@@ -383,21 +358,12 @@ class TestForestBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(trees.measured_height[i]))
         self.assertEqual(39.298, trees.stems_per_ha[i])
 
-        self.assertTrue(np.isnan(trees.saw_log_volume_reduction_factor[i]))
-        self.assertEqual(0, trees.pruning_year[i])
-        self.assertEqual(0, trees.age_when_10cm_diameter_at_breast_height[i])
         self.assertEqual(0, trees.origin[i])
-
-        np.testing.assert_array_equal(
-            trees.stand_origin_relative_position[i],
-            np.array([0.0, 0.0, 0.0])
-        )
 
         self.assertEqual(1, trees.tree_number[i])
 
         self.assertTrue(np.isnan(trees.breast_height_age[i]))
         self.assertTrue(np.isnan(trees.biological_age[i]))
-        self.assertEqual(0.0, trees.lowest_living_branch_height[i])
 
         self.assertEqual(1, trees.management_category[i])
         self.assertEqual(Storey.DOMINANT.value, trees.storey[i])

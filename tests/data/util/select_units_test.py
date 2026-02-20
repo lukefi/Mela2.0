@@ -30,14 +30,11 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.site_type_category = SiteType(1)
         self.stand.tax_class_reduction = 0
         self.stand.drainage_category = DrainageCategory(2)
-        self.stand.drainage_feasibility = bool(0)
         self.stand.drainage_year = 0
         self.stand.fertilization_year = 0
         self.stand.soil_surface_preparation_year = 2023
-        self.stand.natural_regeneration_feasibility = bool(0)
         self.stand.regeneration_area_cleaning_year = 0
         self.stand.young_stand_tending_year = 0
-        self.stand.pruning_year = 0
         self.stand.cutting_year = 0
         self.stand.forest_management_category = 1
         self.stand.method_of_last_cutting = 0
@@ -62,11 +59,6 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.stems_per_ha = np.ascontiguousarray(pd_trees.f, dtype=np.float64)
         self.trees.origin = np.repeat(0, self.trees.size)
         self.trees.management_category = np.ascontiguousarray(pd_trees.manag_cat, np.int32)
-        self.trees.saw_log_volume_reduction_factor = np.repeat(0.0, self.trees.size)
-        self.trees.pruning_year = np.repeat(0, self.trees.size)
-        self.trees.age_when_10cm_diameter_at_breast_height = np.repeat(0, self.trees.size)
-        self.trees.stand_origin_relative_position = np.repeat(np.asarray([[0.0, 0.0, 0.0]]), self.trees.size, axis=0)
-        self.trees.lowest_living_branch_height = np.repeat(0.0, self.trees.size)
         self.trees.tree_category = np.repeat("", self.trees.size)
         self.trees.storey = np.repeat(0, self.trees.size)
         self.trees.sapling = np.repeat(False, self.trees.size)

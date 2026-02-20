@@ -17,8 +17,7 @@ def preproc_filter(stands: StandList, **operation_params) -> StandList:
 def compute_location_metadata(stands: StandList, **operation_params) -> StandList:
     """
     This operation sets in-place the location based metadata properties for each given ForestStand, where missing.
-    These properties are: height above sea level, temperature sum, sea effect, lake effect, monthly temperature and
-    monthly rainfall
+    These properties are: height above sea level, temperature sum, sea effect, lake effect
     """
 
     # Lazy import of optional MetsiGrow functions.
@@ -60,10 +59,6 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
             stand.sea_effect = wi.sea
         if stand.lake_effect is None:
             stand.lake_effect = wi.lake
-        if stand.monthly_temperatures is None:
-            stand.monthly_temperatures = wi.temp
-        if stand.monthly_rainfall is None:
-            stand.monthly_rainfall = wi.rain
 
     return stands
 
