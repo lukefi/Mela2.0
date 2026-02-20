@@ -331,20 +331,6 @@ class VMIBuilder(ForestBuilder):
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(data_row[indices["municipality"]]))
 
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
-        result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
-        result.forest_management_category = vmi_util.determine_forest_management_category(
-            result.land_use_category,
-            result.forestry_centre_id,
-            data_row,
-            result.owner_category,
-            indices, False)
-        result.municipality_id = vmi_util.determine_municipality(
-            data_row[indices["municipality"]],
-            data_row[indices["kitukunta"]])
-
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
 
         return result
