@@ -94,11 +94,6 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "origin",
                               "management_category",
-                              "saw_log_volume_reduction_factor",
-                              "pruning_year",
-                              "age_when_10cm_diameter_at_breast_height",
-                              "stand_origin_relative_position",
-                              "lowest_living_branch_height",
                               "storey"]:
                 self.assertTrue(
                     np.array_equal(
@@ -123,13 +118,7 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "basal_area",
                               "origin",
-                              "management_category",
-                              "saw_log_volume_reduction_factor",
-                              "cutting_year",
-                              "age_when_10cm_diameter_at_breast_height",
                               "tree_number",
-                              "stand_origin_relative_position",
-                              "lowest_living_branch_height",
                               "storey",
                               "sapling_stems_per_ha",
                               "number_of_generated_trees"]:
@@ -138,7 +127,7 @@ class IoUtilsTest(ConverterTestSuite):
                         getattr(stand.tree_strata, attribute),
                         getattr(stands_from_csv[i].tree_strata, attribute), True))
 
-            for attribute in ["identifier", "sapling_stratum"]:
+            for attribute in ["identifier"]:
                 self.assertTrue(
                     np.array_equal(
                         getattr(stand.tree_strata, attribute),

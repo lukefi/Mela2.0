@@ -52,7 +52,6 @@ def _append_stratum_row(
     sapling_stems_per_ha = util.get_or_default(
         util.parse_type(row[indices["sapling_stems_per_ha"]], float), 0.0
     )
-    sapling_stratum = sapling_stems_per_ha > 0
 
     mean_diameter = util.parse_type(row[indices["avg_diameter"]], float)
     mean_height = vmi_util.determine_stratum_tree_height(row[indices["avg_height"]])
@@ -68,12 +67,6 @@ def _append_stratum_row(
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
-    management_category = 1
-    saw_log_volume_reduction_factor = -1.0
-    cutting_year = 0
-    age_when_10cm_diameter_at_breast_height = 0
-    stand_origin_relative_position = (0.0, 0.0, 0.0)
-    lowest_living_branch_height = 0.0
     number_of_generated_trees = None
 
     values = {
@@ -86,16 +79,9 @@ def _append_stratum_row(
         "stems_per_ha": stems_per_ha,
         "basal_area": basal_area,
         "origin": origin,
-        "management_category": management_category,
-        "saw_log_volume_reduction_factor": saw_log_volume_reduction_factor,
-        "cutting_year": cutting_year,
-        "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
         "tree_number": tree_number,
-        "stand_origin_relative_position": stand_origin_relative_position,
-        "lowest_living_branch_height": lowest_living_branch_height,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
-        "sapling_stratum": sapling_stratum,
         "number_of_generated_trees": number_of_generated_trees,
     }
 
@@ -152,15 +138,6 @@ def _append_tree_row(
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
-    saw_log_volume_reduction_factor = None
-    pruning_year = 0
-    age_when_10cm_diameter_at_breast_height = 0
-    stand_origin_relative_position = (0.0, 0.0, 0.0)
-
-    lowest_living_branch_height = (
-        util.get_or_default(util.parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
-    )
-
     sapling = False
     tree_type = vmi_util.determine_tree_type(row[indices["tree_type"]])
 
@@ -182,11 +159,6 @@ def _append_tree_row(
         "stems_per_ha": stems_per_ha,
         "origin": origin,
         "management_category": management_category,
-        "saw_log_volume_reduction_factor": saw_log_volume_reduction_factor,
-        "pruning_year": pruning_year,
-        "age_when_10cm_diameter_at_breast_height": age_when_10cm_diameter_at_breast_height,
-        "stand_origin_relative_position": stand_origin_relative_position,
-        "lowest_living_branch_height": lowest_living_branch_height,
         "tree_category": tree_category,
         "storey": storey,
         "sapling": sapling,
@@ -224,11 +196,8 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "basal_area": basal_area,
         "origin": 0,
         "tree_number": tree_number,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": None,
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
-        "sapling_stratum": False,
         "number_of_generated_trees": None,
     }
 
@@ -256,16 +225,9 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "biological_age": util.parse_type(rowj.age, float),
         "basal_area": basal_area,
         "origin": None,
-        "management_category": None,
-        "saw_log_volume_reduction_factor": None,
-        "cutting_year": None,
-        "age_when_10cm_diameter_at_breast_height": None,
         "tree_number": tree_number,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": None,
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
-        "sapling_stratum": False,
         "number_of_generated_trees": None,
     }
 
@@ -365,9 +327,24 @@ class VMIBuilder(ForestBuilder):
         result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
-        result.drainage_feasibility = vmi_util.determine_drainage_feasibility(data_row[indices["ojitus_tarve"]])
+
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(data_row[indices["municipality"]]))
+
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
+            data_row[indices["main_tree_species_dominant_storey"]], result.site_type_category)
+        result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
+        result.forest_management_category = vmi_util.determine_forest_management_category(
+            result.land_use_category,
+            result.forestry_centre_id,
+            data_row,
+            result.owner_category,
+            indices, False)
+        result.municipality_id = vmi_util.determine_municipality(
+            data_row[indices["municipality"]],
+            data_row[indices["kitukunta"]])
+
         result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
 
         return result
@@ -658,9 +635,7 @@ class VMI11Builder(VMIBuilder):
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
         )
-        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(
-            data_row[indices["hakkuuehdotus"]]
-        )
+
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
         result.region = util.parse_int(data_row[indices["county"]])
 
@@ -843,7 +818,6 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
         )
-        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
         result.region = util.parse_int(data_row[indices["county"]])
 
@@ -980,7 +954,6 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
         )
-        result.natural_regeneration_feasibility = vmi_util.determine_natural_renewal(data_row[indices["hakkuuehdotus"]])
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
         result.region = util.parse_int(data_row[indices["county"]])
 
@@ -1107,8 +1080,7 @@ class XMLBuilder(ForestCentreBuilder):
                 stand.fertilization_year = oper_year  # RST record 20
             elif oper_type in (930, 940):
                 stand.drainage_year = oper_year  # RST record 19
-            elif oper_type in (970,):
-                stand.pruning_year = oper_year  # RST record 27
+
             else:
                 print_logline(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
                 # raise UserWarning(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
@@ -1117,7 +1089,6 @@ class XMLBuilder(ForestCentreBuilder):
     def convert_stand_entry(self, entry: ET.Element) -> ForestStand:
         stand_basic_data = smk_util.parse_stand_basic_data(entry)
         stand = ForestStand()
-        stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(stand_basic_data.StandBasicDataDate)  # RST record 2
         stand.start_year = stand.year
         stand.set_area(util.parse_type(stand_basic_data.Area, float))  # RST record 3 and 4
@@ -1134,11 +1105,9 @@ class XMLBuilder(ForestCentreBuilder):
         stand.tax_class_reduction = 0  # RST record 14
         stand.tax_class = 0  # RST record 15
         stand.drainage_category = fc2internal.convert_drainage_category(stand_basic_data.DrainageState)  # RST record 16
-        stand.drainage_feasibility = True  # RST record 17
         # RST record 18 is '0' by default
         operations = smk_util.parse_stand_operations(entry, target_operations='past')
         stand = self.set_stand_operations(stand, operations)  # RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
-        stand.natural_regeneration_feasibility = False  # RST record 22
         stand.development_class = smk_util.parse_development_class(0)  # RST record 24
         stand.forestry_centre_id = None  # RST record 29
         stand.forest_management_category = smk_util.parse_forest_management_category(
@@ -1184,7 +1153,6 @@ class GeoPackageBuilder(ForestCentreBuilder):
         :return: ForestStand object
         """
         stand = ForestStand()
-        stand.management_unit_id = None  # RST record 1
         stand.year = smk_util.parse_year(entry.date)  # RST record 2
         stand.start_year = stand.year
         stand.set_area(entry.area - entry.areadecrease)  # RST record 3 and 4
@@ -1208,9 +1176,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stand.drainage_category = fc2internal.convert_to_internal(
             util.parse_type(entry.drainagestate, int, str),
             fc2internal.convert_drainage_category)  # RST record 16
-        stand.drainage_feasibility = True  # RST record 17
-        # RST record 18 is '0' by default
-        stand.natural_regeneration_feasibility = False  # RST record 22
+
         stand.development_class = smk_util.parse_development_class(
             util.parse_type(entry.developmentclass, str))  # RST record 24
         stand.forestry_centre_id = None  # RST record 29

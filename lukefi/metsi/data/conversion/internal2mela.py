@@ -247,11 +247,6 @@ def mela_trees(trees: ReferenceTrees) -> ReferenceTrees:
     if rt.size == 0:
         return rt
 
-    # --- Tree level sanitization (previously in mela_stand) ---
-    if rt.saw_log_volume_reduction_factor is not None:
-        rt.saw_log_volume_reduction_factor = rt.saw_log_volume_reduction_factor.copy()
-        np.nan_to_num(rt.saw_log_volume_reduction_factor, copy=False, nan=-1.0)
-
     # --- Species conversion: internal TreeSpecies int -> MELA int ---
     if rt.species is not None:
         src = rt.species
@@ -297,7 +292,6 @@ def stand_location_converter(target):
 def mela_stratum(stratum):
     """Convert a TreeStratum so that enumerated category variables are converted to Mela value space"""
     result = copy(stratum)
-    result.stand_origin_relative_position = copy(stratum.stand_origin_relative_position)
     return apply_mappers(result, *default_mela_stratum_mappers)
 
 

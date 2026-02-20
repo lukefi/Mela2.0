@@ -89,14 +89,14 @@ def solve_tree_generation_strategy(stratum: TreeStratum, method='weibull') -> st
         # big trees
         if stratum.has_diameter() and stratum.has_height() and stratum.has_basal_area() and method == 'weibull':
             return TreeStrategy.WEIBULL_DISTRIBUTION.value
-        if not stratum.sapling_stratum and stratum.has_diameter() \
+        if stratum.has_diameter() \
                 and (stratum.has_basal_area() or stratum.has_stems_per_ha()) and method == 'lm':
             return TreeStrategy.LM_TREES.value
         if stratum.has_diameter() and stratum.has_height() and stratum.has_stems_per_ha():
             return TreeStrategy.HEIGHT_DISTRIBUTION.value
         return TreeStrategy.SKIP.value
     # small trees
-    if stratum.has_height() and stratum.sapling_stratum:
+    if stratum.has_height():
         return TreeStrategy.HEIGHT_DISTRIBUTION.value
     return TreeStrategy.SKIP.value
 
@@ -183,7 +183,6 @@ def _generate_trees_for_stratum(
     s.sapling_stems_per_ha = float(
         strata_vec.sapling_stems_per_ha[s_idx]) if not np.isnan(
         strata_vec.sapling_stems_per_ha[s_idx]) else None
-    s.sapling_stratum = bool(strata_vec.sapling_stratum[s_idx])
     s.storey = None  # or convert from int if you keep Storey in SoA
     # etc. for fields you actually use in tree_generation
 
@@ -273,7 +272,6 @@ def generate_reference_trees(
 
     start_idx = int(stand.reference_trees.size)
     for s_idx in range(strata_vec.size):
-        # Skip empty / invalid strata early if you want
         trees_for_stratum = _generate_trees_for_stratum(
             stand,
             strata_vec,
@@ -313,13 +311,6 @@ def generate_reference_trees(
 
             # The rest: fill with neutral defaults so lengths stay consistent
             attr_dict["management_category"].append(-1)
-            attr_dict["saw_log_volume_reduction_factor"].append(np.nan)
-            attr_dict["pruning_year"].append(0)
-            attr_dict["age_when_10cm_diameter_at_breast_height"].append(-1)
-            attr_dict["stand_origin_relative_position"].append(
-                (0.0, 0.0, 0.0)
-            )
-            attr_dict["lowest_living_branch_height"].append(np.nan)
             attr_dict["tree_category"].append("")  # or "reference", up to you
             attr_dict["storey"].append(-1 if t.storey is None else int(t.storey))
             attr_dict["sapling"].append(False)  # generated trees are usually non-sapling

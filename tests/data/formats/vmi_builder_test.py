@@ -1,13 +1,4 @@
 import unittest
-import numpy as np
-from lukefi.metsi.data.formats import vmi_const
-from lukefi.metsi.data.enums.internal import (
-    Storey,
-    TreeSpecies,
-    DrainageCategory,
-    LandUseCategory,
-    OwnerCategory
-)
 from tests.data.test_util import ForestBuilderTestBench
 from tests.data.snapshot_util import assert_snapshot
 

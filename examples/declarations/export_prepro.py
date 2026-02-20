@@ -3,7 +3,6 @@ from lukefi.metsi.domain.exp_ops import *
 default = {}  # Empty dict declares a default output content
 
 mela_decl = {
-    # 'additional_variables': ['VAR0', 'VAR1', 'VAR2', 'VAR_RANDOM'],
     'operations': [prepare_rst_output, classify_values_to],
     'operation_params': {
         classify_values_to: [

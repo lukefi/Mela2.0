@@ -40,12 +40,7 @@ class TestTreeGeneration(unittest.TestCase):
             s.stand = i.stand
             s.stems_per_ha = i.stems_per_ha
             s.sapling_stems_per_ha = i.sapling_stems_per_ha
-            # emulate old behaviour: sapling_stratum flag from sapling stems
-            s.sapling_stratum = (
-                False
-                if i.sapling_stems_per_ha is None or i.sapling_stems_per_ha == 0
-                else True
-            )
+
             strata.append(s)
         return strata
 
@@ -173,7 +168,6 @@ class TestTreeGeneration(unittest.TestCase):
         lm_stratum.mean_diameter = 10.0
         lm_stratum.mean_height = 8.0
         lm_stratum.basal_area = 20.0
-        lm_stratum.sapling_stratum = False
         lm_result = tree_generation.solve_tree_generation_strategy(
             lm_stratum, method="lm"
         )

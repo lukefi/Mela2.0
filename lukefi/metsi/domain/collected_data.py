@@ -16,10 +16,7 @@ class RemovedTrees(CollectedData):
         cur.execute("""
             CREATE TABLE removed_trees(
                 node, stand, identifier, tree_number, species, breast_height_diameter, height,
-                measured_height, breast_height_age, biological_age, stems_per_ha, origin,
-                management_category, saw_log_volume_reduction_factor, pruning_year,
-                age_when_10cm_diameter_at_breast_height, stand_origin_relative_position,
-                lowest_living_branch_height, tree_category, storey, sapling, tree_type, tuhon_ilmiasu,
+                stems_per_ha, origin,
                 PRIMARY KEY (node, identifier),
                 FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand)
             )
@@ -33,7 +30,7 @@ class RemovedTrees(CollectedData):
                 """
                 INSERT INTO removed_trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node_str,
@@ -43,23 +40,7 @@ class RemovedTrees(CollectedData):
                     int(self.removed_trees.species[i]),
                     self.removed_trees.breast_height_diameter[i],
                     self.removed_trees.height[i],
-                    self.removed_trees.measured_height[i],
-                    self.removed_trees.breast_height_age[i],
-                    self.removed_trees.biological_age[i],
                     self.removed_trees.stems_per_ha[i],
-                    int(self.removed_trees.origin[i]),
-                    int(self.removed_trees.management_category[i]),
-                    self.removed_trees.saw_log_volume_reduction_factor[i],
-                    int(self.removed_trees.pruning_year[i]),
-                    int(self.removed_trees.age_when_10cm_diameter_at_breast_height[i]),
-                    f"({self.removed_trees.stand_origin_relative_position[i][0]}, "
-                    f"{self.removed_trees.stand_origin_relative_position[i][1]}, "
-                    f"{self.removed_trees.stand_origin_relative_position[i][2]})",
-                    self.removed_trees.lowest_living_branch_height[i],
-                    self.removed_trees.tree_category[i],
-                    int(self.removed_trees.storey[i]),
-                    bool(self.removed_trees.sapling[i]),
-                    self.removed_trees.tree_type[i],
-                    self.removed_trees.tuhon_ilmiasu[i]
+                    int(self.removed_trees.origin[i])
                 )
             )

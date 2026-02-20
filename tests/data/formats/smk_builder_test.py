@@ -54,14 +54,10 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual('15', self.smk_stands[1].identifier)
 
     def test_smk_builder_stand_variables(self):
-        self.assertEqual(None, self.smk_stands[0].management_unit_id)
-        self.assertEqual(None, self.smk_stands[1].management_unit_id)
         self.assertEqual(2020, self.smk_stands[0].year)
         self.assertEqual(2020, self.smk_stands[1].year)
         self.assertEqual(0.28, self.smk_stands[0].area)
         self.assertEqual(0.45, self.smk_stands[1].area)
-        self.assertEqual(0.28, self.smk_stands[0].area_weight)
-        self.assertEqual(0.45, self.smk_stands[1].area_weight)
         self.assertEqual((6542843.0, 532437.0, None, 'EPSG:3067'), self.smk_stands[0].geo_location)
         self.assertEqual((6532843.0, 536437.0, None, 'EPSG:3067'), self.smk_stands[1].geo_location)
         self.assertEqual('10', self.smk_stands[0].identifier)
@@ -90,18 +86,12 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(DrainageCategory.TRANSFORMED_MIRE, self.smk_stands[0].drainage_category)
         # st:DrainageState '9' -> 5
         self.assertEqual(DrainageCategory.TRANSFORMED_MIRE, self.smk_stands[1].drainage_category)
-        # Drainage feasibility default value True
-        self.assertEqual(True, self.smk_stands[0].drainage_feasibility)
-        self.assertEqual(True, self.smk_stands[1].drainage_feasibility)
         self.assertEqual(None, self.smk_stands[0].drainage_year)
         self.assertEqual(None, self.smk_stands[1].drainage_year)
         self.assertEqual(None, self.smk_stands[0].fertilization_year)
         self.assertEqual(None, self.smk_stands[1].fertilization_year)
         self.assertEqual(None, self.smk_stands[0].soil_surface_preparation_year)
         self.assertEqual(None, self.smk_stands[1].soil_surface_preparation_year)
-        # Natural regeneration feasibility default value False
-        self.assertEqual(False, self.smk_stands[0].natural_regeneration_feasibility)
-        self.assertEqual(False, self.smk_stands[1].natural_regeneration_feasibility)
         self.assertEqual(None, self.smk_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.smk_stands[1].regeneration_area_cleaning_year)
         # Development class default value 0
@@ -111,8 +101,6 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(None, self.smk_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.smk_stands[0].young_stand_tending_year)
         self.assertEqual(None, self.smk_stands[1].young_stand_tending_year)
-        self.assertEqual(None, self.smk_stands[0].pruning_year)
-        self.assertEqual(None, self.smk_stands[1].pruning_year)
         self.assertEqual(None, self.smk_stands[0].cutting_year)
         self.assertEqual(None, self.smk_stands[1].cutting_year)
         self.assertEqual(None, self.smk_stands[0].forestry_centre_id)
@@ -164,25 +152,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(vec0.basal_area[0]))
         self.assertEqual(5.2, vec0.basal_area[1])
 
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
-        self.assertEqual(-1, vec0.cutting_year[0])
-        self.assertEqual(-1, vec0.cutting_year[1])
-
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
-
         self.assertEqual(1, vec0.tree_number[0])
         self.assertEqual(2, vec0.tree_number[1])
-
-        np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
-        np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
-
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
-
-        self.assertEqual(-1, vec0.management_category[0])
-        self.assertEqual(-1, vec0.management_category[1])
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])
@@ -221,8 +192,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(self.gpkg_stands[1].identifier, 41652748)
 
     def test_smk_builder_stand_variables(self):
-        self.assertEqual(None, self.gpkg_stands[0].management_unit_id)
-        self.assertEqual(None, self.gpkg_stands[1].management_unit_id)
         self.assertEqual(2021, self.gpkg_stands[0].year)
         self.assertEqual(2021, self.gpkg_stands[1].year)
         self.assertEqual(4.264, self.gpkg_stands[0].area)
@@ -247,18 +216,13 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].tax_class)
         self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL, self.gpkg_stands[0].drainage_category)
         self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL, self.gpkg_stands[1].drainage_category)
-        # Drainage feasibility default value True
-        self.assertEqual(True, self.gpkg_stands[0].drainage_feasibility)
-        self.assertEqual(True, self.gpkg_stands[1].drainage_feasibility)
+
         self.assertEqual(None, self.gpkg_stands[0].drainage_year)
         self.assertEqual(None, self.gpkg_stands[1].drainage_year)
         self.assertEqual(None, self.gpkg_stands[0].fertilization_year)
         self.assertEqual(None, self.gpkg_stands[1].fertilization_year)
         self.assertEqual(None, self.gpkg_stands[0].soil_surface_preparation_year)
         self.assertEqual(None, self.gpkg_stands[1].soil_surface_preparation_year)
-        # Natural regeneration feasibility default value False
-        self.assertEqual(False, self.gpkg_stands[0].natural_regeneration_feasibility)
-        self.assertEqual(False, self.gpkg_stands[1].natural_regeneration_feasibility)
         self.assertEqual(None, self.gpkg_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.gpkg_stands[1].regeneration_area_cleaning_year)
         # Development class default value 0
@@ -268,8 +232,6 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.gpkg_stands[0].young_stand_tending_year)
         self.assertEqual(None, self.gpkg_stands[1].young_stand_tending_year)
-        self.assertEqual(None, self.gpkg_stands[0].pruning_year)
-        self.assertEqual(None, self.gpkg_stands[1].pruning_year)
         self.assertEqual(None, self.gpkg_stands[0].cutting_year)
         self.assertEqual(None, self.gpkg_stands[1].cutting_year)
         self.assertEqual(None, self.gpkg_stands[0].forestry_centre_id)
@@ -316,22 +278,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(13.56, vec0.basal_area[0])
         self.assertEqual(7.16, vec0.basal_area[1])
 
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[0]))
-        self.assertTrue(np.isnan(vec0.saw_log_volume_reduction_factor[1]))
-
-        self.assertEqual(-1, vec0.cutting_year[0])
-        self.assertEqual(-1, vec0.cutting_year[1])
-
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[0])
-        self.assertEqual(-1, vec0.age_when_10cm_diameter_at_breast_height[1])
         self.assertEqual(1, vec0.tree_number[0])
         self.assertEqual(2, vec0.tree_number[1])
-        np.testing.assert_array_equal(vec0.stand_origin_relative_position[0], np.array([0.0, 0.0, 0.0]))
-        np.testing.assert_array_equal(vec0.stand_origin_relative_position[1], np.array([0.0, 0.0, 0.0]))
 
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[0]))
-        self.assertTrue(np.isnan(vec0.lowest_living_branch_height[1]))
-        self.assertEqual(-1, vec0.management_category[0])
-        self.assertEqual(-1, vec0.management_category[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])
