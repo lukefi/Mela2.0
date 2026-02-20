@@ -7,7 +7,8 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
-from examples.declarations.export_prepro import mela_and_default_csv, sqlite_decl
+from examples.declarations.export_prepro import mela_and_default_csv
+from examples.declarations.sqlite import sqlite_decl
 
 control_structure = {
     "app_configuration": {
