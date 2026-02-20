@@ -317,7 +317,6 @@ def update_strata_to_match_trees(stands: StandList, **operation_params) -> Stand
             strata.stems_per_ha[i_stratum] = stems
             strata.number_of_generated_trees[i_stratum] = ntrees
             strata.sapling_stems_per_ha[i_stratum] = None
-            strata.sapling_stratum[i_stratum] = False
 
             # basal area of the whole stand
             stand_ba += stratum_ba
