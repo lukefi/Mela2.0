@@ -47,7 +47,7 @@ def ages(stand: ForestStand,
     gy = bal
     lampos = stand.degree_days or 0.0
     kmy = (stand.geo_location[2] if stand.geo_location is not None else 0.0) or 0.0
-    boni = stand.site_type_category or 0
+    boni = min(stand.site_type_category or 0, 8)
     keskid = dgm
     rsynty = origin
     rverotar = stand.tax_class_reduction or 0
