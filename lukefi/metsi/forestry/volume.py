@@ -39,12 +39,18 @@ def tree_volumes(reference_trees: ReferenceTrees,
     :return: vector containing calculated volumes for each reference tree
     :rtype: npt.NDArray[np.float64]
     """
-    dbh = reference_trees.breast_height_diameter
-    h = reference_trees.height
-    species = reference_trees.species
-    logita, lambda_ = volume_params(dbh, h, species, temperature_sum / 10, dataset)
+    retval = np.full(shape=len(reference_trees), fill_value=0.0, dtype=np.float64)
 
-    return _tree_volumes(dbh, h, logita, lambda_) / 1000
+    tall_trees = reference_trees.height > 1.3
+
+    h = reference_trees.height[tall_trees]
+    dbh = reference_trees.breast_height_diameter[tall_trees]
+    species = reference_trees.species[tall_trees]
+
+    logita, lambda_ = volume_params(dbh, h, species, temperature_sum / 10, dataset)
+    retval[tall_trees] = _tree_volumes(dbh, h, logita, lambda_) / 1000
+
+    return retval
 
 
 def _tree_volumes(dbh: npt.NDArray[np.float64],
