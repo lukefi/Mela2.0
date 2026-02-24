@@ -483,7 +483,6 @@ def protection_code(production_limitation: str, production_limitation_detail: st
         vmi_pt = 2
         decimals = 0.6 + int(other_values) / 100
 
-    # if (land_use_category in ('2','3') and vmi_pt == 3):
     if land_use_category in (2, 3) and vmi_pt == 3:
         vmi_pt = 2
         decimals = 0.9
