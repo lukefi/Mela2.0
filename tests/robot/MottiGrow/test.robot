@@ -5,7 +5,7 @@ Library           Collections
 Library           String
 Library           ${CURDIR}/../DatabaseCompareLibrary.py
 Resource          ${CURDIR}/../simulation.resource
-Suite Setup       Run Simulation    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}
+Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/data.xml
