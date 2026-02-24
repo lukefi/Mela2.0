@@ -383,8 +383,11 @@ def parse_forestry_centre(forestry_centre: str) -> int:
         return 10
 
 
-def determine_forest_management_category(land_use_category: int, county: int, muuttujat: Sequence,
-                                         owner_group: int, indices: dict) -> float:
+def determine_forest_management_category(land_use_category: int,
+                                         county: int,
+                                         muuttujat: Sequence,
+                                         owner_group: int,
+                                         indices: dict) -> float:
     """Determine forest management category  for given conditions."""
 
     return protection_code(muuttujat[indices["puuntuotannon_rajoitus"]],
@@ -398,9 +401,14 @@ def determine_forest_management_category(land_use_category: int, county: int, mu
                            muuttujat[indices["koealan_kasittelyluokka"]])
 
 
-def protection_code(production_limitation: str, production_limitation_detail: str,
-                    land_use_category: int, other_values: str, protection_forest_code: str,
-                    owner_group: int, county: int, aland_area_code: str,
+def protection_code(production_limitation: str,
+                    production_limitation_detail: str,
+                    land_use_category: int,
+                    other_values: str,
+                    protection_forest_code: str,
+                    owner_group: int,
+                    county: int,
+                    aland_area_code: str,
                     test_area_handling_class: str) -> float:
 
     # Determine first the NFI management category (vmi_pt)
