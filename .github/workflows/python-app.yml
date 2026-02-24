@@ -67,10 +67,6 @@ jobs:
       with:
         cache-version: 2
 
-    - name: Compile shared libraries
-      run: |
-        make -C lukefi/metsi/forestry/c
-
     - name: Test with pytest
       run: |
         python -m pytest --junit-xml=pytest.xml --cov=lukefi --cov-report xml --cov-branch
