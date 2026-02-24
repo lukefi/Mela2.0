@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.15] - 2026-02-24
+
+### Changed
+
+- Remove unused Pukkala codes #MELA2-169
+
 ## [0.4.14] - 2026-02-20
 
 ### Changed
