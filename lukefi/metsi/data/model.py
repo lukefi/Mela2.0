@@ -210,7 +210,6 @@ class ReferenceTree():
     origin: Optional[int] = None
     # default is the order of appearance (or in sample plot)
     tree_number: Optional[int] = None
-    # Angle from plot origin, distance (m) to plot origin, height difference (m) with plot origin
     management_category: Optional[int] = None
 
     # VMI tree_category for living/dead/otherwise unusable tree
