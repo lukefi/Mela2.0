@@ -1,14 +1,15 @@
 from dataclasses import dataclass
 from functools import lru_cache
 from enum import Enum
-from pathlib import Path
 from typing import Optional
 import numpy as np
 from numba import njit
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.forestry.preprocessing.data.points import ref_coords as _REF_COORDS, point_map as _POINT_MAP
+from lukefi.metsi.forestry.preprocessing.data.triangles import triangles as _TRIANGLES
+
 
 MAXTRIANGLE = 167000.0
-DATA_PATH = Path(__file__).with_suffix("").parent / "data" / "ykjtm35_data.npz"
 
 _current_triangle_tm35_to_ykj = {"value": -1}
 
@@ -132,14 +133,10 @@ class _Mesh:
 
 @lru_cache(maxsize=1)
 def _load_mesh() -> _Mesh:
-    if not DATA_PATH.exists():
-        raise MetsiException(...)
-
-    data = np.load(DATA_PATH)
-    triangles = np.ascontiguousarray(data["triangles"].astype(np.int32, copy=False))
-    point_map = np.ascontiguousarray(data["point_map"].astype(np.int32, copy=False))
-    ref_coords = np.ascontiguousarray(data["ref_coords"].astype(np.float64, copy=False))
-
+    # Data is stored as numpy arrays in sibling modules (points.py / triangles.py).
+    triangles = np.ascontiguousarray(_TRIANGLES.astype(np.int32, copy=False))
+    point_map = np.ascontiguousarray(_POINT_MAP.astype(np.int32, copy=False))
+    ref_coords = np.ascontiguousarray(_REF_COORDS.astype(np.float64, copy=False))
     return _Mesh(triangles=triangles, point_map=point_map, ref_coords=ref_coords)
 
 
