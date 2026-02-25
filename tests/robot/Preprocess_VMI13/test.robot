@@ -1,7 +1,7 @@
 *** Settings ***
 Library        ../CustomCompareLibrary.py
 Resource       ../simulation.resource
-Suite Setup    Run Simulation    ${INPUT_PATH}    ${OUTPUT_PATH}    ${CONTROL_PATH}
+Suite Setup    Run Simulation Check Upd    ${INPUT_PATH}    ${OUTPUT_PATH}    ${CONTROL_PATH}        ${REFERENCE_PATH}
 
 *** Variables ***
 ${INPUT_PATH}            ${CURDIR}/input/VMI13_source_mini.dat

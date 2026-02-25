@@ -19,6 +19,8 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "municipality": slice(68, 71),     # kunta (col 69-71)
     "owner_group": slice(81, 82),      # omiryh (col 82)
     "degree_days": slice(87, 91),      # lamsum1 (col 88-91)
+    "ptraj": slice(93, 96),             # ptraj (col 96)
+    "pttark": slice(96, 97),             # pttark (col 97)
     "suojametsakoodi": slice(97, 98),   # suojamet (col 98)
     "fra_class": slice(99, 100),       # fraluo (col 100) in PSUOMI, blank in ESUOMI
     "land_category": slice(100, 101),  # maaluo (col 101)
@@ -64,6 +66,18 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "jakso2_sivulaji1": slice(227, 229),                # j2sivplaji1 228-229
     "jakso2_sivulaji1_osuus": slice(229, 231),          # j2sivplaji1os 230-231
     "jakso2_sivulaji2": slice(231, 233),                # j2sivplaji2 232-233
+    "ml123ala": slice(270, 272),                    # Maaluokkien 1-3 pinta-ala
+    "abi1kasehd": slice(275, 276),                 # 276	kasittelyehdotus
+    "abi1ala": slice(276, 278),                    # 278	pinta-ala (aaria)
+
+    "abi2kasehd": slice(281, 282),                 # 282	kasittelyehdotus
+    "abi2ala": slice(282, 284),                    # 284	pinta-ala (aaria)
+
+    "abi3kasehd": slice(287, 288),                 # 288	kasittelyehdotus
+    "abi3ala": slice(288, 290),                    # 290	pinta-ala (aaria)
+
+    "mhptrajtar": slice(305, 306),                    # MH:n rajoituksen tarkennus (Pohjois-Suomi)
+
     "lat_measured": slice(306, 313),
     "lon_measured": slice(313, 320),
 
@@ -72,6 +86,7 @@ VMI9_STAND_COMMON: dict[str, slice] = {
 # Stand row indices – Etelä-Suomi (pvm at 45-50)
 VMI9_STAND_INDICES_ESUOMI = dict(VMI9_STAND_COMMON)
 VMI9_STAND_INDICES_ESUOMI["date"] = slice(44, 50)  # pvm (col 45-50)
+VMI9_STAND_INDICES_ESUOMI["mhptrajtar"] = slice(0, 0)  # Not in use
 
 # Stand row indices – Pohjois-Suomi (pvm at 76-81)
 VMI9_STAND_INDICES_PSUOMI = dict(VMI9_STAND_COMMON)

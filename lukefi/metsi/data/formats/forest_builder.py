@@ -94,10 +94,12 @@ def _append_tree_row(
     attr: dict[str, list],
     indices,
     row,
-    is_vmi11: bool = False,
-    is_vmi12: bool = False,
+    vmi_version: int,
+    forestry_centre_id: int | None,
+    ahvkeilaus: str = "",
     height_conversion_factor: float = 100.0,
     measured_height_conversion_factor: float = 10.0,
+
 ):
     """Append one VMI tree row into an SoA attribute dict compatible with DTYPES_TREE.
 
@@ -113,7 +115,7 @@ def _append_tree_row(
 
     tree_category = tc_enum.value if tc_enum else None
 
-    if is_vmi11:
+    if vmi_version == 11:
         breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
     else:
         breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
@@ -132,7 +134,11 @@ def _append_tree_row(
         row[indices["measured_height"]],
         conversion_factor=measured_height_conversion_factor,
     )
-    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
+
+    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter,
+                                                   vmi_version=vmi_version,
+                                                   forestry_centre_id=forestry_centre_id,
+                                                   ahvkeilaus=ahvkeilaus)
 
     origin = 0
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
@@ -422,6 +428,8 @@ class VMI9Builder(VMIBuilder):
             data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
+
+        result.forest_management_category = vmi_util.determine_forest_management_category_vmi9(data_row, indices)
         return result
 
     def build(self) -> StandList:
@@ -449,7 +457,9 @@ class VMI9Builder(VMIBuilder):
                 if stand_id not in result:
                     continue
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                vmi_util.append_tree_row_vmi9(attr_dict, VMI9_TREE_INDICES, row)
+                stand = result.get(stand_id)
+                vmi_util.append_tree_row_vmi9(attr_dict, VMI9_TREE_INDICES, row,
+                                              forestry_centre_id=stand.forestry_centre_id)
 
         out = StandList()
         for sid, stand in result.items():
@@ -573,7 +583,9 @@ class VMI10Builder(VMIBuilder):
                 if stand_id not in result:
                     continue
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row)
+                stand = result.get(stand_id)
+                vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row,
+                                               forestry_centre_id=stand.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
@@ -634,6 +646,7 @@ class VMI11Builder(VMIBuilder):
             ahvkeilaus=data_row[indices["ahvkeilaus"]],
         )
         result.set_area(area_ha)
+        result.ahvkeilaus = data_row[indices["ahvkeilaus"]]
 
         result.area_weight_factors = vmi_util.determine_area_factors(
             data_row[indices["osuus7m"]],
@@ -718,12 +731,14 @@ class VMI11Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
+                stand = result.get(stand_identifier)
                 _append_tree_row(
                     attr_dict,
                     VMI11_TREE_INDICES,
                     row,
-                    is_vmi11=True,
-                    is_vmi12=False,
+                    vmi_version=11,
+                    forestry_centre_id=stand.forestry_centre_id,
+                    ahvkeilaus=stand.ahvkeilaus,
                     height_conversion_factor=10.0,            # VMI11 pituus is in dm
                     measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
                 )
@@ -856,7 +871,9 @@ class VMI12Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row, is_vmi11=False, is_vmi12=True)
+                stand = result.get(stand_identifier)
+                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
+                                 vmi_version=12, forestry_centre_id=stand.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -991,7 +1008,10 @@ class VMI13Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row, is_vmi11=False, is_vmi12=False)
+                stand = result.get(stand_identifier)
+
+                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
+                                 vmi_version=13, forestry_centre_id=stand.forestry_centre_id)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():

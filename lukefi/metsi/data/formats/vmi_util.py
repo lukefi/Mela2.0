@@ -1,4 +1,6 @@
-from typing import Optional
+from typing import Optional, Sequence
+import math
+from dataclasses import dataclass
 from collections.abc import Sequence
 from datetime import datetime as dt
 from shapely.geometry import Point
@@ -430,17 +432,33 @@ def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10
     return h / conversion_factor if h > 0 else None
 
 
-def determine_stems_per_ha(diameter: float | None, is_vmi12: bool) -> float:
-    if diameter is None:
-        raise MetsiException("Missing diameter")
-    medium_diameter_vmi_constant = 5.64 if is_vmi12 else 4.0
-    if 0.0 < diameter < 4.5:
-        return round(1.5 / (3.141592653589793 * ((diameter / 2) / 100.0) ** 2), 0)
-    if 4.5 <= diameter < 9.5:
-        return round(10000.0 / (3.141592653589793 * (medium_diameter_vmi_constant ** 2)), 3)
-    if diameter >= 9.5:
-        return round(10000.0 / (3.141592653589793 * (9.0 ** 2)), 3)
-    return 1.0
+def determine_stems_per_ha(
+    diameter_cm: float,
+    vmi_version: int = 13,
+    forestry_centre_id: int | None = None,
+    ahvkeilaus: str | None = None,
+) -> float:
+    """
+    stems_per_ha logic for VMI9..VMI13.
+    """
+
+    p = _get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
+
+    d = float(diameter_cm)
+    if d <= 0.0:
+        return 1.0
+
+    if d < p.d1:
+        n = 40000.0 * p.q / (math.pi * d * d)
+        # keep legacy-ish rounding for small trees in 12/13
+        return float(round(n, 5))
+
+    if d < p.d2:
+        n = 10000.0 / (math.pi * p.r1 * p.r1)
+        return float(round(n, 5))
+
+    n = 10000.0 / (math.pi * p.r2 * p.r2)
+    return float(round(n, 5))
 
 
 def determine_stratum_tree_height(source_height: str) -> Optional[float]:
@@ -740,7 +758,7 @@ def generate_stratum_identifier(row: Sequence, indices: dict) -> str:
         "stratum"
 
 
-def append_tree_row_vmi9(attr: dict[str, list], indices, row: str):
+def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_centre_id: int | None):
     """
     Append one VMI9 tree row into SoA dict compatible with DTYPES_TREE.
     """
@@ -769,7 +787,8 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str):
         row[indices["total_age"]],
     )
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=9,
+                                          forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
     storey = determine_storey_for_tree(row[indices["latvuskerros"]])
@@ -806,7 +825,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str):
         attr.setdefault(k, []).append(v)
 
 
-def append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
+def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_centre_id: int | None):
     """
     Append one VMI10 tree row into SoA dict compatible with DTYPES_TREE.
     """
@@ -832,7 +851,8 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str):
     breast_height_age = parse_type(row[indices["d13_age"]], float)
     biological_age = parse_type(row[indices["total_age"]], float)
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, is_vmi12=False)
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=10,
+                                          forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
     storey = determine_storey_for_tree(row[indices["latvuskerros"]])
@@ -1191,3 +1211,200 @@ def determine_vmi11_area_ha(
             f"No area_ha lookup value for VMI11: metkes={forestry_centre}, osite={osite}. "
             f"inventointitunnus={inv!r}, lohy={lohy_raw!r}, ahvkeilaus={ak!r}, lohkomuoto={lohkomuoto}."
         ) from exc
+
+
+@dataclass(frozen=True)
+class _StemsParams:
+    q: float
+    r1: float
+    r2: float
+    d1: float
+    d2: float
+
+
+def _is_south_finland(forestry_centre_id: Optional[int]) -> bool:
+    # Treat None as "south" (safe default; callers should pass real value when available)
+    if forestry_centre_id is None:
+        return True
+    return 0 <= forestry_centre_id <= 10
+
+
+def _is_north_finland(forestry_centre_id: Optional[int]) -> bool:
+    if forestry_centre_id is None:
+        return False
+    return 11 <= forestry_centre_id <= 13
+
+
+def _is_ahvenanmaa(forestry_centre_id: Optional[int], ahvkeilaus: Optional[str]) -> bool:
+    if forestry_centre_id == 0 and ahvkeilaus == 'A':
+        return True
+    return False
+
+
+def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvkeilaus: Optional[str]) -> _StemsParams:
+    """
+    Parameters from the provided R-document.
+    forestry_centre_id:
+      0          => Ahvenanmaa
+      0..10      => Etelä-Suomi
+      11..13     => Pohjois-Suomi
+    """
+
+    if vmi_version == 13:
+        return _StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
+
+    if vmi_version == 12:
+        return _StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
+
+    if vmi_version == 11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
+        return _StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
+
+    if vmi_version in (9, 10, 11):
+        if _is_north_finland(forestry_centre_id):
+            return _StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
+        # South (includes Ahvenanmaa for 9/10 and non-special 11)
+        return _StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
+
+    raise MetsiException(f"Unsupported VMI version for stems_per_ha: {vmi_version}")
+
+
+def determine_forest_management_category_vmi9(
+    stand_row: str,
+    indices: dict[str, slice],
+) -> float:
+    """
+    VMI9 käsittelyluokka (forest_management_category) calculation.
+    """
+
+    owner = _parse_int0(stand_row[indices["owner_group"]])
+    ptraj = _parse_int0(stand_row[indices["ptraj"]])
+    pttark = _parse_int0(stand_row[indices["pttark"]])
+    land_category = _parse_int0(stand_row[indices["land_category"]])
+
+    ml123_ala = _parse_float0(stand_row[indices["ml123ala"]])
+
+    abt1 = _parse_int0(stand_row[indices["abi1kasehd"]])
+    abt1_ala = _parse_float0(stand_row[indices["abi1ala"]])
+
+    abt2 = _parse_int0(stand_row[indices["abi2kasehd"]])
+    abt2_ala = _parse_float0(stand_row[indices["abi2ala"]])
+
+    abt3 = _parse_int0(stand_row[indices["abi3kasehd"]])
+    abt3_ala = _parse_float0(stand_row[indices["abi3ala"]])
+
+    # mhptrajtar is only meaningful in North Finland; in South your indices are slice(0,0) or value is blank.
+    mhtark = _parse_int0(stand_row[indices["mhptrajtar"]]) if "mhptrajtar" in indices else 0
+
+    # ------------------------------------------------------------
+    # Start
+    k = 1.0
+
+    # --- avainbiotoopit ---
+    avainbt = max(abt1, abt2, abt3)
+
+    avainbt_pinta_ala = 0.0
+    avainbt_ala = 0.0
+
+    if avainbt == 2:
+        avainbt_pinta_ala = abt1_ala + abt2_ala + abt3_ala
+
+    if ml123_ala > 0.0:
+        avainbt_ala = avainbt_pinta_ala / ml123_ala
+
+    # --- metsähallituksen rajoituksen tarkennus ---
+    if owner == 4:
+        ptraj = 0
+
+    if owner == 4 and mhtark in (2, 3, 4, 5, 6, 9):
+        ptraj = mhtark
+
+    # --- käsittelyluokka ---
+    if ptraj in (101, 102):
+        k = 7.1
+
+    if ptraj in (401, 402, 403, 404, 408, 409, 410):
+        k = 7.2
+
+    if ptraj == 105 and owner not in (4, 5):
+        k = 7.3
+
+    if ptraj == 105 and owner in (4, 5):
+        k = 7.5
+
+    if ptraj in (104, 106):
+        k = 7.5
+
+    if ptraj == 103:
+        k = 7.4
+
+    if ptraj in (201, 205, 301):
+        k = 7.5
+
+    if ptraj == 405:
+        k = 2.1
+
+    if ptraj in (202, 203, 307):
+        k = 2.4
+
+    if ptraj == 304:
+        k = 2.2
+
+    if ptraj == 303:
+        k = 2.3
+
+    if ptraj == 501 and pttark in (1, 2, 3, 4, 5) and owner in (4, 5):
+        k = 2.4
+
+    if ptraj in (309, 306, 302):
+        k = 2.4
+
+    if ptraj == 107 and pttark == 1:
+        k = 7.5
+
+    if ptraj == 107 and pttark != 1:
+        k = 2.4
+
+    if ptraj == 606 and pttark == 1 and avainbt == 2:
+        k = 7.5
+
+    if ptraj == 606 and pttark != 1 and avainbt == 2:
+        k = 2.4
+
+    if ptraj == 608 and pttark == 1 and avainbt == 2 and avainbt_ala >= 0.5:
+        k = 7.5
+
+    if ptraj == 608 and pttark != 1 and avainbt == 2 and avainbt_ala >= 0.5:
+        k = 2.4
+
+    if ptraj == 601 and owner == 4:
+        k = 2.4
+
+    if ptraj == 305:
+        k = 2.4
+
+    if owner == 4 and ptraj == 0:
+        k = 1.0
+
+    if owner == 4 and ptraj in (2, 3, 4, 5):
+        k = 2.4
+
+    if owner == 4 and ptraj in (6, 9):
+        k = 7.5
+
+    # --- maaluokka adjustments ---
+    if land_category == 2 and k == 1.0:
+        k = 3.5
+
+    if land_category == 2 and 2.0 <= k < 3.0:
+        k = k + 1.0
+
+    if land_category == 3 and k == 1.0:
+        k = 6.5
+
+    if land_category == 3 and 2.0 <= k < 3.0:
+        k = k + 4.0
+
+    if land_category == 3 and k > 7.0:
+        k = 7.6
+
+    return float(k)

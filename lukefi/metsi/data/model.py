@@ -351,6 +351,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_diameter: Optional[float] = None
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
+    ahvkeilaus: Optional[str] = None  # only used in VMI11
 
     def __eq__(self, other):
         return id(self) == id(other)
