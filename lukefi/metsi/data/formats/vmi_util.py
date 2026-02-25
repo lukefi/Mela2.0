@@ -1,7 +1,6 @@
 from typing import Optional, Sequence
 import math
 from dataclasses import dataclass
-from collections.abc import Sequence
 from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
