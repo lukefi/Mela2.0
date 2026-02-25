@@ -187,13 +187,11 @@ def storey_match(stratum: TreeStratum, tree: ReferenceTree):
     #       Vallitsevan jakson ja alikasvoksen jättöpuut jäävät aina kohdentamatta, koska
     #       VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
 
-    # |puu$latker=="E") { # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
+    # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
     if tree.latvuskerros == "5":
-        # return stratum.asema == 5 or stratum.asema == 6 or stratum.asema == 9
         return stratum.asema in (5, 6, 9)
-    # if tree.latvuskerros == "6" or tree.latvuskerros == "7":  # ylispuujakso, ei jättöpuu
+    # ylispuujakso, ei jättöpuu
     if tree.latvuskerros in ("6", "7"):
-        # return stratum.asema == 2 or stratum.asema == 4
         return stratum.asema in (2, 4)
     if tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
         return stratum.asema == 3
