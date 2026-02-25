@@ -96,7 +96,7 @@ def _append_tree_row(
     row,
     vmi_version: int,
     forestry_centre_id: int | None,
-    ahvkeilaus: str = "",
+    ahvkeilaus: str | None = None,
     height_conversion_factor: float = 100.0,
     measured_height_conversion_factor: float = 10.0,
 
@@ -454,12 +454,18 @@ class VMI9Builder(VMIBuilder):
         if self.builder_flags.get("measured_trees", False):
             for row in self.reference_trees:
                 stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
-                if stand_id not in result:
+
+                stand2 = result.get(stand_id)
+                if stand2 is None:
                     continue
+
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                stand = result.get(stand_id)
-                vmi_util.append_tree_row_vmi9(attr_dict, VMI9_TREE_INDICES, row,
-                                              forestry_centre_id=stand.forestry_centre_id)
+                vmi_util.append_tree_row_vmi9(
+                    attr_dict,
+                    VMI9_TREE_INDICES,
+                    row,
+                    forestry_centre_id=stand2.forestry_centre_id,
+                )
 
         out = StandList()
         for sid, stand in result.items():
@@ -583,9 +589,12 @@ class VMI10Builder(VMIBuilder):
                 if stand_id not in result:
                     continue
                 attr_dict = tree_attrs.setdefault(stand_id, {})
-                stand = result.get(stand_id)
+                stand2 = result.get(stand_id)
+                if stand2 is None:
+                    continue
+
                 vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row,
-                                               forestry_centre_id=stand.forestry_centre_id)
+                                               forestry_centre_id=stand2.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
@@ -731,14 +740,16 @@ class VMI11Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand = result.get(stand_identifier)
+                stand2 = result.get(stand_identifier)
+                if stand2 is None:
+                    continue
                 _append_tree_row(
                     attr_dict,
                     VMI11_TREE_INDICES,
                     row,
                     vmi_version=11,
-                    forestry_centre_id=stand.forestry_centre_id,
-                    ahvkeilaus=stand.ahvkeilaus,
+                    forestry_centre_id=stand2.forestry_centre_id,
+                    ahvkeilaus=stand2.ahvkeilaus,
                     height_conversion_factor=10.0,            # VMI11 pituus is in dm
                     measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
                 )
@@ -871,9 +882,11 @@ class VMI12Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand = result.get(stand_identifier)
+                stand2 = result.get(stand_identifier)
+                if stand2 is None:
+                    continue
                 _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
-                                 vmi_version=12, forestry_centre_id=stand.forestry_centre_id)
+                                 vmi_version=12, forestry_centre_id=stand2.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -1008,10 +1021,12 @@ class VMI13Builder(VMIBuilder):
             for row in self.reference_trees:
                 stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
                 attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand = result.get(stand_identifier)
+                stand2 = result.get(stand_identifier)
+                if stand2 is None:
+                    continue
 
                 _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
-                                 vmi_version=13, forestry_centre_id=stand.forestry_centre_id)
+                                 vmi_version=13, forestry_centre_id=stand2.forestry_centre_id)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
