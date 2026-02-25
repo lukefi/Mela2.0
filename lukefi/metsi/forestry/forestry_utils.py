@@ -65,8 +65,6 @@ def find_matching_stratum_by_diameter_lm(
     :return: matching stratum or None if no match is found
     """
 
-    # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
-    #       jonka keskiläpimitta on lähinnä puun läpimittaa.
     # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
     #       R-koodissa kerroin = 3.
 
@@ -169,9 +167,6 @@ def find_matching_storey_stratum_for_tree(
 
     # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
     #       jonka keskiläpimitta on lähinnä puun läpimittaa.
-    # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
-    #       R-koodissa kerroin = 3.
-
     if len(candidate_strata) > 0:
         selected_stratum = find_matching_stratum_by_diameter_lm(tree, candidate_strata, diameter_threshold)
     else:
