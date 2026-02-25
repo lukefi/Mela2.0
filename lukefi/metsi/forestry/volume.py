@@ -27,30 +27,46 @@ class TreeVolumeDataset(StrEnum):
 def tree_volumes(reference_trees: ReferenceTrees,
                  temperature_sum: float,
                  dataset: TreeVolumeDataset = TreeVolumeDataset.CLIMBED) -> npt.NDArray[np.float64]:
-    """
-    Calculate volumes for reference trees based on variable form factor model.
+    """Calculate volumes for reference trees based on variable form factor model.
 
-    :param reference_trees: reference trees whose volumes to calculate
-    :type reference_trees: ReferenceTrees
-    :param temperature_sum: temperature sum ("degree days")
-    :type temperature_sum: float
-    :param dataset: which dataset fit to use for model parameters ("climbed", "felled" or "scanned")
-    :type dataset: TreeVolumeDataset
-    :return: vector containing calculated volumes for each reference tree
-    :rtype: npt.NDArray[np.float64]
+    Args:
+        reference_trees (ReferenceTrees): reference trees whose volumes to calculate
+        temperature_sum (float): temperature sum ("degree days")
+        dataset (TreeVolumeDataset, optional): which dataset fit to use for model parameters ("climbed", "felled" or 
+            "scanned"). Defaults to TreeVolumeDataset.CLIMBED.
+
+    Returns:
+        npt.NDArray[np.float64]: vector containing calculated volumes for each reference tree in m^3
     """
-    dbh = reference_trees.breast_height_diameter
-    h = reference_trees.height
-    species = reference_trees.species
+    retval = np.full(shape=len(reference_trees), fill_value=0.0, dtype=np.float64)
+
+    tall_trees = reference_trees.height > 1.3
+
+    h = reference_trees.height[tall_trees]
+    dbh = reference_trees.breast_height_diameter[tall_trees]
+    species = reference_trees.species[tall_trees]
+
     logita, lambda_ = volume_params(dbh, h, species, temperature_sum / 10, dataset)
+    retval[tall_trees] = _tree_volumes(dbh, h, logita, lambda_) / 1000  # Convert dm^3 -> m^3
 
-    return _tree_volumes(dbh, h, logita, lambda_) / 1000
+    return retval
 
 
 def _tree_volumes(dbh: npt.NDArray[np.float64],
                   h: npt.NDArray[np.float64],
                   logita: npt.NDArray[np.float64],
-                  lambda_: npt.NDArray[np.float64]):
+                  lambda_: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    """Calculate tree volumes.
+
+    Args:
+        dbh (npt.NDArray[np.float64]): breast height diameter
+        h (npt.NDArray[np.float64]): height
+        logita (npt.NDArray[np.float64]): logit transformation of the form factor
+        lambda_ (npt.NDArray[np.float64]): lambda parameter for the model
+
+    Returns:
+        npt.NDArray[np.float64]: Tree volumes in dm^3
+    """
     lam = np.exp(lambda_)
     w = 2 - 2 * np.exp((h - 1.3) / lam) / (1 + np.exp((h - 1.3) / lam))
     rstump = w * dbh / 20 + (1 - w) * dbh / 20 * h / (h - 1.3)
