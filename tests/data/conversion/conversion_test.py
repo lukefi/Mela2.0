@@ -1,6 +1,7 @@
 from lukefi.metsi.data.formats import vmi_util
 from lukefi.metsi.data.formats.vmi_const import *
 from tests.data import test_util
+from lukefi.metsi.app.utils import MetsiException
 
 
 class TestConversion(test_util.ConverterTestSuite):
@@ -369,14 +370,29 @@ class TestConversion(test_util.ConverterTestSuite):
 
     def test_determine_stems_per_ha(self):
         assertions = [
-            ([3.0, True], 2122.0),
-            ([6.0, True], 100.067),
-            ([6.0, False], 198.944),
-            ([12.0, True], 39.298),
-            ([0.0, True], 1.0),
-            ([0.0, False], 1.0)
+            # VMI13 parameters
+            ([3.0, 13, None, None], 2122.06591),
+            ([6.0, 13, None, None], 198.94368),
+            ([12.0, 13, None, None], 39.29752),
+
+            # VMI12 parameters (different r1 => different mid-diameter plateau)
+            ([6.0, 12, None, None], 100.06724),
+            ([12.0, 12, None, None], 39.29752),
+
+            # Zero/negative diameter always => 1.0
+            ([0.0, 13, None, None], 1.0),
+            ([0.0, 12, None, None], 1.0),
+
+            # VMI11 special-case Ahvenanmaa (metkes=0, ahvkeilaus='A')
+            ([12.0, 11, 0, "A"], 88.41941),
+
+            ([30.0, 10, 1, None], 28.29421),   # south
+            ([30.0, 10, 12, None], 21.22066),  # north
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_stems_per_ha)
+
+        # Unsupported VMI version should raise
+        self.assertRaises(MetsiException, vmi_util.determine_stems_per_ha, 10.0, 99, None, None)
 
     def test_determine_tree_age_values(self):
         assertions = [
