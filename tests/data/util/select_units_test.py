@@ -6,7 +6,8 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     OwnerCategory,
     SiteType,
-    SoilPeatlandCategory)
+    SoilPeatlandCategory,
+    TreeManagementCategory)
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -63,13 +64,13 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.storey = np.repeat(0, self.trees.size)
         self.trees.sapling = np.repeat(False, self.trees.size)
         self.trees.tree_type = np.repeat("", self.trees.size)
-        self.trees.tuhon_ilmiasu = np.repeat("", self.trees.size)
+        self.trees.damage_type = np.repeat("", self.trees.size)
         self.trees.latvuskerros = np.repeat(0.0, self.trees.size)
         self.stand.reference_trees = self.trees
 
     def test_odds_units(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: trees.management_category <= 1,
+            lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -78,7 +79,7 @@ class TestSelectUnits(unittest.TestCase):
             np.array([0.01, 0.5, 0.99]),
             "relative"
         )
-        set1.sfunction = lambda _, trees: trees.management_category <= 1
+        set1.sfunction = lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION
         set1.order_var = "breast_height_diameter"
         set1.target_var = "stems_per_ha"
         set1.target_type = "relative"
@@ -100,7 +101,7 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_odds_profile(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: trees.management_category <= 1,
+            lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -123,7 +124,7 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_scale(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: trees.management_category <= 1,
+            lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -147,7 +148,8 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_level(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: (trees.breast_height_diameter > 10) & (trees.management_category <= 1),
+            lambda _, trees: ((trees.breast_height_diameter > 10) &
+                              (trees.management_category <= TreeManagementCategory.NO_RESTRICTION)),
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -171,7 +173,7 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_relative_remain(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: trees.management_category <= 1,
+            lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -196,7 +198,8 @@ class TestSelectUnits(unittest.TestCase):
 
     def test_multiple_sets(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: (trees.breast_height_diameter > 10) & (trees.management_category <= 1),
+            lambda _, trees: ((trees.breast_height_diameter > 10) &
+                              (trees.management_category <= TreeManagementCategory.NO_RESTRICTION)),
             "breast_height_diameter",
             "stems_per_ha",
             "relative",
@@ -207,7 +210,7 @@ class TestSelectUnits(unittest.TestCase):
         )
 
         set2 = SelectionSet[ForestStand, ReferenceTrees](
-            lambda _, trees: trees.management_category <= 1,
+            lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
             "relative",

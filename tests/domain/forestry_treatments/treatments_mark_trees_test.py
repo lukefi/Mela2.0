@@ -4,6 +4,7 @@ from unittest.mock import patch
 import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.enums.internal import TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -29,7 +30,7 @@ class MarkTreesTest(unittest.TestCase):
                     "identifier": f"{stand.identifier}-tree-{i}",
                     "stems_per_ha": s,
                     "tree_type": "ORIGINAL",
-                    "management_category": 1,
+                    "management_category": TreeManagementCategory.NO_RESTRICTION,
                 }
             )
 
@@ -56,7 +57,7 @@ class MarkTreesTest(unittest.TestCase):
                 stand,
                 select_from_all=True,
                 mode="odds_units",
-                attributes={"tree_type": "SPARE", "management_category": 2},
+                attributes={"tree_type": "SPARE", "management_category": TreeManagementCategory.RETENTION_TREE},
             )
 
     @patch("lukefi.metsi.domain.forestry_treatments.mark_trees.select_units")
@@ -106,7 +107,7 @@ class MarkTreesTest(unittest.TestCase):
             "mode": "odds_units",
             "attributes": {
                 "tree_type": "SPARE",
-                "management_category": 2,
+                "management_category": TreeManagementCategory.RETENTION_TREE,
             },
         }
 
