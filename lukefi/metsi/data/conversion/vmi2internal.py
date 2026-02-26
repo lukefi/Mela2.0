@@ -1,27 +1,51 @@
-from typing import Optional
+from typing import Callable, Optional
 
 from lukefi.metsi.data.enums.vmi import (
     VmiOrigin,
+    VmiArableLandDetail,
+    VmiBuildUpLandDetail,
+    VmiDamageType,
+    VmiFraLandUseClass,
+    VmiInlandWaterDetail,
+    VmiLandUseCategoryDetail,
+    VmiOtherForestryLandDetail,
+    VmiPoorlyProductiveForestLandDetail,
+    VmiProductiveForestLandDetail,
     VmiSiteType,
     VmiOwnerCategory,
     VmiSoilPeatlandCategory,
     VmiSpecies,
     VmiLandUseCategory,
     VmiTreeCategory,
-    VmiDrainageCategory, VmiStratumRank, VmiTreeStorey,
+    VmiDrainageCategory,
+    VmiStratumRank,
+    VmiTreeStorey,
+    VmiTreeType,
+    VmiUnproductiveLandDetail,
 )
 from lukefi.metsi.data.enums.internal import (
     Origin,
+    ArableLandDetail,
+    BuildUpLandDetail,
+    DamageType,
+    FraLandUseClass,
+    InlandWaterDetail,
+    LandUseCategoryDetail,
+    OtherForestryLandDetail,
+    PoorlyProductiveForestLandDetail,
+    ProductiveForestLandDetail,
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,
+    TreeCategory,
     TreeSpecies,
     LandUseCategory,
     DrainageCategory, Storey,
-    TreeCategory
+    TreeType,
+    UnproductiveLandDetail,
 )
 
-_species_map = {
+_SPECIES_MAP = {
     VmiSpecies.PINE: TreeSpecies.PINE,
     VmiSpecies.SPRUCE: TreeSpecies.SPRUCE,
     VmiSpecies.SILVER_BIRCH: TreeSpecies.SILVER_BIRCH,
@@ -56,8 +80,15 @@ _species_map = {
     VmiSpecies.TREELESS: TreeSpecies.TREELESS
 }
 
+_FRA_LAND_USE_CLASS_MAP = {
+    VmiFraLandUseClass.FOREST: FraLandUseClass.FOREST,
+    VmiFraLandUseClass.OTHER_WOODED_LAND: FraLandUseClass.OTHER_WOODED_LAND,
+    VmiFraLandUseClass.OTHER_LAND: FraLandUseClass.OTHER_LAND,
+    VmiFraLandUseClass.OTHER_LAND_WITH_TREE_COVER: FraLandUseClass.OTHER_LAND_WITH_TREE_COVER,
+}
 
-_land_use_map = {
+
+_LAND_USE_MAP = {
     VmiLandUseCategory.FOREST: LandUseCategory.FOREST,
     VmiLandUseCategory.SCRUB_LAND: LandUseCategory.SCRUB_LAND,
     VmiLandUseCategory.WASTE_LAND: LandUseCategory.WASTE_LAND,
@@ -71,8 +102,62 @@ _land_use_map = {
     VmiLandUseCategory.OBSOLETE: LandUseCategory.OTHER_FOREST
 }
 
+_LAND_USE_DETAIL_MAP: dict[VmiLandUseCategoryDetail, LandUseCategoryDetail] = {
+    VmiProductiveForestLandDetail.NORMAL: ProductiveForestLandDetail.NORMAL,
+    VmiProductiveForestLandDetail.PASTURE: ProductiveForestLandDetail.PASTURE,
+    VmiProductiveForestLandDetail.CONVERTED: ProductiveForestLandDetail.CONVERTED,
 
-_owner_map = {
+    VmiPoorlyProductiveForestLandDetail.NORMAL: PoorlyProductiveForestLandDetail.NORMAL,
+    VmiPoorlyProductiveForestLandDetail.PASTURE: PoorlyProductiveForestLandDetail.PASTURE,
+    VmiPoorlyProductiveForestLandDetail.CONVERTED: PoorlyProductiveForestLandDetail.CONVERTED,
+
+    VmiUnproductiveLandDetail.VEGETATION_COVER: UnproductiveLandDetail.VEGETATION_COVER,
+    VmiUnproductiveLandDetail.NO_VEGETATION_COVER: UnproductiveLandDetail.NO_VEGETATION_COVER,
+
+    VmiOtherForestryLandDetail.OTHER_MINERAL_SOIL: OtherForestryLandDetail.OTHER_MINERAL_SOIL,
+    VmiOtherForestryLandDetail.OTHER_ORGANIC_SOIL: OtherForestryLandDetail.OTHER_ORGANIC_SOIL,
+    VmiOtherForestryLandDetail.SEED_PRODUCTION_FOREST: OtherForestryLandDetail.SEED_PRODUCTION_FOREST,
+    VmiOtherForestryLandDetail.FORESTRY_BUILDINGS: OtherForestryLandDetail.FORESTRY_BUILDINGS,
+    VmiOtherForestryLandDetail.FOREST_ROAD: OtherForestryLandDetail.FOREST_ROAD,
+    VmiOtherForestryLandDetail.SMALL_SCALE_PEAT_PRODUCTION: OtherForestryLandDetail.SMALL_SCALE_PEAT_PRODUCTION,
+    VmiOtherForestryLandDetail.GRAVEL_OR_SAND_PRODUCTION: OtherForestryLandDetail.GRAVEL_OR_SAND_PRODUCTION,
+
+    VmiArableLandDetail.FARMED_FIELDS_OR_FALLOWS: ArableLandDetail.FARMED_FIELDS_OR_FALLOWS,
+    VmiArableLandDetail.ABANDONED_FIELD_MINERAL_SOIL: ArableLandDetail.ABANDONED_FIELD_MINERAL_SOIL,
+    VmiArableLandDetail.ABANDONED_FIELD_ORGANIC_SOIL: ArableLandDetail.ABANDONED_FIELD_ORGANIC_SOIL,
+    VmiArableLandDetail.ABANDONED_FIELD_REFORESTING_MINERAL_SOIL:
+        ArableLandDetail.ABANDONED_FIELD_REFORESTING_MINERAL_SOIL,
+    VmiArableLandDetail.ABANDONED_FIELD_REFORESTING_ORGANIC_SOIL:
+        ArableLandDetail.ABANDONED_FIELD_REFORESTING_ORGANIC_SOIL,
+    VmiArableLandDetail.PASTURE_MEADOW: ArableLandDetail.PASTURE_MEADOW,
+    VmiArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_MINERAL_SOIL:
+        ArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_MINERAL_SOIL,
+    VmiArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_ORGANIC_SOIL:
+        ArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_ORGANIC_SOIL,
+    VmiArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_MINERAL_SOIL:
+        ArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_MINERAL_SOIL,
+    VmiArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_ORGANIC_SOIL:
+        ArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_ORGANIC_SOIL,
+    VmiArableLandDetail.UNPRODUCTIVE_LAND: ArableLandDetail.UNPRODUCTIVE_LAND,
+    VmiArableLandDetail.BARNS_AND_OTHER_AGRICULTURAL_BUILDINGS: ArableLandDetail.BARNS_AND_OTHER_AGRICULTURAL_BUILDINGS,
+    VmiArableLandDetail.FRUIT_TREE_OR_BERRY_SHRUB_PLANTATION: ArableLandDetail.FRUIT_TREE_OR_BERRY_SHRUB_PLANTATION,
+
+    VmiBuildUpLandDetail.PEAT_PRODUCTION_PREPARATION: BuildUpLandDetail.PEAT_PRODUCTION_PREPARATION,
+    VmiBuildUpLandDetail.PEAT_PRODUCTION_OUT_OF_USE: BuildUpLandDetail.PEAT_PRODUCTION_OUT_OF_USE,
+    VmiBuildUpLandDetail.PEAT_PRODUCTION_MAINTENANCE: BuildUpLandDetail.PEAT_PRODUCTION_MAINTENANCE,
+    VmiBuildUpLandDetail.SURFACE_DRAINAGE_ON_PEAT_PRODUCTION: BuildUpLandDetail.SURFACE_DRAINAGE_ON_PEAT_PRODUCTION,
+    VmiBuildUpLandDetail.GREEN_HOUSE_YARD_HOME_GARDEN: BuildUpLandDetail.GREEN_HOUSE_YARD_HOME_GARDEN,
+    VmiBuildUpLandDetail.MINING_AREA: BuildUpLandDetail.MINING_AREA,
+    VmiBuildUpLandDetail.PEAT_PRODUCTION_ONGOING: BuildUpLandDetail.PEAT_PRODUCTION_ONGOING,
+    VmiBuildUpLandDetail.GRAVEL_OR_SAND_PRODUCTION: BuildUpLandDetail.GRAVEL_OR_SAND_PRODUCTION,
+    VmiBuildUpLandDetail.OTHER_BUILD_UP_LAND: BuildUpLandDetail.OTHER_BUILD_UP_LAND,
+
+    VmiInlandWaterDetail.NATURAL_WATER_BASIN: InlandWaterDetail.NATURAL_WATER_BASIN,
+    VmiInlandWaterDetail.ARTIFICIAL_LAKE_OR_TAMED_RIVER: InlandWaterDetail.ARTIFICIAL_LAKE_OR_TAMED_RIVER,
+}
+
+
+_OWNER_MAP = {
     VmiOwnerCategory.UNKNOWN: OwnerCategory.UNKNOWN,
     VmiOwnerCategory.PRIVATE: OwnerCategory.PRIVATE,
     VmiOwnerCategory.FOREST_INDUSTRY_ENTERPRISE: OwnerCategory.FOREST_INDUSTRY,
@@ -87,7 +172,7 @@ _owner_map = {
 }
 
 
-_soil_peatland_map = {
+_SOIL_PEATLAND_MAP = {
     VmiSoilPeatlandCategory.MINERAL_SOIL: SoilPeatlandCategory.MINERAL_SOIL,
     VmiSoilPeatlandCategory.SPRUCE_MIRE: SoilPeatlandCategory.SPRUCE_MIRE,
     VmiSoilPeatlandCategory.PINE_MIRE: SoilPeatlandCategory.PINE_MIRE,
@@ -95,7 +180,7 @@ _soil_peatland_map = {
 }
 
 
-_site_type_map = {
+_SITE_TYPE_MAP = {
     VmiSiteType.LEHTO: SiteType.VERY_RICH_SITE,
     VmiSiteType.LEHTOMAINEN_KANGAS: SiteType.RICH_SITE,
     VmiSiteType.TUOREKANGAS: SiteType.DAMP_SITE,
@@ -109,7 +194,7 @@ _site_type_map = {
 }
 
 
-_drainage_category_map = {
+_DRAINAGE_CATEGORY_MAP = {
     VmiDrainageCategory.OJITTAMATON_KANGAS_TAI_SUO: DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
     VmiDrainageCategory.OJITETTU_KANGAS: DrainageCategory.DITCHED_MINERAL_SOIL,
     VmiDrainageCategory.OJIKKO: DrainageCategory.DITCHED_MIRE,
@@ -117,7 +202,7 @@ _drainage_category_map = {
     VmiDrainageCategory.TURVEKANGAS: DrainageCategory.TRANSFORMED_MIRE
 }
 
-_stratum_rank_map = {
+_STRATUM_RANK_MAP = {
     VmiStratumRank.UNGROWABLE_SAPLINGS: Storey.DOMINANT,
     VmiStratumRank.DOMINANT: Storey.DOMINANT,
     VmiStratumRank.OVER_1: Storey.OVER,
@@ -131,7 +216,7 @@ _stratum_rank_map = {
 }
 
 
-_tree_storey_map = {
+_TREE_STOREY_MAP = {
     VmiTreeStorey.DOMINANT_MAIN: Storey.DOMINANT,
     VmiTreeStorey.DOMINANT_MIDDLE: Storey.DOMINANT,
     VmiTreeStorey.DOMINANT_LOWER: Storey.DOMINANT,
@@ -146,7 +231,7 @@ _tree_storey_map = {
     VmiTreeStorey.OVER_SPARE_2: Storey.SPARE
 }
 
-_origin_map = {
+_ORIGIN_MAP = {
     VmiOrigin.UNKNOWN: Origin.UNKNOWN,
     VmiOrigin.NATURAL_SEED: Origin.NATURAL_SEED,
     VmiOrigin.NATURAL_SPROUT: Origin.NATURAL_SPROUT,
@@ -154,110 +239,173 @@ _origin_map = {
     VmiOrigin.SEEDED: Origin.SEEDED
 }
 
+_TREE_TYPE_MAP = {
+    VmiTreeType.REMEASURED_TALLY_TREE: TreeType.REMEASURED_TALLY_TREE,
+    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M:
+        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M:
+        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+    VmiTreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT: TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
+    VmiTreeType.OLD_TALLY_TREE_STUMP_STEM_REMOVED: TreeType.OLD_TALLY_TREE_STUMP_STEM_REMOVED,
+    VmiTreeType.OLD_TALLY_TREE_STUMP_STEM_NOT_REMOVED: TreeType.OLD_TALLY_TREE_STUMP_STEM_NOT_REMOVED,
+    VmiTreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE: TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE,
+    VmiTreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY:
+        TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY,
+    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS:
+        TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS,
+    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS:
+        TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS,
+}
 
-TREE_CATEGORY_MAP: dict[VmiTreeCategory, TreeCategory] = {
-    VmiTreeCategory.C0: TreeCategory.C0,
-    VmiTreeCategory.C1: TreeCategory.C1,
-    VmiTreeCategory.C2: TreeCategory.C3,
-    VmiTreeCategory.C3: TreeCategory.C3,
-    VmiTreeCategory.C4: TreeCategory.C3,
-    VmiTreeCategory.C5: TreeCategory.C7,
-    VmiTreeCategory.C6: TreeCategory.C7,
-    VmiTreeCategory.C7: TreeCategory.C7,
-    VmiTreeCategory.C8: TreeCategory.C7,
-    VmiTreeCategory.C9: TreeCategory.C3,
+_TREE_CATEGORY_MAP = {
+    VmiTreeCategory.SMALL_TREE: TreeCategory.SMALL_TREE,
+    VmiTreeCategory.WASTE_TREE: TreeCategory.WASTE_TREE,
+    VmiTreeCategory.PULP_WOOD_TREE: TreeCategory.PULP_WOOD_TREE,
+    VmiTreeCategory.SAW_LOG_TREE: TreeCategory.SAW_LOG_TREE,
+    VmiTreeCategory.USABLE_STANDING_DEAD_TREE: TreeCategory.USABLE_STANDING_DEAD_TREE,
+    VmiTreeCategory.USABLE_FALLEN_DEAD_TREE: TreeCategory.USABLE_FALLEN_DEAD_TREE,
+    VmiTreeCategory.UNUSABLE_DEAD_TREE: TreeCategory.UNUSABLE_DEAD_TREE,
+    VmiTreeCategory.STUMP_ALIVE_WHEN_FELLING: TreeCategory.STUMP_ALIVE_WHEN_FELLING,
+    VmiTreeCategory.STUMP_DEAD_STANDING_WHEN_FELLING: TreeCategory.STUMP_DEAD_STANDING_WHEN_FELLING,
+    VmiTreeCategory.STUMP_DEAD_FALLEN_WHEN_FELLING: TreeCategory.STUMP_DEAD_FALLEN_WHEN_FELLING,
+}
 
-    VmiTreeCategory.A: TreeCategory.A,
-    VmiTreeCategory.B: TreeCategory.B,
-    VmiTreeCategory.C: TreeCategory.A,
-    VmiTreeCategory.D: TreeCategory.D,
-    VmiTreeCategory.E: TreeCategory.E,
-    VmiTreeCategory.F: TreeCategory.F,
-    VmiTreeCategory.G: TreeCategory.G,
+_DAMAGE_TYPE_MAP = {
+    VmiDamageType.NO_DAMAGE: DamageType.NO_DAMAGE,
+    VmiDamageType.DEAD_STANDING_TREES: DamageType.DEAD_STANDING_TREES,
+    VmiDamageType.FALLEN_OR_BROKEN_TREES: DamageType.FALLEN_OR_BROKEN_TREES,
+    VmiDamageType.DECAYED_STANDING_LIVING_TREES: DamageType.DECAYED_STANDING_LIVING_TREES,
+    VmiDamageType.DAMAGES_ON_THE_STEMS: DamageType.DAMAGES_ON_THE_STEMS,
+    VmiDamageType.FLOWS_OF_RESIN: DamageType.FLOWS_OF_RESIN,
+    VmiDamageType.BROKEN_TOP: DamageType.BROKEN_TOP,
+    VmiDamageType.DEAD_LEADER_BRANCH: DamageType.DEAD_LEADER_BRANCH,
+    VmiDamageType.LEADER_CHANGE_BY_LEADER_DAMAGE: DamageType.LEADER_CHANGE_BY_LEADER_DAMAGE,
+    VmiDamageType.MULTIPLE_LEADERS: DamageType.MULTIPLE_LEADERS,
+    VmiDamageType.BENT_TOP: DamageType.BENT_TOP,
+    VmiDamageType.DEFORMED_STEM: DamageType.DEFORMED_STEM,
+    VmiDamageType.DEAD_BRANCHES_IN_LIVING_CROWN: DamageType.DEAD_BRANCHES_IN_LIVING_CROWN,
+    VmiDamageType.BROKEN_BRANCHES_IN_LIVING_CROWN: DamageType.BROKEN_BRANCHES_IN_LIVING_CROWN,
+    VmiDamageType.DEFORMED_OR_BENT_BRANCHES_IN_LIVING_CROWN: DamageType.DEFORMED_OR_BENT_BRANCHES_IN_LIVING_CROWN,
+    VmiDamageType.ABNORMAL_DYING_BRANCHES_IN_LOWER_CROWN: DamageType.ABNORMAL_DYING_BRANCHES_IN_LOWER_CROWN,
+    VmiDamageType.LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS: DamageType.LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS,
+    VmiDamageType.LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS_CURRENT_SEASON:
+        DamageType.LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS_CURRENT_SEASON,
+    VmiDamageType.LOSS_OF_OLDER_NEEDLES: DamageType.LOSS_OF_OLDER_NEEDLES,
+    VmiDamageType.LOSS_OF_NEEDLES_OF_ALL_AGES: DamageType.LOSS_OF_NEEDLES_OF_ALL_AGES,
+    VmiDamageType.LOSS_OF_LEAVES: DamageType.LOSS_OF_LEAVES,
+    VmiDamageType.DISCOLORED_NEEDLES_OR_LEAVES: DamageType.DISCOLORED_NEEDLES_OR_LEAVES,
+    VmiDamageType.DISCOLORED_NEEDLES_CURRENT_PERIOD: DamageType.DISCOLORED_NEEDLES_CURRENT_PERIOD,
+    VmiDamageType.DISCOLORED_OLDER_NEEDLES: DamageType.DISCOLORED_OLDER_NEEDLES,
+    VmiDamageType.DISCOLORED_NEEDLES_OF_ALL_AGES: DamageType.DISCOLORED_NEEDLES_OF_ALL_AGES,
+    VmiDamageType.DISCOLORED_LEAVES: DamageType.DISCOLORED_LEAVES,
+    VmiDamageType.DEFORMED_NEEDLES_OR_LEAVES: DamageType.DEFORMED_NEEDLES_OR_LEAVES,
 }
 
 
-def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
-    if raw is None:
-        return None
-
-    raw = raw.strip()
-    if not raw or raw == ".":
-        return None
-
-    try:
-        vmi_enum = VmiTreeCategory(raw.upper())
-
-    except ValueError as exc:
-        raise ValueError(f'Unknown VMI tree_category: {raw}') from exc
-
-    return TREE_CATEGORY_MAP.get(vmi_enum)
+def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
+    def inner(code: str):
+        if code in ('', ' ', '.'):
+            return None
+        return func(code)
+    return inner
 
 
-def is_empty_vmi_str(candidate: str) -> bool:
-    return candidate in ('', ' ', '.', '\n')
-
-
-def convert_drainage_category(code):
-    if is_empty_vmi_str(code):
-        return None
+@check_empty_vmi
+def convert_drainage_category(code: str) -> DrainageCategory:
     value = VmiDrainageCategory(code)
-    return _drainage_category_map.get(value)
+    return _DRAINAGE_CATEGORY_MAP[value]
 
 
-def convert_site_type_category(code: str) -> Optional[SiteType]:
-    if is_empty_vmi_str(code):
-        return None
+@check_empty_vmi
+def convert_site_type_category(code: str) -> SiteType:
     value = VmiSiteType(code)
-    return _site_type_map.get(value)
+    return _SITE_TYPE_MAP[value]
 
 
-def convert_soil_peatland_category(code: str) -> Optional[SoilPeatlandCategory]:
-    if is_empty_vmi_str(code):
-        return None
-
-    if code == '0':
-        return None
-
+@check_empty_vmi
+def convert_soil_peatland_category(code: str) -> SoilPeatlandCategory:
     vmi_category = VmiSoilPeatlandCategory(code)
-    return _soil_peatland_map.get(vmi_category)
+    return _SOIL_PEATLAND_MAP[vmi_category]
+
+
+@check_empty_vmi
+def convert_fra_land_use_class(fra_code: str) -> FraLandUseClass:
+    vmi_fra = VmiFraLandUseClass(fra_code)
+    return _FRA_LAND_USE_CLASS_MAP[vmi_fra]
 
 
 def convert_land_use_category(lu_code: str) -> LandUseCategory:
     """sanitization of lu_code is the responsibility of the caller,
     meaning that this conversion will fail e.g. if the parameter is a lower-case letter."""
     vmi_category = VmiLandUseCategory(lu_code)
-    return _land_use_map[vmi_category]
+    return _LAND_USE_MAP[vmi_category]
+
+
+def convert_land_use_category_detail(lu_cat: LandUseCategory, lud_code: str) -> Optional[LandUseCategoryDetail]:
+    vmi_cat_det: VmiLandUseCategoryDetail
+    if lu_cat == LandUseCategory.FOREST:
+        vmi_cat_det = VmiProductiveForestLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.SCRUB_LAND:
+        vmi_cat_det = VmiPoorlyProductiveForestLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.WASTE_LAND:
+        vmi_cat_det = VmiUnproductiveLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.OTHER_FOREST:
+        vmi_cat_det = VmiOtherForestryLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.AGRICULTURAL:
+        vmi_cat_det = VmiArableLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.BUILT_LAND:
+        vmi_cat_det = VmiBuildUpLandDetail(lud_code)
+    elif lu_cat == LandUseCategory.FRESHWATER:
+        vmi_cat_det = VmiInlandWaterDetail(lud_code)
+    else:
+        return None
+
+    return _LAND_USE_DETAIL_MAP[vmi_cat_det]
 
 
 def convert_species(species_code: str) -> TreeSpecies:
     """Converts VMI species code to internal TreeSpecies code"""
     value = species_code.strip()
     vmi_species = VmiSpecies(value)
-    return _species_map[vmi_species]
+    return _SPECIES_MAP[vmi_species]
 
 
 def convert_owner(owner_code: str) -> OwnerCategory:
     vmi_owner = VmiOwnerCategory(owner_code)
-    return _owner_map[vmi_owner]
+    return _OWNER_MAP[vmi_owner]
 
 
-def convert_stratum_rank(rank_code: str) -> Optional[Storey]:
-    if is_empty_vmi_str(rank_code):
-        return None
+@check_empty_vmi
+def convert_stratum_rank(rank_code: str) -> Storey:
     vmi_rank = VmiStratumRank(rank_code)
-    return _stratum_rank_map[vmi_rank]
+    return _STRATUM_RANK_MAP[vmi_rank]
 
 
-def convert_tree_storey(storey_code: str) -> Optional[Storey]:
-    if is_empty_vmi_str(storey_code):
-        return None
+@check_empty_vmi
+def convert_tree_storey(storey_code: str) -> Storey:
     vmi_storey = VmiTreeStorey(storey_code)
-    return _tree_storey_map[vmi_storey]
+    return _TREE_STOREY_MAP[vmi_storey]
 
 
+@check_empty_vmi
 def convert_origin(origin_code: str) -> Optional[Origin]:
-    if is_empty_vmi_str(origin_code):
-        return None
     vmi_origin = VmiOrigin(origin_code)
-    return _origin_map.get(vmi_origin)
+    return _ORIGIN_MAP.get(vmi_origin)
+
+
+@check_empty_vmi
+def convert_tree_type(type_code: str) -> TreeType:
+    vmi_type = VmiTreeType(type_code)
+    return _TREE_TYPE_MAP[vmi_type]
+
+
+@check_empty_vmi
+def convert_tree_category(cat_code: str) -> TreeCategory:
+    vmi_cat = VmiTreeCategory(cat_code)
+    return _TREE_CATEGORY_MAP[vmi_cat]
+
+
+@check_empty_vmi
+def convert_damage_type(dam_code: str) -> DamageType:
+    vmi_dam = VmiDamageType(dam_code)
+    return _DAMAGE_TYPE_MAP[vmi_dam]

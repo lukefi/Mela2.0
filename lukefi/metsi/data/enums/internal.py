@@ -247,19 +247,6 @@ class Storey(MetsiEnum):
     REMOVAL = 6
 
 
-class TreeCategory(StrEnum):
-    C0 = "0"
-    C1 = "1"
-    C3 = "3"
-    C7 = "7"
-    A = "A"
-    B = "B"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-
-
 class Origin(MetsiEnum):
     UNSET = -1
     UNKNOWN = 0
