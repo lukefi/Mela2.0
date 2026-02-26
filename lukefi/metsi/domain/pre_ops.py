@@ -238,7 +238,6 @@ def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> S
             for target, generated in zip(ba_targets[i][0], ba_sums[i]):
                 coeff = target / generated if generated > 0 else -1
                 scale_coeffs[i].append(coeff)
-                # print(i+1,generated, target, coeff)
     scale_coeff_ret = ba_target_ret / ba_sum_ret if ba_sum_ret > 0 else -1
 
     for stand in stands:
