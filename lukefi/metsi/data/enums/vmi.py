@@ -119,6 +119,13 @@ _VMI_NUMERIC_TO_SPECIES_MAP = {
 }
 
 
+class VmiFraLandUseClass(Enum):
+    FOREST = "1"
+    OTHER_WOODED_LAND = "2"
+    OTHER_LAND = "3"
+    OTHER_LAND_WITH_TREE_COVER = "4"
+
+
 class VmiLandUseCategory(Enum):
     FOREST = '1'
     SCRUB_LAND = '2'
@@ -131,6 +138,70 @@ class VmiLandUseCategory(Enum):
     FRESHWATER = 'A'
     SEA = 'B'
     OBSOLETE = 'C'
+
+
+class VmiLandUseCategoryDetail(Enum):
+    pass
+
+
+class VmiProductiveForestLandDetail(VmiLandUseCategoryDetail):
+    NORMAL = "0"
+    PASTURE = "5"
+    CONVERTED = "6"
+
+
+class VmiPoorlyProductiveForestLandDetail(VmiLandUseCategoryDetail):
+    NORMAL = "0"
+    PASTURE = "5"
+    CONVERTED = "6"
+
+
+class VmiUnproductiveLandDetail(VmiLandUseCategoryDetail):
+    VEGETATION_COVER = "0"
+    NO_VEGETATION_COVER = "1"
+
+
+class VmiOtherForestryLandDetail(VmiLandUseCategoryDetail):
+    OTHER_MINERAL_SOIL = "1"
+    OTHER_ORGANIC_SOIL = "2"
+    SEED_PRODUCTION_FOREST = "4"
+    FORESTRY_BUILDINGS = "6"
+    FOREST_ROAD = "7"
+    SMALL_SCALE_PEAT_PRODUCTION = "8"
+    GRAVEL_OR_SAND_PRODUCTION = "9"
+
+
+class VmiArableLandDetail(VmiLandUseCategoryDetail):
+    FARMED_FIELDS_OR_FALLOWS = "0"
+    ABANDONED_FIELD_MINERAL_SOIL = "1"
+    ABANDONED_FIELD_ORGANIC_SOIL = "2"
+    ABANDONED_FIELD_REFORESTING_MINERAL_SOIL = "3"
+    ABANDONED_FIELD_REFORESTING_ORGANIC_SOIL = "4"
+    PASTURE_MEADOW = "5"
+    BIOENERGY_PRODUCTION_WOODY_PLANTS_MINERAL_SOIL = "6"
+    BIOENERGY_PRODUCTION_WOODY_PLANTS_ORGANIC_SOIL = "7"
+    BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_MINERAL_SOIL = "8"
+    BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_ORGANIC_SOIL = "9"
+    UNPRODUCTIVE_LAND = "A"
+    BARNS_AND_OTHER_AGRICULTURAL_BUILDINGS = "B"
+    FRUIT_TREE_OR_BERRY_SHRUB_PLANTATION = "C"
+
+
+class VmiBuildUpLandDetail(VmiLandUseCategoryDetail):
+    PEAT_PRODUCTION_PREPARATION = "1"
+    PEAT_PRODUCTION_OUT_OF_USE = "2"
+    PEAT_PRODUCTION_MAINTENANCE = "3"
+    SURFACE_DRAINAGE_ON_PEAT_PRODUCTION = "4"
+    GREEN_HOUSE_YARD_HOME_GARDEN = "5"
+    MINING_AREA = "6"
+    PEAT_PRODUCTION_ONGOING = "8"
+    GRAVEL_OR_SAND_PRODUCTION = "9"
+    OTHER_BUILD_UP_LAND = "0"
+
+
+class VmiInlandWaterDetail(VmiLandUseCategoryDetail):
+    NATURAL_WATER_BASIN = "0"
+    ARTIFICIAL_LAKE_OR_TAMED_RIVER = "8"
 
 
 class VmiOwnerCategory(Enum):
@@ -208,26 +279,6 @@ class VmiTreeStorey(Enum):
     OVER_SPARE_2 = 'G'
 
 
-class VmiTreeCategory(StrEnum):
-    C0 = "0"
-    C1 = "1"
-    C2 = "2"
-    C3 = "3"
-    C4 = "4"
-    C5 = "5"
-    C6 = "6"
-    C7 = "7"
-    C8 = "8"
-    C9 = "9"
-    A = "A"
-    B = "B"
-    C = "C"
-    D = "D"
-    E = "E"
-    F = "F"
-    G = "G"
-
-
 class VmiOrigin(Enum):
     UNKNOWN = '0'
     NATURAL_SEED = '1'
@@ -238,3 +289,59 @@ class VmiOrigin(Enum):
 
 def convert_vmi_numeric_to_species(numeric: VmiSpeciesNumeric) -> VmiSpecies:
     return _VMI_NUMERIC_TO_SPECIES_MAP[numeric]
+
+
+class VmiTreeType(Enum):
+    REMEASURED_TALLY_TREE = 'V'
+    NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M = 'U'
+    NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M = 'S'
+    NEW_TALLY_TREE_OTHER_THAN_INCREMENT = 'T'
+    OLD_TALLY_TREE_STUMP_STEM_REMOVED = 'K'
+    OLD_TALLY_TREE_STUMP_STEM_NOT_REMOVED = 'R'
+    OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE = 'N'
+    OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY = 'Z'
+    OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS = 'M'
+    OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS = 'J'
+
+
+class VmiTreeCategory(Enum):
+    SMALL_TREE = '0'
+    WASTE_TREE = '1'
+    PULP_WOOD_TREE = '3'
+    SAW_LOG_TREE = '7'
+    USABLE_STANDING_DEAD_TREE = 'A'
+    USABLE_FALLEN_DEAD_TREE = 'B'
+    UNUSABLE_DEAD_TREE = 'D'
+    STUMP_ALIVE_WHEN_FELLING = 'E'
+    STUMP_DEAD_STANDING_WHEN_FELLING = 'F'
+    STUMP_DEAD_FALLEN_WHEN_FELLING = 'G'
+
+
+class VmiDamageType(Enum):
+    NO_DAMAGE = '0'
+    DEAD_STANDING_TREES = '1'
+    FALLEN_OR_BROKEN_TREES = '2'
+    DECAYED_STANDING_LIVING_TREES = '3'
+    DAMAGES_ON_THE_STEMS = '4'
+    FLOWS_OF_RESIN = '5'
+    BROKEN_TOP = '61'
+    DEAD_LEADER_BRANCH = '62'
+    LEADER_CHANGE_BY_LEADER_DAMAGE = '71'
+    MULTIPLE_LEADERS = '72'
+    BENT_TOP = '73'
+    DEFORMED_STEM = '8'
+    DEAD_BRANCHES_IN_LIVING_CROWN = '91'
+    BROKEN_BRANCHES_IN_LIVING_CROWN = '92'
+    DEFORMED_OR_BENT_BRANCHES_IN_LIVING_CROWN = '93'
+    ABNORMAL_DYING_BRANCHES_IN_LOWER_CROWN = 'A'
+    LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS = 'B'
+    LOSS_OF_NEEDLES_LEAVES_OR_SHOOTS_CURRENT_SEASON = 'B1'
+    LOSS_OF_OLDER_NEEDLES = 'B2'
+    LOSS_OF_NEEDLES_OF_ALL_AGES = 'B3'
+    LOSS_OF_LEAVES = 'B4'
+    DISCOLORED_NEEDLES_OR_LEAVES = 'C'
+    DISCOLORED_NEEDLES_CURRENT_PERIOD = 'C1'
+    DISCOLORED_OLDER_NEEDLES = 'C2'
+    DISCOLORED_NEEDLES_OF_ALL_AGES = 'C3'
+    DISCOLORED_LEAVES = 'C4'
+    DEFORMED_NEEDLES_OR_LEAVES = 'D'
