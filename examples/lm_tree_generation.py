@@ -1,3 +1,5 @@
+import numpy as np
+
 from lukefi.metsi.domain.pre_ops import *
 from lukefi.metsi.sim.generators import *
 
@@ -9,16 +11,21 @@ control_structure = {
     },
 
     "preprocessing_operations": [
-        preproc_filter,
+        filter_stands,
+        filter_trees,
         scale_area_weight,
         generate_reference_trees
     ],
 
     "preprocessing_params": {
-        preproc_filter: [
+        filter_stands: [
             {
-                "remove trees": "tree_type not in ('V', 'U', 'S', 'T', 'N')",
-                "remove stands": "site_type_category is None"
+                "remove": lambda stand: stand.site_type_category is None
+            }
+        ],
+        filter_trees: [
+            {
+                "predicate": lambda stand: np.isin(stand.reference_trees.tree_type, ('V', 'U', 'S', 'T', 'N'))
             }
         ],
         generate_reference_trees: [

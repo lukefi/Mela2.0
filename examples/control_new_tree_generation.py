@@ -34,7 +34,7 @@ control_structure = {
         ],
         filter_trees: [
             {
-                "mask": (
+                "predicate": (
                     lambda stand: np.isin(
                         stand.reference_trees.tree_type,
                         ("",
