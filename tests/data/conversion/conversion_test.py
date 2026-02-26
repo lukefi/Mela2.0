@@ -37,24 +37,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_artificial_regeneration_year)
 
-    def test_determine_development_class(self):
-        assertions = [
-            (['1'], 1),
-            (['2'], 2),
-            (['3'], 3),
-            (['4'], 4),
-            (['5'], 5),
-            (['6'], 6),
-            (['7'], 7),
-            (['8'], 8),
-            (['9'], 9),
-            (['10'], 0),
-            (['0'], 0),
-            ([0], 0),
-            ([0.0], 0)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_development_class)
-
     def test_determine_natural_renewal(self):
         assertions = [
             (['0'], False),

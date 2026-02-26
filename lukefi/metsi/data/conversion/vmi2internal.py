@@ -5,6 +5,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiArableLandDetail,
     VmiBuildUpLandDetail,
     VmiDamageType,
+    VmiDevelopmentClass,
     VmiFraLandUseClass,
     VmiInlandWaterDetail,
     VmiLandUseCategoryDetail,
@@ -28,6 +29,7 @@ from lukefi.metsi.data.enums.internal import (
     ArableLandDetail,
     BuildUpLandDetail,
     DamageType,
+    DevelopmentClass,
     FraLandUseClass,
     InlandWaterDetail,
     LandUseCategoryDetail,
@@ -302,6 +304,19 @@ _DAMAGE_TYPE_MAP = {
 }
 
 
+_DEVELOPMENT_CLASS_MAP = {
+    VmiDevelopmentClass.NON_STOCKED_REGENERATION: DevelopmentClass.NON_STOCKED_REGENERATION,
+    VmiDevelopmentClass.YOUNG_SEEDLING_STAND: DevelopmentClass.YOUNG_SEEDLING_STAND,
+    VmiDevelopmentClass.ADVANCED_SEEDLING_STAND: DevelopmentClass.ADVANCED_SEEDLING_STAND,
+    VmiDevelopmentClass.YOUNG_THINNING_STAGE_STAND: DevelopmentClass.YOUNG_THINNING_STAGE_STAND,
+    VmiDevelopmentClass.ADVANCED_THINNING_STAGE_STAND: DevelopmentClass.ADVANCED_THINNING_STAGE_STAND,
+    VmiDevelopmentClass.MATURE_STAND: DevelopmentClass.MATURE_STAND,
+    VmiDevelopmentClass.SHELTER_TREE_STAND: DevelopmentClass.SHELTER_TREE_STAND,
+    VmiDevelopmentClass.SEED_TREE_STAND: DevelopmentClass.SEED_TREE_STAND,
+    VmiDevelopmentClass.UNEVEN_AGED_STAND: DevelopmentClass.UNEVEN_AGED_STAND,
+}
+
+
 def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
     def inner(code: str):
         if code in ('', ' ', '.'):
@@ -409,3 +424,9 @@ def convert_tree_category(cat_code: str) -> TreeCategory:
 def convert_damage_type(dam_code: str) -> DamageType:
     vmi_dam = VmiDamageType(dam_code)
     return _DAMAGE_TYPE_MAP[vmi_dam]
+
+
+@check_empty_vmi
+def convert_development_class(dev_code: str) -> DevelopmentClass:
+    vmi_dev = VmiDevelopmentClass(dev_code)
+    return _DEVELOPMENT_CLASS_MAP[vmi_dev]

@@ -9,6 +9,7 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (
+    DevelopmentClass,
     FraLandUseClass,
     LandUseCategory,
     LandUseCategoryDetail,
@@ -71,7 +72,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     fertilization_year: Optional[int] = None
     soil_surface_preparation_year: Optional[int] = None
     regeneration_area_cleaning_year: Optional[int] = None
-    development_class: Optional[int] = None
+    development_class: Optional[DevelopmentClass] = None
     main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
@@ -187,7 +188,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.fertilization_year = conv(row[16], int)
         self.soil_surface_preparation_year = conv(row[17], int)
         self.regeneration_area_cleaning_year = conv(row[18], int)
-        self.development_class = conv(row[19], int)
+        self.development_class = DevelopmentClass(int(row[19])) if row[19] != 'None' else None
         self.artificial_regeneration_year = conv(row[20], int)
         self.young_stand_tending_year = conv(row[21], int)
         self.cutting_year = conv(row[22], int)

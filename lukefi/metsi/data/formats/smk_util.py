@@ -146,18 +146,6 @@ def parse_drainage_category(source: str) -> int | None:
     return util.parse_int(source)
 
 
-def parse_development_class(source) -> int:
-    """ TODO: Waiting for future implementation.
-
-    At the moment (22.9.2023) development class variable is extracted
-    from .gpkg (not in .xml) format but not used by any model in simulation.
-    For that reason constant zero is returned.
-
-    :returns: zero """
-    _ = source
-    return 0
-
-
 def parse_forest_management_category(source: str | None) -> int | float | None:
     if source is None:
         return None

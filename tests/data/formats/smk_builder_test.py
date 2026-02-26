@@ -94,9 +94,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(None, self.smk_stands[1].soil_surface_preparation_year)
         self.assertEqual(None, self.smk_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.smk_stands[1].regeneration_area_cleaning_year)
-        # Development class default value 0
-        self.assertEqual(0, self.smk_stands[0].development_class)
-        self.assertEqual(0, self.smk_stands[1].development_class)
+        self.assertEqual(None, self.smk_stands[0].development_class)
+        self.assertEqual(None, self.smk_stands[1].development_class)
         self.assertEqual(None, self.smk_stands[0].artificial_regeneration_year)
         self.assertEqual(None, self.smk_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.smk_stands[0].young_stand_tending_year)
@@ -225,9 +224,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].soil_surface_preparation_year)
         self.assertEqual(None, self.gpkg_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.gpkg_stands[1].regeneration_area_cleaning_year)
-        # Development class default value 0
-        self.assertEqual(0, self.gpkg_stands[0].development_class)
-        self.assertEqual(0, self.gpkg_stands[1].development_class)
+        self.assertEqual(None, self.gpkg_stands[0].development_class)
+        self.assertEqual(None, self.gpkg_stands[1].development_class)
         self.assertEqual(None, self.gpkg_stands[0].artificial_regeneration_year)
         self.assertEqual(None, self.gpkg_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.gpkg_stands[0].young_stand_tending_year)

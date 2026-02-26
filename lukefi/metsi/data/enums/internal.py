@@ -315,3 +315,15 @@ class DamageType(StrEnum):
 class TreeManagementCategory(MetsiEnum):
     NO_RESTRICTION = 1
     RETENTION_TREE = 2
+
+
+class DevelopmentClass(MetsiEnum):
+    NON_STOCKED_REGENERATION = 1
+    YOUNG_SEEDLING_STAND = 2
+    ADVANCED_SEEDLING_STAND = 3
+    YOUNG_THINNING_STAGE_STAND = 4
+    ADVANCED_THINNING_STAGE_STAND = 5
+    MATURE_STAND = 6
+    SHELTER_TREE_STAND = 7
+    SEED_TREE_STAND = 8
+    UNEVEN_AGED_STAND = 9
