@@ -218,13 +218,16 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_basal_area_at_county_level(stands: StandList, **operation_params) -> StandList:
-    # scale basal area at the county level to match basal areas by species in NFI data
-    # NOTE: It is supposed that all stands belong to same county and represent the whole county
+def scale_basal_area_at_county_level(stands: StandList) -> StandList:
+    """Scale basal area at the county level to match basal areas by species in NFI data.
+       NOTE: It is supposed that all stands belong to same county and represent the whole county.
 
-    # Basal areas by county, land use categories and species
+    Args:
+        stands (StandList): the list of stands to update
 
-    _ = operation_params
+    Returns:
+        StandList: updated stands
+    """
 
     county = stands[0].region
     if county == 19 and stands[1].municipality_id in (47, 148, 890):
