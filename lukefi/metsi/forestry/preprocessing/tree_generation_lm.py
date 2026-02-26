@@ -161,7 +161,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     tree_data = {
         'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
         'height': robjects.FloatVector([robjects.NA_Real
-                                        if source_trees.tuhon_ilmiasu[i] in ('2', '61', '62', '71', '72') or
+                                        if source_trees.damage_type[i] in ('2', '61', '62', '71', '72') or
                                         source_trees.measured_height[i] == 0
                                         else (source_trees.measured_height[i]) for i in range(len(source_trees))]),
         'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or

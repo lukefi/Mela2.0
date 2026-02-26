@@ -112,10 +112,7 @@ def _append_tree_row(
     tree_number = util.parse_type(row[indices["tree_number"]], int)
 
     species = vmi2internal.convert_species(row[indices["species"]])
-    raw_tc = row[indices["tree_category"]]
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
-
-    tree_category = tc_enum.value if tc_enum else None
+    tree_category = vmi2internal.convert_tree_category(row[indices["tree_category"]])
 
     if vmi_version == VmiIteration.VMI11:
         breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
@@ -150,7 +147,7 @@ def _append_tree_row(
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
     sapling = False
-    tree_type = vmi_util.determine_tree_type(row[indices["tree_type"]])
+    tree_type = vmi2internal.convert_tree_type(row[indices["tree_type"]])
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
@@ -325,18 +322,12 @@ class VMIBuilder(ForestBuilder):
 
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
         result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
-
-        fra_raw = data_row[indices["fra_class"]].strip()
-        result.fra_category = None if fra_raw in ("", ".") else fra_raw
-
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
-        result.land_use_category_detail = data_row[indices["land_category_detail"]]
-        result.site_type_category = vmi2internal.convert_site_type_category(
-            data_row[indices["kasvupaikkatunnus"]].strip())
-
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
-            data_row[indices["paatyyppi"]].strip())
-
+        result.fra_category = vmi2internal.convert_fra_land_use_class(data_row[indices["fra_class"]])
+        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]])
+        result.land_use_category_detail = vmi2internal.convert_land_use_category_detail(
+            result.land_use_category, data_row[indices["land_category_detail"]])
+        result.site_type_category = vmi2internal.convert_site_type_category(data_row[indices["kasvupaikkatunnus"]])
+        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(data_row[indices["paatyyppi"]])
         result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])

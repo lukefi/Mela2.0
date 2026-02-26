@@ -459,8 +459,8 @@ def determine_tree_age_values(chest_height_age_source: str, age_increase_source:
     return None if chest_height_age == 0 else chest_height_age, computed_age
 
 
-def determine_tree_management_category(sourcevalue: str) -> int:
-    return 2 if sourcevalue.lower() in ('b', 'c', 'd', 'e', 'f', 'g') else 1
+def determine_tree_management_category(latvuskerros: str) -> int:
+    return 2 if latvuskerros.lower() in ('b', 'c', 'd', 'e', 'f', 'g') else 1
 
 
 def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10.0) -> Optional[float]:

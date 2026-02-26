@@ -21,12 +21,12 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "stems_per_ha": (np.float64, 0.0),
     "origin": (np.int32, -1),
     "management_category": (np.int32, -1),
-    "tree_category": (np.dtype("U20"), ""),
+    "tree_category": (np.dtype("U1"), ""),
     "storey": (np.int32, -1),
     "sapling": (np.bool_, False),
-    "tree_type": (np.dtype("U20"), ""),
-    "tuhon_ilmiasu": (np.dtype("U20"), ""),
-    "latvuskerros": (np.dtype("U20"), ""),
+    "tree_type": (np.dtype("U1"), ""),
+    "damage_type": (np.dtype("U2"), ""),
+    "latvuskerros": (np.dtype("U1"), ""),
     "basal_area": (np.float64, 0.0),
     "volume": (np.float64, 0.0),
     "stratum": (np.int32, -1)
@@ -380,7 +380,7 @@ class ReferenceTrees(VectorData):
     storey: npt.NDArray[np.int32]
     sapling: npt.NDArray[np.bool_]
     tree_type: npt.NDArray[np.str_]
-    tuhon_ilmiasu: npt.NDArray[np.str_]
+    damage_type: npt.NDArray[np.str_]
     latvuskerros: npt.NDArray[np.str_]
     basal_area: npt.NDArray[np.float64]
     volume: npt.NDArray[np.float64]
@@ -417,7 +417,7 @@ class ReferenceTrees(VectorData):
             Storey(self.storey[i]),
             self.sapling[i],
             self.tree_type[i],
-            self.tuhon_ilmiasu[i],
+            self.damage_type[i],
             self.latvuskerros[i],
             self.basal_area[i],
             self.volume[i]
@@ -462,7 +462,7 @@ class ReferenceTrees(VectorData):
             str(self.sapling[i]),
             str(self.storey[i]),
             str(self.tree_type[i]),
-            str(self.tuhon_ilmiasu[i])
+            str(self.damage_type[i])
         ]
 
 

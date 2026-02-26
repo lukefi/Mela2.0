@@ -8,9 +8,16 @@ from dataclasses import dataclass
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
-                                              TreeSpecies, DrainageCategory)
-from lukefi.metsi.data.formats.util import convert_str_to_type as conv
+from lukefi.metsi.data.enums.internal import (
+    FraLandUseClass,
+    LandUseCategory,
+    LandUseCategoryDetail,
+    OwnerCategory,
+    SiteType,
+    SoilPeatlandCategory,
+    TreeSpecies,
+    DrainageCategory)
+from lukefi.metsi.data.formats.util import convert_land_use_category_detail, convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
@@ -78,9 +85,9 @@ class ForestStand(Finalizable, ComputationalUnit):
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
 
-    fra_category: Optional[str] = None  # VMI fra category
+    fra_category: Optional[FraLandUseClass] = None  # VMI fra category
     # VMI land use category detail
-    land_use_category_detail: Optional[str] = None
+    land_use_category_detail: Optional[LandUseCategoryDetail] = None
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
     sea_effect: Optional[float] = None
@@ -187,8 +194,8 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.forest_management_category = conv(row[24], float)
         self.method_of_last_cutting = conv(row[25], int)
         self.municipality_id = conv(row[26], int)
-        self.fra_category = conv(row[27], str)
-        self.land_use_category_detail = conv(row[28], str)
+        self.fra_category = conv(row[27], FraLandUseClass)
+        self.land_use_category_detail = convert_land_use_category_detail(self.land_use_category, row[28])
         self.auxiliary_stand = row[29] == "True"
         self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
         self.stand_id = conv(row[32], int)
