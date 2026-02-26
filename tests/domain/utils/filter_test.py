@@ -136,7 +136,7 @@ class FilterTest(unittest.TestCase):
         stands = filter_trees_(
             [s1, s2],
             **{
-                "mask": lambda stand: ~np.isin(stand.reference_trees.identifier, ["3", "4"])
+                "predicate": lambda stand: ~np.isin(stand.reference_trees.identifier, ["3", "4"])
             }
         )
         stands = filter_stands_(
