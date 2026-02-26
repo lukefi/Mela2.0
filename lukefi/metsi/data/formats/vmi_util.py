@@ -490,6 +490,17 @@ def determine_stratum_origin_vmi9(source_origin: str) -> str:
     return ""
 
 
+def determine_stratum_origin_vmi10(source_origin: str) -> str:
+
+    if source_origin in ("0", "1", "2"):
+        return "0"  # Natural
+    if source_origin == "3":
+        return "2"  # Planted
+    if source_origin == "4":
+        return "1"  # Seeded
+    return ""
+
+
 def determine_stratum_age_values(biological_age_source: str,
                                  breast_height_age_source: str,
                                  height: Optional[float]) -> tuple[float, float]:
@@ -1035,7 +1046,7 @@ def append_vmi10_strata_from_stand_row(
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
+        synty = determine_stratum_origin_vmi10(stand_row[indices[f"jakso{seg_no}_syntytapa"]])
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
         d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
         h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
