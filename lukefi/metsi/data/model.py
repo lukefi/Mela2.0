@@ -15,6 +15,7 @@ from lukefi.metsi.data.enums.internal import (
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory,
+    TreeManagementCategory,
     TreeSpecies,
     DrainageCategory)
 from lukefi.metsi.data.formats.util import convert_land_use_category_detail, convert_str_to_type as conv
@@ -316,7 +317,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         if len(self.reference_trees) == 0:
             return None
         trees = self.reference_trees
-        non_saved_trees_indices = np.flatnonzero(trees.management_category != 2)
+        non_saved_trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
         sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
         sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
         i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)

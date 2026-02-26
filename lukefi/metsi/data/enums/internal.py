@@ -310,3 +310,8 @@ class DamageType(StrEnum):
     DISCOLORED_NEEDLES_OF_ALL_AGES = 'C3'
     DISCOLORED_LEAVES = 'C4'
     DEFORMED_NEEDLES_OR_LEAVES = 'D'
+
+
+class TreeManagementCategory(MetsiEnum):
+    NO_RESTRICTION = 1
+    RETENTION_TREE = 2

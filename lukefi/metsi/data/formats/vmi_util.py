@@ -5,7 +5,7 @@ from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
@@ -459,8 +459,10 @@ def determine_tree_age_values(chest_height_age_source: str, age_increase_source:
     return None if chest_height_age == 0 else chest_height_age, computed_age
 
 
-def determine_tree_management_category(latvuskerros: str) -> int:
-    return 2 if latvuskerros.lower() in ('b', 'c', 'd', 'e', 'f', 'g') else 1
+def determine_tree_management_category(latvuskerros: str) -> TreeManagementCategory:
+    return TreeManagementCategory.RETENTION_TREE \
+        if latvuskerros.lower() in ('b', 'c', 'd', 'e', 'f', 'g') \
+        else TreeManagementCategory.NO_RESTRICTION
 
 
 def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10.0) -> Optional[float]:
@@ -822,8 +824,8 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
 
     species = vmi2internal.convert_species(row[indices["species"]])
 
-    raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
+    raw_tc = row[indices["tree_category"]].strip()
+    tc_enum = vmi2internal.convert_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
@@ -889,8 +891,8 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
 
     species = vmi2internal.convert_species(row[indices["species"]])
 
-    raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
+    raw_tc = row[indices["tree_category"]].strip()
+    tc_enum = vmi2internal.convert_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
