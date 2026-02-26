@@ -12,7 +12,7 @@ from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
 from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
-from lukefi.metsi.forestry.preprocessing.py_ages import ages
+from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)

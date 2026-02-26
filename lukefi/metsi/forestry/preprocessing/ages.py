@@ -1,13 +1,9 @@
-import ctypes as cts
-
 import numpy as np
 from lukefi.metsi.data.enums.internal import Origin, SoilPeatlandCategory, DrainageCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTree, ReferenceTrees
-
-# DLL_PATH = Path('lukefi', 'metsi', 'forestry', 'fortran', 'lib', 'ikaf.dll')
-DLL_PATH = 'lukefi/metsi/forestry/fortran/lib/ikaf.dll'
-DLL = cts.CDLL(DLL_PATH)
+from lukefi.metsi.forestry.ika import ages as ages_
+from lukefi.metsi.forestry.ika import agesuo as agesuo_
 
 
 def ages(stand: ForestStand,
@@ -46,54 +42,20 @@ def ages(stand: ForestStand,
         drainage_category = 1
 
     # intent(in), value
-    rpl = cts.c_float(species)  # VMI7
-    lpm = cts.c_float(tree.breast_height_diameter or 0.0)
-    gy = cts.c_float(bal)
-    lampos = cts.c_float(stand.degree_days or 0.0)
-    kmy = cts.c_float((stand.geo_location[2] if stand.geo_location is not None else 0.0) or 0.0)
-    boni = cts.c_float(min(stand.site_type_category or 0, 8))  # VMI7 classification (same as internal)
-    keskid = cts.c_float(dgm)
-    rsynty = cts.c_float(origin)
-    rverotar = cts.c_float(stand.tax_class_reduction or 0)  # VMI7 classification (same as in VMI12, VNI13)
-    ojitil = cts.c_float(drainage_category)  # VMI7
-
-    # intent(out)
-    age_ptr = cts.c_float()
-    hajo_ptr = cts.c_float()
+    rpl = species
+    lpm = tree.breast_height_diameter
+    gy = bal
+    lampos = stand.degree_days or 0.0
+    kmy = (stand.geo_location[2] if stand.geo_location is not None else 0.0) or 0.0
+    boni = min(stand.site_type_category or 0, 8)
+    keskid = dgm
+    rsynty = origin
+    rverotar = stand.tax_class_reduction or 0
+    ojitil = drainage_category
 
     if stand.soil_peatland_category == SoilPeatlandCategory.MINERAL_SOIL:
-        f = DLL.ages
-        f.argtypes = [
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.POINTER(cts.c_float),
-            cts.POINTER(cts.c_float)
-        ]
-        f(rpl, lpm, gy, lampos, kmy, boni, keskid, rsynty, rverotar, cts.byref(age_ptr), cts.byref(hajo_ptr))
-
+        age, _ = ages_(rpl, lpm, gy, lampos, kmy, boni, keskid, rsynty, rverotar)
     else:  # peatlands
-        f = DLL.agesuo
-        f.argtypes = [
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.c_float,
-            cts.POINTER(cts.c_float),
-            cts.POINTER(cts.c_float)
-        ]
-        f(rpl, lpm, gy, lampos, kmy, boni, keskid, rsynty, rverotar, ojitil, cts.byref(age_ptr), cts.byref(hajo_ptr))
+        age, _ = agesuo_(rpl, lpm, gy, lampos, kmy, boni, keskid, rsynty, rverotar, ojitil)
 
-    return age_ptr.value, age_ptr.value + added_years
+    return age, age + added_years

@@ -10,7 +10,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing import distributions
 from lukefi.metsi.forestry.preprocessing.naslund import naslund_height, naslund_correction
-from lukefi.metsi.forestry.preprocessing.py_ages import ages
+from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.tree_generation_lm import tree_generation_lm
 
 
