@@ -1,7 +1,8 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
+import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
 from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
@@ -18,23 +19,53 @@ from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 
 
-def filter_stands(stands: StandList, **operation_params) -> StandList:
-    command: str
-    predicate: Callable[[ForestStand], bool]
-    for command, predicate in operation_params.items():
-        stands = filter_stands_(stands, command, predicate)
+def filter_stands(stands: StandList,
+                  *,
+                  select: Optional[Callable[[ForestStand], bool]] = None,
+                  remove: Optional[Callable[[ForestStand], bool]] = None) -> StandList:
+    """Filter list of forest stands.
+
+    Args:
+        stands (StandList): list of stands to filter
+
+    Returns:
+        StandList: the filtered stands
+    """
+    if select is not None:
+        stands = filter_stands_(stands, "select", select)
+    if remove is not None:
+        stands = filter_stands_(stands, "remove", remove)
+
     return stands
 
 
-def filter_trees(stands: StandList, **operation_params) -> StandList:
-    mask = operation_params["mask"]
-    stands = filter_trees_(stands, mask)
+def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    """Filter reference trees for each stand in list based on given predicate.
+
+    Args:
+        stands (StandList): list of forest stands whose trees to filter
+        predicate (Callable[[ForestStand], npt.NDArray[np.bool_]]): function that accepts a single stand and returns a
+            numpy boolen array whose size matches the number of reference trees for the stand
+
+    Returns:
+        StandList: the list of stands with the trees filtered (also modified in-place)
+    """
+    stands = filter_trees_(stands, predicate)
     return stands
 
 
-def filter_strata(stands: StandList, **operation_params) -> StandList:
-    mask = operation_params["mask"]
-    stands = filter_strata_(stands, mask)
+def filter_strata(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    """Filter tree strata for each stand in list based on given predicate. The predicate should be a
+
+    Args:
+        stands (StandList): list of forest stands whose strata to filter
+        predicate (Callable[[ForestStand], npt.NDArray[np.bool_]]): function that accepts a single stand and returns a
+            numpy boolen array whose size matches the number of strata for the stand
+
+    Returns:
+        StandList: the list of stands with the strata filtered (also modified in-place)
+    """
+    stands = filter_strata_(stands, predicate)
     return stands
 
 

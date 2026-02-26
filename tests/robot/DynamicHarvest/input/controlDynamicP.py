@@ -32,15 +32,13 @@ control_structure = {
         ],
         filter_stands: [
             {
-                # "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
                 "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
             }
         ],
         filter_trees: [
             {
-                "mask": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                         (stand.reference_trees.stems_per_ha == 0))),
-                # "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+                "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                              (stand.reference_trees.stems_per_ha == 0))),
             }
         ]
     },

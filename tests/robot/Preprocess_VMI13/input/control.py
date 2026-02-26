@@ -28,8 +28,8 @@ control_structure = {
         ],
         filter_trees: [
             {
-                "mask": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                         (stand.reference_trees.stems_per_ha == 0)))
+                "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                              (stand.reference_trees.stems_per_ha == 0)))
             }
         ]
     },
