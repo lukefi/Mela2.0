@@ -251,8 +251,6 @@ def mela_trees(trees: ReferenceTrees) -> ReferenceTrees:
     if rt.species is not None:
         src = rt.species
 
-        # Keep behavior consistent with current mela_stand: -1 -> 0 before/after mapping.
-        # (RST/classifier-specific convention) :contentReference[oaicite:9]{index=9}
         missing_mask = src == -1
 
         # Clip to LUT domain to avoid index errors if unexpected values appear.
