@@ -348,10 +348,17 @@ def area_ha_to_1000ha(stands: StandList, **operation_params):
 
 
 def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
-    # scale the number of stems of the (measured) trees according to the stand's
-    # proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
-    # by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
-    # are scaled by proportion of the sample plot with 9 m radius.
+    """Scale the number of stems of the (measured) trees according to the stand's
+       proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
+       by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
+       are scaled by proportion of the sample plot with 9 m radius.
+
+    Args:
+        stands (StandList): list of ForestStands
+
+    Returns:
+        StandList: the modified stands
+    """
     _ = operation_params
     for stand in stands:
         trees = stand.reference_trees
