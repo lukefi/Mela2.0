@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 from lukefi.metsi.data.enums.internal import (
+    CuttingMethod,
     DrainageCategory,
     LandUseCategory,
     OwnerCategory,
@@ -38,7 +39,7 @@ class TestSelectUnits(unittest.TestCase):
         self.stand.young_stand_tending_year = 0
         self.stand.cutting_year = 0
         self.stand.forest_management_category = 1
-        self.stand.method_of_last_cutting = 0
+        self.stand.method_of_last_cutting = CuttingMethod.NO_CUTTING
         self.stand.municipality_id = 78
         self.stand.forestry_centre_id = 1
 
