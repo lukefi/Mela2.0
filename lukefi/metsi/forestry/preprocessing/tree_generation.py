@@ -158,7 +158,8 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
 
     return _finalize_trees(result, stratum, params.get('ng_scale_factor', 1))
 
-def _calculate_g_from_trees(stems_per_ha, breast_height_diameter) -> float:
+
+def _calculate_basal_area_from_trees(stems_per_ha, breast_height_diameter) -> float:
     return np.pi * np.sum(stems_per_ha * ((breast_height_diameter / 200) ** 2))
 
 
@@ -174,19 +175,19 @@ def _determine_ages(stand: ForestStand,
 
 
 def adjust_retention_trees(stand: ForestStand,
-                            new_trees: ReferenceTrees,
-                            retention_trees_mask: npt.NDArray[np.bool_]):
+                           new_trees: ReferenceTrees,
+                           retention_trees_mask: npt.NDArray[np.bool_]):
     # Scales the stem counts so that basal area does not increase
     # Basal area may increse if the basal area of the retention trees is greater than
     # basal area of the reference trees
 
     trees = stand.reference_trees
 
-    g_retention = _calculate_g_from_trees(
+    g_retention = _calculate_basal_area_from_trees(
         trees.stems_per_ha[retention_trees_mask],
         trees.breast_height_diameter[retention_trees_mask])
 
-    g_generated_not_retention_trees = _calculate_g_from_trees(
+    g_generated_not_retention_trees = _calculate_basal_area_from_trees(
         new_trees.stems_per_ha[new_trees.management_category != 2],
         new_trees.breast_height_diameter[new_trees.management_category != 2])
 
