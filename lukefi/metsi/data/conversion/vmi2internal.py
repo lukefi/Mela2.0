@@ -4,6 +4,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiOrigin,
     VmiArableLandDetail,
     VmiBuildUpLandDetail,
+    VmiCuttingMethod,
     VmiDamageType,
     VmiDevelopmentClass,
     VmiFraLandUseClass,
@@ -21,6 +22,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiDrainageCategory,
     VmiStratumRank,
     VmiTreeStorey,
+    VmiTimeOfCutting,
     VmiTreeType,
     VmiUnproductiveLandDetail,
 )
@@ -28,6 +30,7 @@ from lukefi.metsi.data.enums.internal import (
     Origin,
     ArableLandDetail,
     BuildUpLandDetail,
+    CuttingMethod,
     DamageType,
     DevelopmentClass,
     FraLandUseClass,
@@ -317,6 +320,17 @@ _DEVELOPMENT_CLASS_MAP = {
 }
 
 
+_CUTTING_METHOD_MAP = {
+    VmiCuttingMethod.NO_CUTTING: CuttingMethod.NO_CUTTING,
+    VmiCuttingMethod.OTHER_THINNING: CuttingMethod.THINNING,
+    VmiCuttingMethod.CUTTING_FOR_ARTIFICIAL_REGENERATION: CuttingMethod.CLEARCUTTING,
+    VmiCuttingMethod.FIRST_THINNING: CuttingMethod.FIRST_THINNING,
+    VmiCuttingMethod.OVER_STOREY_REMOVAL: CuttingMethod.OVER_STORY_REMOVAL,
+    VmiCuttingMethod.CUTTING_FOR_NATURAL_REGENERATION: CuttingMethod.SEED_TREE_CUTTING,
+    VmiCuttingMethod.NURSE_CROP_CUTTING: CuttingMethod.SHELTERWOOD_CUTTING
+}
+
+
 def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
     def inner(code: str):
         if code in ('', ' ', '.'):
@@ -430,3 +444,55 @@ def convert_damage_type(dam_code: str) -> DamageType:
 def convert_development_class(dev_code: str) -> DevelopmentClass:
     vmi_dev = VmiDevelopmentClass(dev_code)
     return _DEVELOPMENT_CLASS_MAP[vmi_dev]
+
+
+def _convert_cutting_method(cut_code: str, cutting_year: Optional[int]) -> CuttingMethod:
+    if cut_code in ('', ' ', '.'):
+        return CuttingMethod.NO_CUTTING
+    if cutting_year is not None and cutting_year > 0:
+        vmi_cut = VmiCuttingMethod(cut_code)
+        return _CUTTING_METHOD_MAP.get(vmi_cut, CuttingMethod.NO_CUTTING)
+    return CuttingMethod.NO_CUTTING
+
+
+def _determine_forest_maintenance_year(cutting_time_src: str, year: int) -> Optional[int]:
+    """Determine the year of last operation from given VMI source classes and the year of data set."""
+    if cutting_time_src in ('', ' ', '.'):
+        return None
+    vmi_cutting_time = VmiTimeOfCutting(cutting_time_src)
+    if vmi_cutting_time in (
+            VmiTimeOfCutting.ONGOING_SEASON,
+            VmiTimeOfCutting.PREVIOUS_SEASON,
+            VmiTimeOfCutting.TWO_SEASONS_AGO,
+            VmiTimeOfCutting.THREE_SEASONS_AGO,
+            VmiTimeOfCutting.FOUR_SEASONS_AGO,
+            VmiTimeOfCutting.FIVE_SEASONS_AGO):
+        return year - int(cutting_time_src)
+    if vmi_cutting_time == VmiTimeOfCutting.SIX_TO_TEN_SEASONS_AGO:
+        return year - 7
+    if vmi_cutting_time == VmiTimeOfCutting.ELEVEN_TO_THIRTY_SEASONS_AGO:
+        return year - 20
+    if vmi_cutting_time == VmiTimeOfCutting.MORE_THAN_THIRTY_YEARS_AGO:
+        return year - 40
+    return None
+
+
+def convert_forest_maintenance_details(cutting_type_class_src: str,
+                                       cutting_time_src: str,
+                                       year: int) -> tuple[Optional[int], Optional[int], Optional[CuttingMethod]]:
+    """
+    Return a triplet of (young_stand_tending_year, cutting_year, cutting_method). VMI source data is exclusive
+    between cutting and tending, i.e. the codes are overloaded into the same year class variable. RST target format
+    allows separate value for both tending and cutting years, but this is impossible in source data.
+    """
+    operation_year = _determine_forest_maintenance_year(cutting_time_src, year)
+    method = _convert_cutting_method(cutting_type_class_src, operation_year)
+
+    if cutting_type_class_src in ('1', '2'):
+        return operation_year, None, None
+    if method == 0:
+        # This case is necessary. Operations over 10 years old are listed as type 0, or no operation in VMI data.
+        # The actual year is still recorded, but we don't seem to want it in RST target. This is based on original
+        # implementation of this application.
+        return None, None, None
+    return None, operation_year, method

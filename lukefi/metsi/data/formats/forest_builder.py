@@ -7,7 +7,7 @@ import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.enums.internal import OwnerCategory, Origin
+from lukefi.metsi.data.enums.internal import CuttingMethod, OwnerCategory, Origin
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
@@ -541,11 +541,10 @@ class VMI10Builder(VMIBuilder):
             result.year,
         )
 
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
-            result.year,
-        )
+            result.year)
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
@@ -708,11 +707,10 @@ class VMI11Builder(VMIBuilder):
             result.year,
         )
 
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
-            result.year,
-        )
+            result.year)
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
@@ -835,7 +833,7 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["viljely"]],
             data_row[indices["viljely_aika"]],
             result.year)
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
             result.year
@@ -980,7 +978,7 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["viljely"]],
             data_row[indices["viljely_aika"]],
             result.year)
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
             result.year)
@@ -1093,24 +1091,25 @@ class XMLBuilder(ForestCentreBuilder):
             (oper_type, oper_year) = oper
             if oper_type in (1,):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 4  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.OVER_STORY_REMOVAL  # RST record 31
             elif oper_type in (2, 13, 20):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 3  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.FIRST_THINNING  # RST record 31
             elif oper_type in (3, 11, 12, 14, 91, 94):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 1  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.THINNING  # RST record 31
             elif oper_type in (4, 15, 100):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 6 if stand.soil_peatland_category in (1, 2, 3) else 5
+                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING if stand.soil_peatland_category in (
+                    1, 2, 3) else CuttingMethod.SEED_TREE_CUTTING
             elif oper_type in (6, 7, 102, 116, 123, 124):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 6  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING  # RST record 31
             elif oper_type in (8, 101, 103, 104, 105, 106, 107, 108, 109,
                                110, 111, 112, 113, 114, 115, 117, 118,
                                119, 120, 121, 122, 125, 126, 127, 128):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 5  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.SEED_TREE_CUTTING  # RST record 31
             elif oper_type in (200, 201, 202, 203, 204, 205, 206, 207, 208,
                                209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
                                221, 222, 223, 224, 225, 226, 227, 228, 300, 301, 302, 303,
@@ -1227,7 +1226,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
             util.parse_type(entry.drainagestate, int, str),
             fc2internal.convert_drainage_category)  # RST record 16
 
-        stand.development_class = None # RST record 24
+        stand.development_class = None  # RST record 24
         stand.forestry_centre_id = None  # RST record 29
         restrictioncode = entry.restrictioncode if entry.restrictiontype == 1 else 1
         stand.forest_management_category = smk_util.parse_forest_management_category(

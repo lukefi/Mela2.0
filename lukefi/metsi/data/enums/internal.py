@@ -327,3 +327,13 @@ class DevelopmentClass(MetsiEnum):
     SHELTER_TREE_STAND = 7
     SEED_TREE_STAND = 8
     UNEVEN_AGED_STAND = 9
+
+
+class CuttingMethod(MetsiEnum):
+    NO_CUTTING = 0
+    THINNING = 1
+    CLEARCUTTING = 2
+    FIRST_THINNING = 3
+    OVER_STORY_REMOVAL = 4
+    SEED_TREE_CUTTING = 5
+    SHELTERWOOD_CUTTING = 6

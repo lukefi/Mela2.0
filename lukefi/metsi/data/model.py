@@ -9,6 +9,7 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (
+    CuttingMethod,
     DevelopmentClass,
     FraLandUseClass,
     LandUseCategory,
@@ -79,7 +80,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     cutting_year: Optional[int] = None
     forestry_centre_id: Optional[int] = None
     forest_management_category: Optional[int | float] = None
-    method_of_last_cutting: Optional[int] = None
+    method_of_last_cutting: Optional[CuttingMethod] = None
     municipality_id: Optional[int] = None
     dominant_storey_age: Optional[float] = None
     dominant_height_dominant_storey: Optional[float] = None
@@ -194,7 +195,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.cutting_year = conv(row[22], int)
         self.forestry_centre_id = conv(row[23], int)
         self.forest_management_category = conv(row[24], float)
-        self.method_of_last_cutting = conv(row[25], int)
+        self.method_of_last_cutting = CuttingMethod(int(row[25])) if row[25] != 'None' else None
         self.municipality_id = conv(row[26], int)
         self.fra_category = conv(row[27], FraLandUseClass)
         self.land_use_category_detail = convert_land_use_category_detail(self.land_use_category, row[28])
