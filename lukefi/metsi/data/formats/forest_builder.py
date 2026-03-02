@@ -65,6 +65,7 @@ def _append_stratum_row(
     basal_area = util.parse_type(row[indices["basal_area"]], float)
     tree_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
+    asema = util.parse_type(row[indices["stratum_rank"]], int)
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
@@ -83,6 +84,7 @@ def _append_stratum_row(
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
+        "asema": asema
     }
 
     # Always append in DTYPES_STRATA order
@@ -140,7 +142,10 @@ def _append_tree_row(
                                                    forestry_centre_id=forestry_centre_id,
                                                    ahvkeilaus=ahvkeilaus)
 
-    origin = 0
+    if vmi_version > 11:
+        origin = vmi2internal.convert_origin(row[indices["origin"]])
+    else:
+        origin = 0
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
@@ -149,6 +154,7 @@ def _append_tree_row(
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
+    latvuskerros = row[indices["latvuskerros"]]
 
     basal_area = None
     volume = None
@@ -172,6 +178,7 @@ def _append_tree_row(
         "tuhon_ilmiasu": tuhon_ilmiasu,
         "basal_area": basal_area,
         "volume": volume,
+        "latvuskerros": latvuskerros
     }
 
     for key in DTYPES_TREE:
@@ -704,7 +711,7 @@ class VMI11Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category(
+            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
                 result.land_use_category,
                 result.forestry_centre_id,
                 data_row,
@@ -840,7 +847,7 @@ class VMI12Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category(
+            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
                 result.land_use_category,
                 result.forestry_centre_id,
                 data_row,
@@ -986,7 +993,6 @@ class VMI13Builder(VMIBuilder):
                 data_row,
                 result.owner_category,
                 indices,
-                False,
             )
         else:
             result.forest_management_category = 1

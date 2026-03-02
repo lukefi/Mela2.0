@@ -2,6 +2,7 @@ from enum import Enum, StrEnum
 
 
 class VmiSpecies(Enum):
+    TREELESS = "0"
     PINE = "1"
     SPRUCE = "2"
     SILVER_BIRCH = "3"
@@ -148,3 +149,11 @@ class VmiTreeCategory(StrEnum):
     E = "E"
     F = "F"
     G = "G"
+
+
+class VmiOrigin(Enum):
+    UNKNOWN = '0'
+    NATURAL_SEED = '1'
+    NATURAL_SPROUT = '2'
+    PLANTED = '3'
+    SEEDED = '4'

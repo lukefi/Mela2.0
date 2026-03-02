@@ -1,12 +1,12 @@
 import unittest
 import numpy as np
 
-from lukefi.metsi.domain.utils.filter import applyfilter
-from lukefi.metsi.domain.pre_ops import preproc_filter
-
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.domain.utils.filter import filter_stands, filter_strata, filter_trees
+from lukefi.metsi.domain.pre_ops import filter_stands as filter_stands_
+from lukefi.metsi.domain.pre_ops import filter_trees as filter_trees_
 
 
 class FilterTest(unittest.TestCase):
@@ -17,18 +17,18 @@ class FilterTest(unittest.TestCase):
         s1100 = ForestStand(identifier="3", degree_days=1100)
 
         self.assertEqual(
-            applyfilter(
+            filter_stands(
                 [s900, s1000, s1100],
-                "select stands",
-                lambda stand: stand.degree_days > 1050,
+                "select",
+                lambda stand: stand.degree_days is not None and stand.degree_days > 1050,
             ),
             [s1100],
         )
         self.assertEqual(
-            applyfilter(
+            filter_stands(
                 [s900, s1000, s1100],
-                "remove stands",
-                lambda stand: stand.degree_days > 1050,
+                "remove",
+                lambda stand: stand.degree_days is not None and stand.degree_days > 1050,
             ),
             [s900, s1000],
         )
@@ -73,28 +73,23 @@ class FilterTest(unittest.TestCase):
         )
 
         # Remove small pine seedlings (<1.3m)
-        applyfilter(
-            [stand1, stand2],
-            "remove trees",
-            lambda trees: (trees.height < 1.3) & (trees.species == int(TreeSpecies.PINE)),
-        )
+        filter_trees([stand1, stand2], lambda stand: ~((stand.reference_trees.height < 1.3)
+                     & (stand.reference_trees.species == int(TreeSpecies.PINE))), )
         self.assertListEqual(stand1.reference_trees.identifier.tolist(), ["t-2", "t-3"])
         self.assertListEqual(stand2.reference_trees.identifier.tolist(), ["t-4", "t-5"])
 
         # Select very tall trees (>20m)
-        applyfilter(
+        filter_trees(
             [stand1, stand2],
-            "select trees",
-            lambda trees: trees.height > 20.0,
+            lambda stand: stand.reference_trees.height > 20.0,
         )
         self.assertListEqual(stand1.reference_trees.identifier.tolist(), ["t-3"])
         self.assertEqual(stand2.reference_trees.size, 0)
 
         # Select spruce strata
-        applyfilter(
+        filter_strata(
             [stand1, stand2],
-            "select strata",
-            lambda strata: strata.species == int(TreeSpecies.SPRUCE),
+            lambda stand: stand.tree_strata.species == int(TreeSpecies.SPRUCE),
         )
         self.assertListEqual(stand1.tree_strata.identifier.tolist(), ["s-2"])
         self.assertEqual(stand2.tree_strata.size, 0)
@@ -105,7 +100,7 @@ class FilterTest(unittest.TestCase):
         s3 = ForestStand(identifier="3")
 
         self.assertEqual(
-            applyfilter(
+            filter_stands(
                 [s1, s2, s3],
                 "select",
                 lambda stand: stand.identifier in ["1", "3"],
@@ -114,24 +109,12 @@ class FilterTest(unittest.TestCase):
         )
 
     def test_reject_invalid_command(self):
-        with self.assertRaisesRegex(ValueError, "filter syntax error"):
-            applyfilter([], "? ? ?", lambda x: 1)  # type: ignore[arg-type]
-        with self.assertRaisesRegex(ValueError, "invalid filter verb"):
-            applyfilter([], "choose", lambda x: 1)  # type: ignore[arg-type]
-        with self.assertRaisesRegex(ValueError, "invalid filter object"):
-            applyfilter([], "select something", lambda x: 1)  # type: ignore[arg-type]
-
-    def test_tree_predicate_must_return_correct_mask_shape(self):
-        stand = ForestStand(identifier="S")
-        stand.reference_trees = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1", "t2"],
-                "species": [int(TreeSpecies.PINE), int(TreeSpecies.SPRUCE)],
-            }
-        )
-
-        with self.assertRaisesRegex(ValueError, r"tree predicate must return mask of shape \(2,\)"):
-            applyfilter([stand], "select trees", lambda trees: np.array([True]))  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            filter_stands([], "? ? ?", lambda x: 1)  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            filter_stands([], "choose", lambda x: 1)  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            filter_stands([], "select something", lambda x: 1)  # type: ignore[arg-type]
 
     def test_preproc_filter(self):
         s1 = ForestStand(identifier="1")
@@ -150,12 +133,17 @@ class FilterTest(unittest.TestCase):
             }
         )
 
-        stands = preproc_filter(
+        stands = filter_trees_(
             [s1, s2],
             **{
-                "remove trees": lambda trees: np.isin(trees.identifier, ["3", "4"]),
+                "predicate": lambda stand: ~np.isin(stand.reference_trees.identifier, ["3", "4"])
+            }
+        )
+        stands = filter_stands_(
+            stands,
+            **{
                 "select": lambda stand: stand.reference_trees.size > 0,
-            },
+            }
         )
 
         self.assertEqual(stands, [s1])
