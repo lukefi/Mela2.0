@@ -7,7 +7,7 @@ import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.enums.internal import OwnerCategory
+from lukefi.metsi.data.enums.internal import OwnerCategory, Origin
 from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
@@ -145,7 +145,7 @@ def _append_tree_row(
     if vmi_version > 11:
         origin = vmi2internal.convert_origin(row[indices["origin"]])
     else:
-        origin = 0
+        origin = Origin.UNKNOWN
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
