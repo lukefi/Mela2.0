@@ -413,7 +413,7 @@ class VMI9Builder(VMIBuilder):
             data_row[indices["ojitus_aika"]],
             result.year
         )
-        result.region = util.parse_int(data_row[indices["county"]])
+        result.region = None
         result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
         lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
         lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
@@ -560,6 +560,7 @@ class VMI10Builder(VMIBuilder):
             data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
+        result.region = None
         return result
 
     def build(self) -> StandList:
@@ -644,7 +645,7 @@ class VMI11Builder(VMIBuilder):
         )
 
         result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
-        result.region = util.parse_int(data_row[indices["county"]])
+        result.region = None
 
         area_ha = vmi_util.determine_vmi11_area_ha(
             vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
