@@ -55,6 +55,7 @@ def _append_stratum_row(
     basal_area = util.parse_type(row[indices["basal_area"]], float)
     tree_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
+    asema = util.parse_type(row[indices["stratum_rank"]], int)
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
@@ -73,6 +74,7 @@ def _append_stratum_row(
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
+        "asema": asema
     }
 
     # Always append in DTYPES_STRATA order
@@ -110,7 +112,7 @@ def _append_tree_row(
 
     stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter, is_vmi12)
 
-    origin = 0
+    origin = vmi2internal.convert_origin(row[indices["origin"]])
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
@@ -119,6 +121,7 @@ def _append_tree_row(
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
     tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
+    latvuskerros = row[indices["latvuskerros"]]
 
     basal_area = None
     volume = None
@@ -142,6 +145,7 @@ def _append_tree_row(
         "tuhon_ilmiasu": tuhon_ilmiasu,
         "basal_area": basal_area,
         "volume": volume,
+        "latvuskerros": latvuskerros
     }
 
     for key in DTYPES_TREE:
@@ -285,7 +289,7 @@ class VMIBuilder(ForestBuilder):
             result.forestry_centre_id,
             data_row,
             result.owner_category,
-            indices, False)
+            indices)
         result.municipality_id = vmi_util.determine_municipality(
             data_row[indices["municipality"]],
             data_row[indices["kitukunta"]])

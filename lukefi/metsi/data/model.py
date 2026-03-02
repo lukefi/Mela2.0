@@ -52,6 +52,7 @@ class TreeStratum():
     sapling_stems_per_ha: Optional[float] = None
     storey: Optional[Storey] = None
     number_of_generated_trees: Optional[int] = None
+    asema: Optional[int] = None
 
     def __hash__(self):
         return id(self)
@@ -209,7 +210,6 @@ class ReferenceTree():
     origin: Optional[int] = None
     # default is the order of appearance (or in sample plot)
     tree_number: Optional[int] = None
-
     management_category: Optional[int] = None
 
     # VMI tree_category for living/dead/otherwise unusable tree
@@ -217,6 +217,7 @@ class ReferenceTree():
     sapling: bool = False
     storey: Optional[Storey] = None
     tree_type: Optional[str] = None
+    latvuskerros: Optional[str] = None
 
     # VMI tuhon ilmiasu
     tuhon_ilmiasu: Optional[str] = None
@@ -412,7 +413,6 @@ class ForestStand(Finalizable, ComputationalUnit):
         return len(self.tree_strata) > 0
 
     def from_row(self, row):
-
         self.year = conv(row[0], int)
         self.start_year = self.year
         self.area = conv(row[1], float) or 0.0
@@ -442,7 +442,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.young_stand_tending_year = conv(row[21], int)
         self.cutting_year = conv(row[22], int)
         self.forestry_centre_id = conv(row[23], int)
-        self.forest_management_category = conv(row[24], int)
+        self.forest_management_category = conv(row[24], float)
         self.method_of_last_cutting = conv(row[25], int)
         self.municipality_id = conv(row[26], int)
         self.fra_category = conv(row[27], str)
