@@ -136,8 +136,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(0, vec0.origin[0])
         self.assertEqual(0, vec0.origin[1])
 
-        self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
-        self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
+        self.assertEqual(0.0, vec0.stems_per_ha[0])
+        self.assertEqual(0.0, vec0.stems_per_ha[1])
 
         self.assertEqual(2.0, vec0.mean_diameter[0])
         self.assertEqual(13.1, vec0.mean_diameter[1])
@@ -264,8 +264,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
         self.assertEqual(-1, vec0.origin[0])
         self.assertEqual(-1, vec0.origin[1])
-        self.assertTrue(np.isnan(vec0.stems_per_ha[0]))
-        self.assertTrue(np.isnan(vec0.stems_per_ha[1]))
+        self.assertEqual(0.0, vec0.stems_per_ha[0])
+        self.assertEqual(0.0, vec0.stems_per_ha[1])
         self.assertEqual(13.18, vec0.mean_diameter[0])
         self.assertEqual(15.67, vec0.mean_diameter[1])
         self.assertEqual(12.14, vec0.mean_height[0])

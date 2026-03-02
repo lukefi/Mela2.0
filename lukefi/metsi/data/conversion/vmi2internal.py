@@ -1,6 +1,7 @@
 from typing import Optional
 
 from lukefi.metsi.data.enums.vmi import (
+    VmiOrigin,
     VmiSiteType,
     VmiOwnerCategory,
     VmiSoilPeatlandCategory,
@@ -9,6 +10,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiDrainageCategory, VmiStratumRank, VmiTreeStorey,
 )
 from lukefi.metsi.data.enums.internal import (
+    Origin,
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,
@@ -49,6 +51,7 @@ _species_map = {
     VmiSpecies.MAPLE: TreeSpecies.MAPLE,
     VmiSpecies.HAZEL: TreeSpecies.HAZEL,
     VmiSpecies.UNKNOWN: TreeSpecies.UNKNOWN,
+    VmiSpecies.TREELESS: TreeSpecies.TREELESS
 }
 
 
@@ -141,6 +144,14 @@ _tree_storey_map = {
     VmiTreeStorey.OVER_SPARE_2: Storey.SPARE
 }
 
+_origin_map = {
+    VmiOrigin.UNKNOWN: Origin.UNKNOWN,
+    VmiOrigin.NATURAL_SEED: Origin.NATURAL_SEED,
+    VmiOrigin.NATURAL_SPROUT: Origin.NATURAL_SPROUT,
+    VmiOrigin.PLANTED: Origin.PLANTED,
+    VmiOrigin.SEEDED: Origin.SEEDED
+}
+
 
 def is_empty_vmi_str(candidate: str) -> bool:
     return candidate in ('', ' ', '.')
@@ -198,3 +209,10 @@ def convert_tree_storey(storey_code: str) -> Optional[Storey]:
         return None
     vmi_storey = VmiTreeStorey(storey_code)
     return _tree_storey_map[vmi_storey]
+
+
+def convert_origin(origin_code: str) -> Optional[Origin]:
+    if is_empty_vmi_str(origin_code):
+        return None
+    vmi_origin = VmiOrigin(origin_code)
+    return _origin_map.get(vmi_origin)

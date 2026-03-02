@@ -1,45 +1,52 @@
 from copy import copy
+from dataclasses import dataclass
 from typing import Any, Optional, overload
 import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.enums.internal import Origin, Storey, TreeSpecies
 
-DTYPES_TREE: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U30"),
-    "tree_number": np.int32,
-    "species": np.int32,
-    "breast_height_diameter": np.float64,
-    "height": np.float64,
-    "measured_height": np.float64,
-    "breast_height_age": np.float64,
-    "biological_age": np.float64,
-    "stems_per_ha": np.float64,
-    "origin": np.int32,
-    "management_category": np.int32,
-    "tree_category": np.str_,
-    "storey": np.int32,
-    "sapling": np.bool_,
-    "tree_type": np.dtype("U20"),
-    "tuhon_ilmiasu": np.dtype("U20"),
-    "basal_area": np.float64,
-    "volume": np.float64
+type DTypeDeclaration = tuple[npt.DTypeLike, Any]
+
+DTYPES_TREE: dict[str, DTypeDeclaration] = {
+    "identifier": (np.dtype("U30"), ""),
+    "tree_number": (np.int32, -1),
+    "species": (np.int32, -1),
+    "breast_height_diameter": (np.float64, 0.0),
+    "height": (np.float64, np.nan),
+    "measured_height": (np.float64, np.nan),
+    "breast_height_age": (np.float64, np.nan),
+    "biological_age": (np.float64, np.nan),
+    "stems_per_ha": (np.float64, 0.0),
+    "origin": (np.int32, -1),
+    "management_category": (np.int32, -1),
+    "tree_category": (np.dtype("U20"), ""),
+    "storey": (np.int32, -1),
+    "sapling": (np.bool_, False),
+    "tree_type": (np.dtype("U20"), ""),
+    "tuhon_ilmiasu": (np.dtype("U20"), ""),
+    "latvuskerros": (np.dtype("U20"), ""),
+    "basal_area": (np.float64, 0.0),
+    "volume": (np.float64, 0.0),
+    "stratum": (np.dtype("U30"), "")
 }
 
-DTYPES_STRATA: dict[str, npt.DTypeLike] = {
-    "identifier": np.dtype("U30"),
-    "species": np.int32,
-    "mean_diameter": np.float64,
-    "mean_height": np.float64,
-    "breast_height_age": np.float64,
-    "biological_age": np.float64,
-    "stems_per_ha": np.float64,
-    "basal_area": np.float64,
-    "origin": np.int32,
-    "tree_number": np.int32,
-    "storey": np.int32,
-    "sapling_stems_per_ha": np.float64,
-    "number_of_generated_trees": np.int32
+DTYPES_STRATA: dict[str, DTypeDeclaration] = {
+    "identifier": (np.dtype("U30"), ""),
+    "species": (np.int32, -1),
+    "mean_diameter": (np.float64, -1),
+    "mean_height": (np.float64, 0.0),
+    "breast_height_age": (np.float64, np.nan),
+    "biological_age": (np.float64, np.nan),
+    "stems_per_ha": (np.float64, 0.0),
+    "basal_area": (np.float64, np.nan),
+    "origin": (np.int32, -1),
+    "tree_number": (np.int32, -1),
+    "storey": (np.int32, -1),
+    "sapling_stems_per_ha": (np.float64, 0.0),
+    "number_of_generated_trees": (np.int32, -1),
+    "asema": (np.int16, -1)
 }
 
 
@@ -47,12 +54,12 @@ class VectorData():
     """
     Base class for generic SoA data.
     """
-    dtypes: dict[str, npt.DTypeLike]
+    dtypes: dict[str, DTypeDeclaration]
     size: int
 
-    def __init__(self, dtypes: dict[str, npt.DTypeLike]):
+    def __init__(self, dtypes: dict[str, DTypeDeclaration], size: int = 0):
         self.dtypes = dtypes
-        self.vectorize({})
+        self.vectorize({"identifier": [""] * size})
 
     def __len__(self):
         return self.size
@@ -88,7 +95,7 @@ class VectorData():
                             [None] *
                             self.size),
                         data_type),
-                    data_type))
+                    data_type[0]))
             if not self.is_contiguous(attribute_name):
                 raise MetsiException("Vectorized data is not contiguous")
         return self
@@ -101,34 +108,12 @@ class VectorData():
         size = len(attr_dict.get('identifier', []))
         setattr(self, 'size', size)
 
-    def defaultify(self, values: list, dtype: npt.DTypeLike) -> list:
+    def defaultify(self, values: list, dtype: DTypeDeclaration) -> list:
         return [self.to_default(v, dtype) for v in values]
 
-    def to_default(self, value: Optional[Any], field_type: npt.DTypeLike) -> Any:
+    def to_default(self, value: Optional[Any], field_type: DTypeDeclaration) -> Any:
         """ Replace None with appropriate defaults based on field type. """
-        int_default = -1
-        str_default = ""
-        float_default = np.nan
-        bool_default = False
-        tuple_default = (np.nan, np.nan, np.nan)
-        object_default = None
-        retval: Any
-
-        if value is None:
-            if np.issubdtype(field_type, np.integer):
-                retval = int_default
-            elif np.issubdtype(field_type, np.floating):
-                retval = float_default
-            elif np.issubdtype(field_type, np.str_):
-                retval = str_default
-            elif np.issubdtype(field_type, np.bool_):
-                retval = bool_default
-            elif np.issubdtype(field_type, np.void):
-                retval = tuple_default
-            else:
-                retval = object_default
-            return retval
-        return value
+        return value if value is not None else field_type[1]
 
     @overload
     def create(self, new: dict[str, Any], index: int | None = None):
@@ -200,7 +185,7 @@ class VectorData():
                     vector.flags.writeable = True
                 vector[index] = value
 
-    def delete(self, index: int | list[int] | npt.NDArray[np.integer]):
+    def delete(self, index: int | list[int] | npt.NDArray[np.int_]):
         """
         Removes data at given index/indices.
 
@@ -239,6 +224,29 @@ class VectorData():
         self.size = 0
 
 
+@dataclass
+class ReferenceTree:
+    identifier: str = ""
+    tree_number: int = -1
+    species: TreeSpecies = TreeSpecies.UNSET
+    breast_height_diameter: float = 0.0
+    height: Optional[float] = None
+    measured_height: Optional[float] = None
+    breast_height_age: Optional[float] = None
+    biological_age: Optional[float] = None
+    stems_per_ha: float = 0.0
+    origin: Origin = Origin.UNSET
+    management_category: int = -1
+    tree_category: str = ""
+    storey: Storey = Storey.UNSET
+    sapling: bool = False
+    tree_type: str = ""
+    tuhon_ilmiasu: str = ""
+    latvuskerros: str = ""
+    basal_area: float = 0.0
+    volume: float = 0.0
+
+
 class ReferenceTrees(VectorData):
     identifier: npt.NDArray[np.str_]
     tree_number: npt.NDArray[np.int32]
@@ -256,12 +264,47 @@ class ReferenceTrees(VectorData):
     sapling: npt.NDArray[np.bool_]
     tree_type: npt.NDArray[np.str_]
     tuhon_ilmiasu: npt.NDArray[np.str_]
-    latvuskerros: npt.NDArray[np.float64]
+    latvuskerros: npt.NDArray[np.str_]
     basal_area: npt.NDArray[np.float64]
     volume: npt.NDArray[np.float64]
+    stratum: npt.NDArray[np.str_]
 
-    def __init__(self):
-        super().__init__(DTYPES_TREE)
+    def __init__(self, size: int = 0):
+        super().__init__(DTYPES_TREE, size)
+
+    def __add__(self, other: "ReferenceTrees") -> "ReferenceTrees":
+        retval = ReferenceTrees()
+        for attribute_name in self.dtypes.keys():
+            setattr(retval, attribute_name, np.concat((getattr(self, attribute_name),
+                                                       getattr(other, attribute_name)), axis=0))
+        retval._recompute_size()
+        return retval
+
+    def __repr__(self) -> str:
+        return f"ReferenceTrees(size={self.size})"
+
+    def get_tree(self, i: int) -> ReferenceTree:
+        return ReferenceTree(
+            self.identifier[i],
+            self.tree_number[i],
+            TreeSpecies(self.species[i]),
+            self.breast_height_diameter[i],
+            self.height[i] if not np.isnan(self.height[i]) else None,
+            self.measured_height[i] if not np.isnan(self.measured_height[i]) else None,
+            self.breast_height_age[i] if not np.isnan(self.breast_height_age[i]) else None,
+            self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
+            self.stems_per_ha[i],
+            Origin(self.origin[i]),
+            self.management_category[i],
+            self.tree_category[i],
+            Storey(self.storey[i]),
+            self.sapling[i],
+            self.tree_type[i],
+            self.tuhon_ilmiasu[i],
+            self.latvuskerros[i],
+            self.basal_area[i],
+            self.volume[i]
+        )
 
     def as_rst_row(self, i: int) -> list:
         return [
@@ -306,6 +349,32 @@ class ReferenceTrees(VectorData):
         ]
 
 
+@dataclass
+class TreeStratum:
+    identifier: str = ""
+    species: TreeSpecies = TreeSpecies.UNSET
+    mean_diameter: float = -1
+    mean_height: float = 0.0
+    breast_height_age: Optional[float] = None
+    biological_age: Optional[float] = None
+    stems_per_ha: float = 0.0
+    basal_area: Optional[float] = None
+    origin: Origin = Origin.UNSET
+    tree_number: int = 0
+    storey: Storey = Storey.UNSET
+    sapling_stems_per_ha: float = 0.0
+    number_of_generated_trees: int = 0
+    asema: int = 0
+
+    def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
+        if self.breast_height_age is not None and self.breast_height_age > 0.0:
+            return self.breast_height_age
+        if self.biological_age is not None and self.biological_age > 0.0:
+            new_breast_height_age = self.biological_age - subtrahend
+            return 0.0 if new_breast_height_age <= 0.0 else new_breast_height_age
+        return 0.0
+
+
 class TreeStrata(VectorData):
     identifier: npt.NDArray[np.str_]
     species: npt.NDArray[np.int32]
@@ -320,9 +389,39 @@ class TreeStrata(VectorData):
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     number_of_generated_trees: npt.NDArray[np.int32]
+    asema: npt.NDArray[np.int16]
 
-    def __init__(self):
-        super().__init__(DTYPES_STRATA)
+    def __init__(self, size: int = 0):
+        super().__init__(DTYPES_STRATA, size)
+
+    def __add__(self, other: "TreeStrata") -> "TreeStrata":
+        retval = TreeStrata()
+        for attribute_name in self.dtypes.keys():
+            setattr(retval, attribute_name, np.concat((getattr(self, attribute_name),
+                                                       getattr(other, attribute_name)), axis=0))
+        retval._recompute_size()
+        return retval
+
+    def __repr__(self) -> str:
+        return f"TreeStrata(size={self.size})"
+
+    def get_stratum(self, i: int) -> TreeStratum:
+        return TreeStratum(
+            self.identifier[i],
+            TreeSpecies(self.species[i]),
+            self.mean_diameter[i],
+            self.mean_height[i],
+            self.breast_height_age[i] if not np.isnan(self.breast_height_age[i]) else None,
+            self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
+            self.stems_per_ha[i],
+            self.basal_area[i] if not np.isnan(self.basal_area[i]) else None,
+            Origin(self.origin[i]),
+            self.tree_number[i],
+            Storey(self.storey[i]),
+            self.sapling_stems_per_ha[i],
+            self.number_of_generated_trees[i],
+            self.asema[i]
+        )
 
     def as_internal_csv_row(self, i) -> list[str]:
         return [

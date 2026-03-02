@@ -1,4 +1,4 @@
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
+from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
 
 
 control_structure = {
@@ -9,20 +9,27 @@ control_structure = {
     "preprocessing_operations": [
         scale_area_weight,
         generate_reference_trees,
-        preproc_filter,
+        filter_stands,
+        filter_trees
     ],
     "preprocessing_params": {
         generate_reference_trees: [
             {
                 "n_trees": 10,
                 "method": "weibull",
-                "debug": False
+                "debug": False,
+                "delete_strata": True
             }
         ],
-        preproc_filter: [
+        filter_stands: [
             {
-                "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
-                "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+                "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+            }
+        ],
+        filter_trees: [
+            {
+                "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                              (stand.reference_trees.stems_per_ha == 0)))
             }
         ]
     },
