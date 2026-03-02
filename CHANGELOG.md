@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-03-02
+
+### Changed
+
+- New model for reference tree generation, currently only for NFI13 source data
+- Management category determination rules changed
+- Tree-to-strata matching logic changed, now based on tree crown class and stratum position in tree storey class
+
+### Added
+
+- New preprocessing operations:
+    - scale_trees_by_area_weight_factors
+    - scale_basal_area_at_county_level
+    - update_strata_to_match_trees
+    - area_ha_to_1000ha
+
 ## [0.4.17] - 2026-02-24
 
 ### Fixed
