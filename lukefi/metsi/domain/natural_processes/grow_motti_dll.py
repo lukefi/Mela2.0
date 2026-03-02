@@ -25,7 +25,8 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     - Raise if values look like lat/long.
     """
     if not y1 or not x1:
-        return (0.0, 0.0)
+        raise ValueError("Stand is missing coordinates required by Motti")
+        # return (0.0, 0.0)
     abs_y, abs_x = abs(y1), abs(x1)
 
     # Clear lat/long guard
@@ -209,28 +210,23 @@ class MottiDLLPredictor:
         v = getattr(self.stand, "tax_class_reduction", None)
         return int(v) if v is not None else 0
 
-    # ---- evolve ----
+    def ensure_state(self, step: int, sim_year: int):
+        """Initialize and attach persistent MottiState to stand if missing."""
+        if getattr(self.stand, "motti_state", None) is not None:
+            return self.stand.motti_state
 
-    def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
         rt = self.stand.reference_trees
-        if not rt:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
-        n = rt.size
-        if n == 0:
-            # nothing to do; fake zeros in the same shape the caller expects
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
+        if not rt or rt.size == 0:
+            return None
 
+        n = rt.size
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
         spedom = _spedom(self.stand.reference_trees)
 
         # site (DLL converts site index if asked)
         y_km, x_km = auto_euref_km(self.get_y, self.get_x)
-        site = self.dll.new_site(
+        yy = self.dll.new_site(
             Y=y_km,
             X=x_km,
             Z=self.get_z,
@@ -250,11 +246,8 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        # Build trees buffer from SoA
-        # ids are stable 1..n in current order
+        # Build trees buffer from SoA (same as previous evolve)
         ids = np.arange(1, n + 1, dtype=int)
-
-        # Prepare vectors (with NaN -> 0 for DLL)
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         h = np.nan_to_num(rt.height, nan=0.0)
@@ -262,11 +255,8 @@ class MottiDLLPredictor:
         age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
         cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
         origin = np.nan_to_num(getattr(rt, "origin", np.zeros(n, dtype=float)), nan=0.0)
-
-        # Species conversion (raises on invalid)
         spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
 
-        # Build list[dict] for the DLL (fields used by wrapper)
         trees_py = [
             {
                 "id": int(i),
@@ -291,9 +281,65 @@ class MottiDLLPredictor:
                 origin.astype(int).tolist(),
             )
         ]
+        yp, ntrees = self.dll.new_trees(trees_py)
 
-        yp, _n = self.dll.new_trees(trees_py)
-        return self.dll.grow(site, yp, _n, step=step, ctrl=None, skip_init=True)
+        buffers = self.dll.alloc_state_buffers(ctrl=None)
+
+        # Attach to stand
+        try:
+            from lukefi.metsi.data.model import MottiState  # type: ignore
+        except Exception:
+            # fallback if type isn't imported
+            MottiState = None  # type: ignore
+
+        if MottiState is not None:
+            self.stand.motti_state = MottiState(
+                dll=self.dll,
+                yy=yy,
+                yp=yp,
+                ntrees=int(ntrees),
+                buffers=buffers,
+                signature=tuple(ids.tolist()),
+            )
+        else:
+            # minimal attachment
+            self.stand.motti_state = type("MottiState", (), {})()
+            self.stand.motti_state.dll = self.dll
+            self.stand.motti_state.yy = yy
+            self.stand.motti_state.yp = yp
+            self.stand.motti_state.ntrees = int(ntrees)
+            self.stand.motti_state.buffers = buffers
+            self.stand.motti_state.signature = tuple(ids.tolist())
+
+        return self.stand.motti_state
+
+    def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
+        state = self.ensure_state(step=step, sim_year=sim_year)
+        if state is None:
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
+
+        # keep year/step current
+        try:
+            state.yy.year = sim_year
+            state.yy.step = step
+        except Exception:
+            pass
+
+        growth = self.dll.grow_with_state(
+            state.yy,
+            state.yp,
+            int(state.ntrees),
+            state.buffers,
+            step=step,
+        )
+        # DLL may update active tree count
+        try:
+            state.ntrees = len(growth.tree_ids)
+        except Exception:
+            pass
+        return growth
 
 
 # -------- DLL path resolver (same behavior as AoS helper) --------

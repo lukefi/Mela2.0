@@ -8,6 +8,18 @@ from cffi import FFI
 
 
 @dataclass
+class MottiStateBuffers:
+    """Persistent Motti model state buffers that must be carried across Growth calls."""
+    saplings: Any        # "Motti4Saplings *"   (ut)
+    kor_state: Any       # "Motti4KorArray *"   (kor)
+    vcr_state: Any       # "Motti4VcrArray *"   (vcr)
+    apv_state: Any       # "Motti4KorArray *"   (apv)
+    fert_array: Any      # "Motti4FerArray *"   (fer)
+    numfer: Any          # "int *"              (numfer)
+    ctrl: Any            # "Motti4Ctrl *"       (o)
+
+
+@dataclass
 class GrowthDeltas:
     tree_ids: List[int]   # IDs of trees that survived in the DLL after growth
     trees_id: List[float]   # diameter increments (xd)
@@ -223,7 +235,9 @@ class Motti4DLL:
         # 1) SiteInit with only Y,X,Z
 
         rv = ffi.new("int *")
+        print(self.data_dir)
         with _maybe_chdir(self.data_dir):
+
             lib.Motti4SiteInit(yy,
                                ffi.new("float *", float(Y)),
                                ffi.new("float *", float(X)),
@@ -359,6 +373,162 @@ class Motti4DLL:
                 acc_ih[tid] = acc_ih.get(tid, 0.0) + float(yp[0][i].xh)
                 nf = float(yp[0][i].f)
                 pf = prev_f.get(tid, nf)  # if first time we see tid, Δf=0
+                acc_if[tid] = acc_if.get(tid, 0.0) + (nf - pf)
+                prev_f[tid] = nf
+
+            done = int(step_p[0])
+            if done <= 0:
+                break
+            remaining -= done
+
+        ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
+        out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
+        out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
+        out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
+        out_age = [float(yp[0][i].age) for i in range(ntrees_p[0])]
+        out_age13 = [float(yp[0][i].age13) for i in range(ntrees_p[0])]
+
+        return GrowthDeltas(
+            tree_ids=ids_now,
+            trees_id=out_id,
+            trees_ih=out_ih,
+            trees_if=out_if,
+            trees_age=out_age,
+            trees_age13=out_age13,
+        )
+
+    # ---------- persistent state buffers ----------
+
+    def alloc_state_buffers(self, ctrl: Optional[dict] = None) -> MottiStateBuffers:
+        """Allocate persistent buffers (saplings/kor/vcr/apv/ctrl) that must be reused across Growth calls."""
+        ffi = self.ffi
+        saplings = ffi.new("Motti4Saplings *")
+        kor_state = ffi.new("Motti4KorArray *")
+        vcr_state = ffi.new("Motti4VcrArray *")
+        apv_state = ffi.new("Motti4KorArray *")
+        fert_array = ffi.new("Motti4FerArray *")
+        numfer = ffi.new("int *", 0)
+        motti_control = cast(Any, ffi.new("Motti4Ctrl *"))
+        # defaults like the C wrapper
+        motti_control.death_tree = 1
+        if ctrl:
+            if "death_tree" in ctrl:
+                motti_control.death_tree = int(bool(ctrl["death_tree"]))
+            if "death_forest" in ctrl:
+                motti_control.death_forest = int(bool(ctrl["death_forest"]))
+            if "calibrate" in ctrl:
+                motti_control.calibrate = int(bool(ctrl["calibrate"]))
+        return MottiStateBuffers(
+            saplings=saplings,
+            kor_state=kor_state,
+            vcr_state=vcr_state,
+            apv_state=apv_state,
+            fert_array=fert_array,
+            numfer=numfer,
+            ctrl=motti_control,
+        )
+
+    def clone_state_buffers(self, buffers: MottiStateBuffers) -> MottiStateBuffers:
+        """Deep-copy persistent buffers for safe branching/copying."""
+        ffi = self.ffi
+        out = self.alloc_state_buffers(ctrl={
+            "death_tree": int(bool(buffers.ctrl.death_tree)),
+            "death_forest": int(bool(getattr(buffers.ctrl, "death_forest", 0))),
+            "calibrate": int(bool(getattr(buffers.ctrl, "calibrate", 0))),
+        })
+        ffi.memmove(out.saplings, buffers.saplings, ffi.sizeof("Motti4Saplings"))
+        ffi.memmove(out.kor_state, buffers.kor_state, ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(out.vcr_state, buffers.vcr_state, ffi.sizeof("Motti4VcrArray"))
+        ffi.memmove(out.apv_state, buffers.apv_state, ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(out.fert_array, buffers.fert_array, ffi.sizeof("Motti4FerArray"))
+        out.numfer[0] = int(buffers.numfer[0])
+        return out
+
+    def clone_site(self, yy: Any) -> Any:
+        """Deep-copy a site struct (yy) for safe branching/copying."""
+        ffi = self.ffi
+        yy2 = ffi.new("Motti4Site *")
+        ffi.memmove(yy2, yy, ffi.sizeof("Motti4Site"))
+        return yy2
+
+    def clone_trees(self, yp: Any, numtrees: int) -> Any:
+        """Deep-copy a trees array (yp) for safe branching/copying."""
+        ffi = self.ffi
+        yp2 = ffi.new("Motti4Trees[]", int(numtrees))
+        ffi.memmove(yp2, yp, ffi.sizeof("Motti4Trees") * int(numtrees))
+        return yp2
+
+    def grow_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        step: int = 5,
+    ) -> GrowthDeltas:
+        """
+        Growth using persistent buffers (saplings/kor/vcr/apv/ctrl) that are carried across calls.
+        Always calls UpdateAfterImport before Growth.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        rv = ffi.new("int *")
+
+        # UpdateAfterImport (always)
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4UpdateAfterImport(
+                yy, yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                rv
+            )
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
+
+        acc_id: Dict[int, float] = {}
+        acc_ih: Dict[int, float] = {}
+        acc_if: Dict[int, float] = {}
+        prev_f: Dict[int, float] = {int(yp[0][i].id): float(yp[0][i].f) for i in range(ntrees_p[0])}
+
+        remaining = int(step)
+        while remaining > 0:
+            # reset like C wrapper
+            try:
+                yy.param_290 = 0.0
+            except AttributeError:
+                pass
+            for i in range(ntrees_p[0]):
+                yp[0][i].crerror = 0.0
+
+            step_p = ffi.new("int *", remaining)
+            rv[0] = 0
+            with _maybe_chdir(self.data_dir):
+                lib.Motti4Growth(
+                    yy, yp,
+                    buffers.saplings,
+                    buffers.kor_state,
+                    buffers.vcr_state,
+                    buffers.apv_state,
+                    ntrees_p,
+                    buffers.fert_array,
+                    buffers.numfer,
+                    buffers.ctrl,
+                    step_p,
+                    rv
+                )
+            if rv[0] != 0:
+                raise RuntimeError(f"Motti4Growth failed (rv={rv[0]})")
+
+            for i in range(ntrees_p[0]):
+                tid = int(yp[0][i].id)
+                acc_id[tid] = acc_id.get(tid, 0.0) + float(yp[0][i].xd)
+                acc_ih[tid] = acc_ih.get(tid, 0.0) + float(yp[0][i].xh)
+                nf = float(yp[0][i].f)
+                pf = prev_f.get(tid, nf)
                 acc_if[tid] = acc_if.get(tid, 0.0) + (nf - pf)
                 prev_f[tid] = nf
 

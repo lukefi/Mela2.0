@@ -1,7 +1,7 @@
 from copy import copy
 import dataclasses
 import sqlite3
-from typing import Optional, override
+from typing import Optional, override, Any, TYPE_CHECKING
 from dataclasses import dataclass
 
 import numpy as np
@@ -352,6 +352,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
 
+    motti_state: Optional["MottiState"] = None
+
     def __eq__(self, other):
         return id(self) == id(other)
 
@@ -630,6 +632,33 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         return (numerator_1 + numerator_2) / denominator
 
+    def __copy__(self):
+        """Make branch-safe copies: clone Motti CFFI buffers so branches don't share state."""
+        new_obj = self.__class__(**{k: copy(v) for k, v in self.__dict__.items() if k != "motti_state"})
+        # clone persistent motti buffers if present
+        try:
+            if getattr(self, "motti_state", None) is not None:
+                ms = self.motti_state
+                dll = ms.dll
+                yy2 = dll.clone_site(ms.yy)
+                yp2 = dll.clone_trees(ms.yp, ms.ntrees)
+                buffers2 = dll.clone_state_buffers(ms.buffers)
+                new_obj.motti_state = MottiState(
+                    dll=dll,
+                    yy=yy2,
+                    yp=yp2,
+                    ntrees=int(ms.ntrees),
+                    buffers=buffers2,
+                    signature=ms.signature,
+                )
+        except Exception:
+            # safer to drop state than to accidentally share pointers across branches
+            new_obj.motti_state = None
+        return new_obj
+
+    def __deepcopy__(self, memo):
+        return self.__copy__()
+
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
     result = ["stand", stand.identifier]
@@ -719,3 +748,14 @@ def stand_as_internal_row(stand: ForestStand):
         stand.main_tree_species_dominant_storey,
         stand.region
     ]
+
+
+@dataclass(eq=False, repr=False)
+class MottiState:
+    # Motti4DLL instance (lightweight; uses class-level cache)
+    dll: Any
+    yy: Any                  # "Motti4Site *"
+    yp: Any                  # "Motti4Trees *"
+    ntrees: int              # current number of “active” trees in yp
+    buffers: Any           # MottiStateBuffers
+    signature: tuple[int, ...]  # e.g. tree_number list at init time, or hash

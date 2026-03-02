@@ -6,6 +6,7 @@ from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_nod
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.domain.natural_processes.motti_bootstrap import ensure_motti_initialized
 
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
@@ -19,6 +20,9 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     for unit in units:
         payload = SimulationPayload(unit)
         payload.computational_unit.update_aggregates()
+
+        ensure_motti_initialized(payload.computational_unit, control)
+
         if db is not None:
             # Write initial state to database
             output_node_to_db(db, payload, [], {"initial"})
