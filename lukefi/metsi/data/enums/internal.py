@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 
 class MetsiEnum(IntEnum):
@@ -174,6 +174,19 @@ class Storey(MetsiEnum):
     SPARE = 4
     REMOTE = 5
     REMOVAL = 6
+
+
+class TreeCategory(StrEnum):
+    C0 = "0"
+    C1 = "1"
+    C3 = "3"
+    C7 = "7"
+    A = "A"
+    B = "B"
+    D = "D"
+    E = "E"
+    F = "F"
+    G = "G"
 
 
 class Origin(MetsiEnum):

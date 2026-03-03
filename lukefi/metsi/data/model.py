@@ -352,6 +352,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_diameter: Optional[float] = None
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
+    ahvkeilaus: Optional[str] = None  # only used in VMI11
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -562,7 +563,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 """--sql
                 INSERT INTO strata
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node,
@@ -652,8 +653,9 @@ def stand_as_rst_row(stand: ForestStand):
         stand.degree_days,
         stand.owner_category.value if stand.owner_category else None,
         stand.land_use_category.value if stand.land_use_category else None,
-        stand.soil_peatland_category,
-        stand.site_type_category,
+        stand.soil_peatland_category.value if stand.soil_peatland_category else None,
+        stand.site_type_category.value if stand.site_type_category else None,
+
         stand.tax_class_reduction,
         stand.tax_class,
         stand.drainage_category,

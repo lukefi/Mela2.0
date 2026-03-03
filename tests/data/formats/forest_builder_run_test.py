@@ -1,6 +1,9 @@
 import unittest
-from lukefi.metsi.data.formats.forest_builder import VMI12Builder, VMI13Builder, XMLBuilder, GeoPackageBuilder
 from pathlib import Path
+from lukefi.metsi.data.formats.forest_builder import (
+    VMI9Builder, VMI10Builder, VMI11Builder, VMI12Builder,
+    VMI13Builder, XMLBuilder, GeoPackageBuilder
+)
 from lukefi.metsi.app.metsi_enum import StrataOrigin
 
 
@@ -12,6 +15,7 @@ def vmi_file_reader(file: Path) -> list[str]:
 def xml_file_reader(file: Path) -> str:
     with open(file, 'r', encoding='utf-8') as input_file:
         return input_file.read()
+
 
 class TestForestBuilderRun(unittest.TestCase):
 
@@ -25,22 +29,50 @@ class TestForestBuilderRun(unittest.TestCase):
         result = len(list_of_stands)
         self.assertEqual(result, assertion[1])
 
-
     def test_run_vmi12_forest_builder_build(self):
         assertion = ('VMI12_source_mini.dat', 4)
         reference_file = Path('tests', 'data', 'resources', assertion[0])
         list_of_stands = VMI12Builder(
             builder_flags={"measured_trees": False, "strata": True},
-             declared_conversions={},
-             data_rows=vmi_file_reader(reference_file)).build()
+            declared_conversions={},
+            data_rows=vmi_file_reader(reference_file)).build()
         result = len(list_of_stands)
         self.assertEqual(result, assertion[1])
-
 
     def test_run_vmi13_forest_builder_build(self):
         assertion = ('VMI13_source_mini.dat', 4)
         reference_file = Path('tests', 'data', 'resources', assertion[0])
         list_of_stands = VMI13Builder(
+            builder_flags={"measured_trees": False, "strata": True},
+            declared_conversions={},
+            data_rows=vmi_file_reader(reference_file)).build()
+        result = len(list_of_stands)
+        self.assertEqual(result, assertion[1])
+
+    def test_run_vmi11_forest_builder_build(self):
+        assertion = ('VMI11_mini.dat', 3)
+        reference_file = Path('tests', 'data', 'resources', assertion[0])
+        list_of_stands = VMI11Builder(
+            builder_flags={"measured_trees": False, "strata": True},
+            declared_conversions={},
+            data_rows=vmi_file_reader(reference_file)).build()
+        result = len(list_of_stands)
+        self.assertEqual(result, assertion[1])
+
+    def test_run_vmi10_forest_builder_build(self):
+        assertion = ('VMI10_mini.dat', 3)
+        reference_file = Path('tests', 'data', 'resources', assertion[0])
+        list_of_stands = VMI10Builder(
+            builder_flags={"measured_trees": False, "strata": True},
+            declared_conversions={},
+            data_rows=vmi_file_reader(reference_file)).build()
+        result = len(list_of_stands)
+        self.assertEqual(result, assertion[1])
+
+    def test_run_vmi9_forest_builder_build(self):
+        assertion = ('VMI9_mini.dat', 3)
+        reference_file = Path('tests', 'data', 'resources', assertion[0])
+        list_of_stands = VMI9Builder(
             builder_flags={"measured_trees": False, "strata": True},
             declared_conversions={},
             data_rows=vmi_file_reader(reference_file)).build()
