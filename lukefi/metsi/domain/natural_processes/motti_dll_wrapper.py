@@ -232,10 +232,8 @@ class Motti4DLL:
         ffi, lib = self.ffi, self.lib
         yy = cast(Any, ffi.new("Motti4Site *"))
 
-        # 1) SiteInit with only Y,X,Z
-
+        # SiteInit with only Y,X,Z
         rv = ffi.new("int *")
-        print(self.data_dir)
         with _maybe_chdir(self.data_dir):
 
             lib.Motti4SiteInit(yy,
@@ -246,7 +244,6 @@ class Motti4DLL:
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SiteInit failed (rv={rv[0]})")
 
-        # 2) Fill the rest (do NOT set yy.dd ourselves)
         yy.Y = float(Y)
         yy.X = float(X)
         yy.Z = float(Z)
@@ -260,7 +257,6 @@ class Motti4DLL:
         if year is not None:
             yy.year = float(year)
         yy.step = float(step)
-        # sensible defaults seen in the C wrapper
         yy.nstorey = 1.0
         yy.gstorey = 1.0
 
@@ -451,11 +447,11 @@ class Motti4DLL:
         ffi.memmove(yy2, yy, ffi.sizeof("Motti4Site"))
         return yy2
 
-    def clone_trees(self, yp: Any, numtrees: int) -> Any:
-        """Deep-copy a trees array (yp) for safe branching/copying."""
+    def clone_trees(self, yp: Any) -> Any:
+        """Deep-copy a full Motti4Trees buffer (fixed 1000-tree array)."""
         ffi = self.ffi
-        yp2 = ffi.new("Motti4Trees[]", int(numtrees))
-        ffi.memmove(yp2, yp, ffi.sizeof("Motti4Trees") * int(numtrees))
+        yp2 = ffi.new("Motti4Trees *")
+        ffi.memmove(yp2, yp, ffi.sizeof("Motti4Trees"))
         return yp2
 
     def grow_with_state(

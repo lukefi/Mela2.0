@@ -642,7 +642,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 ms = self.motti_state
                 dll = ms.dll
                 yy2 = dll.clone_site(ms.yy)
-                yp2 = dll.clone_trees(ms.yp, ms.ntrees)
+                yp2 = dll.clone_trees(ms.yp)
                 buffers2 = dll.clone_state_buffers(ms.buffers)
                 new_obj.motti_state = MottiState(
                     dll=dll,
