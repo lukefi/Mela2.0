@@ -5,7 +5,7 @@ from lukefi.metsi.domain.pre_ops import (
     filter_trees,
     generate_reference_trees,
     scale_area_weight)
-from lukefi.metsi.domain.events import GrowMotti
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
