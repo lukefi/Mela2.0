@@ -8,7 +8,6 @@ from geopandas import GeoSeries
 from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.conversion.internal2mela import map_vmi_tree_category
 
 from lukefi.metsi.data.formats.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS, VMI11_COUNTY_AREAS
 from lukefi.metsi.app.utils import MetsiException
@@ -870,7 +869,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
     species = vmi2internal.convert_species(row[indices["species"]])
 
     raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = map_vmi_tree_category(raw_tc)
+    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
@@ -937,7 +936,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     species = vmi2internal.convert_species(row[indices["species"]])
 
     raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = map_vmi_tree_category(raw_tc)
+    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])

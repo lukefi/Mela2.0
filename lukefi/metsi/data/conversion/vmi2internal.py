@@ -7,6 +7,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiSoilPeatlandCategory,
     VmiSpecies,
     VmiLandUseCategory,
+    VmiTreeCategory,
     VmiDrainageCategory, VmiStratumRank, VmiTreeStorey,
 )
 from lukefi.metsi.data.enums.internal import (
@@ -17,6 +18,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     LandUseCategory,
     DrainageCategory, Storey,
+    TreeCategory
 )
 
 _species_map = {
@@ -151,6 +153,45 @@ _origin_map = {
     VmiOrigin.PLANTED: Origin.PLANTED,
     VmiOrigin.SEEDED: Origin.SEEDED
 }
+
+
+TREE_CATEGORY_MAP: dict[VmiTreeCategory, TreeCategory] = {
+    VmiTreeCategory.C0: TreeCategory.C0,
+    VmiTreeCategory.C1: TreeCategory.C1,
+    VmiTreeCategory.C2: TreeCategory.C3,
+    VmiTreeCategory.C3: TreeCategory.C3,
+    VmiTreeCategory.C4: TreeCategory.C3,
+    VmiTreeCategory.C5: TreeCategory.C7,
+    VmiTreeCategory.C6: TreeCategory.C7,
+    VmiTreeCategory.C7: TreeCategory.C7,
+    VmiTreeCategory.C8: TreeCategory.C7,
+    VmiTreeCategory.C9: TreeCategory.C3,
+
+    VmiTreeCategory.A: TreeCategory.A,
+    VmiTreeCategory.B: TreeCategory.B,
+    VmiTreeCategory.C: TreeCategory.A,
+    VmiTreeCategory.D: TreeCategory.D,
+    VmiTreeCategory.E: TreeCategory.E,
+    VmiTreeCategory.F: TreeCategory.F,
+    VmiTreeCategory.G: TreeCategory.G,
+}
+
+
+def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
+    if raw is None:
+        return None
+
+    raw = raw.strip()
+    if not raw or raw == ".":
+        return None
+
+    try:
+        vmi_enum = VmiTreeCategory(raw.upper())
+
+    except ValueError as exc:
+        raise ValueError(f'Unknown VMI tree_category: {raw}') from exc
+
+    return TREE_CATEGORY_MAP.get(vmi_enum)
 
 
 def is_empty_vmi_str(candidate: str) -> bool:

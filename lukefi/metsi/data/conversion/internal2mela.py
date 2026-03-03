@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Optional
+
 import numpy as np
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.model import ForestStand
@@ -17,11 +17,9 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     OwnerCategory,
     LandUseCategory,
-    DrainageCategory,
-    TreeCategory
+    DrainageCategory
 
 )
-from lukefi.metsi.data.enums.vmi import VmiTreeCategory
 from lukefi.metsi.data.conversion.util import apply_mappers
 from lukefi.metsi.app.utils import MetsiException
 
@@ -126,44 +124,6 @@ _rich_mire_types = [
     SiteType.RICH_SITE,
     SiteType.DAMP_SITE
 ]
-
-TREE_CATEGORY_MAP: dict[VmiTreeCategory, TreeCategory] = {
-    VmiTreeCategory.C0: TreeCategory.C0,
-    VmiTreeCategory.C1: TreeCategory.C1,
-    VmiTreeCategory.C2: TreeCategory.C3,
-    VmiTreeCategory.C3: TreeCategory.C3,
-    VmiTreeCategory.C4: TreeCategory.C3,
-    VmiTreeCategory.C5: TreeCategory.C7,
-    VmiTreeCategory.C6: TreeCategory.C7,
-    VmiTreeCategory.C7: TreeCategory.C7,
-    VmiTreeCategory.C8: TreeCategory.C7,
-    VmiTreeCategory.C9: TreeCategory.C3,
-
-    VmiTreeCategory.A: TreeCategory.A,
-    VmiTreeCategory.B: TreeCategory.B,
-    VmiTreeCategory.C: TreeCategory.A,
-    VmiTreeCategory.D: TreeCategory.D,
-    VmiTreeCategory.E: TreeCategory.E,
-    VmiTreeCategory.F: TreeCategory.F,
-    VmiTreeCategory.G: TreeCategory.G,
-}
-
-
-def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
-    if raw is None:
-        return None
-
-    raw = raw.strip()
-    if not raw or raw == ".":
-        return None
-
-    try:
-        vmi_enum = VmiTreeCategory(raw.upper())
-
-    except ValueError as exc:
-        raise ValueError(f'Unknown VMI tree_category: {raw}') from exc
-
-    return TREE_CATEGORY_MAP.get(vmi_enum)
 
 
 def site_type_mapper(target):
