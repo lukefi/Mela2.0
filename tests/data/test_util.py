@@ -3,7 +3,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 from lukefi.metsi.app import file_io
-from lukefi.metsi.data.formats.forest_builder import VMIBuilder, VMI13Builder, VMI12Builder
+from lukefi.metsi.data.formats.forest_builder import (
+    VMIBuilder, VMI13Builder, VMI12Builder,
+    VMI11Builder, VMI10Builder, VMI9Builder
+)
 
 
 class ConverterTestSuite(unittest.TestCase):
@@ -15,6 +18,7 @@ class ConverterTestSuite(unittest.TestCase):
     def assertions_should_raise_TypeError(self, assertions: list[tuple], fn: Callable):
         for case in assertions:
             self.assertRaises(TypeError, fn, *case[0])
+
 
 class ForestBuilderTestBench(unittest.TestCase):
 
@@ -29,8 +33,7 @@ class ForestBuilderTestBench(unittest.TestCase):
             'K0999999 98 13001 1207217 2  01 15521741  020081711 00                                                              7725 3999  342                                                                                                                                           259959  134571   11515 39185 101864  4303 11769  8489 24696 4196',
             'K0999999 97 11    66521333246174    1010   1117021         060059100170409   2   3  1891251S7260918 101 1 20    0   0 0   0   00  0 00   0  0   0   011004323   6652133.28 T  97955.34 66521333246174 S1 3 3         00M00M00M      00      1800 04050 00705 1000012940A    0 0   0 12  00 222 1      3   9383',
             'K0999999 97 12 01  1 31 1800 5000   04 050  00705F00 1 714B2 0',
-            'K0999999 96 21    66521333246174    0100   1041721         000059100417      4  55         S0280818 101 3 4     0   0 0   0    132       0  0        1          6652133.05 T 117155.45 66521333246174    5 1                                                          0A                              3  19 21'
-        ]
+            'K0999999 96 21    66521333246174    0100   1041721         000059100417      4  55         S0280818 101 3 4     0   0 0   0    132       0  0        1          6652133.05 T 117155.45 66521333246174    5 1                                                          0A                              3  19 21']
 
         vmi12_builder: VMIBuilder = VMI12Builder(vmi_builder_flags, {}, vmi12_data)
         return vmi12_builder
@@ -43,12 +46,45 @@ class ForestBuilderTestBench(unittest.TestCase):
         return vmi13_builder
 
     @classmethod
-    def vmi12_built(cls, vmi_builder_flags: dict =default_builder_flags):
+    def vmi11_builder(cls, vmi_builder_flags: dict = default_builder_flags) -> VMI11Builder:
+        vmi11_file_path = Path('tests', 'data', 'resources', 'VMI11_mini.dat')
+        vmi11_data = file_io.vmi_file_reader(vmi11_file_path)
+        vmi11_builder: VMIBuilder = VMI11Builder(vmi_builder_flags, {}, vmi11_data)
+        return vmi11_builder
+
+    @classmethod
+    def vmi10_builder(cls, vmi_builder_flags: dict = default_builder_flags) -> VMI10Builder:
+        vmi10_file_path = Path('tests', 'data', 'resources', 'VMI10_mini.dat')
+        vmi10_data = file_io.vmi_file_reader(vmi10_file_path)
+        vmi10_builder: VMIBuilder = VMI10Builder(vmi_builder_flags, {}, vmi10_data)
+        return vmi10_builder
+
+    @classmethod
+    def vmi9_builder(cls, vmi_builder_flags: dict = default_builder_flags) -> VMI9Builder:
+        vmi9_file_path = Path('tests', 'data', 'resources', 'VMI9_mini.dat')
+        vmi9_data = file_io.vmi_file_reader(vmi9_file_path)
+        vmi9_builder: VMIBuilder = VMI9Builder(vmi_builder_flags, {}, vmi9_data)
+        return vmi9_builder
+
+    @classmethod
+    def vmi12_built(cls, vmi_builder_flags: dict = default_builder_flags):
         return cls.vmi12_builder(vmi_builder_flags).build()
 
     @classmethod
     def vmi13_built(cls, vmi_builder_flags: dict = default_builder_flags):
         return cls.vmi13_builder(vmi_builder_flags).build()
+
+    @classmethod
+    def vmi11_built(cls, vmi_builder_flags: dict = default_builder_flags):
+        return cls.vmi11_builder(vmi_builder_flags).build()
+
+    @classmethod
+    def vmi10_built(cls, vmi_builder_flags: dict = default_builder_flags):
+        return cls.vmi10_builder(vmi_builder_flags).build()
+
+    @classmethod
+    def vmi9_built(cls, vmi_builder_flags: dict = default_builder_flags):
+        return cls.vmi9_builder(vmi_builder_flags).build()
 
 # vmi13_data = [
 #     '1 U 1  99  99 99 9   . 0 20181121 2018 258 3 1 10 10  . 12 10 176 176 893    1    5 4 S 7013044.52 543791.23 7013044.52 543791.23  179.70 1019    . T  1 3   33 220  0   . 0  . 1 0  0  . . 0 1  0  . . 0 0 2 3 0  . 2 3 1 35 2 3 2 0 4  75 0 0 3 1 5  2 .  . .  . 15 4 10 0 15 2 10 8 15 6 26 .  .  .    . 22 187  63 19 . U     . E 1 . . 0 A . . . . 0 . 0 .  . 0 . 7 3 . . 4 1 . 2 2 2   0 . . 0 . .   1  0 0 .   . 0 0 . . .         . 1 7013044.52 543791.23 .    .',
