@@ -16,10 +16,12 @@ class TestCoordinateConversion(unittest.TestCase):
     def test_convert_location_to_ykj(self):
         dummy_float = 0.0
         target_crs = 'EPSG:2393'
-        # Already in target CRS
-        passthrough_gl = tuple((dummy_float for _ in range(3))) + ('EPSG:2393',)
+        passthrough_gl: tuple[float, float, float, str] = (dummy_float, dummy_float, dummy_float, target_crs)
+
         stand_assertion = ForestStand(geo_location=passthrough_gl)
-        result = convert_location_to_ykj(*stand_assertion.geo_location)
+        assert stand_assertion.geo_location is not None
+
+        result = convert_location_to_ykj(*passthrough_gl)
         self.assertEqual(result[0], dummy_float)
         self.assertEqual(result[1], dummy_float)
         self.assertEqual(result[3], target_crs)
@@ -31,6 +33,6 @@ class TestCoordinateConversion(unittest.TestCase):
         self.assertEqual(result[1], 3268000.003019635)
         self.assertEqual(result[3], target_crs)
         # Invalid CRS raises exception
-        invalid_gl = tuple((dummy_float for _ in range(3))) + ('InvalidCRS',)
-        invalid_stand = ForestStand(geo_location=invalid_gl)
-        self.assertRaises(MetsiException, convert_location_to_ykj, *invalid_stand.geo_location)
+        invalid_gl: tuple[float, float, float, str] = (dummy_float, dummy_float, dummy_float, "InvalidCRS")
+
+        self.assertRaises(MetsiException, convert_location_to_ykj, *invalid_gl)

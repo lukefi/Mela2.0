@@ -1,8 +1,5 @@
-from dataclasses import dataclass
-from functools import lru_cache
 from enum import Enum
 from typing import Optional
-import numpy as np
 from numba import njit
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.preprocessing.data.points import ref_coords as _REF_COORDS, point_map as _POINT_MAP
@@ -120,32 +117,18 @@ class CRS(Enum):
     EPSG_2393 = ("EPSG:2393", "YKJ")
 
     @property
-    def name(self):  # pylint: disable=function-redefined, invalid-overridden-method
-        return ":".join(self._name_.split("_"))  # pylint: disable=no-member
+    def epsg(self) -> str:
+        return self.value[0]
 
-
-@dataclass(frozen=True)
-class _Mesh:
-    triangles: np.ndarray   # (T,3) point indices
-    point_map: np.ndarray   # maps point index -> row in ref_coords
-    ref_coords: np.ndarray  # (P,4): [ykj_x, ykj_y, tm35_x, tm35_y]
-
-
-@lru_cache(maxsize=1)
-def _load_mesh() -> _Mesh:
-    # Data is stored as numpy arrays in sibling modules (points.py / triangles.py).
-    triangles = np.ascontiguousarray(_TRIANGLES.astype(np.int32, copy=False))
-    point_map = np.ascontiguousarray(_POINT_MAP.astype(np.int32, copy=False))
-    ref_coords = np.ascontiguousarray(_REF_COORDS.astype(np.float64, copy=False))
-    return _Mesh(triangles=triangles, point_map=point_map, ref_coords=ref_coords)
+    @property
+    def aliases(self) -> tuple[str, ...]:
+        return self.value
 
 
 def erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
 
-    mesh = _load_mesh()
-
     tri = _find_triangle_nb(
-        mesh.triangles, mesh.point_map, mesh.ref_coords,
+        _TRIANGLES, _POINT_MAP, _REF_COORDS,
         u, v,
         False,  # input_is_ykj
         _current_triangle_tm35_to_ykj["value"]
@@ -157,7 +140,7 @@ def erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
     _current_triangle_tm35_to_ykj["value"] = int(tri)
 
     x, y = _convert_using_triangle_nb(
-        mesh.triangles, mesh.point_map, mesh.ref_coords,
+        _TRIANGLES, _POINT_MAP, _REF_COORDS,
         u, v,
         False,
         tri
@@ -178,13 +161,13 @@ def convert_location_to_ykj(
         return (latitude, longitude, heigh_above_sea_level, crs)
 
     if _is_erts(crs):
-        new_crs = CRS.EPSG_2393.name
+        new_crs = CRS.EPSG_2393.epsg
         x, y = erts_tm35_to_ykj(latitude, longitude)
         return (x, y, heigh_above_sea_level, new_crs)
 
     raise MetsiException(
-        f"Error while converting from {CRS.EPSG_3067.name} to {CRS.EPSG_2393.name}. "
-        f"Check the source crs.\n We only support {CRS.EPSG_3067.name} as source crs at the moment."
+        f"Error while converting from {CRS.EPSG_3067.epsg} to {CRS.EPSG_2393.epsg}. "
+        f"Check the source crs.\n We only support {CRS.EPSG_3067.epsg} as source crs at the moment."
     )
 
 
