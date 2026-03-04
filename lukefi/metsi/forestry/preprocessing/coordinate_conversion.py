@@ -140,7 +140,7 @@ def _load_mesh() -> _Mesh:
     return _Mesh(triangles=triangles, point_map=point_map, ref_coords=ref_coords)
 
 
-def _erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
+def erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
 
     mesh = _load_mesh()
 
@@ -179,7 +179,7 @@ def convert_location_to_ykj(
 
     if _is_erts(crs):
         new_crs = CRS.EPSG_2393.name
-        x, y = _erts_tm35_to_ykj(latitude, longitude)
+        x, y = erts_tm35_to_ykj(latitude, longitude)
         return (x, y, heigh_above_sea_level, new_crs)
 
     raise MetsiException(
@@ -188,4 +188,4 @@ def convert_location_to_ykj(
     )
 
 
-__all__ = ["convert_location_to_ykj", "CRS", "_erts_tm35_to_ykj"]
+__all__ = ["convert_location_to_ykj", "CRS", "erts_tm35_to_ykj"]
