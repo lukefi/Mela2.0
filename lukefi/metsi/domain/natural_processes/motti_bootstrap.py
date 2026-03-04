@@ -1,24 +1,9 @@
 from typing import Any
 from lukefi.metsi.data.model import ForestStand
-import functools
+
 # We reuse the predictor's ensure_state() so logic stays in one place
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import MottiDLLPredictor
-
-
-def _extract_motti_data_dir(control: dict[str, Any]) -> str | None:
-    """
-    Tries a few common layouts so you don't have to freeze the control schema yet.
-    """
-    # flat key
-    if "motti_data_dir" in control:
-        return control.get("motti_data_dir")
-
-    # nested
-    m = control.get("motti") or control.get("natural_processes", {}).get("motti")
-    if isinstance(m, dict):
-        return m.get("data_dir") or m.get("motti_data_dir")
-
-    return None
+from lukefi.metsi.sim.sim_configuration import SimConfiguration
 
 
 def _iter_stands(unit: Any):
@@ -44,36 +29,17 @@ def _iter_stands(unit: Any):
                 pass
 
 
-def _transition_uses_motti(control):
-    t = control.get("transition")
-    if t is None:
-        return False
-
-    # If Transition wrapper
-    f = getattr(t, "transition_fn", None)
-    if isinstance(f, functools.partial):
-        base = f.func
-        if getattr(base, "__name__", "") == "grow_motti_dll_fn":
-            return True
-
-    # fallback: callable transition itself
-    if callable(t) and getattr(t, "__name__", "") == "grow_motti_dll_fn":
-        return True
-
-    return False
-
-
-def ensure_motti_initialized(unit: Any, control: dict[str, Any]) -> None:
+def ensure_motti_initialized(unit: Any, config: SimConfiguration) -> None:
     """
     Initialize Motti state for all stands under this computational unit.
 
     Called once at simulation start from simulator.py.
     It is safe to call this multiple times; it is a no-op if stand.motti_state already exists.
     """
-    if not _transition_uses_motti(control):
+    if not config.transition.uses_motti:
         return
 
-    data_dir = _extract_motti_data_dir(control)
+    data_dir = config.transition.parameters.get("data_dir")
 
     for stand in _iter_stands(unit):
         # Only initialize if there are trees and we haven't already initialized.

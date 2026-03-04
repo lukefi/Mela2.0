@@ -1,7 +1,7 @@
 from copy import copy
 import dataclasses
 import sqlite3
-from typing import Optional, override, Any, TYPE_CHECKING
+from typing import Optional, override, Any, cast
 from dataclasses import dataclass
 
 import numpy as np
@@ -636,25 +636,44 @@ class ForestStand(Finalizable, ComputationalUnit):
     def __copy__(self):
         """Make branch-safe copies: clone Motti CFFI buffers so branches don't share state."""
         new_obj = self.__class__(**{k: copy(v) for k, v in self.__dict__.items() if k != "motti_state"})
-        # clone persistent motti buffers if present
-        try:
-            if getattr(self, "motti_state", None) is not None:
-                ms = self.motti_state
-                dll = ms.dll
-                yy2 = dll.clone_site(ms.yy)
-                yp2 = dll.clone_trees(ms.yp)
-                buffers2 = dll.clone_state_buffers(ms.buffers)
-                new_obj.motti_state = MottiState(
-                    dll=dll,
-                    yy=yy2,
-                    yp=yp2,
-                    ntrees=int(ms.ntrees),
-                    buffers=buffers2,
-                    signature=ms.signature,
-                )
-        except Exception:
-            # safer to drop state than to accidentally share pointers across branches
+
+        ms = self.motti_state
+        if ms is None:
             new_obj.motti_state = None
+            return new_obj
+
+        # explicit “invariant” checks (less defensive than try/except around everything)
+        dll = getattr(ms, "dll", None)
+        yy = getattr(ms, "yy", None)
+        yp = getattr(ms, "yp", None)
+        buffers = getattr(ms, "buffers", None)
+        ntrees = getattr(ms, "ntrees", None)
+        signature = getattr(ms, "signature", None)
+
+        if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
+            # state is incomplete -> safest is to drop it
+            new_obj.motti_state = None
+            return new_obj
+        if signature is None:
+            new_obj.motti_state = None
+            return new_obj
+        try:
+            yy2 = dll.clone_site(yy)
+            yp2 = dll.clone_trees(yp)
+            buffers2 = dll.clone_state_buffers(buffers)
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # cloning failed -> drop state rather than share pointers
+            new_obj.motti_state = None
+            return new_obj
+
+        new_obj.motti_state = MottiState(
+            dll=dll,
+            yy=yy2,
+            yp=yp2,
+            ntrees=int(ntrees),
+            buffers=buffers2,
+            signature=cast(tuple[int, ...], signature),
+        )
         return new_obj
 
     def __deepcopy__(self, memo):

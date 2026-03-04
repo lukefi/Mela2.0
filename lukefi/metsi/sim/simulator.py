@@ -21,7 +21,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         payload = SimulationPayload(unit)
         payload.computational_unit.update_aggregates()
 
-        ensure_motti_initialized(payload.computational_unit, control)
+        ensure_motti_initialized(payload.computational_unit, simconfig)
 
         if db is not None:
             # Write initial state to database

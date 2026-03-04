@@ -5,17 +5,24 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 
 
 class Transition[T: ComputationalUnit]:
+    base_fn: TransitionFn[T]
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
 
     def __init__(self, transition_fn: TransitionFn[T], **parameters):
         self.parameters = parameters
+        self.base_fn = transition_fn
         self.transition_fn = partial(transition_fn, **parameters)
+
+    @property
+    def uses_motti(self) -> bool:
+        return self.base_fn is grow_motti_dll_fn
 
     def __call__(self, state: T) -> OpTuple[T]:
         return self.transition_fn(state)

@@ -11,7 +11,7 @@ from lukefi.metsi.data.enums.internal import (
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES,
 )
-from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
@@ -285,13 +285,6 @@ class MottiDLLPredictor:
 
         buffers = self.dll.alloc_state_buffers(ctrl=None)
 
-        # Attach to stand
-        try:
-            from lukefi.metsi.data.model import MottiState  # type: ignore
-        except Exception:
-            # fallback if type isn't imported
-            MottiState = None  # type: ignore
-
         if MottiState is not None:
             self.stand.motti_state = MottiState(
                 dll=self.dll,
@@ -302,14 +295,15 @@ class MottiDLLPredictor:
                 signature=tuple(ids.tolist()),
             )
         else:
-            # minimal attachment
-            self.stand.motti_state = type("MottiState", (), {})()
-            self.stand.motti_state.dll = self.dll
-            self.stand.motti_state.yy = yy
-            self.stand.motti_state.yp = yp
-            self.stand.motti_state.ntrees = int(ntrees)
-            self.stand.motti_state.buffers = buffers
-            self.stand.motti_state.signature = tuple(ids.tolist())
+            ms = MottiState()
+            ms.dll = self.dll
+            ms.yy = yy
+            ms.yp = yp
+            ms.ntrees = int(ntrees)
+            ms.buffers = buffers
+            ms.signature = tuple(ids.tolist())
+
+            self.stand.motti_state = ms
 
         return self.stand.motti_state
 
@@ -320,12 +314,8 @@ class MottiDLLPredictor:
                                 trees_age=[], trees_age13=[]
                                 )
 
-        # keep year/step current
-        try:
-            state.yy.year = sim_year
-            state.yy.step = step
-        except Exception:
-            pass
+        state.yy.year = sim_year
+        state.yy.step = step
 
         growth = self.dll.grow_with_state(
             state.yy,
@@ -334,11 +324,9 @@ class MottiDLLPredictor:
             state.buffers,
             step=step,
         )
-        # DLL may update active tree count
-        try:
-            state.ntrees = len(growth.tree_ids)
-        except Exception:
-            pass
+
+        state.ntrees = len(growth.tree_ids)
+
         return growth
 
 
