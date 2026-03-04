@@ -195,7 +195,7 @@ def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
 
 
 def is_empty_vmi_str(candidate: str) -> bool:
-    return candidate in ('', ' ', '.')
+    return candidate in ('', ' ', '.', '\n')
 
 
 def convert_drainage_category(code):
