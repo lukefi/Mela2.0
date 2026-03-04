@@ -100,7 +100,7 @@ def make_rt(
 
 class FakeDLL:
     """
-    Minimal DLL stub implementing the methods used by MottiDLLPredictorVec.
+    Minimal DLL stub implementing the methods used by MottiDLLPredictor.
     Kept as its own concrete type so tests can access .captured_trees_py.
     """
 
@@ -110,23 +110,40 @@ class FakeDLL:
 
     def new_site(self, **kwargs: Any) -> SimpleNamespace:
         self.captured_site = dict(kwargs)
-        return SimpleNamespace(site="ok")
+        return SimpleNamespace(site="ok", year=kwargs.get("year", 0), step=kwargs.get("step", 0))
 
     def new_trees(self, trees_py: List[Dict[str, Any]]) -> tuple[SimpleNamespace, int]:
         self.captured_trees_py = list(trees_py)
         return SimpleNamespace(buf="ok"), len(trees_py)
 
-    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
-        # Default: zero deltas for every tree ID in order 1..n (infer n from last new_trees)
+    def alloc_state_buffers(self, ctrl: Any = None) -> Any:
+        return SimpleNamespace(buffers="ok", ctrl=ctrl)
+
+    def grow_with_state(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         if not self.captured_trees_py:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
+            return GrowthDeltas(
+                tree_ids=[],
+                trees_id=[],
+                trees_ih=[],
+                trees_if=[],
+                trees_age=[],
+                trees_age13=[],
+            )
+
         n = len(self.captured_trees_py)
         ids = list(range(1, n + 1))
         zeros = [0.0] * n
-        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros,
-                            trees_age=zeros, trees_age13=zeros)
+        return GrowthDeltas(
+            tree_ids=ids,
+            trees_id=zeros,
+            trees_ih=zeros,
+            trees_if=zeros,
+            trees_age=zeros,
+            trees_age13=zeros,
+        )
+
+    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
+        return self.grow_with_state(*_args, **_kwargs)
 
 
 # ---------- Tests ----------
@@ -305,7 +322,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         stand = make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
-            def grow(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
+            def grow_with_state(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
                 # Only tree id=1 grows / survives
                 return GrowthDeltas(
                     tree_ids=[1],
@@ -339,7 +356,3 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertAlmostEqual(rt_out.breast_height_diameter[1], 12.0, places=6)
         self.assertAlmostEqual(rt_out.height[1], 14.0, places=6)
         self.assertEqual(float(rt_out.stems_per_ha[1]), 0.0)
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=2)
