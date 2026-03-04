@@ -1,6 +1,6 @@
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter
+from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Sequence, Event
 from examples.declarations.sqlite import sqlite_decl
@@ -15,7 +15,8 @@ control_structure = {
     },
     "preprocessing_operations": [
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
-        preproc_filter,
+        filter_stands,
+        filter_trees
     ],
     "preprocessing_params": {
         generate_reference_trees: [
@@ -25,12 +26,16 @@ control_structure = {
                 "debug": False
             }
         ],
-        preproc_filter: [
+        filter_stands: [
             {
-                "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
-                "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+                "remove": lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0) 
             }
-        ]
+        ],
+        filter_trees: [
+            {
+                "predicate": lambda stand: ~(stand.reference_trees.sapling | (stand.reference_trees.stems_per_ha == 0))
+            }
+        ],
     },
     "simulation_instructions": [
         SimulationInstruction(

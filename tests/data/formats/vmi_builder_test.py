@@ -1,394 +1,51 @@
 import unittest
-import numpy as np
-from lukefi.metsi.data.formats import vmi_const
-from lukefi.metsi.data.enums.internal import (
-    Storey,
-    TreeSpecies,
-    DrainageCategory,
-    LandUseCategory,
-    OwnerCategory
-)
 from tests.data.test_util import ForestBuilderTestBench
+from tests.data.snapshot_util import assert_snapshot
+
+
+class TestForestBuilderSnapshots(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
+        cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
+        cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
+        cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
+        cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
+
+    def test_snapshot_vmi9(self):
+        assert_snapshot(self, name="vmi9", stands=self.vmi9_stands)
+
+    def test_snapshot_vmi10(self):
+        assert_snapshot(self, name="vmi10", stands=self.vmi10_stands)
+
+    def test_snapshot_vmi11(self):
+        assert_snapshot(self, name="vmi11", stands=self.vmi11_stands)
+
+    def test_snapshot_vmi12(self):
+        assert_snapshot(self, name="vmi12", stands=self.vmi12_stands)
+
+    def test_snapshot_vmi13(self):
+        assert_snapshot(self, name="vmi13", stands=self.vmi13_stands)
 
 
 class TestForestBuilder(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.vmi9_builder = ForestBuilderTestBench.vmi9_builder
+        cls.vmi10_builder = ForestBuilderTestBench.vmi10_builder
+        cls.vmi11_builder = ForestBuilderTestBench.vmi11_builder
         cls.vmi12_builder = ForestBuilderTestBench.vmi12_builder
         cls.vmi13_builder = ForestBuilderTestBench.vmi13_builder
 
+        cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
+        cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
+        cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
         cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
         cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
 
+        cls.vmi9_stands_ref_trees_false = ForestBuilderTestBench.vmi9_built({'measured_trees': False, 'strata': True})
+        cls.vmi10_stands_ref_trees_false = ForestBuilderTestBench.vmi10_built({'measured_trees': False, 'strata': True})
+        cls.vmi11_stands_ref_trees_false = ForestBuilderTestBench.vmi11_built({'measured_trees': False, 'strata': True})
         cls.vmi12_stands_ref_trees_false = ForestBuilderTestBench.vmi12_built({'measured_trees': False, 'strata': True})
         cls.vmi13_stands_ref_trees_false = ForestBuilderTestBench.vmi13_built({'measured_trees': False, 'strata': True})
-
-    def test_vmi12_init(self):
-        vmi12_builder = self.vmi12_builder()
-        self.assertEqual(4, len(vmi12_builder.forest_stands))
-        self.assertEqual(1, len(vmi12_builder.reference_trees))
-        self.assertEqual(2, len(vmi12_builder.tree_strata))
-
-    def test_vmi12_stands(self):
-        self.assertEqual(4, len(self.vmi12_stands))
-
-    def test_vmi12_stand_identifiers(self):
-        self.assertEqual('0-999-999-99-1', self.vmi12_stands[0].identifier)
-        self.assertEqual('0-999-999-98-1', self.vmi12_stands[1].identifier)
-
-    def test_vmi12_stand_variables(self):
-        # test data coincides with county 21
-        reference_area = round(vmi_const.vmi12_county_areas[21], 4)
-        self.assertEqual(False, self.vmi12_stands[0].auxiliary_stand)
-        self.assertEqual(True, self.vmi12_stands[3].auxiliary_stand)
-        self.assertEqual(reference_area, self.vmi12_stands[0].area)
-        self.assertEqual(reference_area, self.vmi12_stands[1].area)
-        # auxiliary stand area should be 0
-        self.assertEqual(0.0, self.vmi12_stands[3].area)
-        self.assertEqual(reference_area, self.vmi12_stands[0].area_weight)
-        self.assertEqual(reference_area, self.vmi12_stands[1].area_weight)
-        self.assertAlmostEqual(reference_area, self.vmi12_stands[3].area_weight)
-        # lat 6656996, lon 3102608, height
-        self.assertEqual((6652133.0, 3246174.0, None, 'EPSG:2393'), self.vmi12_stands[0].geo_location)
-        # lat 6675011, lon 3118967, height 124
-        self.assertEqual((6652133.0, 3246174.0, 12.4, 'EPSG:2393'), self.vmi12_stands[1].geo_location)
-        # '' -> None
-        self.assertEqual(None, self.vmi12_stands[0].degree_days)
-        # '1271' -> 1271.0
-        self.assertEqual(1271.0, self.vmi12_stands[1].degree_days)
-        # owner group is '0', which translated to 0
-        self.assertEqual(OwnerCategory.UNKNOWN, self.vmi12_stands[0].owner_category)
-        # owner group is '1', which translated to 0
-        self.assertEqual(OwnerCategory.PRIVATE, self.vmi12_stands[1].owner_category)
-        self.assertEqual(' ', self.vmi12_stands[0].fra_category)
-        self.assertEqual('1', self.vmi12_stands[1].fra_category)
-        self.assertEqual(LandUseCategory.SEA, self.vmi12_stands[0].land_use_category)
-        self.assertEqual(LandUseCategory.FOREST, self.vmi12_stands[1].land_use_category)
-        self.assertEqual('0', self.vmi12_stands[0].land_use_category_detail)
-        self.assertEqual('0', self.vmi12_stands[1].land_use_category_detail)
-        # paatyyppi is ' '
-        self.assertEqual(None, self.vmi12_stands[0].soil_peatland_category)
-        # paatyyppi is '1'
-        self.assertEqual(1.0, self.vmi12_stands[1].soil_peatland_category)
-        # kasvupaikkatunnus is ' '
-        self.assertEqual(None, self.vmi12_stands[0].site_type_category)
-        # kasvupaikkatunnus is '3'
-        self.assertEqual(3, self.vmi12_stands[1].site_type_category)
-        # '' -> 0
-        self.assertEqual(0, self.vmi12_stands[0].tax_class)
-        # '1' -> 2
-        self.assertEqual(2, self.vmi12_stands[1].tax_class)
-        # ojitus_tilanne is ' '
-        self.assertEqual(None, self.vmi12_stands[0].drainage_category)
-        # ojitus_tilanne is '0' and paatyyppi is '1'
-        self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE, self.vmi12_stands[1].drainage_category)
-        # ojitus_aika is ''
-        self.assertEqual(None, self.vmi12_stands[0].drainage_year)
-        # ojitus_aika is ''
-        self.assertEqual(None, self.vmi12_stands[1].drainage_year)
-        # value not available in VMI12 source
-        self.assertEqual(None, self.vmi12_stands[0].fertilization_year)
-        # value not available in VMI12 source
-        self.assertEqual(None, self.vmi12_stands[1].fertilization_year)
-        # '', 2018 -> None
-        self.assertEqual(None, self.vmi12_stands[0].soil_surface_preparation_year)
-        # '0', 2018 -> 2018
-        self.assertEqual(2018, self.vmi12_stands[1].soil_surface_preparation_year)
-
-        # muu_toimenpide is ' '
-        # muu_toimenpide_aika is ' '
-        # date is 020618
-        self.assertEqual(None, self.vmi12_stands[0].regeneration_area_cleaning_year)
-        # muu_toimenpide is '0'
-        # muu_toimenpide_aika is ' '
-        # date is 280818
-        self.assertEqual(None, self.vmi12_stands[1].regeneration_area_cleaning_year)
-        # kehitysluokka is ' ' -> 0
-        self.assertEqual(0, self.vmi12_stands[0].development_class)
-        # kehitysluokka is '5' -> 5
-        self.assertEqual(5, self.vmi12_stands[1].development_class)
-        # viljely is ' '
-        # viljely_aika is ' '
-        # date is 020618 and year is 2018 when date string is parsed
-        self.assertEqual(None, self.vmi12_stands[0].artificial_regeneration_year)
-        # viljely is '0'
-        # viljely_aika is ' '
-        # date is 280818 and year is 2018 when date string is parsed
-        self.assertEqual(None, self.vmi12_stands[1].artificial_regeneration_year)
-        # hakkuu_aika is ' ', hakkuu_tapa is ' ' (no record)
-        self.assertEqual(None, self.vmi12_stands[0].young_stand_tending_year)
-        # hakkuu_aika is '6', hakkuu_tapa is '4' (cutting 7 years ago)
-        self.assertEqual(None, self.vmi12_stands[1].young_stand_tending_year)
-        # hakkuu_aika is ' ', hakkuu_tapa is ' ' (no record)
-        self.assertEqual(None, self.vmi12_stands[0].cutting_year)
-        # hakkuu_aika is '6', hakkuu_tapa is '4' (cutting 7 years ago)
-        self.assertEqual(2011, self.vmi12_stands[1].cutting_year)
-        # forestry_centre is '00'
-        self.assertEqual(0, self.vmi12_stands[0].forestry_centre_id)
-        # forestry_centre is '00'
-        self.assertEqual(0, self.vmi12_stands[1].forestry_centre_id)
-        # fmc is '1'
-        self.assertEqual(1, self.vmi12_stands[0].forest_management_category)
-        # fmc is '1'
-        self.assertEqual(1, self.vmi12_stands[1].forest_management_category)
-        # hakkuu_tapa is ' ', (no record)
-        self.assertEqual(None, self.vmi12_stands[0].method_of_last_cutting)
-        # hakkuu_tapa is '4', (cutting)
-        self.assertEqual(1, self.vmi12_stands[1].method_of_last_cutting)
-        # municipality is '417', kitukunta is '417'
-        self.assertEqual(417, self.vmi12_stands[0].municipality_id)
-        # municipality is '417', kitukunta is '417'
-        self.assertEqual(417, self.vmi12_stands[1].municipality_id)
-        # osuus564 is '10', koealaosuudet is '10'
-        self.assertEqual((1.0, 1.0), self.vmi12_stands[0].area_weight_factors)
-        # osuus564 is '10', koealaosuudet is '10'
-        self.assertEqual((1.0, 1.0), self.vmi12_stands[1].area_weight_factors)
-        self.assertEqual(False, self.vmi12_stands[0].auxiliary_stand)
-        self.assertEqual(False, self.vmi12_stands[1].auxiliary_stand)
-        self.assertEqual(None, self.vmi12_stands[0].basal_area)
-        self.assertEqual(19.0, self.vmi12_stands[1].basal_area)
-        # vallitsevanjakson_d13ika is '   ' vallitsevanjakson_ikalisays is '  ' -> result to 0.0
-        self.assertEqual(0.0, self.vmi12_stands[0].dominant_storey_age)
-        # vallitsevanjakson_d13ika is '045' vallitsevanjakson_ikalisays is '06' -> result to 51.0
-        self.assertEqual(51.0, self.vmi12_stands[1].dominant_storey_age)
-
-    def test_vmi12_trees(self):
-        # SoA counts per stand
-        self.assertEqual(0, self.vmi12_stands[0].reference_trees.size)
-        self.assertEqual(1, self.vmi12_stands[1].reference_trees.size)
-        self.assertEqual(0, self.vmi12_stands[2].reference_trees.size)
-
-        # Identifier of the only measured tree for stand 1
-        self.assertEqual(
-            '0-999-999-98-1-001-tree',
-            self.vmi12_stands[1].reference_trees.identifier[0]
-        )
-
-    def test_vmi12_tree_variables(self):
-
-        trees = self.vmi12_stands[1].reference_trees
-        self.assertEqual(1, trees.size)
-        i = 0
-
-        # '7' -> '7'
-        self.assertEqual('7', trees.tree_category[i])
-        # '1' -> 1 (enum stored as int)
-        self.assertEqual(TreeSpecies.PINE, TreeSpecies(trees.species[i]))
-        # '207' -> 20.7
-        self.assertEqual(20.7, trees.breast_height_diameter[i])
-        # '1741' -> 17.41
-        self.assertEqual(17.41, trees.height[i])
-
-        # measured_height was None -> np.nan
-        self.assertTrue(np.isnan(trees.measured_height[i]))
-        # diameter 20.7, area factors 1.0
-        self.assertEqual(39.298, trees.stems_per_ha[i])
-
-        self.assertEqual(0, trees.origin[i])
-
-        self.assertEqual(1, trees.tree_number[i])
-
-        # None -> np.nan
-        self.assertTrue(np.isnan(trees.breast_height_age[i]))
-        self.assertTrue(np.isnan(trees.biological_age[i]))
-
-        self.assertEqual(1, trees.management_category[i])
-        self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
-
-        # None -> "" for string fields
-        self.assertEqual("", trees.tree_type[i])
-        self.assertEqual("", trees.tuhon_ilmiasu[i])
-
-    def test_vmi12_strata(self):
-        self.assertEqual(0, self.vmi12_stands_ref_trees_false[0].tree_strata.size)
-        self.assertEqual(1, self.vmi12_stands_ref_trees_false[1].tree_strata.size)
-
-        self.assertEqual('0-999-999-98-1-01-stratum',
-                         self.vmi12_stands_ref_trees_false[1].tree_strata.identifier[0])
-
-    def test_vmi12_stratum(self):
-        strata = self.vmi12_stands_ref_trees_false[1].tree_strata
-        self.assertEqual(1, strata.size)
-        i = 0
-
-        # species is '1' -> 1
-        self.assertEqual(TreeSpecies.PINE, TreeSpecies(strata.species[i]))
-        # mean_diameter is '24' -> 24.0
-        self.assertEqual(24.0, strata.mean_diameter[i])
-        # mean_height is '190' (dm) -> 19.0 (m)
-        self.assertEqual(19.0, strata.mean_height[i])
-        # stems_per_ha is '     ' -> 0.0
-        self.assertEqual(0.0, strata.stems_per_ha[i])
-        # breast_height_age is '046' -> 46.0
-        self.assertEqual(46.0, strata.breast_height_age[i])
-        # origin is '1' -> 0
-        self.assertEqual(0, strata.origin[i])
-        # biological_age is '06' -> 52.0
-        self.assertEqual(52.0, strata.biological_age[i])
-        # basal area is '17' -> 17.0
-        self.assertEqual(17.0, strata.basal_area[i])
-        self.assertEqual(Storey.DOMINANT.value, strata.storey[i])
-        self.assertEqual(1, strata.tree_number[i])
-
-    def test_vmi13_init(self):
-        vmi13_builder = self.vmi13_builder()
-        self.assertEqual(4, len(vmi13_builder.forest_stands))
-        self.assertEqual(6, len(vmi13_builder.reference_trees))
-        self.assertEqual(3, len(vmi13_builder.tree_strata))
-
-    def test_vmi13_stands(self):
-        self.assertEqual(4, len(self.vmi13_stands))
-
-    def test_vmi13_stand_identifiers(self):
-        self.assertEqual('0-1-12-1-1', self.vmi13_stands[0].identifier)
-        self.assertEqual('0-2-23-2-1', self.vmi13_stands[1].identifier)
-
-    def test_vmi13_stand_variables(self):
-        # When county is 21, lohkomuoto is 0 and lohkotarkenne is 0 reference_area is 164.2650475
-        reference_area = 164.2650475
-        self.assertEqual(False, self.vmi13_stands[0].auxiliary_stand)
-        self.assertEqual(True, self.vmi13_stands[2].auxiliary_stand)
-        self.assertEqual(reference_area, self.vmi13_stands[0].area)
-        self.assertEqual(reference_area, self.vmi13_stands[1].area)
-        # auxiliary stand area should be 0
-        self.assertEqual(0.0, self.vmi13_stands[2].area)
-        self.assertEqual(reference_area, self.vmi13_stands[0].area_weight)
-        self.assertEqual(reference_area, self.vmi13_stands[1].area_weight)
-        self.assertEqual(reference_area, self.vmi13_stands[2].area_weight)
-        # lat 5514200.0, lon 493729.0, height None
-        self.assertEqual((5514200.0, 493729.0, None, 'EPSG:3067'), self.vmi13_stands[0].geo_location)
-        # lat 6671298.0, lon 1385598.0, height 124.0
-        self.assertEqual((6671298.0, 1385598.0, 124.0, 'EPSG:3067'), self.vmi13_stands[1].geo_location)
-        self.assertEqual(None, self.vmi13_stands[0].degree_days)
-        self.assertEqual(1271.0, self.vmi13_stands[1].degree_days)
-        # owner group is '4' which translates to 2
-        self.assertEqual(OwnerCategory.UNKNOWN, self.vmi13_stands[0].owner_category)
-        # owner group is '1' which translated to 0
-        self.assertEqual(OwnerCategory.PRIVATE, self.vmi13_stands[1].owner_category)
-        self.assertEqual(None, self.vmi13_stands[0].fra_category)
-        self.assertEqual('1', self.vmi13_stands[1].fra_category)
-        self.assertEqual(LandUseCategory.SEA, self.vmi13_stands[0].land_use_category)
-        self.assertEqual(1, self.vmi13_stands[1].land_use_category)
-        self.assertEqual('0', self.vmi13_stands[0].land_use_category_detail)
-        self.assertEqual('0', self.vmi13_stands[1].land_use_category_detail)
-        # paatyyppi is '.'
-        self.assertEqual(None, self.vmi13_stands[0].soil_peatland_category)
-        # paatyyppi is '1'
-        self.assertEqual(1.0, self.vmi13_stands[1].soil_peatland_category)
-        # kasvupaikkatunnus is '.'
-        self.assertEqual(None, self.vmi13_stands[0].site_type_category)
-        # kasvupaikkatunnus is '3'
-        self.assertEqual(3, self.vmi13_stands[1].site_type_category)
-        # '0' -> 0
-        self.assertEqual(0, self.vmi13_stands[0].tax_class_reduction)
-        # '0' -> 0
-        self.assertEqual(0, self.vmi13_stands[1].tax_class_reduction)
-        self.assertEqual(0, self.vmi13_stands[0].tax_class)
-        # '1' -> 2
-        self.assertEqual(2, self.vmi13_stands[1].tax_class)
-        self.assertEqual(None, self.vmi13_stands[0].drainage_category)
-        # ojitus_tilanne is '0' and paatyyppi is '1'
-        self.assertEqual(DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE, self.vmi13_stands[1].drainage_category)
-        self.assertEqual(None, self.vmi13_stands[0].drainage_year)
-        # ojitus_aika is '.'
-        self.assertEqual(None, self.vmi13_stands[1].drainage_year)
-        # value not available in VMI13 source
-        self.assertEqual(None, self.vmi13_stands[0].fertilization_year)
-        # value not available in VMI13 source
-        self.assertEqual(None, self.vmi13_stands[1].fertilization_year)
-        self.assertEqual(None, self.vmi13_stands[0].soil_surface_preparation_year)
-        self.assertEqual(2018, self.vmi13_stands[1].soil_surface_preparation_year)
-
-        # muu_toimenpide is '.'
-        # muu_toimenpide_aika is '0'
-        # date is '20200522'
-        self.assertEqual(None, self.vmi13_stands[0].regeneration_area_cleaning_year)
-        # muu_toimenpide is '2'
-        # muu_toimenpide_aika is '0'
-        # date is 20200503
-        self.assertEqual(None, self.vmi13_stands[1].regeneration_area_cleaning_year)
-        self.assertEqual(0, self.vmi13_stands[0].development_class)
-        self.assertEqual(5, self.vmi13_stands[1].development_class)
-        self.assertEqual(None, self.vmi13_stands[0].artificial_regeneration_year)
-        self.assertEqual(None, self.vmi13_stands[1].artificial_regeneration_year)
-        # hakkuu_aika is 'A', hakkuu_tapa is '0' (no operation within 10 years, A is 20 years ago)
-        self.assertEqual(None, self.vmi13_stands[0].young_stand_tending_year)
-        self.assertEqual(None, self.vmi13_stands[1].young_stand_tending_year)
-        # hakkuu_aika is 'A', hakkuu_tapa is '0' (no operation within 10 years, A is 20 years ago)
-        self.assertEqual(None, self.vmi13_stands[0].cutting_year)
-        self.assertEqual(2011, self.vmi13_stands[1].cutting_year)
-        self.assertEqual(0, self.vmi13_stands[0].forestry_centre_id)
-        self.assertEqual(0, self.vmi13_stands[1].forestry_centre_id)
-        # fmc is '1'
-        self.assertEqual(1, self.vmi13_stands[0].forest_management_category)
-        # fmc is '1'
-        self.assertEqual(1, self.vmi13_stands[1].forest_management_category)
-        # hakkuu_tapa is '0' (no operation)
-        self.assertEqual(None, self.vmi13_stands[0].method_of_last_cutting)
-        self.assertEqual(1, self.vmi13_stands[1].method_of_last_cutting)
-        self.assertEqual(417, self.vmi13_stands[0].municipality_id)
-        self.assertEqual(417, self.vmi13_stands[1].municipality_id)
-        self.assertEqual((0.0, 1.0), self.vmi13_stands[0].area_weight_factors)
-        self.assertEqual((0.0, 1.0), self.vmi13_stands[1].area_weight_factors)
-        self.assertEqual(False, self.vmi13_stands[0].auxiliary_stand)
-        self.assertEqual(False, self.vmi13_stands[1].auxiliary_stand)
-        self.assertEqual(None, self.vmi13_stands[0].basal_area)
-        self.assertEqual(19.0, self.vmi13_stands[1].basal_area)
-        self.assertEqual(0.0, self.vmi13_stands[0].dominant_storey_age)
-        self.assertEqual(51.0, self.vmi13_stands[1].dominant_storey_age)
-
-    def test_vmi13_trees(self):
-        self.assertEqual(0, self.vmi13_stands[0].reference_trees.size)
-        self.assertEqual(3, self.vmi13_stands[1].reference_trees.size)
-
-        trees = self.vmi13_stands[1].reference_trees
-        self.assertEqual('0-2-23-2-1-1-tree', trees.identifier[0])
-
-    def test_vmi13_tree_variables(self):
-        trees = self.vmi13_stands[1].reference_trees
-        self.assertEqual(trees.size, 3)
-        i = 0
-
-        self.assertEqual('7', trees.tree_category[i])
-        self.assertEqual(TreeSpecies.PINE, TreeSpecies(trees.species[i]))
-        self.assertEqual(20.7, trees.breast_height_diameter[i])
-        self.assertEqual(17.41, trees.height[i])
-
-        self.assertTrue(np.isnan(trees.measured_height[i]))
-        self.assertEqual(39.298, trees.stems_per_ha[i])
-
-        self.assertEqual(0, trees.origin[i])
-
-        self.assertEqual(1, trees.tree_number[i])
-
-        self.assertTrue(np.isnan(trees.breast_height_age[i]))
-        self.assertTrue(np.isnan(trees.biological_age[i]))
-
-        self.assertEqual(1, trees.management_category[i])
-        self.assertEqual(Storey.DOMINANT.value, trees.storey[i])
-
-        self.assertEqual("", trees.tree_type[i])
-        self.assertEqual("", trees.tuhon_ilmiasu[i])
-
-    def test_vmi13_strata(self):
-        self.assertEqual(0, self.vmi13_stands_ref_trees_false[0].tree_strata.size)
-        self.assertEqual(2, self.vmi13_stands_ref_trees_false[1].tree_strata.size)
-
-        self.assertEqual('0-2-23-2-1-1-stratum', self.vmi13_stands_ref_trees_false[1].tree_strata.identifier[0])
-
-    def test_vmi13_stratum(self):
-        strata = self.vmi13_stands_ref_trees_false[1].tree_strata
-        self.assertGreaterEqual(strata.size, 1)
-        i = 0
-
-        self.assertEqual(TreeSpecies.PINE, TreeSpecies(strata.species[i]))
-        self.assertEqual(24.0, strata.mean_diameter[i])
-        self.assertEqual(19.0, strata.mean_height[i])
-        self.assertEqual(0.0, strata.stems_per_ha[i])
-        self.assertEqual(46.0, strata.breast_height_age[i])
-        self.assertEqual(0, strata.origin[i])
-        self.assertEqual(52.0, strata.biological_age[i])
-        self.assertEqual(17.0, strata.basal_area[i])
-        self.assertEqual(Storey.DOMINANT.value, strata.storey[i])
-        self.assertEqual(1, strata.tree_number[i])

@@ -1,67 +1,34 @@
+from enum import StrEnum
 from typing import Callable
 import numpy as np
+import numpy.typing as npt
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 
-VERBS: set[str] = {"select", "remove"}
-OBJECTS: set[str] = {"stands", "trees", "strata"}
+
+class Verb(StrEnum):
+    SELECT = "select"
+    REMOVE = "remove"
 
 
-def parsecommand(command: str) -> tuple[str, str]:
-    parts = command.split()
-    if len(parts) > 2:
-        raise ValueError(f"filter syntax error: {command}")
-    if len(parts) == 1:
-        v, o = parts[0], "stands"
-    else:
-        v, o = parts
-    if v not in VERBS:
-        raise ValueError(f"invalid filter verb: {v} (in filter {command})")
-    if o not in OBJECTS:
-        raise ValueError(f"invalid filter object: {o} (in filter {command})")
-    return v, o
+def filter_stands(stands: StandList, verb: str, predicate: Callable[[ForestStand], bool]) -> StandList:
+    verb = Verb(verb)
+
+    if verb == Verb.REMOVE:
+        p = predicate
+        predicate = lambda f: not p(f)  # pylint: disable=unnecessary-lambda-assignment
+
+    stands = [s for s in stands if predicate(s)]
+    return stands
 
 
-def applyfilter(stands: StandList, command: str, predicate: Callable[..., bool]) -> StandList:
-    verb, object_ = parsecommand(command)
+def filter_trees(stands: StandList, mask: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    for stand in stands:
+        stand.reference_trees = stand.reference_trees[mask(stand)]
+    return stands
 
-    if object_ == "stands":
-        if verb == "select":
-            return [s for s in stands if predicate(s)]
-        # remove
-        return [s for s in stands if not predicate(s)]
 
-    if object_ == "trees":
-        for s in stands:
-            trees = s.reference_trees
-            if trees.size == 0:
-                continue
-
-            mask = np.asarray(predicate(trees), dtype=bool)
-            if mask.shape != (trees.size,):
-                raise ValueError(
-                    f"tree predicate must return mask of shape ({trees.size},), got {mask.shape}"
-                )
-
-            if verb == "remove":
-                mask = ~mask
-
-            s.reference_trees = trees[mask]
-        return stands
-
-    # handle strata
-    for s in stands:
-        strata = s.tree_strata
-        if strata.size == 0:
-            continue
-
-        mask = np.asarray(predicate(strata), dtype=bool)
-        if mask.shape != (strata.size,):
-            raise ValueError(
-                f"strata predicate must return mask of shape ({strata.size},), got {mask.shape}"
-            )
-
-        if verb == "remove":
-            mask = ~mask
-
-        s.tree_strata = strata[mask]
+def filter_strata(stands: StandList, mask: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    for stand in stands:
+        stand.tree_strata = stand.tree_strata[mask(stand)]
     return stands

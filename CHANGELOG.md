@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.2] - 2026-03-04
+
+### Added
+
+- carrier return check to VMI input data parser
+
+## [0.5.1] - 2026-03-03
+
+### Added
+
+- VMI9, VMI10 and VMI11 input support 
+
+## [0.5.0] - 2026-03-02
+
+### Changed
+
+- New model for reference tree generation, currently only for NFI13 source data
+- Management category determination rules changed
+- Tree-to-strata matching logic changed, now based on tree crown class and stratum position in tree storey class
+
+### Added
+
+- New preprocessing operations:
+    - scale_trees_by_area_weight_factors
+    - scale_basal_area_at_county_level
+    - update_strata_to_match_trees
+    - area_ha_to_1000ha
+
+## [0.4.17] - 2026-02-24
+
+### Fixed
+
+- Volume is now calculated only for large trees (> 1.3 m)
+
+## [0.4.16] - 2026-02-24
+
+### Changed
+
+- Added robot test update flag #MELA2-170
+
+## [0.4.15] - 2026-02-24
+
+### Changed
+
+- Remove unused Pukkala codes #MELA2-169
+
 ## [0.4.14] - 2026-02-20
 
 ### Changed

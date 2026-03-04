@@ -1,13 +1,8 @@
 import math
 from collections.abc import Callable
-from typing import Optional
-import numpy as np
+from typing import Iterable, Optional
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
-from lukefi.metsi.data.vector_model import (
-    ReferenceTrees as VectorReferenceTrees,
-    TreeStrata as VectorTreeStrata,
-)
+from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
 def calculate_basal_area(tree: ReferenceTree) -> float:
@@ -56,7 +51,43 @@ def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: Tree
     return initial_stratum
 
 
-def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, list]:
+def find_matching_stratum_by_diameter_lm(
+        reference_tree: ReferenceTree,
+        strata: Iterable[TreeStratum],
+        threshold: float = 3.0) -> Optional[TreeStratum]:
+    """
+    Find the stratum that has the closest diameter to the reference tree diameter by factor of difference, where the
+    reference tree diameter is between the stratum mean diameter divided by threshold and multiplied by threshold.
+
+    :param reference_tree: candidate reference tree
+    :param strata: candidate strata
+    :param threshold: threshold factor for diameter bounds
+    :return: matching stratum or None if no match is found
+    """
+
+    # i.	Jos puun läpimitta on yli kerroin*valitun ositteen keskiläpimitta, puuta ei kohdisteta sille.
+    #       R-koodissa kerroin = 3.
+
+    candidate = min(
+        strata,
+        # R-koodin mukaisesti puuttuva dgm <- 0
+        key=lambda stratum: 0 if stratum.mean_diameter == -1 else abs(
+            reference_tree.breast_height_diameter - stratum.mean_diameter),
+        default=None
+    )
+    if candidate is None:
+        return None
+
+    candidate_dgm = candidate.mean_diameter if candidate.mean_diameter != -1 \
+        else reference_tree.breast_height_diameter
+    lower = candidate_dgm / threshold
+    upper = candidate_dgm * threshold
+    if lower <= reference_tree.breast_height_diameter <= upper:
+        return candidate
+    return None
+
+
+def split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """ Splits a list into two lists based on a predicate.
 
     :param items: list to be split
@@ -74,142 +105,91 @@ def split_list_by_predicate(items: list, predicate: Callable) -> tuple[list, lis
     return matching_items, non_matching_items
 
 
+def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratum]) -> list[TreeStratum]:
+    """
+    Find a list of strata which have a similar species to the given species. Out of deciduous trees,
+    silver birch is considered most similar to downy birch and vice versa.
+    :param species:
+    :param strata:
+    :return:
+    """
+    # e.	Jos koivulle ei ole oman puulajin ositetta, kohdistetaan se toisen koivulajin ositteeseen,
+    #       jos sellainen on.
+    # f.	Jos havupuulle ei ole olemassa oman puulajin ositetta, kohdistetaan se jonkin muun havupuun ositteeseen.
+    # g.	Jos lehtipuulle ei ole oman puulajin ositetta eikä koivulle koivuositetta, kohdistetaan se jonkun muun
+    #       lehtipuun ositteeseen. Koivuositteeseen ei kuitenkaan kohdisteta muita kuin koivuja.
+
+    candidates: list[TreeStratum] = []
+
+    if species.is_deciduous():
+        if species == TreeSpecies.DOWNY_BIRCH:
+            candidates.extend(filter(lambda s: s.species == TreeSpecies.SILVER_BIRCH, strata))
+        elif species == TreeSpecies.SILVER_BIRCH:
+            candidates.extend(filter(lambda s: s.species == TreeSpecies.DOWNY_BIRCH, strata))
+        if len(candidates) == 0:
+            candidates.extend(
+                filter(
+                    lambda s: s.species.is_deciduous() and s.species not in (
+                        TreeSpecies.SILVER_BIRCH,
+                        TreeSpecies.DOWNY_BIRCH),
+                    strata))
+    elif species.is_coniferous():
+        candidates.extend(filter(lambda s: s.species.is_coniferous(), strata))
+
+    return candidates
+
+
 def find_matching_storey_stratum_for_tree(
-    tree_index: int,
-    trees: VectorReferenceTrees,
-    strata: VectorTreeStrata,
-    diameter_threshold: float = 2.5,
-) -> Optional[int]:
-    """
-    SoA-based version of `find_matching_storey_stratum_for_tree`.
-
-    Parameters
-    ----------
-    tree_index:
-        Index of the tree in `trees` whose matching stratum we want.
-    trees:
-        SoA container of reference trees (VectorReferenceTrees).
-    strata:
-        SoA container of strata (VectorTreeStrata).
-    diameter_threshold:
-        Threshold factor used for diameter matching. Same semantics as
-        `find_matching_stratum_by_diameter_lm`:
-        tree_d is accepted if:
-            mean_diameter / threshold < tree_d < mean_diameter * threshold
-
-    Returns
-    -------
-    Optional[int]
-        Index of the matching stratum in `strata`, or None if no match.
-    """
-
-    # Basic sanity
-    if strata.size == 0 or trees.size == 0:
-        return None
-    if tree_index < 0 or tree_index >= trees.size:
+        tree: ReferenceTree,
+        strata: TreeStrata,
+        diameter_threshold: float = 3.0) -> Optional[str]:
+    # a.	Tarkista, että puu on inventoinnissa mitattu (puutyypit vaihtelee inventointien välillä)
+    #       ja se on elävä (elävillä puilla puuluokka on numeerinen).
+    if tree.tree_type not in ("", "V", "Y", "U", "S", "T", "N", " ") or \
+            tree.tree_category not in ("", "0", "1", "3", "4", "5", "6", "7", "8", "9"):
         return None
 
-    tree_storey = trees.storey[tree_index]
-    tree_species_code = trees.species[tree_index]
-    tree_diameter = trees.breast_height_diameter[tree_index]
+    same_storey_strata = [
+        strata.get_stratum(i) for i in range(len(strata))
+        if storey_match(strata.get_stratum(i), tree)
+    ]
+    same_species_strata, other_species_strata = split_list_by_predicate(
+        same_storey_strata,
+        lambda stratum: stratum.species == tree.species)
 
-    # If no valid diameter, we can't do diameter-based matching
-    if np.isnan(tree_diameter) or tree_diameter <= 0.0:
-        return None
-
-    # 1) Strata in the same storey
-    same_storey_idx = np.nonzero(strata.storey == tree_storey)[0]
-    if same_storey_idx.size == 0:
-        return None
-
-    same_storey_species = strata.species[same_storey_idx]
-
-    # 2) Split same-storey strata into same-species and other-species
-    same_species_mask = same_storey_species == tree_species_code
-    same_species_idx = same_storey_idx[same_species_mask]
-    other_species_idx = same_storey_idx[~same_species_mask]
-
-    def _similar_species_indices() -> np.ndarray:
-        # If tree species is missing, just bail out
-        if tree_species_code == -1:
-            return np.array([], dtype=int)
-
-        try:
-            tree_species = TreeSpecies(tree_species_code)
-        except ValueError:
-            return np.array([], dtype=int)
-
-        # No other strata to compare against
-        if other_species_idx.size == 0:
-            return np.array([], dtype=int)
-
-        result: list[int] = []
-        for j in other_species_idx:
-            s_code = strata.species[j]
-            if s_code == -1:
-                continue
-            try:
-                s_species = TreeSpecies(s_code)
-            except ValueError:
-                continue
-
-            if tree_species.is_deciduous():
-                # Special birch handling
-                if (
-                    tree_species == TreeSpecies.DOWNY_BIRCH
-                    and s_species == TreeSpecies.SILVER_BIRCH
-                ):
-                    result.append(int(j))
-                elif (
-                    tree_species == TreeSpecies.SILVER_BIRCH
-                    and s_species == TreeSpecies.DOWNY_BIRCH
-                ):
-                    result.append(int(j))
-                elif s_species.is_deciduous():
-                    result.append(int(j))
-            elif tree_species.is_coniferous():
-                if s_species.is_coniferous():
-                    result.append(int(j))
-
-        return np.array(result, dtype=int)
-
-    # 3) Candidate strata selection (mirror AoS logic):
-    #    - prefer same species
-    #    - otherwise, similar species (deciduous/coniferous rules)
-    #    - otherwise, any same-storey strata
-    if same_species_idx.size > 0:
-        candidate_idx = same_species_idx
+    # d.	Puu kohdistetaan ensisijaisesti oman puulajin ositteeseen.
+    if len(same_species_strata) > 0:
+        candidate_strata = same_species_strata
+    elif len(other_species_strata) > 0:
+        candidate_strata = find_strata_by_similar_species(tree.species, other_species_strata)
     else:
-        similar_idx = _similar_species_indices()
-        if similar_idx.size > 0:
-            candidate_idx = similar_idx
-        else:
-            candidate_idx = same_storey_idx
+        candidate_strata = []
 
-    if candidate_idx.size == 0:
-        return None
+    # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
+    #       jonka keskiläpimitta on lähinnä puun läpimittaa.
+    if len(candidate_strata) > 0:
+        selected_stratum = find_matching_stratum_by_diameter_lm(tree, candidate_strata, diameter_threshold)
+    else:
+        selected_stratum = None
 
-    # 4) Filter to strata that "have diameter" (SoA equivalent of TreeStratum.has_diameter)
-    candidate_mean_d = strata.mean_diameter[candidate_idx]
-    has_diameter_mask = (~np.isnan(candidate_mean_d)) & (candidate_mean_d > 0.0)
-    candidate_idx = candidate_idx[has_diameter_mask]
-    candidate_mean_d = candidate_mean_d[has_diameter_mask]
+    return selected_stratum.identifier if selected_stratum is not None else None
 
-    if candidate_idx.size == 0:
-        return None
 
-    # 5) Diameter-based selection and threshold check (SoA version of find_matching_stratum_by_diameter_lm)
-    #    - pick stratum i that minimizes abs(tree_d / mean_d_i - 1)
-    #    - accept only if tree_d within [mean_d / threshold, mean_d * threshold]
-    ratios = np.abs(tree_diameter / candidate_mean_d - 1.0)
-    best_pos = int(np.argmin(ratios))
-    best_idx = int(candidate_idx[best_pos])
-    best_d = float(candidate_mean_d[best_pos])
+def storey_match(stratum: TreeStratum, tree: ReferenceTree):
+    # b.	Puu voidaan kohdistaa vain ositteeseen jonka jaksotieto vastaa puun latvuskerrostietoa.
+    # c.	Jättöpuu (latvuskerroskoodi kirjain) voidaan kohdistaa vain jättöylispuujaksoon
+    #       (koodit F ja G), ja jättöpuujaksoon voidaan kohdistaa vain jättöpuita.
+    #       Vallitsevan jakson ja alikasvoksen jättöpuut jäävät aina kohdentamatta, koska
+    #       VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
 
-    lower = best_d / diameter_threshold
-    upper = best_d * diameter_threshold
-
-    if lower < tree_diameter < upper:
-        return best_idx
-
-    return None
+    # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
+    if tree.latvuskerros == "5":
+        return stratum.asema in (5, 6, 9)
+    # ylispuujakso, ei jättöpuu
+    if tree.latvuskerros in ("6", "7"):
+        return stratum.asema in (2, 4)
+    if tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
+        return stratum.asema == 3
+    if tree.latvuskerros in ("2", "3", "4"):  # valitseva jakso
+        return stratum.asema <= 1
+    return False

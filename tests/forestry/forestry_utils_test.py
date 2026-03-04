@@ -1,10 +1,8 @@
 import unittest
 
-import numpy as np
 from lukefi.metsi.forestry import forestry_utils as futil
-from lukefi.metsi.data.model import ReferenceTree, TreeStratum
 from lukefi.metsi.data.enums.internal import TreeSpecies, Storey
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
 def strata_fixture() -> list[TreeStratum]:
@@ -105,14 +103,6 @@ class ForestryUtilsTest(unittest.TestCase):
         """
         Simple SoA case: same species + same storey, pick closest mean_diameter.
         """
-        trees = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1"],
-                "species": [TreeSpecies.SPRUCE.value],
-                "storey": [Storey.DOMINANT.value],
-                "breast_height_diameter": [11.0],
-            }
-        )
         strata = TreeStrata().vectorize(
             {
                 "identifier": ["s1", "s2"],
@@ -125,26 +115,26 @@ class ForestryUtilsTest(unittest.TestCase):
                     Storey.DOMINANT.value,
                 ],
                 "mean_diameter": [10.0, 20.0],
+                "asema": ["1", "1"]
             }
         )
+        tree = ReferenceTree(
+            identifier="t1",
+            species=TreeSpecies.SPRUCE,
+            storey=Storey.DOMINANT,
+            breast_height_diameter=11.0,
+            latvuskerros="2"
+        )
 
-        idx = futil.find_matching_storey_stratum_for_tree(0, trees, strata)
+        idx = futil.find_matching_storey_stratum_for_tree(tree, strata)
         # 11 cm is closer to 10 cm than 20 cm => index 0
-        self.assertEqual(0, idx)
+        self.assertEqual("s1", idx)
 
     def test_matching_storey_stratum_similar_deciduous_species(self):
         """
         SoA case: deciduous tree, UNDER storey, should use "similar species"
         logic and pick closest deciduous stratum in same storey.
         """
-        trees = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1"],
-                "species": [TreeSpecies.DOWNY_BIRCH.value],
-                "storey": [Storey.UNDER.value],
-                "breast_height_diameter": [6.2],
-            }
-        )
         strata = TreeStrata().vectorize(
             {
                 "identifier": ["s1", "s2"],
@@ -158,50 +148,52 @@ class ForestryUtilsTest(unittest.TestCase):
                     Storey.UNDER.value,
                 ],
                 "mean_diameter": [6.0, 10.0],
+                "asema": [5, 5, 5]
             }
         )
+        tree = ReferenceTree(
+            identifier="t1",
+            species=TreeSpecies.DOWNY_BIRCH,
+            storey=Storey.UNDER,
+            breast_height_diameter=6.2,
+            latvuskerros="5"
+        )
 
-        idx = futil.find_matching_storey_stratum_for_tree(0, trees, strata)
+        idx = futil.find_matching_storey_stratum_for_tree(tree, strata)
         # 6.2 cm is closer to mean_diameter 6.0 than 10.0 => index 0
-        self.assertEqual(0, idx)
+        self.assertEqual("s1", idx)
 
     def test_matching_storey_stratum_invalid_diameter(self):
         """
         SoA case: diameter 0 or NaN gives no match.
         """
         # Diameter 0.0
-        trees_zero = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1"],
-                "species": [TreeSpecies.SPRUCE.value],
-                "storey": [Storey.DOMINANT.value],
-                "breast_height_diameter": [0.0],
-            }
-        )
         strata = TreeStrata().vectorize(
             {
                 "identifier": ["s1"],
                 "species": [TreeSpecies.SPRUCE.value],
                 "storey": [Storey.DOMINANT.value],
                 "mean_diameter": [10.0],
+                "asema": [1]
             }
         )
-        idx_zero = futil.find_matching_storey_stratum_for_tree(
-            0, trees_zero, strata
+        tree_zero = ReferenceTree(
+            identifier="t1",
+            species=TreeSpecies.SPRUCE,
+            storey=Storey.DOMINANT,
+            breast_height_diameter=0.0,
+            latvuskerros="2"
         )
+        idx_zero = futil.find_matching_storey_stratum_for_tree(tree_zero, strata)
         self.assertIsNone(idx_zero)
 
-        trees_nan = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1"],
-                "species": [TreeSpecies.SPRUCE.value],
-                "storey": [Storey.DOMINANT.value],
-                "breast_height_diameter": [np.nan],
-            }
+        tree_nan = ReferenceTree(
+            identifier="t1",
+            species=TreeSpecies.SPRUCE,
+            storey=Storey.DOMINANT,
+            latvuskerros="2"
         )
-        idx_nan = futil.find_matching_storey_stratum_for_tree(
-            0, trees_nan, strata
-        )
+        idx_nan = futil.find_matching_storey_stratum_for_tree(tree_nan, strata)
         self.assertIsNone(idx_nan)
 
     def test_matching_storey_stratum_threshold_respected(self):
@@ -209,14 +201,6 @@ class ForestryUtilsTest(unittest.TestCase):
         SoA case: using a stricter diameter_threshold should cause an
         otherwise-closest stratum to be rejected.
         """
-        trees = ReferenceTrees().vectorize(
-            {
-                "identifier": ["t1"],
-                "species": [TreeSpecies.SPRUCE.value],
-                "storey": [Storey.DOMINANT.value],
-                "breast_height_diameter": [40.0],
-            }
-        )
         strata = TreeStrata().vectorize(
             {
                 "identifier": ["s1", "s2"],
@@ -229,17 +213,21 @@ class ForestryUtilsTest(unittest.TestCase):
                     Storey.DOMINANT.value,
                 ],
                 "mean_diameter": [10.0, 20.0],
+                "asema": ["1", "1"]
             }
+        )
+        tree = ReferenceTree(
+            identifier="t1",
+            species=TreeSpecies.SPRUCE,
+            storey=Storey.DOMINANT,
+            breast_height_diameter=40.0,
+            latvuskerros="2"
         )
 
         # With default threshold=2.5, 40 is within [20/2.5, 20*2.5] = [8, 50] → match index 1
-        idx_default = futil.find_matching_storey_stratum_for_tree(
-            0, trees, strata
-        )
-        self.assertEqual(1, idx_default)
+        idx_default = futil.find_matching_storey_stratum_for_tree(tree, strata)
+        self.assertEqual("s2", idx_default)
 
         # With stricter threshold, 40 is outside allowed range -> None
-        idx_strict = futil.find_matching_storey_stratum_for_tree(
-            0, trees, strata, diameter_threshold=1.5
-        )
+        idx_strict = futil.find_matching_storey_stratum_for_tree(tree, strata, diameter_threshold=1.5)
         self.assertIsNone(idx_strict)

@@ -1,7 +1,8 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class VmiSpecies(Enum):
+    TREELESS = "0"
     PINE = "1"
     SPRUCE = "2"
     SILVER_BIRCH = "3"
@@ -128,3 +129,31 @@ class VmiTreeStorey(Enum):
     UNDER_SPARE_1 = 'E'
     OVER_SPARE_1 = 'F'
     OVER_SPARE_2 = 'G'
+
+
+class VmiTreeCategory(StrEnum):
+    C0 = "0"
+    C1 = "1"
+    C2 = "2"
+    C3 = "3"
+    C4 = "4"
+    C5 = "5"
+    C6 = "6"
+    C7 = "7"
+    C8 = "8"
+    C9 = "9"
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+    F = "F"
+    G = "G"
+
+
+class VmiOrigin(Enum):
+    UNKNOWN = '0'
+    NATURAL_SEED = '1'
+    NATURAL_SPROUT = '2'
+    PLANTED = '3'
+    SEEDED = '4'

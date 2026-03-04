@@ -8,7 +8,7 @@ class TestConversion(test_util.ConverterTestSuite):
         assertions = [
             (["A9"], TreeSpecies.YEW),
             (["A1"], TreeSpecies.SHORE_PINE),
-            (["0"], TreeSpecies.UNKNOWN),
+            (["0"], TreeSpecies.TREELESS),
         ]
         self.run_with_test_assertions(
             assertions, vmi2internal.convert_species)

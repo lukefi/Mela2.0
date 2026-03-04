@@ -1,6 +1,6 @@
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
-from lukefi.metsi.domain.pre_ops import generate_reference_trees, preproc_filter, scale_area_weight
+from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
@@ -20,7 +20,8 @@ control_structure = {
     "preprocessing_operations": [
         scale_area_weight,
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees
-        preproc_filter,
+        filter_stands,
+        filter_trees,
     ],
     "preprocessing_params": {
         generate_reference_trees: [
@@ -30,10 +31,14 @@ control_structure = {
                 "debug": False
             }
         ],
-        preproc_filter: [
+        filter_stands: [
             {
-                "remove trees": (lambda trees: (trees.sapling != 0) | (trees.stems_per_ha == 0)),
-                "remove stands": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+                "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+            }
+        ],
+        filter_trees: [
+            {
+                "predicate": lambda stand: ~stand.reference_trees.sapling & (stand.reference_trees.stems_per_ha > 0)
             }
         ]
     },
