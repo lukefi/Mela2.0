@@ -396,7 +396,7 @@ class Motti4DLL:
     # ---------- persistent state buffers ----------
 
     def alloc_state_buffers(self, ctrl: Optional[dict] = None) -> MottiStateBuffers:
-        """Allocate persistent buffers (saplings/kor/vcr/apv/ctrl) that must be reused across Growth calls."""
+        """Allocate persistent buffers that must be reused across Growth calls."""
         ffi = self.ffi
         saplings = ffi.new("Motti4Saplings *")
         kor_state = ffi.new("Motti4KorArray *")
@@ -425,7 +425,7 @@ class Motti4DLL:
         )
 
     def clone_state_buffers(self, buffers: MottiStateBuffers) -> MottiStateBuffers:
-        """Deep-copy persistent buffers for safe branching/copying."""
+        """Deep-copy buffers for branching."""
         ffi = self.ffi
         out = self.alloc_state_buffers(ctrl={
             "death_tree": int(bool(buffers.ctrl.death_tree)),
@@ -441,7 +441,7 @@ class Motti4DLL:
         return out
 
     def clone_site(self, yy: Any) -> Any:
-        """Deep-copy a site struct (yy) for safe branching/copying."""
+        """Deep-copy a site struct (yy) for branching."""
         ffi = self.ffi
         yy2 = ffi.new("Motti4Site *")
         ffi.memmove(yy2, yy, ffi.sizeof("Motti4Site"))
@@ -463,7 +463,7 @@ class Motti4DLL:
         step: int = 5,
     ) -> GrowthDeltas:
         """
-        Growth using persistent buffers (saplings/kor/vcr/apv/ctrl) that are carried across calls.
+        Growth using persistent buffers that are carried across calls.
         Always calls UpdateAfterImport before Growth.
         """
         ffi, lib = self.ffi, self.lib

@@ -26,7 +26,6 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     """
     if not y1 or not x1:
         raise ValueError("Stand is missing coordinates required by Motti")
-        # return (0.0, 0.0)
     abs_y, abs_x = abs(y1), abs(x1)
 
     # Clear lat/long guard
@@ -246,7 +245,6 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        # Build trees buffer from SoA (same as previous evolve)
         ids = np.arange(1, n + 1, dtype=int)
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)

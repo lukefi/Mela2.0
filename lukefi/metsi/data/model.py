@@ -642,7 +642,6 @@ class ForestStand(Finalizable, ComputationalUnit):
             new_obj.motti_state = None
             return new_obj
 
-        # explicit “invariant” checks (less defensive than try/except around everything)
         dll = getattr(ms, "dll", None)
         yy = getattr(ms, "yy", None)
         yp = getattr(ms, "yp", None)
@@ -651,7 +650,6 @@ class ForestStand(Finalizable, ComputationalUnit):
         signature = getattr(ms, "signature", None)
 
         if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
-            # state is incomplete -> safest is to drop it
             new_obj.motti_state = None
             return new_obj
         if signature is None:
@@ -773,10 +771,9 @@ def stand_as_internal_row(stand: ForestStand):
 
 @dataclass(eq=False, repr=False)
 class MottiState:
-    # Motti4DLL instance (lightweight; uses class-level cache)
     dll: Any
-    yy: Any                  # "Motti4Site *"
-    yp: Any                  # "Motti4Trees *"
-    ntrees: int              # current number of “active” trees in yp
-    buffers: Any           # MottiStateBuffers
-    signature: tuple[int, ...]  # e.g. tree_number list at init time, or hash
+    yy: Any                     # "Motti4Site *"
+    yp: Any                     # "Motti4Trees *"
+    ntrees: int                 # current number of “active” trees in yp
+    buffers: Any                # MottiStateBuffers
+    signature: tuple[int, ...]
