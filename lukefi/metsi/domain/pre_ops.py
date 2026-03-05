@@ -3,9 +3,12 @@ from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
+from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
@@ -218,7 +221,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_basal_area_at_county_level(stands: StandList) -> StandList:
+def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
     """Scale basal area at the county level to match basal areas by species in NFI data.
        NOTE: It is supposed that all stands belong to same county and represent the whole county.
 
@@ -230,6 +233,7 @@ def scale_basal_area_at_county_level(stands: StandList) -> StandList:
     """
 
     county = stands[0].region
+    assert county is not None
     if county == 19 and stands[1].municipality_id in (47, 148, 890):
         county = 30
 
@@ -260,16 +264,39 @@ def scale_basal_area_at_county_level(stands: StandList) -> StandList:
                 np.sum(trees.stems_per_ha[mask2] * ((trees.breast_height_diameter[mask2] / 200) ** 2))
 
     # scale coefficients
-    ba_targets: list[list[list[float]]] = [[x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 1],
-                                           [x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 2]]
-    ba_target_ret = [x.ppa for x in BA_NFI_RET if x.maakunta == county][0]
+
+    forest_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_metsamaa.csv',
+                                 sep=' ',
+                                 index_col="maakunta")
+    scrub_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_kitumaa.csv',
+                                sep=' ',
+                                index_col="maakunta")
+    retention_trees_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_saastopuut.csv',
+                                     sep=' ',
+                                     index_col="maakunta")
+
+    ba_targets = [np.full(max(TreeSpecies), 0.0, dtype=np.float64),
+                  np.full(max(TreeSpecies), 0.0, dtype=np.float64)]
+
+    for species_col in forest_land_ba:
+        ba_targets[0][vmi2internal.convert_species(str(species_col)) - 1] = forest_land_ba[species_col][county]
+    for species_col in scrub_land_ba:
+        ba_targets[1][vmi2internal.convert_species(str(species_col)) - 1] = scrub_land_ba[species_col][county]
+
+    # ba_targets: list[npt.NDArray[np.float64]] = [forest_land_ba.loc[county].to_numpy(),
+    #                                              scrub_land_ba.loc[county].to_numpy()]
+    ba_target_ret: np.float64 = retention_trees_ba.V2[county]
+
+    # ba_targets: list[list[list[float]]] = [[x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 1],
+    #                                        [x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 2]]
+    # ba_target_ret = [x.ppa for x in BA_NFI_RET if x.maakunta == county][0]
 
     if len(ba_targets) == 0:
         scale_coeffs = [[1] * max(TreeSpecies), [1] * max(TreeSpecies)]
     else:
         scale_coeffs = [[], []]
         for i in range(2):
-            for target, generated in zip(ba_targets[i][0], ba_sums[i]):
+            for target, generated in zip(ba_targets[i], ba_sums[i]):
                 coeff = target / generated if generated > 0 else -1
                 scale_coeffs[i].append(coeff)
     scale_coeff_ret = ba_target_ret / ba_sum_ret if ba_sum_ret > 0 else -1
