@@ -1,4 +1,12 @@
-from enum import Enum, StrEnum
+from enum import Enum, IntEnum, StrEnum
+
+
+class VmiIteration(StrEnum):
+    VMI9 = "vmi9"
+    VMI10 = "vmi10"
+    VMI11 = "vmi11"
+    VMI12 = "vmi12"
+    VMI13 = "vmi13"
 
 
 class VmiSpecies(Enum):
