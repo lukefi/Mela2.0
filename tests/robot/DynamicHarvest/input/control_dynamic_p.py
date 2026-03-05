@@ -80,6 +80,7 @@ control_structure = {
     },
     'export_prepro': {
         'csv': mela_and_default_csv,
+        'rst': mela_and_default_csv,
     },
 
 
