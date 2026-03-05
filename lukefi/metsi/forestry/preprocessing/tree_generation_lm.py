@@ -105,8 +105,15 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     assert stand_county is not None
     assert stand_development_class is not None
 
-    species_proportions = get_spe_proportions(stand_land_use_cat, stand_county, stand_development_class,
-                                              stratum.asema, stratum.mean_diameter, stratum.stems_per_ha, spevmi)
+    species_proportions = get_spe_proportions(
+        stand_land_use_cat,
+        stand_county,
+        stand_development_class,
+        stratum.asema,
+        stratum.mean_diameter,
+        stratum.stems_per_ha,
+        spevmi,
+        params["nfi_iteration"])
     proportions_data = {
         'puulaji': robjects.FloatVector(list(range(1, len(species_proportions) + 1))),
         'osuus': robjects.FloatVector(species_proportions)
