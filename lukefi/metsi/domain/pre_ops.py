@@ -232,7 +232,6 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     """
 
     county = stands[0].region
-    assert county is not None
     if county == 19 and stands[1].municipality_id in (47, 148, 890):
         county = 30
 
@@ -276,12 +275,17 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     ba_targets = [np.full(max(TreeSpecies), 0.0, dtype=np.float64),
                   np.full(max(TreeSpecies), 0.0, dtype=np.float64)]
 
-    for species_col in forest_land_ba:
-        ba_targets[0][vmi2internal.convert_species(str(species_col)) - 1] = forest_land_ba[species_col][county]
-    for species_col in scrub_land_ba:
-        ba_targets[1][vmi2internal.convert_species(str(species_col)) - 1] = scrub_land_ba[species_col][county]
+    geo_index = stands[0].forestry_centre_id if nfi_iteration in (
+        VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else county
 
-    ba_target_ret: np.float64 = retention_trees_ba.V2[county]
+    assert geo_index is not None
+
+    for species_col in forest_land_ba:
+        ba_targets[0][vmi2internal.convert_species(str(species_col)) - 1] = forest_land_ba[species_col][geo_index]
+    for species_col in scrub_land_ba:
+        ba_targets[1][vmi2internal.convert_species(str(species_col)) - 1] = scrub_land_ba[species_col][geo_index]
+
+    ba_target_ret: np.float64 = retention_trees_ba.V2[geo_index]
 
     if len(ba_targets) == 0:
         scale_coeffs = [[1] * max(TreeSpecies), [1] * max(TreeSpecies)]
