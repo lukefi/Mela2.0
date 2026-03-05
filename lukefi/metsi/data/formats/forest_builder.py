@@ -567,6 +567,16 @@ class VMI10Builder(VMIBuilder):
             result.year
         )
         result.region = None
+        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+            result.forest_management_category = vmi_util.determine_forest_management_category(
+                result.land_use_category,
+                result.forestry_centre_id,
+                data_row,
+                result.owner_category,
+                indices,
+            )
+        else:
+            result.forest_management_category = 1
         return result
 
     def build(self) -> StandList:
@@ -710,13 +720,12 @@ class VMI11Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
+            result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
                 data_row,
                 result.owner_category,
                 indices,
-                False,
             )
         else:
             result.forest_management_category = 1
@@ -846,13 +855,12 @@ class VMI12Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
+            result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
                 data_row,
                 result.owner_category,
                 indices,
-                True,
             )
         else:
             result.forest_management_category = 1
