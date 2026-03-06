@@ -37,7 +37,7 @@ def get_spe_proportions(land_use_class: int, county: int, development_class: int
             strtype = "MetsaVart"
 
     if (spelm, strtype, county) in _spe_proportions.index:
-        proportions_: pd.Series[np.float64] = cast(pd.Series, _spe_proportions.loc[spelm].loc[strtype].loc[county])
+        proportions_: pd.Series = cast(pd.Series, _spe_proportions.loc[spelm].loc[strtype].loc[county])
         proportions: list[float] = list(proportions_)
     else:
         proportions = [0] * 31

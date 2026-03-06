@@ -129,8 +129,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     assert stand_development_class is not None
 
     if (geo_index, stand_land_use_cat, spevmi) in _dh_kertoimet.index:
-        dhcoeffs: pd.Series[float] = cast(pd.Series,
-                                          _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
+        dhcoeffs: pd.Series = cast(pd.Series,
+                                   _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
         dfactor = dhcoeffs["dfactor"]
         hfactor = dhcoeffs["hfactor"]
     else:
