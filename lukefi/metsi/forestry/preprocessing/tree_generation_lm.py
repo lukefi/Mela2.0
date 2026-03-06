@@ -9,7 +9,6 @@ from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
-from lukefi.metsi.forestry.preprocessing.dhkertoimet import DHCOEFF
 
 SPECIES_INT2LM = [
     # Mänty 1, Kuusi 2, Rkoivu 3, Hkoivu 4,Haapa 5,Hleppä 6, Tleppä 7, Muu
@@ -125,20 +124,13 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
             index_col=["maakunta", "maalk", "puulaji"])
         _dh_kertoimet_loaded = True
 
-    # dhcoeffs = next(
-    #     (item for item in DHCOEFF
-    #      if item["maakunta"] == stand_county and
-    #      item["maalk"] == stand_land_use_cat and
-    #      item["puulaji"] == spevmi),
-    #     {"maakunta": 0, "maalk": 0, "puulaji": 0, "dfactor": None, "hfactor": None}
-    # )
-
     assert geo_index is not None
     assert stand_land_use_cat is not None
     assert stand_development_class is not None
 
     if (geo_index, stand_land_use_cat, spevmi) in _dh_kertoimet.index:
-        dhcoeffs: pd.Series = cast(pd.Series, _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
+        dhcoeffs: pd.Series[float] = cast(pd.Series,
+                                          _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
         dfactor = dhcoeffs["dfactor"]
         hfactor = dhcoeffs["hfactor"]
     else:
