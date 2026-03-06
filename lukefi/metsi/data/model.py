@@ -297,6 +297,7 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
+    motti_state: Optional["MottiState"] = None
 
     time: int = 0
     start_time: int = 0
@@ -353,8 +354,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
-
-    motti_state: Optional["MottiState"] = None
 
     def __eq__(self, other):
         return id(self) == id(other)
