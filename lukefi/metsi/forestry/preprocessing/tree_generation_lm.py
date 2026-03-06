@@ -90,10 +90,6 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         _dg_mean_kitumaa_loaded = True
 
     if stand_land_use_cat == 2:
-        # dgmean: dict[str, Any] = next(
-        # (item for item in DGMEAN_KITUMAA if item["maakunta"] == stand_county and item["species"] == spevmi), {
-        # "maakunta": 0, "species": 0, "DGM": 0.0})
-        # dgm: float = dgmean["DGM"]
         vmispe_str = str(convert_vmi_numeric_to_species(VmiSpeciesNumeric(spevmi)).value)
         if stand_county in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[stand_county]:
             dgm: float = cast(float, _dg_mean_kitumaa.loc[stand_county][vmispe_str])
