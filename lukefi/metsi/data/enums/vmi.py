@@ -50,6 +50,75 @@ class VmiSpecies(Enum):
         return None
 
 
+class VmiSpeciesNumeric(IntEnum):
+    TREELESS = 10
+    PINE = 1
+    SPRUCE = 2
+    SILVER_BIRCH = 3
+    DOWNY_BIRCH = 4
+    ASPEN = 5
+    GREY_ALDER = 6
+    COMMON_ALDER = 7
+    MOUNTAIN_ASH = 8
+    GOAT_WILLOW = 9
+    OTHER_CONIFEROUS = 20
+    SHORE_PINE = 11
+    KEDAR = 12
+    OTHER_PINE = 13
+    LARCH = 14
+    ABIES = 15
+    OTHER_SPRUCE = 16
+    THUJA = 17
+    JUNIPER = 18
+    YEW = 19
+    OTHER_DECIDUOUS = 30
+    BAY_WILLOW = 21
+    EUROPEAN_WHITE_ELM = 22
+    WYCH_ELM = 23
+    SMALL_LEAVED_LIME = 24
+    POPLAR = 25
+    COMMON_ASH = 26
+    OAK = 27
+    BIRD_CHERRY = 28
+    MAPLE = 29
+    HAZEL = 31
+
+
+_VMI_NUMERIC_TO_SPECIES_MAP = {
+    VmiSpeciesNumeric.TREELESS: VmiSpecies.TREELESS,
+    VmiSpeciesNumeric.PINE: VmiSpecies.PINE,
+    VmiSpeciesNumeric.SPRUCE: VmiSpecies.SPRUCE,
+    VmiSpeciesNumeric.SILVER_BIRCH: VmiSpecies.SILVER_BIRCH,
+    VmiSpeciesNumeric.DOWNY_BIRCH: VmiSpecies.DOWNY_BIRCH,
+    VmiSpeciesNumeric.ASPEN: VmiSpecies.ASPEN,
+    VmiSpeciesNumeric.GREY_ALDER: VmiSpecies.GREY_ALDER,
+    VmiSpeciesNumeric.COMMON_ALDER: VmiSpecies.COMMON_ALDER,
+    VmiSpeciesNumeric.MOUNTAIN_ASH: VmiSpecies.MOUNTAIN_ASH,
+    VmiSpeciesNumeric.GOAT_WILLOW: VmiSpecies.GOAT_WILLOW,
+    VmiSpeciesNumeric.OTHER_CONIFEROUS: VmiSpecies.OTHER_CONIFEROUS,
+    VmiSpeciesNumeric.SHORE_PINE: VmiSpecies.SHORE_PINE,
+    VmiSpeciesNumeric.KEDAR: VmiSpecies.KEDAR,
+    VmiSpeciesNumeric.OTHER_PINE: VmiSpecies.OTHER_PINE,
+    VmiSpeciesNumeric.LARCH: VmiSpecies.LARCH,
+    VmiSpeciesNumeric.ABIES: VmiSpecies.ABIES,
+    VmiSpeciesNumeric.OTHER_SPRUCE: VmiSpecies.OTHER_SPRUCE,
+    VmiSpeciesNumeric.THUJA: VmiSpecies.THUJA,
+    VmiSpeciesNumeric.JUNIPER: VmiSpecies.JUNIPER,
+    VmiSpeciesNumeric.YEW: VmiSpecies.YEW,
+    VmiSpeciesNumeric.OTHER_DECIDUOUS: VmiSpecies.OTHER_DECIDUOUS,
+    VmiSpeciesNumeric.BAY_WILLOW: VmiSpecies.BAY_WILLOW,
+    VmiSpeciesNumeric.EUROPEAN_WHITE_ELM: VmiSpecies.EUROPEAN_WHITE_ELM,
+    VmiSpeciesNumeric.WYCH_ELM: VmiSpecies.WYCH_ELM,
+    VmiSpeciesNumeric.SMALL_LEAVED_LIME: VmiSpecies.SMALL_LEAVED_LIME,
+    VmiSpeciesNumeric.POPLAR: VmiSpecies.POPLAR,
+    VmiSpeciesNumeric.COMMON_ASH: VmiSpecies.COMMON_ASH,
+    VmiSpeciesNumeric.OAK: VmiSpecies.OAK,
+    VmiSpeciesNumeric.BIRD_CHERRY: VmiSpecies.BIRD_CHERRY,
+    VmiSpeciesNumeric.MAPLE: VmiSpecies.MAPLE,
+    VmiSpeciesNumeric.HAZEL: VmiSpecies.HAZEL,
+}
+
+
 class VmiLandUseCategory(Enum):
     FOREST = '1'
     SCRUB_LAND = '2'
@@ -165,3 +234,7 @@ class VmiOrigin(Enum):
     NATURAL_SPROUT = '2'
     PLANTED = '3'
     SEEDED = '4'
+
+
+def convert_vmi_numeric_to_species(numeric: VmiSpeciesNumeric) -> VmiSpecies:
+    return _VMI_NUMERIC_TO_SPECIES_MAP[numeric]
