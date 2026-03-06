@@ -5,7 +5,7 @@ import pandas as pd
 from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.data.enums.vmi import VmiSpeciesNumeric, convert_vmi_numeric_to_species
+from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
@@ -44,6 +44,8 @@ SPECIES_LM2INT: list[TreeSpecies] = [
 lm_tree_generation_loaded = False  # pylint: disable=invalid-name
 _dg_mean_kitumaa: pd.DataFrame
 _dg_mean_kitumaa_loaded = False  # pylint: disable=invalid-name
+_dh_kertoimet: pd.DataFrame
+_dh_kertoimet_loaded = False  # pylint: disable=invalid-name
 
 
 def _determine_hmalli_value(species: TreeSpecies):
@@ -58,6 +60,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     global lm_tree_generation_loaded  # pylint: disable=global-statement
     global _dg_mean_kitumaa  # pylint: disable=global-statement
     global _dg_mean_kitumaa_loaded  # pylint: disable=global-statement
+    global _dh_kertoimet  # pylint: disable=global-statement
+    global _dh_kertoimet_loaded  # pylint: disable=global-statement
 
     dir_ = Path(__file__).parent.parent.resolve() / "r"
     growth_script_file = dir_ / "lm_tree_generation.R"
@@ -73,6 +77,11 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     stand_development_class = stand.development_class
     if stand_municipality in (47, 148, 890):
         stand_county = 30
+
+    nfi_iteration = params["nfi_iteration"]
+
+    geo_index = stand.forestry_centre_id if nfi_iteration in (
+        VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else stand_county
 
     nos = stratum.stems_per_ha
     gos = stratum.basal_area
@@ -91,8 +100,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
 
     if stand_land_use_cat == 2:
         vmispe_str = str(convert_vmi_numeric_to_species(VmiSpeciesNumeric(spevmi)).value)
-        if stand_county in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[stand_county]:
-            dgm: float = cast(float, _dg_mean_kitumaa.loc[stand_county][vmispe_str])
+        if geo_index in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[geo_index]:
+            dgm: float = cast(float, _dg_mean_kitumaa.loc[geo_index][vmispe_str])
         else:
             dgm = 0.0
 
@@ -109,23 +118,37 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'Nos': robjects.FloatVector([nos or robjects.NA_Real])
     }
 
-    dhcoeffs = next(
-        (item for item in DHCOEFF
-         if item["maakunta"] == stand_county and
-         item["maalk"] == stand_land_use_cat and
-         item["puulaji"] == spevmi),
-        {"maakunta": 0, "maalk": 0, "puulaji": 0, "dfactor": None, "hfactor": None}
-    )
-    dhcoeffs_vec = robjects.FloatVector([dhcoeffs["dfactor"], dhcoeffs["hfactor"]]) if dhcoeffs["dfactor"] is not None \
-        else None
+    if not _dh_kertoimet_loaded:
+        _dh_kertoimet = pd.read_csv(
+            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DHkertoimet.csv',
+            sep=' ',
+            index_col=["maakunta", "maalk", "puulaji"])
+        _dh_kertoimet_loaded = True
 
+    # dhcoeffs = next(
+    #     (item for item in DHCOEFF
+    #      if item["maakunta"] == stand_county and
+    #      item["maalk"] == stand_land_use_cat and
+    #      item["puulaji"] == spevmi),
+    #     {"maakunta": 0, "maalk": 0, "puulaji": 0, "dfactor": None, "hfactor": None}
+    # )
+
+    assert geo_index is not None
     assert stand_land_use_cat is not None
-    assert stand_county is not None
     assert stand_development_class is not None
+
+    if (geo_index, stand_land_use_cat, spevmi) in _dh_kertoimet.index:
+        dhcoeffs: pd.Series = cast(pd.Series, _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
+        dfactor = dhcoeffs["dfactor"]
+        hfactor = dhcoeffs["hfactor"]
+    else:
+        dfactor = None
+        hfactor = None
+    dhcoeffs_vec = robjects.FloatVector([dfactor, hfactor]) if dfactor is not None else None
 
     species_proportions = get_spe_proportions(
         stand_land_use_cat,
-        stand_county,
+        geo_index,
         stand_development_class,
         stratum.asema,
         stratum.mean_diameter,
