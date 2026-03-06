@@ -571,9 +571,13 @@ class VMI10Builder(VMIBuilder):
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                ""
             )
         else:
             result.forest_management_category = 1
@@ -723,9 +727,13 @@ class VMI11Builder(VMIBuilder):
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1
@@ -858,9 +866,13 @@ class VMI12Builder(VMIBuilder):
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1
@@ -997,9 +1009,13 @@ class VMI13Builder(VMIBuilder):
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1

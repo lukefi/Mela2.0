@@ -294,32 +294,16 @@ def determine_owner_group(sourcevalue: str) -> int:
 
 def determine_forest_management_category(land_use_category: int,
                                          county: int,
-                                         muuttujat: Sequence,
                                          owner_group: int,
-                                         indices: dict) -> float:
-    """Determine forest management category  for given conditions."""
+                                         production_limitation: str,
+                                         production_limitation_detail: str,
+                                         other_values: str,
+                                         protection_forest_code: str,
+                                         aland_area_code: str,
+                                         test_area_handling_class: str
 
-    return protection_code(muuttujat[indices["puuntuotannon_rajoitus"]],
-                           muuttujat[indices["puuntuotannon_rajoitus_tarkenne"]],
-                           land_use_category,
-                           muuttujat[indices["muut_arvot"]],
-                           muuttujat[indices["suojametsakoodi"]],
-                           owner_group,
-                           county,
-                           muuttujat[indices["ahvenanmaan_markkinahakkuualue"]],
-                           muuttujat[indices["koealan_kasittelyluokka"]])
-
-
-def protection_code(production_limitation: str,
-                    production_limitation_detail: str,
-                    land_use_category: int,
-                    other_values: str,
-                    protection_forest_code: str,
-                    owner_group: int,
-                    county: int,
-                    aland_area_code: str,
-                    test_area_handling_class: str) -> float:
-
+                                         ) -> float:
+    # Determine forest management category  for given conditions.
     # Determine first the NFI management category (vmi_pt)
     # MELA management category is then determined by NFI management category and land_use_category
     vmi_pt = 3
