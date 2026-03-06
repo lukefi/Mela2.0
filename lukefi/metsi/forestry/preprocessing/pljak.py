@@ -1,6 +1,5 @@
 from typing import cast
 
-import numpy as np
 import pandas as pd
 from lukefi.metsi.data.enums.vmi import VmiIteration
 
