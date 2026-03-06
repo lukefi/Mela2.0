@@ -1,6 +1,6 @@
 from pathlib import Path
 import math
-from typing import Any, cast
+from typing import cast
 import pandas as pd
 from rpy2 import robjects
 
@@ -10,7 +10,6 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
 from lukefi.metsi.forestry.preprocessing.dhkertoimet import DHCOEFF
-from lukefi.metsi.forestry.preprocessing.dgmean_kitumaa import DGMEAN_KITUMAA
 
 SPECIES_INT2LM = [
     # Mänty 1, Kuusi 2, Rkoivu 3, Hkoivu 4,Haapa 5,Hleppä 6, Tleppä 7, Muu
