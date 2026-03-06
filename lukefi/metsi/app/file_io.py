@@ -21,9 +21,9 @@ from lukefi.metsi.domain.forestry_types import StandList, ForestStand
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.data.util.csv_utils import STAND_INTERNAL_COLUMNS, stand_internal_values, csv_cell
+from lukefi.metsi.data.util.csv_utils import STAND_INTERNAL_COLUMNS, csv_cell
 from lukefi.metsi.data.vector_model import DTYPES_TREE, DTYPES_STRATA
-
+from lukefi.metsi.data.model import stand_as_internal_row
 
 StandReader = Callable[[str | Path], StandList]
 StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]
@@ -182,7 +182,7 @@ def csv_exp_writer(filepath: Path, container: ExportableContainer[ForestStand]) 
         w = csv.writer(f, delimiter=';')
         w.writerow(stand_header)
         for stand in container.export_objects:
-            row = [stand.identifier] + stand_internal_values(stand)
+            row = [stand.identifier] + stand_as_internal_row(stand)
             if additional:
                 row.extend(stand.get_value_list(additional))
             w.writerow([csv_cell(x) for x in row])
