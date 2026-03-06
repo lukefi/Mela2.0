@@ -502,8 +502,6 @@ class VMI10Builder(VMIBuilder):
             return "stand"
         if row_type == 2:
             return "tree"
-        if row_type == 3:
-            return "tree"
         return None
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
