@@ -21,6 +21,9 @@ from lukefi.metsi.domain.forestry_types import StandList, ForestStand
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.data.util.csv_utils import STAND_INTERNAL_COLUMNS, stand_internal_values, csv_cell
+from lukefi.metsi.data.vector_model import DTYPES_TREE, DTYPES_STRATA
+
 
 StandReader = Callable[[str | Path], StandList]
 StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]
@@ -51,8 +54,10 @@ def prepare_target_directory(path_descriptor: str) -> Path:
 def stand_writer(container_format: str) -> StandWriter:
     """Return a serialization file writer function for a ForestDataPackage"""
 
-    if container_format == "csv":
-        return csv_writer
+    if container_format in ("csv", "csv_legacy"):
+        return csv_legacy_writer
+    if container_format == "csv_exp":
+        return csv_exp_writer
     if container_format == "rst":
         return rst_writer
     raise MetsiException(f"Unsupported container format '{container_format}'")
@@ -136,7 +141,7 @@ def row_writer(filepath: Path, rows: list[str]):
             file.write('\n')
 
 
-def csv_writer(filepath: Path, container: ExportableContainer[ForestStand]):
+def csv_legacy_writer(filepath: Path, container: ExportableContainer[ForestStand]):
     row_writer(filepath, stands_to_csv_content(container, ';'))
 
 
@@ -152,6 +157,59 @@ def par_writer(filepath: Path, var_names: list[str]):
         dir_parts = list(filepath.parts)[0:-1]
         return determine_file_path(os.path.join(*dir_parts), 'c-variables.par')
     row_writer(to_par_filepath(filepath), mela_par_file_content(var_names))
+
+
+def csv_exp_writer(filepath: Path, container: ExportableContainer[ForestStand]) -> None:
+    """
+    Exports stands.csv, trees.csv and strata.csv
+    """
+    out_dir = filepath.parent
+
+    stands_path = out_dir / "stands.csv"
+    trees_path = out_dir / "trees.csv"
+    strata_path = out_dir / "strata.csv"
+
+    # Delete old files for now. Maybe later under --delete
+    for p in (stands_path, trees_path, strata_path):
+        if p.exists():
+            p.unlink()
+
+    additional = container.additional_vars or []
+
+    # --- stands.csv ---
+    stand_header = ["stand_identifier"] + STAND_INTERNAL_COLUMNS + list(additional)
+    with open(stands_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, delimiter=';')
+        w.writerow(stand_header)
+        for stand in container.export_objects:
+            row = [stand.identifier] + stand_internal_values(stand)
+            if additional:
+                row.extend(stand.get_value_list(additional))
+            w.writerow([csv_cell(x) for x in row])
+
+    # --- trees.csv ---
+    tree_cols = list(DTYPES_TREE.keys())
+    tree_header = ["stand_identifier"] + tree_cols
+    with open(trees_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, delimiter=';')
+        w.writerow(tree_header)
+        for stand in container.export_objects:
+            trees = stand.reference_trees
+            for i in range(trees.size):
+                row = [stand.identifier] + [getattr(trees, col)[i] for col in tree_cols]
+                w.writerow([csv_cell(x) for x in row])
+
+    # --- strata.csv ---
+    strata_cols = list(DTYPES_STRATA.keys())
+    strata_header = ["stand_identifier"] + strata_cols
+    with open(strata_path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, delimiter=';')
+        w.writerow(strata_header)
+        for stand in container.export_objects:
+            strata = stand.tree_strata
+            for i in range(strata.size):
+                row = [stand.identifier] + [getattr(strata, col)[i] for col in strata_cols]
+                w.writerow([csv_cell(x) for x in row])
 
 
 def vmi_file_reader(file: str | Path) -> list[str]:

@@ -1,4 +1,5 @@
 import copy
+import json
 from typing import Any, Callable, Optional
 
 from lukefi.metsi.app.app_types import ExportableContainer
@@ -10,7 +11,8 @@ from lukefi.metsi.sim.runners import evaluate_sequence
 
 
 def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList,
-                        base_name: str = "preprocessing_result") -> None:
+                        base_name: str = "preprocessing_result",
+                        app_configuration: Optional[dict[str, Any]] = None,) -> None:
     output_formats = list(decl.keys())
     print_logline(f"Writing all preprocessed data to directory '{target_directory}'")
     for output_format in output_formats:
@@ -27,3 +29,9 @@ def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: Sta
             result = ExportableContainer(stands, additional_varnames)
         print_logline(f"Writing preprocessed data to '{target_directory}\\{file_name}'")
         write_stands_to_file(result, filepaths, output_format)
+
+        if output_format == "csv_exp":
+            metadata_path = determine_file_path(target_directory, "metadata.json")
+            payload = {"app_configuration": app_configuration or {}}
+            with open(metadata_path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, ensure_ascii=False, indent=2)
