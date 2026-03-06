@@ -18,11 +18,11 @@ mela = {
 
 mela_and_default_csv = {
     'rst': mela_decl,
-    'csv_legacy': default,
+    'csv': default,
 }
 
 default_csv = {
-    'csv_legacy': default
+    'csv': default
 }
 
 default_csv_exp = {
@@ -31,7 +31,7 @@ default_csv_exp = {
 
 mela_csv_legacy_and_exp = {
     'rst': mela_decl,
-    'csv_legacy': default,
+    'csv': default,
     'csv_exp': default,
 }
 __all__ = [
