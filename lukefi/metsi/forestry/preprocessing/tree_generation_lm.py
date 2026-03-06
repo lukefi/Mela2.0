@@ -1,9 +1,11 @@
 from pathlib import Path
 import math
-from typing import Any
+from typing import Any, cast
+import pandas as pd
 from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiSpeciesNumeric, convert_vmi_numeric_to_species
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
@@ -39,7 +41,10 @@ SPECIES_LM2INT: list[TreeSpecies] = [
     TreeSpecies(24), TreeSpecies(25), TreeSpecies(26), TreeSpecies(9), TreeSpecies(37)
 ]
 
+
 lm_tree_generation_loaded = False  # pylint: disable=invalid-name
+_dg_mean_kitumaa: pd.DataFrame
+_dg_mean_kitumaa_loaded = False  # pylint: disable=invalid-name
 
 
 def _determine_hmalli_value(species: TreeSpecies):
@@ -52,6 +57,9 @@ def _determine_hmalli_value(species: TreeSpecies):
 
 def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> ReferenceTrees:
     global lm_tree_generation_loaded  # pylint: disable=global-statement
+    global _dg_mean_kitumaa  # pylint: disable=global-statement
+    global _dg_mean_kitumaa_loaded  # pylint: disable=global-statement
+
     dir_ = Path(__file__).parent.parent.resolve() / "r"
     growth_script_file = dir_ / "lm_tree_generation.R"
     if not lm_tree_generation_loaded:
@@ -73,11 +81,26 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     spevmi = SPECIES_INT2LM[stratum.species.value - 1]
 
     # kitumaalle keskiläpimitta taulukosta
+
+    if not _dg_mean_kitumaa_loaded:
+        _dg_mean_kitumaa = pd.read_csv(
+            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DGMean_kitumaa.csv',
+            sep=' ',
+            index_col="maakunta"
+        )
+        _dg_mean_kitumaa_loaded = True
+
     if stand_land_use_cat == 2:
-        dgmean: dict[str, Any] = next(
-            (item for item in DGMEAN_KITUMAA if item["maakunta"] == stand_county and item["species"] == spevmi), {
-                "maakunta": 0, "species": 0, "DGM": 0.0})
-        dgm: float = dgmean["DGM"]
+        # dgmean: dict[str, Any] = next(
+        # (item for item in DGMEAN_KITUMAA if item["maakunta"] == stand_county and item["species"] == spevmi), {
+        # "maakunta": 0, "species": 0, "DGM": 0.0})
+        # dgm: float = dgmean["DGM"]
+        vmispe_str = str(convert_vmi_numeric_to_species(VmiSpeciesNumeric(spevmi)).value)
+        if stand_county in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[stand_county]:
+            dgm: float = cast(float, _dg_mean_kitumaa.loc[stand_county][vmispe_str])
+        else:
+            dgm = 0.0
+
     else:
         dgm = stratum.mean_diameter
 
