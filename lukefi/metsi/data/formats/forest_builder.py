@@ -8,6 +8,7 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.enums.internal import OwnerCategory, Origin
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
@@ -95,7 +96,7 @@ def _append_tree_row(
     attr: dict[str, list],
     indices,
     row,
-    vmi_version: int,
+    vmi_version: VmiIteration,
     forestry_centre_id: int | None,
     ahvkeilaus: str | None = None,
     height_conversion_factor: float = 100.0,
@@ -141,7 +142,7 @@ def _append_tree_row(
                                                    forestry_centre_id=forestry_centre_id,
                                                    ahvkeilaus=ahvkeilaus)
 
-    if vmi_version > 11:
+    if vmi_version in (VmiIteration.VMI12, VmiIteration.VMI13):
         origin = vmi2internal.convert_origin(row[indices["origin"]])
     else:
         origin = Origin.UNKNOWN
@@ -775,7 +776,7 @@ class VMI11Builder(VMIBuilder):
                     attr_dict,
                     VMI11_TREE_INDICES,
                     row,
-                    vmi_version=11,
+                    vmi_version=VmiIteration.VMI11,
                     forestry_centre_id=stand2.forestry_centre_id,
                     ahvkeilaus=stand2.ahvkeilaus,
                     height_conversion_factor=10.0,            # VMI11 pituus is in dm
@@ -917,7 +918,7 @@ class VMI12Builder(VMIBuilder):
                 if stand2 is None:
                     continue
                 _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
-                                 vmi_version=12, forestry_centre_id=stand2.forestry_centre_id)
+                                 vmi_version=VmiIteration.VMI12, forestry_centre_id=stand2.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -1060,7 +1061,7 @@ class VMI13Builder(VMIBuilder):
                     continue
 
                 _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
-                                 vmi_version=13, forestry_centre_id=stand2.forestry_centre_id)
+                                 vmi_version=VmiIteration.VMI13, forestry_centre_id=stand2.forestry_centre_id)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():

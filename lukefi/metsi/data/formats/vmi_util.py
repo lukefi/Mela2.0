@@ -6,6 +6,7 @@ from shapely.geometry import Point
 from geopandas import GeoSeries
 
 from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
@@ -478,7 +479,7 @@ def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10
 
 def determine_stems_per_ha(
     diameter_cm: float,
-    vmi_version: int = 13,
+    vmi_version: VmiIteration = VmiIteration.VMI13,
     forestry_centre_id: int | None = None,
     ahvkeilaus: str | None = None,
 ) -> float:
@@ -486,7 +487,7 @@ def determine_stems_per_ha(
     stems_per_ha logic for VMI9..VMI13.
     """
 
-    p = _get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
+    p = get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
 
     d = float(diameter_cm)
     if d <= 0.0:
@@ -841,7 +842,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         row[indices["total_age"]],
     )
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=9,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI9,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -905,7 +906,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     breast_height_age = parse_type(row[indices["d13_age"]], float)
     biological_age = parse_type(row[indices["total_age"]], float)
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=10,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI10,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -1269,7 +1270,7 @@ def determine_vmi11_area_ha(
 
 
 @dataclass(frozen=True)
-class _StemsParams:
+class StemsParams:
     q: float
     r1: float
     r2: float
@@ -1296,7 +1297,10 @@ def _is_ahvenanmaa(forestry_centre_id: Optional[int], ahvkeilaus: Optional[str])
     return False
 
 
-def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvkeilaus: Optional[str]) -> _StemsParams:
+def get_stems_params(
+        vmi_version: VmiIteration,
+        forestry_centre_id: Optional[int],
+        ahvkeilaus: Optional[str]) -> StemsParams:
     """
     Parameters from the provided R-document.
     forestry_centre_id:
@@ -1305,20 +1309,20 @@ def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvke
       11..13     => Pohjois-Suomi
     """
 
-    if vmi_version == 13:
-        return _StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI13:
+        return StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 12:
-        return _StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI12:
+        return StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
-        return _StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
+    if vmi_version == VmiIteration.VMI11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
+        return StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
 
-    if vmi_version in (9, 10, 11):
+    if vmi_version in (VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11):
         if _is_north_finland(forestry_centre_id):
-            return _StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
+            return StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
         # South (includes Ahvenanmaa for 9/10 and non-special 11)
-        return _StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
+        return StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
 
     raise MetsiException(f"Unsupported VMI version for stems_per_ha: {vmi_version}")
 
