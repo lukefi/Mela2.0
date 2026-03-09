@@ -117,7 +117,7 @@ def _append_tree_row(
 
     tree_category = tc_enum.value if tc_enum else None
 
-    if vmi_version == 11:
+    if vmi_version == VmiIteration.VMI11:
         breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
     else:
         breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
