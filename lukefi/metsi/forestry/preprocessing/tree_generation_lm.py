@@ -195,7 +195,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'shinit': 0.1,
         'plos': dfplos,
         'nmax': params.get('lm_stems_nmax', 2000),
-        'dhfactor': dhcoeffs_vec
+        'dhfactor': dhcoeffs_vec,
+        'rho': params.get('rho', 1.6)
     }
 
     r_args = {k: v for k, v in r_args_all.items() if v is not None}
