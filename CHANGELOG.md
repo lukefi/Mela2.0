@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.5] - 2026-03-10
+
+### Added
+
+- Separate parameter files for different VMI iterations
+
 ## [0.5.4] - 2026-03-10
 
 ### Fixed
