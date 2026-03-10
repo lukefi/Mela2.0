@@ -169,11 +169,6 @@ def csv_exp_writer(filepath: Path, container: ExportableContainer[ForestStand]) 
     trees_path = out_dir / "trees.csv"
     strata_path = out_dir / "strata.csv"
 
-    # Delete old files for now. Maybe later under --delete
-    for p in (stands_path, trees_path, strata_path):
-        if p.exists():
-            p.unlink()
-
     additional = container.additional_vars or []
 
     # --- stands.csv ---
@@ -253,7 +248,6 @@ def delete_existing_export_files(
     """
     formats = []
     if export_prepro:
-        # Only consider formats declared in export_prepro
         formats = list(export_prepro.keys())
 
     td = Path(target_directory)
@@ -262,12 +256,30 @@ def delete_existing_export_files(
     candidates.append(td / f"{simulation_base_name}.db")
 
     for fmt in formats:
-        candidates.append(td / f"{preprocessing_base_name}.{fmt}")
+        if fmt == "csv_exp":
+            # csv_exp_writer() creates these real files, not "<base>.csv_exp"
+            candidates.extend([
+                td / "stands.csv",
+                td / "trees.csv",
+                td / "strata.csv",
+            ])
+        else:
+            candidates.append(td / f"{preprocessing_base_name}.{fmt}")
+
         if fmt == "rst":
-            # rst_writer() may also write this file (avoid appending in repeated runs)
+            # rst_writer() may also write this file
             candidates.append(td / "c-variables.par")
 
-    existing = [p for p in candidates if p.is_file()]
+    # Deduplicate while preserving order
+    seen = set()
+    unique_candidates: list[Path] = []
+    for p in candidates:
+        key = str(p.resolve()) if p.is_absolute() else str(p)
+        if key not in seen:
+            seen.add(key)
+            unique_candidates.append(p)
+
+    existing = [p for p in unique_candidates if p.is_file()]
     if not existing:
         return True
 
@@ -280,7 +292,6 @@ def delete_existing_export_files(
             print("Aborting (no files were deleted).")
             return False
 
-    # delete
     for p in existing:
         try:
             p.unlink()
