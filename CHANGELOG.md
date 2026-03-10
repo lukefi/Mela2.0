@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.4] - 2026-03-10
+
+### Fixed
+- Added development_class in VMI9-10
+
+## [0.5.3] - 2026-03-05
+
+### Fixed
+- unified forest_management_category vmi 11-13
+
+### Added
+ - Same logic to vmi10
+
 ## [0.5.2] - 2026-03-04
 
 ### Added
