@@ -221,8 +221,10 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
 
 def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
-    """Scale basal area at the county level to match basal areas by species in NFI data.
-       NOTE: It is supposed that all stands belong to same county and represent the whole county.
+    """Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
+       for NFI iterations 12 and up, forestry centre for earlier.
+       NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
+       (or fc).
 
     Args:
         stands (StandList): the list of stands to update
