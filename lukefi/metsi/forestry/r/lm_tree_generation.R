@@ -33,11 +33,6 @@
 # 6.8.2025 Keskiläpimitan harhan korjaus muutettu
 ###############################################################################
 
-#metsi
-library_requirements <- c("lmfor", "stats4")
-if(!all(library_requirements %in% installed.packages()[, "Package"]))
-  install.packages(repos="https://cran.r-project.org", dependencies=TRUE, library_requirements)
-
 library(stats4)
 library(lmfor)
 #load("menu/HDmod_Siipilehto_Kangas_2015.RData")
@@ -331,18 +326,11 @@ kuvauspuut.weibull<-function(theta,tapa,n=10,G=NA,N=NA,mind=2,minlkm=NA,dmax=100
 # mind: pienimmän läpimittaluokan ylärajan minimiarvo
 # q, r1, r2, d1, d2: vmi_koelaan käytetyt säteet, pienten puiden relaskooppikerroin sekä läpimittarajat. Oletuksena VMI13-mukaiset arrvot.  
 # rho: muotoparametrin harhan korjausparametri
+# HDmod. para
 
-#generoi.kuvauspuut<-function(ositerivi,lukupuut,n,tapa,HDmod.=HDmod,hmalli=1,shdef=4,shinit=0.1,
-#                             width=2,minshape=2,mind=0,q=1.5,r1=4,r2=9.00,d1=4.5,d2=9.5,skaalaus=1,plos=NA,nmax=2000, dhfactor=c(1,1), rho=1.6) {
-generoi.kuvauspuut<-function(ositerivi,lukupuut, path="",n,tapa,hmalli=1,shdef=4,shinit=0.1,
-                             width=2,minshape=2,mind=0,q=1.5,r1=4,r2=9.00,d1=4.5,d2=9.5,skaalaus=1,plos=NA,nmax=2000, dhfactor=c(1,1), rho=1.6) {
-
-  #metsi
-  if (!exists("HDmod")) {
-     load(paste0(path,"HDmod_Siipilehto_Kangas_2015_VMI13",".RData"), envir = .GlobalEnv)
-  }
-  HDmod. = HDmod
-
+generoi.kuvauspuut<-function(ositerivi,lukupuut,n,tapa,HDpath,hmalli=1,shdef=4,shinit=0.1,width=2,minshape=2,mind=0,q=1.5,r1=4,r2=9.00,d1=4.5,d2=9.5,skaalaus=1,plos=NA,nmax=2000,
+                             dhfactor=c(1,1), rho=1.6) {
+  if(!exists("HDmod.")) HDmod.<<-readRDS(HDpath) # <<- lukee objektin globaliin ympäristöön. 
   # kokojakauma
   Dcor<-dhfactor[1]*ositerivi$DGM # Keskiläpimitan harhan korjaus, käytetään vain kokjakauman muodostamisessa
   ositerivi$HGM<-dhfactor[2]*ositerivi$HGM
@@ -388,5 +376,22 @@ generoi.kuvauspuut<-function(ositerivi,lukupuut, path="",n,tapa,hmalli=1,shdef=4
   kuvauspuut
 }
 
+# HDpath: rds-tiedosto, jossa on mallilistojen lista
+# whichmodel: skallari, mitä mallia käytetään: 1: männyn, 2: kuusen, 3: koivun
+# dd lämpösumma
+# DGM ositteen ppa:lla painotetettu keskiläpimitta, cm 
+# dbh puun läpimitta, cm
+# Gos ositteen ppa, m2/ha
+# Jos joku objekteista dd, DGM, dbh, Gos on vektori, on palautusarvo myös vektori.  
+
+
+Hpred_simple<-function(HDpath,whichmodel,dd,DGM,dbh,Gos) {
+  if(!exists("HDmod.")) HDmod.<<-readRDS(HDpath) # <<- lukee objektin globaliin ympäristöön.
+  puudat<-data.frame(lpm=dbh,DGM=DGM,DDY=dd,G=Gos)
+  Hpred(lpuut=puudat,kpuut=puudat[rep(FALSE,nrow(puudat)),],
+        malli=HDmod.[[whichmodel]][[2]],m=c(2,3,2)[whichmodel])$pred
+}
+
+#Hpred_simple("menu/VMIAineistonMuodostus/results/HDmod_Siipilehto_Kangas_2015_VMI13.rds",1,1200,20,1:30)
 
 
