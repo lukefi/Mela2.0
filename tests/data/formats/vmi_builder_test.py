@@ -46,8 +46,6 @@ class TestForestBuilderCsvExpSnapshots(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             out_dir = Path(tmpdir)
 
-            # csv_exp_writer ignores the given filename itself and writes:
-            #   stands.csv, trees.csv, strata.csv
             csv_exp_writer(
                 out_dir / "preprocessing_result.csv_exp",
                 ExportableContainer(export_objects=stands, additional_vars=None),

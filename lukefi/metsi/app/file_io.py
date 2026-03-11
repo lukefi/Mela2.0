@@ -257,7 +257,6 @@ def delete_existing_export_files(
 
     for fmt in formats:
         if fmt == "csv_exp":
-            # csv_exp_writer() creates these real files, not "<base>.csv_exp"
             candidates.extend([
                 td / "stands.csv",
                 td / "trees.csv",
@@ -267,10 +266,8 @@ def delete_existing_export_files(
             candidates.append(td / f"{preprocessing_base_name}.{fmt}")
 
         if fmt == "rst":
-            # rst_writer() may also write this file
             candidates.append(td / "c-variables.par")
 
-    # Deduplicate while preserving order
     seen = set()
     unique_candidates: list[Path] = []
     for p in candidates:
