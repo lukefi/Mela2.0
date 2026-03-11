@@ -10,6 +10,7 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
+from lukefi.metsi.data.enums.internal import DrainageCategory
 
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -39,7 +40,6 @@ def make_empty_sapling() -> SimpleNamespace:
 
 
 def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
-    # NOTE: this version guarantees both `sapling` and `saplings` exist.
     sap = make_empty_sapling()
     return SimpleNamespace(
         year=2000,
@@ -54,6 +54,16 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         reference_trees=rt,
         sapling=sap,
         saplings=sap,
+        start_time=2025,
+        artificial_regeneration_year=1,
+        soil_surface_preparation_year=2,
+        regeneration_area_cleaning_year=3,
+        stand_id=12345,
+        method_of_last_cutting=5,
+        fertilization_year=100,
+        young_stand_tending_year=200,
+        drainage_category=DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
+        drainage_year=3,
     )
 
 

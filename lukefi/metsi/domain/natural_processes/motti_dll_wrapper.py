@@ -216,7 +216,11 @@ class Motti4DLL:
         *,
         Y: float, X: float, Z: float = -1.0,
         lake: float = 0.0, sea: float = 0.0,
-        mal: int = 1, mty: int = 3, verl: int = 2, verlt: int = 0, alr: int = 1,
+        mal: int = 1, mty: int = 3, verl: int = 2, verlt: int = 0,
+        xt_regen: int = 1, xt_muok: int = 1, xt_raiv: int = 1, sid: int = 1,
+        fthin: bool = False, xt_thin: int = 1, xt_fert: int = 1,
+        xt_thoit: int = 1, drain: int = 1, xt_ndrain: int = 1,
+        alr: int = 1,
         year: Optional[float] = 2010.0,   # safe default if caller does not provide
         step: float = 5.0,
         convert_mela_site: bool = True,
@@ -253,6 +257,18 @@ class Motti4DLL:
         yy.mty = float(self.convert_site_index(mty) if convert_mela_site else mty)
         yy.verl = float(verl)
         yy.verlt = float(verlt)
+        yy.xt_regen = float(xt_regen)
+        yy.xt_muok = float(xt_muok)
+        yy.xt_raiv = float(xt_raiv)
+        yy.sid = float(sid)
+
+        yy.fthin = float(fthin)
+        yy.xt_thin = float(xt_thin)
+        yy.xt_fert = float(xt_fert)
+        yy.xt_thoit = float(xt_thoit)
+        yy.drain = float(drain)
+        yy.xt_ndrain = float(xt_ndrain)
+
         yy.alr = float(alr)
         if year is not None:
             yy.year = float(year)

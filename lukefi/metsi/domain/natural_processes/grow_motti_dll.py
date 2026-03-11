@@ -150,7 +150,7 @@ class MottiDLLPredictor:
     # ---- stand/site properties ----
     @property
     def year(self) -> float:
-        y = getattr(self.stand, "year", None)
+        y = getattr(self.stand, "start_year", None)
         return float(y) if y is not None else 2010.0
 
     @property
@@ -209,6 +209,55 @@ class MottiDLLPredictor:
         v = getattr(self.stand, "tax_class_reduction", None)
         return int(v) if v is not None else 0
 
+    @property
+    def xt_regen(self) -> int:
+        return (self.stand.start_time - self.stand.artificial_regeneration_year) if self.stand.artificial_regeneration_year \
+            is not None else self.stand.start_time
+
+    @property
+    def xt_muok(self) -> int:
+        return (self.stand.start_time - self.stand.soil_surface_preparation_year) if self.stand.soil_surface_preparation_year \
+            is not None else self.stand.start_time
+
+    @property
+    def xt_raiv(self) -> int:
+        return (self.stand.start_time - self.stand.regeneration_area_cleaning_year) if self.stand.regeneration_area_cleaning_year \
+            is not None else self.stand.start_time
+
+    @property
+    def sid(self) -> int:
+        return self.stand.stand_id or 0
+
+    @property
+    def fthin(self) -> bool:
+        return bool(self.stand.method_of_last_cutting or 0)
+
+    @property
+    def xt_thin(self) -> int:
+        return (self.stand.method_of_last_cutting or self.stand.cutting_year or 0)
+
+    @property
+    def xt_fert(self) -> int:
+        return (self.stand.start_time - self.stand.fertilization_year) if self.stand.fertilization_year \
+            is not None else self.stand.start_time
+
+    @property
+    def xt_thoit(self) -> int:
+        return (self.stand.start_time - self.stand.young_stand_tending_year) if self.stand.young_stand_tending_year \
+            is not None else self.stand.start_time
+
+    @property
+    def drain(self) -> int:
+
+        if not self.stand.drainage_category:
+            return 0
+        return self.stand.drainage_category.value
+
+    @property
+    def xt_ndrain(self) -> int:
+        return (self.stand.start_time - self.stand.drainage_year) if self.stand.drainage_year \
+            is not None else self.stand.start_time
+
     def ensure_state(self, step: int, sim_year: int):
         """Initialize and attach persistent MottiState to stand if missing."""
         if getattr(self.stand, "motti_state", None) is not None:
@@ -235,6 +284,16 @@ class MottiDLLPredictor:
             mty=self.mty,
             verl=self.verl,
             verlt=self.verlt,
+            xt_regen=self.xt_regen,
+            xt_muok=self.xt_muok,
+            xt_raiv=self.xt_raiv,
+            sid=self.sid,
+            fthin=self.fthin,
+            xt_thin=self.xt_thin,
+            xt_fert=self.xt_fert,
+            xt_thoit=self.xt_thoit,
+            drain=self.drain,
+            xt_ndrain=self.xt_ndrain,
             alr=self.alr,
             year=sim_year,
             step=step,
