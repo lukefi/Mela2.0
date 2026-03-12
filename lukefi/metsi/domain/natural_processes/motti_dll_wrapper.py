@@ -316,10 +316,9 @@ class Motti4DLL:
 
     def grow(
         self, yy, yp, numtrees: int, step: int = 5,
-        ctrl: Optional[dict] = None, skip_init: bool = True
+        ctrl: Optional[dict] = None
     ) -> GrowthDeltas:
         ffi, lib = self.ffi, self.lib
-        strata = ffi.new("Motti4Strata *")
         saplings = ffi.new("Motti4Saplings *")
         kor_state = ffi.new("Motti4KorArray *")
         vcr_state = ffi.new("Motti4VcrArray *")
@@ -337,23 +336,8 @@ class Motti4DLL:
                 motti_control.calibrate = int(bool(ctrl["calibrate"]))
 
         ntrees_p = ffi.new("int *", numtrees)
-        err = ffi.new("int *")
         rv = ffi.new("int *")
         numfer = ffi.new("int *", 0)
-
-        # Init (only when building trees inside DLL). With host trees, SKIP like the C wrapper.
-        if not skip_init:
-            with _maybe_chdir(self.data_dir):
-                lib.Motti4Init(strata, yy, saplings, kor_state, vcr_state, apv_state, yp,
-                               motti_control, ntrees_p, err, rv)
-            if rv[0] != 0 or err[0] != 0:
-                raise RuntimeError(f"Motti4Init failed (rv={rv[0]}, err={err[0]})")
-
-        # UpdateAfterImport
-        with _maybe_chdir(self.data_dir):
-            lib.Motti4UpdateAfterImport(yy, yp, saplings, kor_state, vcr_state, apv_state, ntrees_p, rv)
-        if rv[0] != 0:
-            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
 
         # Accumulators keyed by tree id (order can change between sub-steps)
         acc_id: Dict[int, float] = {}
@@ -409,6 +393,29 @@ class Motti4DLL:
             trees_age13=out_age13,
         )
 
+    def new_strata(self, strata_py: list[dict]) -> Any:
+        """
+        Builds Motti4Strata from FDM strata.
+        """
+        ffi = self.ffi
+        yo = ffi.new("Motti4Strata *")
+
+        max_n = min(len(strata_py), 10)
+        for i in range(max_n):
+            s = strata_py[i]
+            yo[0][i].spe = float(s.get("spe", 0.0))
+            yo[0][i].age = float(s.get("age", 0.0))
+            yo[0][i].ba = float(s.get("ba", 0.0))
+            yo[0][i].f = float(s.get("f", 0.0))
+            yo[0][i].h = float(s.get("h", 0.0))
+            yo[0][i].hw = float(s.get("hw", 0.0))
+            yo[0][i].d = float(s.get("d", 0.0))
+            yo[0][i].dg = float(s.get("dg", 0.0))
+            yo[0][i].storey = float(s.get("storey", 0.0))
+            yo[0][i].st = float(s.get("st", 0.0))
+            yo[0][i].sid = float(s.get("sid", 0.0))
+
+        return yo
     # ---------- persistent state buffers ----------
 
     def alloc_state_buffers(self, ctrl: Optional[dict] = None) -> MottiStateBuffers:
@@ -487,20 +494,6 @@ class Motti4DLL:
         ntrees_p = ffi.new("int *", int(numtrees))
         rv = ffi.new("int *")
 
-        # UpdateAfterImport (always)
-        with _maybe_chdir(self.data_dir):
-            lib.Motti4UpdateAfterImport(
-                yy, yp,
-                buffers.saplings,
-                buffers.kor_state,
-                buffers.vcr_state,
-                buffers.apv_state,
-                ntrees_p,
-                rv
-            )
-        if rv[0] != 0:
-            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
-
         acc_id: Dict[int, float] = {}
         acc_ih: Dict[int, float] = {}
         acc_if: Dict[int, float] = {}
@@ -564,3 +557,53 @@ class Motti4DLL:
             trees_age=out_age,
             trees_age13=out_age13,
         )
+
+    def initialize_with_state(
+        self,
+        yo: Any,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+    ) -> int:
+        """
+        One-time initialization for Motti4Init
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        err = ffi.new("int *")
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4Init(
+                yo,
+                yy,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                yp,
+                buffers.ctrl,
+                ntrees_p,
+                err,
+                rv,
+            )
+        if rv[0] != 0 or err[0] != 0:
+            raise RuntimeError(f"Motti4Init failed (rv={rv[0]}, err={err[0]})")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4UpdateAfterImport(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                rv,
+            )
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])

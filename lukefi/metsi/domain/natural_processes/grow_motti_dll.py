@@ -13,7 +13,7 @@ from lukefi.metsi.data.enums.internal import (
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth
+from lukefi.metsi.domain.natural_processes.util import update_stand_growth, safe_storey_value
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 
@@ -79,6 +79,51 @@ def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
     if not p.is_absolute():
         p = Path.cwd() / p
     return p.resolve()
+
+
+def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
+    """
+    Convert stand.tree_strata into Python dicts for Motti4Strata.
+
+    Uncertain fields:
+      hw -> temporary fallback to mean_height
+      dg -> temporary fallback to mean_diameter
+      st -> temporary dummy 0.0
+    """
+    strata = getattr(stand, "tree_strata", None)
+    if strata is None or strata.size == 0:
+        return []
+
+    sid = float(stand.stand_id or 0)
+    out: list[dict] = []
+
+    for i in range(min(strata.size, 10)):
+        spe_raw = int(strata.species[i])
+        if spe_raw < 0:
+            continue
+
+        biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
+        basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
+        stems_per_ha = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
+        mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
+        mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
+        storey = safe_storey_value(strata.storey[i])
+
+        out.append({
+            "spe": float(species_to_motti(spe_raw)),
+            "age": biological_age,
+            "ba": basal_area,
+            "f": stems_per_ha,
+            "h": mean_height,
+            "hw": mean_height,      # TODO: replace with true ppa-weighted height
+            "d": mean_diameter,
+            "dg": mean_diameter,    # TODO: Change to correct variable
+            "storey": storey,
+            "st": 0.0,              # TODO: What is this?
+            "sid": sid,
+        })
+
+    return out
 
 
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
@@ -211,17 +256,20 @@ class MottiDLLPredictor:
 
     @property
     def xt_regen(self) -> int:
-        return (self.stand.start_time - self.stand.artificial_regeneration_year) if self.stand.artificial_regeneration_year \
+        art = self.stand.artificial_regeneration_year
+        return (self.stand.start_time - art) if art \
             is not None else self.stand.start_time
 
     @property
     def xt_muok(self) -> int:
-        return (self.stand.start_time - self.stand.soil_surface_preparation_year) if self.stand.soil_surface_preparation_year \
+        soil = self.stand.soil_surface_preparation_year
+        return (self.stand.start_time - soil) if soil \
             is not None else self.stand.start_time
 
     @property
     def xt_raiv(self) -> int:
-        return (self.stand.start_time - self.stand.regeneration_area_cleaning_year) if self.stand.regeneration_area_cleaning_year \
+        reg = self.stand.regeneration_area_cleaning_year
+        return (self.stand.start_time - reg) if reg \
             is not None else self.stand.start_time
 
     @property
@@ -230,7 +278,7 @@ class MottiDLLPredictor:
 
     @property
     def fthin(self) -> bool:
-        return bool(self.stand.method_of_last_cutting or 0)
+        return bool(self.stand.method_of_last_cutting)
 
     @property
     def xt_thin(self) -> int:
@@ -272,7 +320,6 @@ class MottiDLLPredictor:
 
         spedom = _spedom(self.stand.reference_trees)
 
-        # site (DLL converts site index if asked)
         y_km, x_km = auto_euref_km(self.get_y, self.get_x)
         yy = self.dll.new_site(
             Y=y_km,
@@ -340,7 +387,18 @@ class MottiDLLPredictor:
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
 
+        # strata_py = _build_motti_strata_py(self.stand)
+        # yo = self.dll.new_strata(strata_py)
+
         buffers = self.dll.alloc_state_buffers(ctrl=None)
+
+        # ntrees = self.dll.initialize_with_state(
+        #     yo=yo,
+        #     yy=yy,
+        #     yp=yp,
+        #     numtrees=int(ntrees),
+        #     buffers=buffers,
+        # )
 
         if MottiState is not None:
             self.stand.motti_state = MottiState(
@@ -359,7 +417,6 @@ class MottiDLLPredictor:
             ms.ntrees = int(ntrees)
             ms.buffers = buffers
             ms.signature = tuple(ids.tolist())
-
             self.stand.motti_state = ms
 
         return self.stand.motti_state
