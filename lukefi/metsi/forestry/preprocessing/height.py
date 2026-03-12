@@ -23,11 +23,11 @@ def predict_tree_height(
         "HDpath": hdmod_path,
         "whichmodel": model,
         "dd": temp_sum,
-        "DGM": stratum_weighted_mean_diameter or robjects.NA_Real,
+        "DGM": stratum_weighted_mean_diameter,
         "dbh": tree_diameter,
         "Gos": stratum_basal_area
     }
 
     result = robjects.r['Hpred_simple'](**r_args)
 
-    return result
+    return result[0]
