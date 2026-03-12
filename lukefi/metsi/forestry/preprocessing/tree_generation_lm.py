@@ -10,6 +10,7 @@ from lukefi.metsi.data.formats.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
+from lukefi.metsi.forestry.r.hdmod.hdmod_files import HDMOD_FILE_PATH_MAP
 
 SPECIES_INT2LM = [
     # Mänty 1, Kuusi 2, Rkoivu 3, Hkoivu 4,Haapa 5,Hleppä 6, Tleppä 7, Muu
@@ -48,7 +49,7 @@ _dh_kertoimet: pd.DataFrame
 _dh_kertoimet_loaded = False  # pylint: disable=invalid-name
 
 
-def _determine_hmalli_value(species: TreeSpecies):
+def determine_hmalli_value(species: TreeSpecies):
     if species in (TreeSpecies.PINE, TreeSpecies.OTHER_PINE, TreeSpecies.SHORE_PINE):
         return 1
     if species.is_coniferous():
@@ -182,6 +183,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     if sum(species_proportions) > 0:
         ntrees = ntrees / sum(species_proportions)
 
+    hdmod_path = HDMOD_FILE_PATH_MAP[nfi_iteration]
+
     df = robjects.DataFrame(stratum_data)
     df2 = robjects.DataFrame(tree_data)
     dfplos = robjects.DataFrame(proportions_data) if stand_land_use_cat == 1 else None
@@ -189,11 +192,12 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     r_args_all = {
         'ositerivi': df,
         'lukupuut': df2,
-        'path': str(dir_) + '/',
+        # 'path': str(dir_) + '/',
         'tapa': params.get('lm_mode', 'dcons'),
+        'HDpath': hdmod_path,
         'width': params.get('lm_fix_width', 2),
         'n': ntrees,
-        'hmalli': _determine_hmalli_value(stratum.species),
+        'hmalli': determine_hmalli_value(stratum.species),
         'shdef': params.get('lm_shdef', 5),
         'shinit': 0.1,
         'q': stems_params.q,
