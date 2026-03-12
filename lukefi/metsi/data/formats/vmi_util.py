@@ -1278,13 +1278,6 @@ class StemsParams:
     d2: float
 
 
-def _is_south_finland(forestry_centre_id: Optional[int]) -> bool:
-    # Treat None as "south" (safe default; callers should pass real value when available)
-    if forestry_centre_id is None:
-        return True
-    return 0 <= forestry_centre_id <= 10
-
-
 def _is_north_finland(forestry_centre_id: Optional[int]) -> bool:
     if forestry_centre_id is None:
         return False
