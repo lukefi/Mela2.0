@@ -11,7 +11,7 @@ def predict_tree_height(
         stratum_weighted_mean_diameter: float,
         tree_diameter: float,
         stratum_basal_area: float) -> float:
-    global lm_tree_generation_loaded
+    global lm_tree_generation_loaded  # pylint: disable=global-statement
 
     if not lm_tree_generation_loaded:
         robjects.r.source("lukefi/metsi/forestry/r/lm_tree_generation.R")
