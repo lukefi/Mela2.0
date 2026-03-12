@@ -179,7 +179,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         # lisätään irralliset säästöpuut
         if add_retention_trees and np.any(retention_trees_mask):
-            adjust_retention_trees(stand, new_trees, retention_trees_mask)
+            adjust_retention_trees(stand, new_trees, retention_trees_mask, operation_params['nfi_iteration'])
         if operation_params.get('age_model', False):
             for i in range(len(new_trees)):
                 if new_trees.breast_height_diameter[i] > 0:
