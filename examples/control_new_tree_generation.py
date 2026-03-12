@@ -68,6 +68,7 @@ control_structure = {
                 "lm_shdef": 5,
                 "age_model": True,  # käytetäänkö kuvauspuulle ikämallin ikää (true) vai ositteen ikää (false)
                 "nfi_iteration": VmiIteration.VMI13,
+                "rho": 1.6
             }
         ],
         convert_coordinates: [

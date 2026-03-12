@@ -6,6 +6,7 @@ from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
+from lukefi.metsi.data.formats.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
@@ -77,7 +78,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     if stand_municipality in (47, 148, 890):
         stand_county = 30
 
-    nfi_iteration = params["nfi_iteration"]
+    nfi_iteration: VmiIteration = params["nfi_iteration"]
 
     geo_index = stand.forestry_centre_id if nfi_iteration in (
         VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else stand_county
@@ -86,6 +87,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     gos = stratum.basal_area
 
     spevmi = SPECIES_INT2LM[stratum.species.value - 1]
+
+    stems_params = get_stems_params(nfi_iteration, stand.forestry_centre_id, stand.ahvkeilaus)
 
     # kitumaalle keskiläpimitta taulukosta
 
@@ -146,7 +149,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         stratum.mean_diameter,
         stratum.stems_per_ha,
         spevmi,
-        params["nfi_iteration"])
+        nfi_iteration)
     proportions_data = {
         'puulaji': robjects.FloatVector(list(range(1, len(species_proportions) + 1))),
         'osuus': robjects.FloatVector(species_proportions)
@@ -193,9 +196,15 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'hmalli': _determine_hmalli_value(stratum.species),
         'shdef': params.get('lm_shdef', 5),
         'shinit': 0.1,
+        'q': stems_params.q,
+        'r1': stems_params.r1,
+        'r2': stems_params.r2,
+        'd1': stems_params.d1,
+        'd2': stems_params.d2,
         'plos': dfplos,
         'nmax': params.get('lm_stems_nmax', 2000),
-        'dhfactor': dhcoeffs_vec
+        'dhfactor': dhcoeffs_vec,
+        'rho': params.get('rho', 1.6)
     }
 
     r_args = {k: v for k, v in r_args_all.items() if v is not None}
