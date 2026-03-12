@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.6] - 2026-03-12
+
+### Fixed
+
+- Tree generation strategy selection now works for strata without mean height
+
 ## [0.5.5] - 2026-03-10
 
 ### Added
