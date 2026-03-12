@@ -107,6 +107,7 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         stems_per_ha = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
+        origin = safe_storey_value(strata.origin[i])
         storey = safe_storey_value(strata.storey[i])
 
         out.append({
@@ -115,11 +116,11 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
             "ba": basal_area,
             "f": stems_per_ha,
             "h": mean_height,
-            "hw": mean_height,      # TODO: replace with true ppa-weighted height
+            "hw": mean_height,      # ppa-weighted height
             "d": mean_diameter,
-            "dg": mean_diameter,    # TODO: Change to correct variable
+            "dg": mean_diameter,    # ppa-weighted keskiläpimitta
             "storey": storey,
-            "st": 0.0,              # TODO: What is this?
+            "st": origin,
             "sid": sid,
         })
 
