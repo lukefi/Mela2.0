@@ -192,7 +192,6 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     r_args_all = {
         'ositerivi': df,
         'lukupuut': df2,
-        # 'path': str(dir_) + '/',
         'tapa': params.get('lm_mode', 'dcons'),
         'HDpath': hdmod_path,
         'width': params.get('lm_fix_width', 2),
