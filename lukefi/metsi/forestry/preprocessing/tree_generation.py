@@ -239,15 +239,17 @@ def adjust_retention_trees(stand: ForestStand,
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
         trees.breast_height_age[i] = breast_height_age
         trees.biological_age[i] = biological_age
-        trees.height[i] = predict_tree_height(
-            nfi_iteration,
-            determine_hmalli_value(
-                TreeSpecies(
-                    trees.species[i])),
-            stand.degree_days,
-            None,
-            float(trees.breast_height_diameter[i]),
-            1.0)
+        if np.isnan(trees.height[i]) or trees.height[i] == 0:
+            trees.height[i] = predict_tree_height(
+                nfi_iteration,
+                determine_hmalli_value(
+                    TreeSpecies(
+                        trees.species[i])),
+                stand.degree_days or 0.0,
+                float(trees.breast_height_diameter[i]),
+                float(trees.breast_height_diameter[i]),
+                1.0
+            )
 
 
 def adjust_ages(stand: ForestStand, trees: ReferenceTrees):
