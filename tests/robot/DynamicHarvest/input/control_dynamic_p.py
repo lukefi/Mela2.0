@@ -78,10 +78,7 @@ control_structure = {
             do_nothing
         ]
     },
-    'export_prepro': {
-        'csv': mela_and_default_csv,
-        'rst': mela_and_default_csv,
-    },
+    'export_prepro': mela_and_default_csv
 
 
 }
