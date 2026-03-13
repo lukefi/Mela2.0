@@ -1,6 +1,8 @@
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import vmi_util
 from lukefi.metsi.data.formats.vmi_const import *
 from tests.data import test_util
+from lukefi.metsi.app.utils import MetsiException
 
 
 class TestConversion(test_util.ConverterTestSuite):
@@ -92,19 +94,19 @@ class TestConversion(test_util.ConverterTestSuite):
 
         for county in range(1, 17):
             self.assertEqual(
-                round(vmi12_county_areas[county - 1], 4),
+                round(VMI12_COUNTY_AREAS[county - 1], 4),
                 vmi_util.determine_vmi12_area_ha(0, county))
 
         assertions = [
             ([2, 17], 0.0),
-            ([3, 17], round(vmi12_county_areas[16], 4)),
-            ([4, 17], round(vmi12_county_areas[17], 4)),
-            ([2, 18], round(vmi12_county_areas[18], 4)),
+            ([3, 17], round(VMI12_COUNTY_AREAS[16], 4)),
+            ([4, 17], round(VMI12_COUNTY_AREAS[17], 4)),
+            ([2, 18], round(VMI12_COUNTY_AREAS[18], 4)),
             ([2, 19], 0.0),
-            ([4, 19], round(vmi12_county_areas[19], 4)),
-            ([5, 19], round(vmi12_county_areas[20], 4)),
+            ([4, 19], round(VMI12_COUNTY_AREAS[19], 4)),
+            ([5, 19], round(VMI12_COUNTY_AREAS[20], 4)),
             ([5, 20], 0.0),
-            ([5, 21], round(vmi12_county_areas[21], 4)),
+            ([5, 21], round(VMI12_COUNTY_AREAS[21], 4)),
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi12_area_ha)
 
@@ -286,49 +288,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.parse_forestry_centre)
 
-    def test_determine_fmc_by_land_category(self):
-        assertions = [
-            ([10, 1], 1),
-            ([10, 2], 3),
-            ([10, 3], 6),
-            ([10, 4], 10),
-            ([10, 123], 10),
-            ([None, None], None),
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_land_category)
-
-    def test_determine_fmc_by_natura_area(self):
-        assertions = [
-            ([10.0, '2'], 1.0),
-            ([10.0, '3'], 1.0),
-            ([10.0, 'kissa123'], 10.0),
-            ([None, 'kissa123'], None),
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_natura_area)
-
-    def test_determine_fmc_by_aland_centre(self):
-        assertions = [
-            ([10, '0', 21, '1'], 7),
-            ([10, '1', 21, '2'], 7),
-            ([10, '0', 21, '0'], 7),
-            ([10, '1', 21, '0'], 10),
-            ([10, 'kissa123', 666, 'bbc'], 10),
-            ([None, 'kissa123', 666, 'bbc'], None)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_aland_centre)
-
-    def test_determine_fmc_by_test_area_handling_class(self):
-        assertions = [
-            (['.'], 1),
-            (['1'], 1),
-            (['2'], 2),
-            (['3.1'], 7),
-            (['3.2'], 7),
-            (['4'], 1),
-            ([None], 1)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_fmc_by_test_area_handling_class)
-
     def test_determine_municipality(self):
         assertions = [
             (['  1', '  2'], 1),
@@ -369,14 +328,29 @@ class TestConversion(test_util.ConverterTestSuite):
 
     def test_determine_stems_per_ha(self):
         assertions = [
-            ([3.0, True], 2122.0),
-            ([6.0, True], 100.067),
-            ([6.0, False], 198.944),
-            ([12.0, True], 39.298),
-            ([0.0, True], 1.0),
-            ([0.0, False], 1.0)
+            # VMI13 parameters
+            ([3.0, VmiIteration.VMI13, None, None], 2122.06591),
+            ([6.0, VmiIteration.VMI13, None, None], 198.94368),
+            ([12.0, VmiIteration.VMI13, None, None], 39.29752),
+
+            # VMI12 parameters (different r1 => different mid-diameter plateau)
+            ([6.0, VmiIteration.VMI12, None, None], 100.06724),
+            ([12.0, VmiIteration.VMI12, None, None], 39.29752),
+
+            # Zero/negative diameter always => 1.0
+            ([0.0, VmiIteration.VMI13, None, None], 1.0),
+            ([0.0, VmiIteration.VMI12, None, None], 1.0),
+
+            # VMI11 special-case Ahvenanmaa (metkes=0, ahvkeilaus='A')
+            ([12.0, VmiIteration.VMI11, 0, "A"], 88.41941),
+
+            ([30.0, VmiIteration.VMI10, 1, None], 28.29421),   # south
+            ([30.0, VmiIteration.VMI10, 12, None], 21.22066),  # north
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_stems_per_ha)
+
+        # Unsupported VMI version should raise
+        self.assertRaises(MetsiException, vmi_util.determine_stems_per_ha, 10.0, 99, None, None)
 
     def test_determine_tree_age_values(self):
         assertions = [

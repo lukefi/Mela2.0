@@ -88,6 +88,9 @@ class EvaluationStrategy(StringConfigEnum):
 
 class StateFormat(StringConfigEnum):
     CSV = 'csv'
+    VMI9 = 'vmi9'
+    VMI10 = 'vmi10'
+    VMI11 = 'vmi11'
     VMI12 = 'vmi12'
     VMI13 = 'vmi13'
     XML = 'xml'

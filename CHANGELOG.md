@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.7] - 2026-03-12
+
+### Added
+
+- `rho` parameter for reference tree generation (lm)
+- stem parameters fetched for tree generation (lm) by stand and VMI iteration
+
+## [0.5.6] - 2026-03-12
+
+### Fixed
+
+- Tree generation strategy selection now works for strata without mean height
+
+## [0.5.5] - 2026-03-10
+
+### Added
+
+- Separate parameter files for different VMI iterations
+
+## [0.5.4] - 2026-03-10
+
+### Fixed
+- Added development_class in VMI9-10
+
+## [0.5.3] - 2026-03-05
+
+### Fixed
+- unified forest_management_category vmi 11-13
+
+### Added
+ - Same logic to vmi10
+
+## [0.5.2] - 2026-03-04
+
+### Added
+
+- carrier return check to VMI input data parser
+
+## [0.5.1] - 2026-03-03
+
+### Added
+
+- VMI9, VMI10 and VMI11 input support 
+
+## [0.5.0] - 2026-03-02
+
+### Changed
+
+- New model for reference tree generation, currently only for NFI13 source data
+- Management category determination rules changed
+- Tree-to-strata matching logic changed, now based on tree crown class and stratum position in tree storey class
+
+### Added
+
+- New preprocessing operations:
+    - scale_trees_by_area_weight_factors
+    - scale_basal_area_at_county_level
+    - update_strata_to_match_trees
+    - area_ha_to_1000ha
+
 ## [0.4.17] - 2026-02-24
 
 ### Fixed

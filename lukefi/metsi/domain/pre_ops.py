@@ -1,16 +1,73 @@
-from typing import Any, Callable
-from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.domain.utils.filter import applyfilter
-from lukefi.metsi.forestry.preprocessing import tree_generation
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
+from collections.abc import Callable
+from typing import Any, Optional
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.conversion import vmi2internal
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
+from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
+from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
+from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
+from lukefi.metsi.forestry.preprocessing.ages import ages
+from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
+from lukefi.metsi.forestry.preprocessing.tree_generation import (
+    adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 
 
-def preproc_filter(stands: StandList, **operation_params) -> StandList:
-    command: str
-    predicate: Callable[..., bool]
-    for command, predicate in operation_params.items():
-        stands = applyfilter(stands, command, predicate)
+def filter_stands(stands: StandList,
+                  *,
+                  select: Optional[Callable[[ForestStand], bool]] = None,
+                  remove: Optional[Callable[[ForestStand], bool]] = None) -> StandList:
+    """Filter list of forest stands.
+
+    Args:
+        stands (StandList): list of stands to filter
+
+    Returns:
+        StandList: the filtered stands
+    """
+    if select is not None:
+        stands = filter_stands_(stands, "select", select)
+    if remove is not None:
+        stands = filter_stands_(stands, "remove", remove)
+
+    return stands
+
+
+def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    """Filter reference trees for each stand in list based on given predicate.
+
+    Args:
+        stands (StandList): list of forest stands whose trees to filter
+        predicate (Callable[[ForestStand], npt.NDArray[np.bool_]]): function that accepts a single stand and returns a
+            numpy boolen array whose size matches the number of reference trees for the stand
+
+    Returns:
+        StandList: the list of stands with the trees filtered (also modified in-place)
+    """
+    stands = filter_trees_(stands, predicate)
+    return stands
+
+
+def filter_strata(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+    """Filter tree strata for each stand in list based on given predicate. The predicate should be a
+
+    Args:
+        stands (StandList): list of forest stands whose strata to filter
+        predicate (Callable[[ForestStand], npt.NDArray[np.bool_]]): function that accepts a single stand and returns a
+            numpy boolen array whose size matches the number of strata for the stand
+
+    Returns:
+        StandList: the list of stands with the strata filtered (also modified in-place)
+    """
+    stands = filter_strata_(stands, predicate)
     return stands
 
 
@@ -64,26 +121,267 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
 
 
 def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
-    """ Operation function that generates reference trees for each stand """
-    debug = operation_params.get("debug", False)
+    """ Operation function that generates (N * stratum) reference trees for each stand """
 
-    for i, stand in enumerate(stands):
-        print(f"\rGenerating trees for stand {stand.identifier}    {i}/{len(stands)}", end="")
+    # oletusarvo true vai false?
+    add_retention_trees = operation_params.get('add_retention_trees', True)
 
-        try:
-            new_vec = tree_generation.generate_reference_trees(stand, **operation_params)
-        except Exception as e:  # noqa: BLE001
-            print(f"\nError generating trees for stand {stand.identifier}")
-            if debug:
-                # pylint: disable=import-outside-toplevel
-                import traceback  # type: ignore[import-outside-toplevel]
-                traceback.print_exc()
+    stratum_association_diameter_threshold = operation_params.get('stratum_association_diameter_threshold', 3)
+
+    for j, stand in enumerate(stands):
+        print(f"\rGenerating trees for stand {stand.identifier}    {j}/{len(stands)}", end="")
+
+        tree_ordering = np.argsort(stand.reference_trees.identifier)
+
+        stand.reference_trees = stand.reference_trees[tree_ordering]
+        trees = stand.reference_trees
+
+        strata = stand.tree_strata
+
+        for i in range(len(trees)):
+            stratum_id = find_matching_storey_stratum_for_tree(
+                trees.get_tree(i), strata, stratum_association_diameter_threshold)
+            trees.stratum[i] = stratum_id if stratum_id is not None else ""
+
+        retention_trees_mask = np.repeat(False, len(trees))
+        if add_retention_trees:
+            retention_trees_mask = (trees.stratum == "") & (
+                trees.management_category == 2) & np.isin(
+                trees.tree_type, ("", "V", "Y", "U", "S", "T", "N", " ")) & np.isin(
+                trees.tree_category, ("", "0", "1", "3", "7"))
+
+        stratum_ordering = np.argsort(stand.tree_strata.identifier)
+        stand.tree_strata = stand.tree_strata[stratum_ordering]
+        strata = stand.tree_strata
+
+        new_trees = ReferenceTrees()
+
+        for k, stratum in enumerate(strata.get_stratum(i) for i in range(len(strata))):
+            try:
+                stratum_trees = reference_trees_from_tree_stratum(stand, stratum, **operation_params)
+                strata.number_of_generated_trees[k] = stratum.number_of_generated_trees
+            except Exception as e:
+                print(
+                    f"\nError generating trees for stratum {
+                        stratum.identifier} with diameter {
+                        stratum.mean_diameter}, height {
+                        stratum.mean_height}, basal_area {
+                        stratum.basal_area}")
+                print()
+                raise e
+
+            if stratum_trees is not None:
+                stand_tree_count = len(new_trees)
+                for i in range(len(stratum_trees)):
+                    stratum_trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + i + 1}-tree"
+
+                new_trees = new_trees + stratum_trees
+
+        # lisätään irralliset säästöpuut
+        if add_retention_trees and np.any(retention_trees_mask):
+            adjust_retention_trees(stand, new_trees, retention_trees_mask)
+        if operation_params.get('age_model', False):
+            for i in range(len(new_trees)):
+                if new_trees.breast_height_diameter[i] > 0:
+                    breast_height_age, biological_age = ages(
+                        stand, new_trees + stand.reference_trees[retention_trees_mask], new_trees.get_tree(i), 10)
+                    new_trees.breast_height_age[i] = round(breast_height_age, 1)
+                    new_trees.biological_age[i] = round(biological_age, 1)
+            adjust_ages(stand, new_trees)
+
+        retention_trees = trees[retention_trees_mask]
+        new_trees = new_trees + retention_trees
+
+        new_strata = TreeStrata(retention_trees.size)
+        new_strata.tree_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
+        new_strata.identifier = np.asarray([
+            stand.identifier +
+            "-" +
+            str(tree_number) +
+            "-stratum" for tree_number in new_strata.tree_number])
+        new_strata.species = retention_trees.species
+        new_strata.origin = retention_trees.origin
+        new_strata.mean_diameter = retention_trees.breast_height_diameter
+        new_strata.mean_height = retention_trees.height
+        new_strata.breast_height_age = retention_trees.breast_height_age
+        new_strata.biological_age = retention_trees.biological_age
+        new_strata.storey = np.repeat(Storey.SPARE, len(retention_trees))
+        new_strata.stems_per_ha = retention_trees.stems_per_ha
+        new_strata.basal_area = retention_trees.stems_per_ha * np.pi * \
+            ((retention_trees.breast_height_diameter / 200) ** 2)
+        new_strata.number_of_generated_trees = np.repeat(1, len(retention_trees))
+
+        stand.tree_strata = stand.tree_strata + new_strata
+        stand.reference_trees = new_trees
+
+        if operation_params.get("delete_strata", False):
+            stand.tree_strata = TreeStrata()
+
+    return stands
+
+
+def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
+    """Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
+       for NFI iterations 12 and up, forestry centre for earlier.
+       NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
+       (or fc).
+
+    Args:
+        stands (StandList): the list of stands to update
+
+    Returns:
+        StandList: updated stands
+    """
+
+    county = stands[0].region
+    if county == 19 and stands[1].municipality_id in (47, 148, 890):
+        county = 30
+
+    # basal area sums by species an land use classes (index 0 = forest land, 1 = scrub land)
+    ba_sums = np.asarray([[0.0] * max(TreeSpecies), [0.0] * max(TreeSpecies)], dtype=np.float64)
+    ba_sum_ret = 0  # retention trees
+
+    for stand in stands:
+        assert stand.land_use_category is not None
+
+        if stand.land_use_category not in (LandUseCategory.FOREST, LandUseCategory.SCRUB_LAND):
+            continue
+
+        trees = stand.reference_trees
+        bhd_positive = trees.breast_height_diameter > 0
+        is_retained = trees.management_category == 2
+        is_not_retained = ~is_retained
+
+        for species in TreeSpecies:
+            if species in (TreeSpecies.UNSET, TreeSpecies.TREELESS):
                 continue
-            raise e
+            mask1 = bhd_positive & is_not_retained & (trees.species == species)
+            mask2 = bhd_positive & is_retained & (trees.species == species)
 
-        stand.reference_trees = new_vec
+            ba_sums[stand.land_use_category - 1][species - 1] += stand.area * np.pi * \
+                np.sum(trees.stems_per_ha[mask1] * ((trees.breast_height_diameter[mask1] / 200) ** 2))
+            ba_sum_ret += stand.area * np.pi * \
+                np.sum(trees.stems_per_ha[mask2] * ((trees.breast_height_diameter[mask2] / 200) ** 2))
 
-    print()
+    # scale coefficients
+    forest_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_metsamaa.csv',
+                                 sep=' ',
+                                 index_col="maakunta")
+    scrub_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_kitumaa.csv',
+                                sep=' ',
+                                index_col="maakunta")
+    retention_trees_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_saastopuut.csv',
+                                     sep=' ',
+                                     index_col="maakunta")
+
+    ba_targets = [np.full(max(TreeSpecies), 0.0, dtype=np.float64),
+                  np.full(max(TreeSpecies), 0.0, dtype=np.float64)]
+
+    geo_index = stands[0].forestry_centre_id if nfi_iteration in (
+        VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else county
+
+    assert geo_index is not None
+
+    for species_col in forest_land_ba:
+        ba_targets[0][vmi2internal.convert_species(str(species_col)) - 1] = forest_land_ba[species_col][geo_index]
+    for species_col in scrub_land_ba:
+        ba_targets[1][vmi2internal.convert_species(str(species_col)) - 1] = scrub_land_ba[species_col][geo_index]
+
+    ba_target_ret: np.float64 = retention_trees_ba.V2[geo_index]
+
+    if len(ba_targets) == 0:
+        scale_coeffs = [[1] * max(TreeSpecies), [1] * max(TreeSpecies)]
+    else:
+        scale_coeffs = [[], []]
+        for i in range(2):
+            for target, generated in zip(ba_targets[i], ba_sums[i]):
+                coeff = target / generated if generated > 0 else -1
+                scale_coeffs[i].append(coeff)
+    scale_coeff_ret = ba_target_ret / ba_sum_ret if ba_sum_ret > 0 else -1
+
+    for stand in stands:
+        assert stand.land_use_category is not None
+
+        if stand.land_use_category not in (LandUseCategory.FOREST, LandUseCategory.SCRUB_LAND):
+            continue
+
+        trees = stand.reference_trees
+        is_retained = trees.management_category == 2
+        is_not_retained = ~is_retained
+        scale_coeffs_for_trees = np.asarray(scale_coeffs[stand.land_use_category - 1])[trees.species - 1]
+        mask = is_not_retained & (scale_coeffs_for_trees >= 0)
+
+        trees.stems_per_ha[mask] *= scale_coeffs_for_trees[mask]
+
+        if scale_coeff_ret >= 0:
+            trees.stems_per_ha[is_retained] *= scale_coeff_ret
+
+    return stands
+
+
+def update_strata_to_match_trees(stands: StandList, **operation_params) -> StandList:
+    _ = operation_params
+
+    for stand in stands:
+        i_tree = -1
+        stand_ba = 0
+
+        trees = stand.reference_trees
+        strata = stand.tree_strata
+
+        for i_stratum in range(len(strata)):
+            ntrees = 0
+            stems = 0
+            stratum_ba = 0
+            species_ba = [0] * max(TreeSpecies)
+            dsum = 0
+            hsum = 0
+            hasum = 0
+            aged13sum = 0
+            aged13asum = 0
+            agebiolsum = 0
+            agebiolasum = 0
+
+            # count the number of reference_trees left (having positive stems_per_ha) for each stratum
+            for _ in range(strata.number_of_generated_trees[i_stratum]):
+                i_tree = i_tree + 1
+                if trees.stems_per_ha[i_tree] > 0:
+                    tree_ba = trees.stems_per_ha[i_tree] * np.pi * ((trees.breast_height_diameter[i_tree] / 200)**2)
+                    dsum = dsum + tree_ba * trees.breast_height_diameter[i_tree]
+                    hsum = hsum + tree_ba * trees.height[i_tree]
+                    hasum = hasum + trees.stems_per_ha[i_tree] * trees.height[i_tree]
+                    aged13sum = aged13sum + tree_ba * trees.breast_height_age[i_tree]
+                    aged13asum = aged13asum + trees.stems_per_ha[i_tree] * trees.breast_height_age[i_tree]
+                    agebiolsum = agebiolsum + tree_ba * trees.biological_age[i_tree]
+                    agebiolasum = agebiolasum + trees.stems_per_ha[i_tree] * trees.biological_age[i_tree]
+                    stratum_ba = stratum_ba + tree_ba
+                    species_ba[trees.species[i_tree] - 1] = species_ba[trees.species[i_tree] - 1] + tree_ba
+
+                    ntrees = ntrees + 1
+                    stems = stems + trees.stems_per_ha[i_tree]
+
+            # update stratum
+            strata.basal_area[i_stratum] = stratum_ba
+            if stems > 0:
+                strata.mean_diameter[i_stratum] = dsum / stratum_ba if stratum_ba > 0 else 0
+                strata.mean_height[i_stratum] = hsum / stratum_ba if stratum_ba > 0 else hasum / stems
+                strata.breast_height_age[i_stratum] = aged13sum / stratum_ba if stratum_ba > 0 else aged13asum / stems
+                strata.biological_age[i_stratum] = agebiolsum / stratum_ba if stratum_ba > 0 else agebiolasum / stems
+            else:
+                strata.mean_diameter[i_stratum] = np.nan
+                strata.mean_height[i_stratum] = np.nan
+                strata.breast_height_age[i_stratum] = np.nan
+                strata.biological_age[i_stratum] = np.nan
+            strata.stems_per_ha[i_stratum] = stems
+            strata.number_of_generated_trees[i_stratum] = ntrees
+            strata.sapling_stems_per_ha[i_stratum] = None
+
+            # basal area of the whole stand
+            stand_ba += stratum_ba
+
+        trees.delete(np.where(trees.stems_per_ha < 0.00005)[0])
+
+        stand.basal_area = stand_ba
     return stands
 
 
@@ -96,6 +394,41 @@ def scale_area_weight(stands: StandList, **operation_params):
     _ = operation_params
     for stand in stands:
         stand.area_weight = stand.area_weight * stand.area_weight_factors[1]
+    return stands
+
+
+def area_ha_to_1000ha(stands: StandList, **operation_params):
+    # Converts area of a stand from ha to 1000 ha
+    _ = operation_params
+    for stand in stands:
+        stand.area_weight = stand.area_weight / 1000
+        stand.area = stand.area / 1000
+    return stands
+
+
+def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
+    """Scale the number of stems of the (measured) trees according to the stand's
+       proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
+       by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
+       are scaled by proportion of the sample plot with 9 m radius.
+
+    Args:
+        stands (StandList): list of ForestStands
+
+    Returns:
+        StandList: the modified stands
+    """
+    _ = operation_params
+    for stand in stands:
+        trees = stand.reference_trees
+        if len(trees) > 0:
+            smaller_diameter = ((4.5 <= trees.breast_height_diameter) &
+                                (trees.breast_height_diameter < 9.5) &
+                                (0 < stand.area_weight_factors[0] < 1))
+            larger_diameter = (trees.breast_height_diameter >= 9.5) & (0 < stand.area_weight_factors[1] < 1)
+            trees.stems_per_ha[smaller_diameter] = trees.stems_per_ha[smaller_diameter] / stand.area_weight_factors[0]
+            trees.stems_per_ha[larger_diameter] = trees.stems_per_ha[larger_diameter] / stand.area_weight_factors[1]
+
     return stands
 
 
@@ -118,8 +451,14 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
     return stands
 
 
-__all__ = ['preproc_filter',
+__all__ = ['filter_stands',
+           'filter_trees',
+           'filter_strata',
            'compute_location_metadata',
            'generate_reference_trees',
+           'scale_basal_area_at_county_level',
+           'update_strata_to_match_trees',
            'scale_area_weight',
+           'area_ha_to_1000ha',
+           'scale_trees_by_area_weight_factors',
            'convert_coordinates']

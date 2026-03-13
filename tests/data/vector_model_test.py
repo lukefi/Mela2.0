@@ -3,18 +3,18 @@ import unittest
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.vector_model import VectorData
+from lukefi.metsi.data.vector_model import DTypeDeclaration, VectorData
 
-DUMMY_DTYPES: dict[str, npt.DTypeLike] = {
-    "x": np.int32,
-    "y": np.int64,
-    "z": np.float64
+DUMMY_DTYPES: dict[str, DTypeDeclaration] = {
+    "x": (np.int32, -1),
+    "y": (np.int64, -1),
+    "z": (np.float64, np.nan)
 }
 
-MULTIDIMENSIONAL_DUMMY_DTYPES: dict[str, npt.DTypeLike] = {
-    "x": np.int32,
-    "y": np.dtype((np.int64, (2,))),
-    "z": np.dtype((np.float64, (3,)))
+MULTIDIMENSIONAL_DUMMY_DTYPES: dict[str, DTypeDeclaration] = {
+    "x": (np.int32, -1),
+    "y": (np.dtype((np.int64, (2,))), -1),
+    "z": (np.dtype((np.float64, (3,))), np.nan)
 }
 
 
