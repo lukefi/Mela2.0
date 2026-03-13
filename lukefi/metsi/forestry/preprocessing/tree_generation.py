@@ -84,7 +84,7 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
     if method == 'lm' and stratum.asema in (7, 8):
         return TreeStrategy.SKIP
 
-    if stratum.mean_height > 1.3:
+    if stratum.mean_height > 1.3 or stratum.mean_diameter > 2:
         # big trees
         if (stratum.mean_diameter > 0.0 and stratum.mean_height >
                 0.0 and stratum.basal_area is not None and stratum.basal_area > 0.0 and method == 'weibull'):

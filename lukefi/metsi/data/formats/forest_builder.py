@@ -8,6 +8,7 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.enums.internal import OwnerCategory, Origin
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
@@ -95,7 +96,7 @@ def _append_tree_row(
     attr: dict[str, list],
     indices,
     row,
-    vmi_version: int,
+    vmi_version: VmiIteration,
     forestry_centre_id: int | None,
     ahvkeilaus: str | None = None,
     height_conversion_factor: float = 100.0,
@@ -116,7 +117,7 @@ def _append_tree_row(
 
     tree_category = tc_enum.value if tc_enum else None
 
-    if vmi_version == 11:
+    if vmi_version == VmiIteration.VMI11:
         breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
     else:
         breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
@@ -141,7 +142,7 @@ def _append_tree_row(
                                                    forestry_centre_id=forestry_centre_id,
                                                    ahvkeilaus=ahvkeilaus)
 
-    if vmi_version > 11:
+    if vmi_version in (VmiIteration.VMI12, VmiIteration.VMI13):
         origin = vmi2internal.convert_origin(row[indices["origin"]])
     else:
         origin = Origin.UNKNOWN
@@ -406,6 +407,7 @@ class VMI9Builder(VMIBuilder):
 
         result.year = parsed.year
         result.start_year = parsed.year
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
 
         area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
@@ -502,6 +504,8 @@ class VMI10Builder(VMIBuilder):
             return "stand"
         if row_type == 2:
             return "tree"
+        if row_type == 3:
+            return "tree"
         return None
 
     def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
@@ -516,6 +520,7 @@ class VMI10Builder(VMIBuilder):
 
         result.year = parsed.year
         result.start_year = parsed.year
+        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
 
         area_ha = vmi_util.get_vmi10_area_ha(
             vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
@@ -567,6 +572,20 @@ class VMI10Builder(VMIBuilder):
             result.year
         )
         result.region = None
+        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+            result.forest_management_category = vmi_util.determine_forest_management_category(
+                result.land_use_category,
+                result.forestry_centre_id,
+                result.owner_category,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                ""
+            )
+        else:
+            result.forest_management_category = 1
         return result
 
     def build(self) -> StandList:
@@ -710,13 +729,16 @@ class VMI11Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
+            result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
-                False,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1
@@ -754,7 +776,7 @@ class VMI11Builder(VMIBuilder):
                     attr_dict,
                     VMI11_TREE_INDICES,
                     row,
-                    vmi_version=11,
+                    vmi_version=VmiIteration.VMI11,
                     forestry_centre_id=stand2.forestry_centre_id,
                     ahvkeilaus=stand2.ahvkeilaus,
                     height_conversion_factor=10.0,            # VMI11 pituus is in dm
@@ -846,13 +868,16 @@ class VMI12Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
-            result.forest_management_category = vmi_util.determine_forest_management_category_vmi11_12(
+            result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
-                True,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1
@@ -893,7 +918,7 @@ class VMI12Builder(VMIBuilder):
                 if stand2 is None:
                     continue
                 _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
-                                 vmi_version=12, forestry_centre_id=stand2.forestry_centre_id)
+                                 vmi_version=VmiIteration.VMI12, forestry_centre_id=stand2.forestry_centre_id)
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -989,9 +1014,13 @@ class VMI13Builder(VMIBuilder):
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
-                data_row,
                 result.owner_category,
-                indices,
+                data_row[indices["puuntuotannon_rajoitus"]],
+                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
+                data_row[indices["muut_arvot"]],
+                data_row[indices["suojametsakoodi"]],
+                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
+                data_row[indices["koealan_kasittelyluokka"]]
             )
         else:
             result.forest_management_category = 1
@@ -1032,7 +1061,7 @@ class VMI13Builder(VMIBuilder):
                     continue
 
                 _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
-                                 vmi_version=13, forestry_centre_id=stand2.forestry_centre_id)
+                                 vmi_version=VmiIteration.VMI13, forestry_centre_id=stand2.forestry_centre_id)
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():

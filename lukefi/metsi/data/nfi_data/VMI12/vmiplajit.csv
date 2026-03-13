@@ -1,0 +1,32 @@
+"string" "numero" "nimi" "recode" "plMela"
+"1" 1 "Manty" "manty" 1
+"2" 2 "Kuusi" "kuusi" 2
+"3" 3 "Rauduskoivu" "koivu" 3
+"4" 4 "Hieskoivu" "koivu" 4
+"5" 5 "Haapa" "muu" 5
+"6" 6 "Harmaaleppa" "muu" 6
+"7" 7 "Tervaleppa" "muu" 6
+"8" 8 "Pihlaja" "muu" 8
+"9" 9 "Raita" "muu" 8
+"0" 10 "Puuton" "muu" 0
+"A1" 11 "Kontortamanty" "muu" 7
+"A2" 12 "Sembramanty" "muu" 7
+"A3" 13 "Muu manty" "muu" 7
+"A4" 14 "Lehtikuusi" "muu" 7
+"A5" 15 "Pihta" "muu" 7
+"A6" 16 "Muu kuusi" "muu" 7
+"A7" 17 "Tuija" "muu" 7
+"A8" 18 "Kataja" "muu" 7
+"A9" 19 "Marjakuusi" "muu" 7
+"A0" 20 "Muu havupuu" "muu" 7
+"B1" 21 "Halava" "muu" 8
+"B2" 22 "Kynajalava" "muu" 8
+"B3" 23 "Vuorijalava" "muu" 8
+"B4" 24 "Metsalehmus" "muu" 8
+"B5" 25 "Poppeli" "muu" 8
+"B6" 26 "Saarni" "muu" 8
+"B7" 27 "Tammi" "muu" 8
+"B8" 28 "Tuomi" "muu" 8
+"B9" 29 "Vaahtera" "muu" 8
+"B0" 30 "Muu lehtipuu" "muu" 8
+"C1" 31 "Pahkinapensas" "muu" 8

@@ -6,6 +6,7 @@ from shapely.geometry import Point
 from geopandas import GeoSeries
 
 from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
@@ -294,32 +295,16 @@ def determine_owner_group(sourcevalue: str) -> int:
 
 def determine_forest_management_category(land_use_category: int,
                                          county: int,
-                                         muuttujat: Sequence,
                                          owner_group: int,
-                                         indices: dict) -> float:
-    """Determine forest management category  for given conditions."""
+                                         production_limitation: str,
+                                         production_limitation_detail: str,
+                                         other_values: str,
+                                         protection_forest_code: str,
+                                         aland_area_code: str,
+                                         test_area_handling_class: str
 
-    return protection_code(muuttujat[indices["puuntuotannon_rajoitus"]],
-                           muuttujat[indices["puuntuotannon_rajoitus_tarkenne"]],
-                           land_use_category,
-                           muuttujat[indices["muut_arvot"]],
-                           muuttujat[indices["suojametsakoodi"]],
-                           owner_group,
-                           county,
-                           muuttujat[indices["ahvenanmaan_markkinahakkuualue"]],
-                           muuttujat[indices["koealan_kasittelyluokka"]])
-
-
-def protection_code(production_limitation: str,
-                    production_limitation_detail: str,
-                    land_use_category: int,
-                    other_values: str,
-                    protection_forest_code: str,
-                    owner_group: int,
-                    county: int,
-                    aland_area_code: str,
-                    test_area_handling_class: str) -> float:
-
+                                         ) -> float:
+    # Determine forest management category  for given conditions.
     # Determine first the NFI management category (vmi_pt)
     # MELA management category is then determined by NFI management category and land_use_category
     vmi_pt = 3
@@ -456,37 +441,6 @@ def protection_code(production_limitation: str,
     return fmc
 
 
-def determine_fmc_by_land_category(default: int, land_category: int) -> int:
-    if land_category == 1:
-        return 1
-    if land_category == 2:
-        return 3
-    if land_category == 3:
-        return 6
-    return default
-
-
-def determine_fmc_by_natura_area(default: int, natura_area_code: str) -> int:
-    # Natura-alueet: luonto-kohteet (2) ja molemmat (3) pois puuntuotannosta;
-    # Tarkista onko minaan vuonna voimassa
-    if natura_area_code in ('2', '3'):
-        return 1  # * lintu-kohde=1;
-    return default
-
-
-def determine_fmc_by_test_area_handling_class(test_area_handling_class: str) -> int:
-    # Metsähallituksen rajoitukset;
-    fmc = 1  # MH, ei rajoituksia
-    if test_area_handling_class != '.':
-        if test_area_handling_class == '1':
-            fmc = 1
-        if test_area_handling_class == '2':
-            fmc = 2
-        if test_area_handling_class in ('3.1', '3.2'):
-            fmc = 7
-    return fmc
-
-
 def determine_tree_age_values(chest_height_age_source: str, age_increase_source: str,
                               total_age_source: str) -> tuple[int | None, int | None]:
     chest_height_age = parse_int(chest_height_age_source)
@@ -525,7 +479,7 @@ def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10
 
 def determine_stems_per_ha(
     diameter_cm: float,
-    vmi_version: int = 13,
+    vmi_version: VmiIteration = VmiIteration.VMI13,
     forestry_centre_id: int | None = None,
     ahvkeilaus: str | None = None,
 ) -> float:
@@ -533,7 +487,7 @@ def determine_stems_per_ha(
     stems_per_ha logic for VMI9..VMI13.
     """
 
-    p = _get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
+    p = get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
 
     d = float(diameter_cm)
     if d <= 0.0:
@@ -888,7 +842,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         row[indices["total_age"]],
     )
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=9,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI9,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -952,7 +906,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     breast_height_age = parse_type(row[indices["d13_age"]], float)
     biological_age = parse_type(row[indices["total_age"]], float)
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=10,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI10,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -1316,19 +1270,12 @@ def determine_vmi11_area_ha(
 
 
 @dataclass(frozen=True)
-class _StemsParams:
+class StemsParams:
     q: float
     r1: float
     r2: float
     d1: float
     d2: float
-
-
-def _is_south_finland(forestry_centre_id: Optional[int]) -> bool:
-    # Treat None as "south" (safe default; callers should pass real value when available)
-    if forestry_centre_id is None:
-        return True
-    return 0 <= forestry_centre_id <= 10
 
 
 def _is_north_finland(forestry_centre_id: Optional[int]) -> bool:
@@ -1343,7 +1290,10 @@ def _is_ahvenanmaa(forestry_centre_id: Optional[int], ahvkeilaus: Optional[str])
     return False
 
 
-def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvkeilaus: Optional[str]) -> _StemsParams:
+def get_stems_params(
+        vmi_version: VmiIteration,
+        forestry_centre_id: Optional[int],
+        ahvkeilaus: Optional[str]) -> StemsParams:
     """
     Parameters from the provided R-document.
     forestry_centre_id:
@@ -1352,20 +1302,20 @@ def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvke
       11..13     => Pohjois-Suomi
     """
 
-    if vmi_version == 13:
-        return _StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI13:
+        return StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 12:
-        return _StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI12:
+        return StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
-        return _StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
+    if vmi_version == VmiIteration.VMI11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
+        return StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
 
-    if vmi_version in (9, 10, 11):
+    if vmi_version in (VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11):
         if _is_north_finland(forestry_centre_id):
-            return _StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
+            return StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
         # South (includes Ahvenanmaa for 9/10 and non-special 11)
-        return _StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
+        return StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
 
     raise MetsiException(f"Unsupported VMI version for stems_per_ha: {vmi_version}")
 
@@ -1510,87 +1460,3 @@ def determine_forest_management_category_vmi9(
         k = 7.6
 
     return float(k)
-
-
-def determine_forest_management_category_vmi11_12(land_category: int, forestry_centre: int, muuttujat: Sequence,
-                                                  owner_group: int, indices: dict,
-                                                  is_vmi12: bool = True) -> int:
-    """Determine forest management category  for given conditions."""
-
-    fmc = 1
-    other_values = muuttujat[indices["muut_arvot"]]
-
-    if is_vmi12:
-        fmc = determine_fmc_by_land_category(fmc, land_category)
-    fmc = determine_fmc_by_production_limitations(fmc, other_values, owner_group,
-                                                  muuttujat[indices["puuntuotannon_rajoitus"]],
-                                                  muuttujat[indices["puuntuotannon_rajoitus_tarkenne"]],
-                                                  muuttujat[indices["suojametsakoodi"]])
-    # fmc = determine_fmc_by_natura_area(fmc, muuttujat[indices.naturaaluekoodi])
-    fmc = determine_fmc_by_aland_centre(fmc, muuttujat[indices["ahvenanmaan_markkinahakkuualue"]], forestry_centre,
-                                        other_values)
-    forest_management_category_override = determine_fmc_by_test_area_handling_class(
-        muuttujat[indices["koealan_kasittelyluokka"]])
-
-    # VMI-raj korvataan tiukemmalla MH-rajoituksella
-    fmc = max(fmc, forest_management_category_override)
-
-    return fmc
-
-
-def determine_fmc_by_production_limitations(default: int, other_values: str, owner_group: int,
-                                            production_limitation: str, production_limitation_detail: str,
-                                            protection_forest_code: str) -> int:
-    if production_limitation == '0':
-        return 1
-    if production_limitation in \
-            ('101', '102', '103', '104', '105', '108'):
-        return 7
-    if production_limitation in ('201', '205', '206', '207') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation == '301':
-        return 7
-    if production_limitation in ('302', '303', '304', '305', '306', '307', '308', '309', '310') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('401', '402', '403', '404', '408', '409'):
-        return 7
-    if production_limitation in ('405', '406', '407') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('501', '502', '503', '504') and \
-            production_limitation_detail in ('1', '2'):
-        return 7
-    if production_limitation in ('107', '109') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('201', '205', '206', '207') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('202', '203') and \
-            production_limitation_detail in ('1', '2', '3', '4'):
-        return 2
-    if production_limitation in ('302', '303', '304', '305', '306', '307', '308', '309', '310') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('405', '406', '407') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if production_limitation in ('501', '502', '503', '504') and \
-            production_limitation_detail in ('3', '4'):
-        return 2
-    if other_values in ('1', '2', '3', '4', '5', '6'):
-        return 2
-    # Lisäksi suojametsät metsähallituksen mailla;
-    if protection_forest_code == '1' and owner_group == 4:
-        return 2
-    return default
-
-
-def determine_fmc_by_aland_centre(default: int, aland_area_code: str, forestry_centre: int,
-                                  other_values: str) -> int:
-    # * Ahvenanmaa;
-    if forestry_centre == 21 and (aland_area_code != '1' or other_values == '2'):
-        return 7
-    return default
