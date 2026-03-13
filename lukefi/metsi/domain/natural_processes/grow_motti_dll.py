@@ -12,7 +12,7 @@ from lukefi.metsi.data.enums.internal import (
     DECIDUOUS_SPECIES,
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
-from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth, safe_storey_value
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
@@ -166,8 +166,28 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-# -------- vectorized predictor --------
+def _strip_tree_strata(stand):
+    """
+    Clear tree information from  strata
+    """
+    strata = getattr(stand, "tree_strata", None)
+    if strata is None or strata.size == 0:
+        return
 
+    n = strata.size
+
+    # Create same-length strata object with default values in every column
+    stripped = TreeStrata(size=n)
+
+    # Keeping only fields that should survive
+    stripped.identifier = strata.identifier.copy()
+    stripped.origin = strata.origin.copy()
+    stripped.storey = strata.storey.copy()
+
+    stand.tree_strata = stripped
+
+
+# -------- vectorized predictor --------
 class MottiDLLPredictor:
     """
     SoA-based predictor feeding the Motti DLL. Builds C tree buffers from vector arrays.
@@ -400,6 +420,8 @@ class MottiDLLPredictor:
         #     numtrees=int(ntrees),
         #     buffers=buffers,
         # )
+
+        _strip_tree_strata(self.stand)
 
         if MottiState is not None:
             self.stand.motti_state = MottiState(
