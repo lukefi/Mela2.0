@@ -4,10 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.7] - 2026-03-12
+
+### Added
+
+- `rho` parameter for reference tree generation (lm)
+- stem parameters fetched for tree generation (lm) by stand and VMI iteration
+
+## [0.5.6] - 2026-03-12
+
+### Fixed
+
+- Tree generation strategy selection now works for strata without mean height
+
+## [0.5.5] - 2026-03-10
+
+### Added
+
+- Separate parameter files for different VMI iterations
+
+## [0.5.4] - 2026-03-10
+
+### Fixed
+- Added development_class in VMI9-10
+
 ## [0.5.3] - 2026-03-05
 
 ### Fixed
 - unified forest_management_category vmi 11-13
+
 ### Added
  - Same logic to vmi10
 
