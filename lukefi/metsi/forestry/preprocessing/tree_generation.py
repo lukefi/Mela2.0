@@ -6,12 +6,14 @@ from typing import Optional
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing import distributions
+from lukefi.metsi.forestry.preprocessing.height import predict_tree_height
 from lukefi.metsi.forestry.preprocessing.naslund import naslund_height, naslund_correction
 from lukefi.metsi.forestry.preprocessing.ages import ages
-from lukefi.metsi.forestry.preprocessing.tree_generation_lm import tree_generation_lm
+from lukefi.metsi.forestry.preprocessing.tree_generation_lm import determine_hmalli_value, tree_generation_lm
 
 
 class TreeStrategy(StrEnum):
@@ -176,7 +178,8 @@ def _determine_ages(stand: ForestStand,
 
 def adjust_retention_trees(stand: ForestStand,
                            new_trees: ReferenceTrees,
-                           retention_trees_mask: npt.NDArray[np.bool_]):
+                           retention_trees_mask: npt.NDArray[np.bool_],
+                           nfi_iteration: VmiIteration):
     # Scales the stem counts so that basal area does not increase
     # Basal area may increse if the basal area of the retention trees is greater than
     # basal area of the reference trees
@@ -236,6 +239,17 @@ def adjust_retention_trees(stand: ForestStand,
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
         trees.breast_height_age[i] = breast_height_age
         trees.biological_age[i] = biological_age
+        if np.isnan(trees.height[i]) or trees.height[i] == 0:
+            trees.height[i] = predict_tree_height(
+                nfi_iteration,
+                determine_hmalli_value(
+                    TreeSpecies(
+                        trees.species[i])),
+                stand.degree_days or 0.0,
+                float(trees.breast_height_diameter[i]),
+                float(trees.breast_height_diameter[i]),
+                1.0
+            )
 
 
 def adjust_ages(stand: ForestStand, trees: ReferenceTrees):
