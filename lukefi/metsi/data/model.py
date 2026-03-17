@@ -354,6 +354,12 @@ class ForestStand(Finalizable, ComputationalUnit):
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
 
+    peatland_type: Optional[SoilPeatlandCategory] = None
+    drained_peatland_type: Optional[int] = None
+    under_storey: bool = False
+    over_storey: bool = False
+    ds_main_tree_species: Optional[TreeSpecies] = None
+
     def __eq__(self, other):
         return id(self) == id(other)
 
