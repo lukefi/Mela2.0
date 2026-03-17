@@ -1,5 +1,5 @@
 from itertools import chain
-from enum import Enum
+
 from typing import Any, Optional
 from collections.abc import Callable
 import numpy as np
@@ -7,13 +7,20 @@ from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.data.formats.util import parse_float
 from lukefi.metsi.data.model import (
     ForestStand,
-    ReferenceTree,
-    TreeStratum,
     stand_as_internal_csv_row,
     stand_as_rst_row)
 from lukefi.metsi.data.formats.rst_const import MSBInitialDataRecordConst as msb_meta
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.vector_model import (
+    ReferenceTrees,
+    TreeStrata,
+    attrs_from_internal_tree_csv_row, attrs_from_internal_stratum_csv_row
+)
+
+
+def _append_attrs(target: dict[str, list[Any]], attrs: dict[str, Any]) -> None:
+    for k, v in attrs.items():
+        target.setdefault(k, []).append(v)
 
 
 def rst_float(source: str | int | float) -> str:
@@ -131,16 +138,6 @@ def stands_to_csv_content(container: ExportableContainer[ForestStand], delimeter
     return result
 
 
-def _append_obj_to_attr_dict(attr_dict: dict[str, list[Any]], obj: Any) -> None:
-    # obj is a dataclass-like instance produced by from_csv_row
-    for k, v in obj.__dict__.items():
-        if k == "stand":
-            continue
-        if isinstance(v, Enum):
-            v = v.value
-        attr_dict.setdefault(k, []).append(v)
-
-
 def csv_content_to_stands(csv_content: list[list[str]]) -> StandList:
     stands: list[ForestStand] = []
 
@@ -166,14 +163,12 @@ def csv_content_to_stands(csv_content: list[list[str]]) -> StandList:
             current_stratum_attrs = {}
 
         elif row_type == "tree":
-            t = ReferenceTree.from_csv_row(row)
             assert current_tree_attrs is not None, "Tree row encountered before first stand row"
-            _append_obj_to_attr_dict(current_tree_attrs, t)
+            _append_attrs(current_tree_attrs, attrs_from_internal_tree_csv_row(row))
 
         elif row_type == "stratum":
-            s = TreeStratum.from_csv_row(row)
             assert current_stratum_attrs is not None, "Stratum row encountered before first stand row"
-            _append_obj_to_attr_dict(current_stratum_attrs, s)
+            _append_attrs(current_stratum_attrs, attrs_from_internal_stratum_csv_row(row))
 
     # finalize last stand
     _finalize_current()

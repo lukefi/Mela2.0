@@ -6,7 +6,7 @@ import numpy.typing as npt
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import Origin, Storey, TreeSpecies
-
+from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 DTYPES_TREE: dict[str, DTypeDeclaration] = {
@@ -48,6 +48,93 @@ DTYPES_STRATA: dict[str, DTypeDeclaration] = {
     "number_of_generated_trees": (np.int32, -1),
     "asema": (np.int16, -1)
 }
+
+TREE_INTERNAL_CSV_COLUMNS = (
+    "identifier",
+    "species",
+    "origin",
+    "stems_per_ha",
+    "breast_height_diameter",
+    "height",
+    "measured_height",
+    "breast_height_age",
+    "biological_age",
+    "tree_number",
+    "management_category",
+    "tree_category",
+    "sapling",
+    "storey",
+    "tree_type",
+    "tuhon_ilmiasu",
+)
+
+STRATUM_INTERNAL_CSV_COLUMNS = (
+    "identifier",
+    "species",
+    "origin",
+    "stems_per_ha",
+    "mean_diameter",
+    "mean_height",
+    "breast_height_age",
+    "biological_age",
+    "basal_area",
+    "tree_number",
+    "sapling_stems_per_ha",
+    "storey",
+)
+
+_ENUM_FIELDS = {
+    "species": TreeSpecies,
+    "origin": Origin,
+    "storey": Storey,
+}
+
+_BOOL_FIELDS = {"sapling"}
+
+
+def _parse_csv_cell(field_name: str, raw: str) -> Any:
+    if raw == "None":
+        return None
+
+    if field_name in _BOOL_FIELDS:
+        return raw == "True"
+
+    if field_name in _ENUM_FIELDS:
+        return _ENUM_FIELDS[field_name](int(raw)).value
+
+    if field_name in DTYPES_TREE:
+        dtype = DTYPES_TREE[field_name][0]
+    elif field_name in DTYPES_STRATA:
+        dtype = DTYPES_STRATA[field_name][0]
+    else:
+        return raw
+
+    if dtype in (np.int32, np.int16):
+        return conv(raw, int)
+    if dtype == np.float64:
+        return conv(raw, float)
+    if dtype == np.bool_:
+        return raw == "True"
+    return conv(raw, str)
+
+
+def attrs_from_internal_tree_csv_row(row: list[str]) -> dict[str, Any]:
+    assert row[0] == "tree"
+    values = row[1:1 + len(TREE_INTERNAL_CSV_COLUMNS)]
+    return {
+        field_name: _parse_csv_cell(field_name, raw)
+        for field_name, raw in zip(TREE_INTERNAL_CSV_COLUMNS, values)
+    }
+
+
+def attrs_from_internal_stratum_csv_row(row: list[str]) -> dict[str, Any]:
+
+    assert row[0] == "stratum"
+    values = row[1:1 + len(STRATUM_INTERNAL_CSV_COLUMNS)]
+    return {
+        field_name: _parse_csv_cell(field_name, raw)
+        for field_name, raw in zip(STRATUM_INTERNAL_CSV_COLUMNS, values)
+    }
 
 
 class VectorData():
@@ -184,6 +271,23 @@ class VectorData():
                     setattr(self, key, vector)
                     vector.flags.writeable = True
                 vector[index] = value
+
+    def update_many(
+        self,
+        new: dict[str, Any | npt.NDArray | list[Any]],
+        index: int | list[int] | npt.NDArray[np.int_] | npt.NDArray[np.bool_],
+    ):
+        for key, value in new.items():
+            if key not in self.dtypes:
+                continue
+
+            vector: npt.NDArray = getattr(self, key)
+            if not vector.flags.writeable:
+                vector = vector.copy()
+                setattr(self, key, vector)
+                vector.flags.writeable = True
+
+            vector[index] = value
 
     def delete(self, index: int | list[int] | npt.NDArray[np.int_]):
         """
