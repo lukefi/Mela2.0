@@ -39,8 +39,8 @@ def _forest_categories_check(payload: SimulationPayload[ForestStand]) -> bool:
     year_drain = stand.drainage_year if stand.drainage_year is not None else -1
 
     stem_count = float(stand.stems_per_ha or 0.0)
-    dgm = float(stand.weighted_mean_diameter or 0.0)
-    hgm = float(stand.weighted_mean_height or 0.0)
+    dgm = float(stand.ds_ba_weighted_mean_diameter or 0.0)
+    hgm = float(stand.ds_ba_weighted_mean_height or 0.0)
 
     cond_mineral = (
         ((0 <= manag_cat < 3) and soil_cat == 1) or
@@ -61,7 +61,7 @@ def _forest_categories_regeneration(payload: Any) -> bool:
     # Map R variables to Python model fields
     manag_cat = stand.forest_management_category
     site_idx = stand.site_type_category
-    dgm = stand.weighted_mean_diameter
+    dgm = stand.ds_ba_weighted_mean_diameter
 
     # If any required value is missing, the condition cannot be satisfied
     if manag_cat is None or site_idx is None or dgm is None:

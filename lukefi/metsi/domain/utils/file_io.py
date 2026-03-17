@@ -41,7 +41,6 @@ def create_database_tables(db: sqlite3.Connection):
             drainage_year INTEGER,
             fertilization_year INTEGER,
             soil_surface_preparation_year INTEGER,
-
             regeneration_area_cleaning_year INTEGER,
             development_class INTEGER,
             artificial_regeneration_year INTEGER,
@@ -51,7 +50,7 @@ def create_database_tables(db: sqlite3.Connection):
             forest_management_category REAL,
             method_of_last_cutting INTEGER,
             municipality_id INTEGER,
-            dominant_storey_age REAL,
+            ds_main_tree_species_biological_age REAL,
             area_weight_factors TEXT,
             fra_category TEXT,
             land_use_category_detail TEXT,
@@ -60,7 +59,7 @@ def create_database_tables(db: sqlite3.Connection):
             lake_effect REAL,
             basal_area REAL,
             main_tree_species_dominant_storey INTEGER,
-            dominant_height_dominant_storey REAL,
+            ds_dominant_height REAL,
             region INTEGER,
             PRIMARY KEY(node, identifier),
             FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand))

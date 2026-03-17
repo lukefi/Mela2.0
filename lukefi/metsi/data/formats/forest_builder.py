@@ -720,7 +720,7 @@ class VMI11Builder(VMIBuilder):
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
 
-        result.dominant_storey_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]],
         )
@@ -846,7 +846,7 @@ class VMI12Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.dominant_storey_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
@@ -990,7 +990,7 @@ class VMI13Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.dominant_storey_age = vmi_util.determine_vmi13_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi13_dominant_storey_age(
             data_row[indices["vallitsevanjaksonika"]]
         )
 

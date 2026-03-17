@@ -69,7 +69,7 @@ def stand_to_snapshot_row(s: ForestStand) -> list[str]:
         _safe_str(s.area_weight_factors[1] if s.area_weight_factors else None),
         _safe_str(s.stand_id),
         _safe_str(s.basal_area),
-        _safe_str(s.dominant_storey_age),
+        _safe_str(s.ds_main_tree_species_biological_age),
         _safe_str(_enum_value(s.main_tree_species_dominant_storey)),
         _safe_str(s.region),
     ]

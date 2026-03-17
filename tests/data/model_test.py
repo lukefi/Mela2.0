@@ -185,5 +185,5 @@ class TestForestDataModel(unittest.TestCase):
 
         self.assertAlmostEqual(58.8, stand.stems_per_ha or 0)
         self.assertAlmostEqual(23.60403760335, stand.basal_area or 0)
-        self.assertAlmostEqual(14.81238229506, stand.weighted_mean_diameter or 0)
-        self.assertAlmostEqual(5.902974074951, stand.weighted_mean_height or 0)
+        self.assertAlmostEqual(14.81238229506, stand.ds_ba_weighted_mean_diameter or 0)
+        self.assertAlmostEqual(5.902974074951, stand.ds_ba_weighted_mean_height or 0)

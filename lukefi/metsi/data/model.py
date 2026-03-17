@@ -333,8 +333,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     forest_management_category: Optional[int | float] = None
     method_of_last_cutting: Optional[int] = None
     municipality_id: Optional[int] = None
-    dominant_storey_age: Optional[float] = None
-    dominant_height_dominant_storey: Optional[float] = None
+    ds_main_tree_species_biological_age: Optional[float] = None
+    ds_dominant_height: Optional[float] = None
 
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
@@ -349,8 +349,8 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     basal_area: Optional[float] = None
     stems_per_ha: Optional[float] = None
-    weighted_mean_diameter: Optional[float] = None
-    weighted_mean_height: Optional[float] = None
+    ds_ba_weighted_mean_diameter: Optional[float] = None
+    ds_ba_weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
 
@@ -452,7 +452,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
         self.stand_id = conv(row[32], int)
         self.basal_area = conv(row[33], float)
-        self.dominant_storey_age = conv(row[34], float)
+        self.ds_main_tree_species_biological_age = conv(row[34], float)
         self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
         self.region = conv(row[36], int)
 
@@ -516,7 +516,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.forest_management_category,
                 self.method_of_last_cutting,
                 self.municipality_id,
-                self.dominant_storey_age,
+                self.ds_main_tree_species_biological_age,
                 str(self.area_weight_factors),
                 self.fra_category,
                 self.land_use_category_detail,
@@ -525,7 +525,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.lake_effect,
                 self.basal_area,
                 self.main_tree_species_dominant_storey,
-                self.dominant_height_dominant_storey,
+                self.ds_dominant_height,
                 self.region))
         for i in range(self.reference_trees.size):
             cur.execute(
@@ -596,15 +596,22 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.stems_per_ha = np.sum(trees.stems_per_ha) + np.sum(strata.stems_per_ha)
         self.basal_area = np.sum(trees.stems_per_ha *
                                  trees.basal_area) + np.sum(strata.basal_area)
-        self.weighted_mean_diameter = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.breast_height_diameter) +
-                                        np.sum(strata.basal_area * strata.mean_diameter)) /
-                                       self.basal_area) if (self.basal_area > 0) else None
+        self.ds_ba_weighted_mean_diameter = (
+            (np.sum(
+                trees.stems_per_ha *
+                trees.basal_area *
+                trees.breast_height_diameter) +
+                np.sum(
+                strata.basal_area *
+                strata.mean_diameter)) /
+            self.basal_area) if (
+                self.basal_area > 0) else None
 
-        self.weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
-                                     np.sum(strata.basal_area * strata.mean_height)) /
-                                     self.basal_area) if (self.basal_area > 0) else None
+        self.ds_ba_weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
+                                            np.sum(strata.basal_area * strata.mean_height)) /
+                                           self.basal_area) if (self.basal_area > 0) else None
 
-        self.dominant_height_dominant_storey = self._calculate_dominant_height()
+        self.ds_dominant_height = self._calculate_dominant_height()
 
     def _calculate_dominant_height(self) -> float | None:
         if len(self.reference_trees) == 0:
@@ -676,7 +683,7 @@ def stand_as_rst_row(stand: ForestStand):
         stand.method_of_last_cutting,
         stand.municipality_id,
         None,
-        stand.dominant_storey_age,
+        stand.ds_main_tree_species_biological_age,
     ]
 
 
@@ -717,7 +724,7 @@ def stand_as_internal_row(stand: ForestStand):
         stand.area_weight_factors[1],
         stand.stand_id,
         stand.basal_area,
-        stand.dominant_storey_age,
+        stand.ds_main_tree_species_biological_age,
         stand.main_tree_species_dominant_storey,
         stand.region
     ]
