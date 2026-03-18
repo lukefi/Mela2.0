@@ -136,6 +136,8 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "land_category_detail": slice(101, 102),    # maaluotar 102
     "paatyyppi": slice(104, 105),               # paatyy 105
     "kasvupaikkatunnus": slice(106, 107),       # kaspai 107
+    "suotyy": slice(108, 110),
+    "tkgtyy": slice(110, 111),
     "ojitus_tilanne": slice(126, 127),  # ojitil
     "ojitus_aika": slice(128, 130),     # ojiaik
     "ojitus_tarve": slice(130, 131),    # ojitar
@@ -247,6 +249,8 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "fra_class": slice(102, 103),
     "paatyyppi": slice(104, 105),
     "kasvupaikkatunnus": slice(106, 107),
+    "suotyy": slice(108, 110),
+    "tkgtyy": slice(110, 111),
     "ojitus_tilanne": slice(126, 127),
     "ojitus_aika": slice(128, 130),
     "ojitus_tarve": slice(130, 131),
@@ -262,6 +266,8 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "lon_measured": slice(190, 197),
     "kehitysluokka": slice(201, 202),
     "main_tree_species_dominant_storey": slice(202, 204),
+    "alikehl": slice(205, 206),
+    "ylikehl": slice(209, 210),
     "pohjapintaala": slice(228, 230),  # kuvppa
     "vallitsevanjakson_d13ika": slice(247, 250),
     "vallitsevanjakson_ikalisays": slice(250, 252),
@@ -344,6 +350,8 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "fra_class": slice(102, 103),
     "paatyyppi": slice(104, 105),
     "kasvupaikkatunnus": slice(106, 107),
+    "suotyy": slice(108, 110),
+    "tkgtyy": slice(110, 111),
     "ojitus_tilanne": slice(126, 127),
     "ojitus_aika": slice(128, 130),
     "ojitus_tarve": slice(130, 131),
@@ -359,6 +367,8 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "lon_measured": slice(190, 197),
     "kehitysluokka": slice(201, 202),
     "main_tree_species_dominant_storey": slice(202, 204),
+    "alikehl": slice(205, 206),
+    "ylikehl": slice(209, 210),
     "vallitsevanjakson_d13ika": slice(247, 250),
     "vallitsevanjakson_ikalisays": slice(250, 252),
     "hakkuu_tapa": slice(262, 263),
