@@ -14,7 +14,6 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "area_ha": slice(50, 59),          # eduala (col 51-59)
     "osuusrel": slice(36, 38),         # osuusrel (col 37-38)
     "osuus7m": slice(59, 61),          # osuus7m (col 60-61)
-    "county": slice(64, 66),           # laani (col 65-66)
     "forestry_centre": slice(66, 68),  # metkes (col 67-68)
     "municipality": slice(68, 71),     # kunta (col 69-71)
     "owner_group": slice(81, 82),      # omiryh (col 82)
@@ -39,6 +38,7 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "ppa5": slice(0, 0),               # not present in VMI9
     "metsikon_ika": slice(184, 187),
     "jakso1_asema": slice(140, 141),                    # jakasema 141
+    "kehitysluokka": slice(141, 142),                   # kehluo
     "jakso1_syntytapa": slice(142, 143),                # syntapa 143
     "jakso1_kokonaisrunkoluku1000": slice(159, 161),    # rlkok 160-161
     "jakso1_keskipituus_dm": slice(163, 166),           # keskipit 164-166
@@ -153,6 +153,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "lat_measured": slice(183, 190),
     "lon_measured": slice(190, 197),
     "jakso1_asema": slice(200, 201),                 # jakasema (col 201)
+    "kehitysluokka": slice(201, 202),                # kehluo
     "jakso1_syntytapa": slice(202, 203),             # syntapa (col 203)
     "jakso1_paapuulaji": slice(203, 205),            # paaplaji (col 204-205)
     "jakso1_paapuulaji_osuus": slice(205, 207),      # paaplajios (col 206-207)
@@ -237,7 +238,6 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "osuus12x": slice(38, 40),
     "osuus7m": slice(40, 42),
     "area_ha": slice(50, 59),  # eduala
-    "county": slice(63, 66),          # invalue (Maastotyöalue) — used as region code
     "forestry_centre": slice(66, 68),  # metkes
     "municipality": slice(68, 71),    # kunta
     "height_above_sea_level": slice(82, 87),
