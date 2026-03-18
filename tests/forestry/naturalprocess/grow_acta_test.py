@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-from lukefi.metsi.data.model import ReferenceTree
+
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.naturalprocess import grow_acta
 
@@ -54,11 +54,11 @@ class GrowActaTest(unittest.TestCase):
             self.assertEqual(i[1], np.round(result, 4))
 
     def test_grow_diameter_and_height(self):
-        diameters = np.array([20.0 + i for i in range(1,6)])
-        heights = np.array([22.0 + i for i in range(1,6)])
-        stems = np.array([200.0 + i*50 for i in range(1,6)])
-        species = np.array([1,2,1,1,2])
-        ages = np.array([50.0 + i for i in range(1,6)])
+        diameters = np.array([20.0 + i for i in range(1, 6)])
+        heights = np.array([22.0 + i for i in range(1, 6)])
+        stems = np.array([200.0 + i * 50 for i in range(1, 6)])
+        species = np.array([1, 2, 1, 1, 2])
+        ages = np.array([50.0 + i for i in range(1, 6)])
         reference_trees = ReferenceTrees()
         reference_trees.breast_height_diameter = diameters
         reference_trees.height = heights
