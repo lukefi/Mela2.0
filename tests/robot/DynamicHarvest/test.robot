@@ -11,7 +11,7 @@ Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}   
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/VMI13_source_mini.dat
 ${OUTPUT_PATH}      ${CURDIR}/output/test
-${CONTROL_SCRIPT}   ${CURDIR}/input/controlDynamicP.py
+${CONTROL_SCRIPT}   ${CURDIR}/input/control_dynamic_p.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
 ${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
 ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db

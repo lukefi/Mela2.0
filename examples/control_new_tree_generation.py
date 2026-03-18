@@ -1,4 +1,5 @@
 import numpy as np
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.domain.pre_ops import (
     area_ha_to_1000ha,
     convert_coordinates,
@@ -66,11 +67,18 @@ control_structure = {
                 "lm_fix_width": 2,  # used with lm_mode fixw
                 "lm_shdef": 5,
                 "age_model": True,  # käytetäänkö kuvauspuulle ikämallin ikää (true) vai ositteen ikää (false)
+                "nfi_iteration": VmiIteration.VMI13,
+                "rho": 1.6
             }
         ],
         convert_coordinates: [
             {
                 "target_system": "YKJ"
+            }
+        ],
+        scale_basal_area_at_county_level: [
+            {
+                "nfi_iteration": VmiIteration.VMI13
             }
         ]
     },
