@@ -277,6 +277,19 @@ class VectorData():
         new: dict[str, Any | npt.NDArray | list[Any]],
         index: int | list[int] | npt.NDArray[np.int_] | npt.NDArray[np.bool_],
     ):
+        """
+        Updates multiple rows at once using vectorized indexing. If any to-be-modified vector is read-only
+        (after finalize), a new copy is created first. The original vector is not modified.
+
+        Supports scalar updates (broadcasted to all selected indices) as well as per-index updates via
+        arrays or lists.
+
+        Args:
+            new (dict[str, Any | ndarray | list]): Dictionary containing attribute names as keys, and
+                their new values. Values can be scalars, lists, or numpy arrays.
+            index (int | list[int] | ndarray[int] | ndarray[bool]): Index or indices of rows to modify.
+                Can be a single index, a list/array of indices, or a boolean mask.
+        """
         for key, value in new.items():
             if key not in self.dtypes:
                 continue
