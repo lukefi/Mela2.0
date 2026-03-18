@@ -5,28 +5,37 @@ import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.enums.internal import Origin, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import (
+    CrownClass,
+    DamageType,
+    Origin,
+    Storey,
+    StratumRank,
+    TreeCategory,
+    TreeManagementCategory,
+    TreeSpecies,
+    TreeType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "identifier": (np.dtype("U30"), ""),
     "tree_number": (np.int32, -1),
-    "species": (np.int32, -1),
+    "species": (np.int32, TreeSpecies.UNSET),
     "breast_height_diameter": (np.float64, 0.0),
     "height": (np.float64, np.nan),
     "measured_height": (np.float64, np.nan),
     "breast_height_age": (np.float64, np.nan),
     "biological_age": (np.float64, np.nan),
     "stems_per_ha": (np.float64, 0.0),
-    "origin": (np.int32, -1),
-    "management_category": (np.int32, -1),
-    "tree_category": (np.dtype("U1"), ""),
-    "storey": (np.int32, -1),
+    "origin": (np.int32, Origin.UNSET),
+    "management_category": (np.int32, TreeManagementCategory.UNSET),
+    "tree_category": (np.dtype("U1"), TreeCategory.UNSET),
+    "storey": (np.int32, Storey.UNSET),
     "sapling": (np.bool_, False),
-    "tree_type": (np.dtype("U1"), ""),
-    "damage_type": (np.dtype("U2"), ""),
-    "latvuskerros": (np.dtype("U1"), ""),
+    "tree_type": (np.dtype("U1"), TreeType.UNSET),
+    "damage_type": (np.dtype("U2"), DamageType.UNSET),
+    "crown_class": (np.int32, CrownClass.UNSET),
     "basal_area": (np.float64, 0.0),
     "volume": (np.float64, 0.0),
     "stratum": (np.int32, -1)
@@ -34,19 +43,19 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
 
 DTYPES_STRATA: dict[str, DTypeDeclaration] = {
     "identifier": (np.dtype("U30"), ""),
-    "species": (np.int32, -1),
+    "species": (np.int32, TreeSpecies.UNSET),
     "mean_diameter": (np.float64, -1),
     "mean_height": (np.float64, 0.0),
     "breast_height_age": (np.float64, np.nan),
     "biological_age": (np.float64, np.nan),
     "stems_per_ha": (np.float64, 0.0),
     "basal_area": (np.float64, np.nan),
-    "origin": (np.int32, -1),
+    "origin": (np.int32, Origin.UNSET),
     "stratum_number": (np.int32, -1),
-    "storey": (np.int32, -1),
+    "storey": (np.int32, Storey.UNSET),
     "sapling_stems_per_ha": (np.float64, 0.0),
     "number_of_generated_trees": (np.int32, -1),
-    "asema": (np.int16, -1)
+    "stratum_rank": (np.int16, StratumRank.UNSET)
 }
 
 TREE_INTERNAL_CSV_COLUMNS = (
@@ -353,13 +362,13 @@ class ReferenceTree:
     biological_age: Optional[float] = None
     stems_per_ha: float = 0.0
     origin: Origin = Origin.UNSET
-    management_category: int = -1
-    tree_category: str = ""
+    management_category: TreeManagementCategory = TreeManagementCategory.UNSET
+    tree_category: TreeCategory = TreeCategory.UNSET
     storey: Storey = Storey.UNSET
     sapling: bool = False
-    tree_type: str = ""
-    tuhon_ilmiasu: str = ""
-    latvuskerros: str = ""
+    tree_type: TreeType = TreeType.UNSET
+    damage_type: DamageType = DamageType.UNSET
+    crown_class: CrownClass = CrownClass.UNSET
     basal_area: float = 0.0
     volume: float = 0.0
 
@@ -381,7 +390,7 @@ class ReferenceTrees(VectorData):
     sapling: npt.NDArray[np.bool_]
     tree_type: npt.NDArray[np.str_]
     damage_type: npt.NDArray[np.str_]
-    latvuskerros: npt.NDArray[np.str_]
+    crown_class: npt.NDArray[np.str_]
     basal_area: npt.NDArray[np.float64]
     volume: npt.NDArray[np.float64]
     stratum: npt.NDArray[np.int32]
@@ -418,7 +427,7 @@ class ReferenceTrees(VectorData):
             self.sapling[i],
             self.tree_type[i],
             self.damage_type[i],
-            self.latvuskerros[i],
+            self.crown_class[i],
             self.basal_area[i],
             self.volume[i]
         )
@@ -481,7 +490,7 @@ class TreeStratum:
     storey: Storey = Storey.UNSET
     sapling_stems_per_ha: float = 0.0
     number_of_generated_trees: int = 0
-    asema: int = 0
+    stratum_rank: StratumRank = StratumRank.UNSET
 
     def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
         if self.breast_height_age is not None and self.breast_height_age > 0.0:
@@ -506,7 +515,7 @@ class TreeStrata(VectorData):
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     number_of_generated_trees: npt.NDArray[np.int32]
-    asema: npt.NDArray[np.int16]
+    stratum_rank: npt.NDArray[np.int16]
 
     def __init__(self, size: int = 0):
         super().__init__(DTYPES_STRATA, size)
@@ -537,7 +546,7 @@ class TreeStrata(VectorData):
             Storey(self.storey[i]),
             self.sapling_stems_per_ha[i],
             self.number_of_generated_trees[i],
-            self.asema[i]
+            self.stratum_rank[i]
         )
 
     def as_internal_csv_row(self, i) -> list[str]:
