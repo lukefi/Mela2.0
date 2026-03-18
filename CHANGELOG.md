@@ -4,10 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.13] - 2026-03-18
+
+### Fixed
+
+- Value scaling fixed in pljak_osuuspaino.csv files for VMI9, VMI10 and VMI11
+
 ## [0.5.12] - 2026-03-18
 
 ### Changed
+
 - Refactor model.ReferenceTree and model.TreeStratum away
+
 ### Added
 - vector_model.update_many and csv export logic
 
