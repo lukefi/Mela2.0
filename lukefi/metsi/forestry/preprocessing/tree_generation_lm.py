@@ -146,7 +146,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         stand_land_use_cat,
         geo_index,
         stand_development_class,
-        stratum.asema,
+        stratum.stratum_rank,
         stratum.mean_diameter,
         stratum.stems_per_ha,
         spevmi,

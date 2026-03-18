@@ -183,13 +183,13 @@ def storey_match(stratum: TreeStratum, tree: ReferenceTree):
     #       VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
 
     # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
-    if tree.latvuskerros == "5":
-        return stratum.asema in (5, 6, 9)
+    if tree.crown_class == "5":
+        return stratum.stratum_rank in (5, 6, 9)
     # ylispuujakso, ei jättöpuu
-    if tree.latvuskerros in ("6", "7"):
-        return stratum.asema in (2, 4)
-    if tree.latvuskerros in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
-        return stratum.asema == 3
-    if tree.latvuskerros in ("2", "3", "4"):  # valitseva jakso
-        return stratum.asema <= 1
+    if tree.crown_class in ("6", "7"):
+        return stratum.stratum_rank in (2, 4)
+    if tree.crown_class in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
+        return stratum.stratum_rank == 3
+    if tree.crown_class in ("2", "3", "4"):  # valitseva jakso
+        return stratum.stratum_rank <= 1
     return False

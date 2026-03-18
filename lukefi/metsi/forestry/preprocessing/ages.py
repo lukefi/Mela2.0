@@ -58,7 +58,7 @@ def ages(stand: ForestStand,
     else:
         species = _AgeModelSpecies.OTHER_DECIDUOUS
 
-    origin = 0 if tree.origin in (Origin.UNSET, Origin.UNKNOWN, Origin.NATURAL_SEED, Origin.NATURAL_SPROUT) else 1
+    origin = 0 if tree.origin in (Origin.UNSET, Origin.NATURAL) else 1
 
     if stand.drainage_category == DrainageCategory.TRANSFORMING_MIRE:
         drainage_category = 2

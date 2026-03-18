@@ -49,7 +49,7 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
 
     reference_trees.height = np.round(reference_trees.height, 2)
 
-    retained = stratum.asema == 3
+    retained = stratum.stratum_rank == 3
     reference_trees.management_category.fill(2 if retained else 1)
     reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
 
@@ -90,7 +90,7 @@ def _trees_from_sapling_height_distribution(stratum: TreeStratum, n_trees: int) 
 def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, method='weibull') -> TreeStrategy:
     """ Solves the strategy of tree generation for given stratum """
 
-    if method == 'lm' and stratum.asema in (7, 8):
+    if method == 'lm' and stratum.stratum_rank in (7, 8):
         return TreeStrategy.SKIP
 
     if stratum.mean_height > 1.3 or stratum.mean_diameter > 2:
