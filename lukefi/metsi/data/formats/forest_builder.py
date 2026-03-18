@@ -46,7 +46,7 @@ def _append_stratum_row(
 
     identifier = vmi_util.generate_stratum_identifier(row, indices)
     species = vmi2internal.convert_species(row[indices["species"]])
-    origin = vmi_util.determine_stratum_origin(row[indices["origin"]])
+    origin = vmi2internal.convert_origin(row[indices["origin"]])
 
     stems_per_ha = util.get_or_default(util.parse_type(row[indices["stems_per_ha"]], float), 0.0)
     sapling_stems_per_ha = util.get_or_default(
@@ -65,7 +65,7 @@ def _append_stratum_row(
     basal_area = util.parse_type(row[indices["basal_area"]], float)
     stratum_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
-    asema = util.parse_type(row[indices["stratum_rank"]], int)
+    stratum_rank = vmi2internal.convert_stratum_rank(row[indices["stratum_rank"]])
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
@@ -84,7 +84,7 @@ def _append_stratum_row(
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
-        "asema": asema
+        "stratum_rank": stratum_rank
     }
 
     # Always append in DTYPES_STRATA order
@@ -142,16 +142,16 @@ def _append_tree_row(
     if vmi_version in (VmiIteration.VMI12, VmiIteration.VMI13):
         origin = vmi2internal.convert_origin(row[indices["origin"]])
     else:
-        origin = Origin.UNKNOWN
+        origin = Origin.UNSET
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
     sapling = False
     tree_type = vmi2internal.convert_tree_type(row[indices["tree_type"]])
 
-    tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
-    latvuskerros = row[indices["latvuskerros"]]
+    damage_raw = row[indices["tuhon_ilmiasu"]]
+    damage_type = None if damage_raw in ("  ", " ", ".", "") else damage_raw.strip()
+    crown_class = vmi2internal.convert_crown_class(row[indices["latvuskerros"]])
 
     basal_area = None
     volume = None
@@ -172,10 +172,10 @@ def _append_tree_row(
         "storey": storey,
         "sapling": sapling,
         "tree_type": tree_type,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": basal_area,
         "volume": volume,
-        "latvuskerros": latvuskerros
+        "crown_class": crown_class
     }
 
     for key in DTYPES_TREE:

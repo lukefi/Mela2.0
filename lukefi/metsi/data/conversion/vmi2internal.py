@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 
 from lukefi.metsi.data.enums.vmi import (
+    VmiCrownClass,
     VmiOrigin,
     VmiArableLandDetail,
     VmiBuildUpLandDetail,
@@ -27,6 +28,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiUnproductiveLandDetail,
 )
 from lukefi.metsi.data.enums.internal import (
+    CrownClass,
     Origin,
     ArableLandDetail,
     BuildUpLandDetail,
@@ -42,6 +44,7 @@ from lukefi.metsi.data.enums.internal import (
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,
+    StratumRank,
     TreeCategory,
     TreeSpecies,
     LandUseCategory,
@@ -208,16 +211,16 @@ _DRAINAGE_CATEGORY_MAP = {
 }
 
 _STRATUM_RANK_MAP = {
-    VmiStratumRank.UNGROWABLE_SAPLINGS: Storey.DOMINANT,
-    VmiStratumRank.DOMINANT: Storey.DOMINANT,
-    VmiStratumRank.OVER_1: Storey.OVER,
-    VmiStratumRank.OVER_2: Storey.SPARE,
-    VmiStratumRank.OVER_3: Storey.OVER,
-    VmiStratumRank.UNDER_1: Storey.UNDER,
-    VmiStratumRank.UNDER_2: Storey.UNDER,
-    VmiStratumRank.UNDER_3: Storey.UNDER,
-    VmiStratumRank.UNDER_4: Storey.UNDER,
-    VmiStratumRank.REMOVAL: Storey.REMOVAL
+    VmiStratumRank.UNPRODUCTIVE_SEEDLINGS: StratumRank.UNGROWABLE_SAPLINGS,
+    VmiStratumRank.DOMINANT_STOREY: StratumRank.DOMINANT,
+    VmiStratumRank.OVER_STOREY: StratumRank.OVER_1,
+    VmiStratumRank.RETENTION_TREE_STOREY: StratumRank.OVER_2,
+    VmiStratumRank.NURSE_CROP: StratumRank.OVER_3,
+    VmiStratumRank.UNDER_STOREY_CAPABLE_FOR_DEVELOPMENT: StratumRank.UNDER_1,
+    VmiStratumRank.UNDER_STOREY_NOT_CAPABLE_FOR_DEVELOPMENT: StratumRank.UNDER_2,
+    VmiStratumRank.NON_ESTABLISHED_SEEDLINGS: StratumRank.UNDER_3,
+    VmiStratumRank.SEEDLING_STRATUM: StratumRank.UNDER_4,
+    VmiStratumRank.DAMAGED_TREE_STRATUM: StratumRank.REMOVAL
 }
 
 
@@ -237,30 +240,30 @@ _TREE_STOREY_MAP = {
 }
 
 _ORIGIN_MAP = {
-    VmiOrigin.UNKNOWN: Origin.UNKNOWN,
-    VmiOrigin.NATURAL_SEED: Origin.NATURAL_SEED,
-    VmiOrigin.NATURAL_SPROUT: Origin.NATURAL_SPROUT,
+    VmiOrigin.UNKNOWN: Origin.NATURAL,
+    VmiOrigin.NATURAL_SEED: Origin.NATURAL,
+    VmiOrigin.NATURAL_SPROUT: Origin.NATURAL,
     VmiOrigin.PLANTED: Origin.PLANTED,
     VmiOrigin.SEEDED: Origin.SEEDED
 }
 
+
 _TREE_TYPE_MAP = {
     VmiTreeType.REMEASURED_TALLY_TREE: TreeType.REMEASURED_TALLY_TREE,
-    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M:
-        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
-    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M:
-        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M: TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+    VmiTreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M: TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
     VmiTreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT: TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
     VmiTreeType.OLD_TALLY_TREE_STUMP_STEM_REMOVED: TreeType.OLD_TALLY_TREE_STUMP_STEM_REMOVED,
     VmiTreeType.OLD_TALLY_TREE_STUMP_STEM_NOT_REMOVED: TreeType.OLD_TALLY_TREE_STUMP_STEM_NOT_REMOVED,
     VmiTreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE: TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE,
-    VmiTreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY:
-        TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY,
-    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS:
-        TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS,
-    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS:
-        TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS,
-}
+    VmiTreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY: TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE_NO_LONGER_TALLY,
+    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS: TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_NO_LONGER_EXISTS,
+    VmiTreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS: TreeType.OLD_TALLY_TREE_LAND_USE_CLASS_CHANGED_STILL_EXISTS,
+    VmiTreeType.OLD_TALLY_TREE_NOT_FOUND: TreeType.OLD_TALLY_TREE_NOT_FOUND,
+    VmiTreeType.OLD_TALLY_TREE_NOW_OUTSIDE_PLOT: TreeType.OLD_TALLY_TREE_NOW_OUTSIDE_PLOT,
+    VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA: TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA,
+    VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE: TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE,
+    VmiTreeType.OLD_CHECKED_TALLY_TREE: TreeType.OLD_CHECKED_TALLY_TREE}
 
 _TREE_CATEGORY_MAP = {
     VmiTreeCategory.SMALL_TREE: TreeCategory.SMALL_TREE,
@@ -328,6 +331,16 @@ _CUTTING_METHOD_MAP = {
     VmiCuttingMethod.OVER_STOREY_REMOVAL: CuttingMethod.OVER_STORY_REMOVAL,
     VmiCuttingMethod.CUTTING_FOR_NATURAL_REGENERATION: CuttingMethod.SEED_TREE_CUTTING,
     VmiCuttingMethod.NURSE_CROP_CUTTING: CuttingMethod.SHELTERWOOD_CUTTING
+}
+
+
+_CROWN_CLASS_MAP = {
+    VmiCrownClass.DOMINANT_TREE_IN_DOMINANT_TREE_STOREY: CrownClass.DOMINANT_TREE_IN_DOMINANT_TREE_STOREY,
+    VmiCrownClass.INTERMEDIATE_TREE_IN_DOMINANT_TREE_STOREY: CrownClass.INTERMEDIATE_TREE_IN_DOMINANT_TREE_STOREY,
+    VmiCrownClass.SUPPRESSED_TREE_IN_DOMINANT_TREE_STOREY: CrownClass.SUPPRESSED_TREE_IN_DOMINANT_TREE_STOREY,
+    VmiCrownClass.UNDER_STOREY_TREE: CrownClass.UNDER_STOREY_TREE,
+    VmiCrownClass.DOMINANT_TREE_IN_OVER_STOREY: CrownClass.DOMINANT_TREE_IN_OVER_STOREY,
+    VmiCrownClass.INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY: CrownClass.INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY
 }
 
 
@@ -405,7 +418,7 @@ def convert_owner(owner_code: str) -> OwnerCategory:
 
 
 @check_empty_vmi
-def convert_stratum_rank(rank_code: str) -> Storey:
+def convert_stratum_rank(rank_code: str) -> StratumRank:
     vmi_rank = VmiStratumRank(rank_code)
     return _STRATUM_RANK_MAP[vmi_rank]
 
@@ -417,9 +430,9 @@ def convert_tree_storey(storey_code: str) -> Storey:
 
 
 @check_empty_vmi
-def convert_origin(origin_code: str) -> Optional[Origin]:
+def convert_origin(origin_code: str) -> Origin:
     vmi_origin = VmiOrigin(origin_code)
-    return _ORIGIN_MAP.get(vmi_origin)
+    return _ORIGIN_MAP[vmi_origin]
 
 
 @check_empty_vmi
@@ -440,8 +453,9 @@ def convert_damage_type(dam_code: str) -> DamageType:
     return _DAMAGE_TYPE_MAP[vmi_dam]
 
 
-@check_empty_vmi
 def convert_development_class(dev_code: str) -> DevelopmentClass:
+    if dev_code in ('', ' ', '.'):
+        return DevelopmentClass.UNKNOWN
     vmi_dev = VmiDevelopmentClass(dev_code)
     return _DEVELOPMENT_CLASS_MAP[vmi_dev]
 
@@ -496,3 +510,9 @@ def convert_forest_maintenance_details(cutting_type_class_src: str,
         # implementation of this application.
         return None, None, None
     return None, operation_year, method
+
+
+@check_empty_vmi
+def convert_crown_class(crown_str: str) -> CrownClass:
+    vmi_crown = VmiCrownClass(crown_str)
+    return _CROWN_CLASS_MAP[vmi_crown]

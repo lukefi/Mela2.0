@@ -5,7 +5,7 @@ from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, SiteType, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
@@ -110,12 +110,6 @@ def determine_artificial_regeneration_year(regeneration: str, regeneration_year:
         if regeneration_year in ('b', 'B'):
             return year - 35
     return None
-
-
-def determine_development_class(dev_class_source: str) -> int:
-    if dev_class_source in {'1', '2', '3', '4', '5', '6', '7', '8', '9'}:
-        return int(dev_class_source)
-    return 0
 
 
 def determine_main_tree_species_dominant_storey(species_source: str,
@@ -515,38 +509,26 @@ def determine_stratum_tree_height(source_height: str) -> Optional[float]:
     return None
 
 
-def determine_stratum_origin(source_origin: str) -> int:
-    # return value explanations:
-    # 0 is natural
-    # 1 is seeded
-    # 2 is planted
-    if source_origin == "3":
-        return 2
-    if source_origin == "4":
-        return 1
-    return 0
-
-
-def determine_stratum_origin_vmi9(source_origin: str) -> str:
+def determine_stratum_origin_vmi9(source_origin: str) -> Origin:
 
     if source_origin in ("1", "2"):
-        return "0"  # Natural
+        return Origin.NATURAL
     if source_origin in ("3", "5", "7", "8"):
-        return "2"  # Planted
+        return Origin.PLANTED
     if source_origin in ("4", "6"):
-        return "1"  # Seeded
-    return ""
+        return Origin.SEEDED
+    return Origin.UNSET
 
 
-def determine_stratum_origin_vmi10(source_origin: str) -> str:
+def determine_stratum_origin_vmi10(source_origin: str) -> Origin:
 
     if source_origin in ("0", "1", "2"):
-        return "0"  # Natural
+        return Origin.NATURAL
     if source_origin == "3":
-        return "2"  # Planted
+        return Origin.PLANTED
     if source_origin == "4":
-        return "1"  # Seeded
-    return ""
+        return Origin.SEEDED
+    return Origin.UNSET
 
 
 def determine_stratum_age_values(biological_age_source: str,
@@ -851,7 +833,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
     storey = determine_storey_for_tree(row[indices["latvuskerros"]])
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
+    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
 
     values = {
         "identifier": identifier,
@@ -874,7 +856,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         "lowest_living_branch_height": lowest_living_branch_height,
         "sapling": False,
         "tree_type": None,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": None,
     }
 
@@ -916,7 +898,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     tree_type = determine_tree_type(row[indices["tree_type"]])
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
+    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
 
     values = {
         "identifier": identifier,
@@ -939,7 +921,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
         "lowest_living_branch_height": lowest_living_branch_height,
         "sapling": False,
         "tree_type": tree_type,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": None,
     }
 
@@ -1046,7 +1028,7 @@ def append_vmi10_strata_from_stand_row(
         mean_height = _parse_float0(seg_h_dm_raw) / 10.0
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)
+        syntytapa = determine_stratum_origin_vmi10(seg_syntytapa_raw)
         storey = determine_storey_for_segment(seg_asema_raw)
 
         running_numb += 1
@@ -1082,7 +1064,7 @@ def append_vmi10_strata_from_stand_row(
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = determine_stratum_origin_vmi10(stand_row[indices[f"jakso{seg_no}_syntytapa"]])
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
         d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
         h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
@@ -1147,7 +1129,7 @@ def append_vmi9_strata_from_stand_row(
         mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)
+        syntytapa = determine_stratum_origin_vmi9(seg_syntytapa_raw)
         storey = determine_storey_for_segment(seg_asema_raw)
 
         running_numb += 1
@@ -1183,7 +1165,7 @@ def append_vmi9_strata_from_stand_row(
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = determine_stratum_origin_vmi9(stand_row[indices[f"jakso{seg_no}_syntytapa"]])
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
 
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
         d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
