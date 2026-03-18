@@ -1,3 +1,4 @@
+from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import vmi_util
 from lukefi.metsi.data.formats.vmi_const import *
@@ -387,11 +388,10 @@ class TestConversion(test_util.ConverterTestSuite):
             (['2'], 0),
             (['3'], 2),
             (['4'], 1),
-            ([""], 0),
-            ([' '], 0),
-            (['kissa123'], 0)
+            ([""], None),
+            ([' '], None),
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_stratum_origin)
+        self.run_with_test_assertions(assertions, vmi2internal.convert_origin)
 
     def test_determine_stratum_age_values(self):
         assertions = [

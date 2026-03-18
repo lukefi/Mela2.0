@@ -66,7 +66,7 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.sapling = np.repeat(False, self.trees.size)
         self.trees.tree_type = np.repeat("", self.trees.size)
         self.trees.damage_type = np.repeat("", self.trees.size)
-        self.trees.latvuskerros = np.repeat(0.0, self.trees.size)
+        self.trees.crown_class = np.repeat(0.0, self.trees.size)
         self.stand.reference_trees = self.trees
 
     def test_odds_units(self):
