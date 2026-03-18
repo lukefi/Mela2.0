@@ -571,6 +571,10 @@ class VMI10Builder(VMIBuilder):
             data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
+
+        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
+        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+
         result.region = None
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
@@ -728,6 +732,11 @@ class VMI11Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_ikalisays"]],
         )
 
+        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
+        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
+
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
@@ -853,6 +862,11 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
+
+        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
+        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
@@ -996,6 +1010,11 @@ class VMI13Builder(VMIBuilder):
         result.ds_main_tree_species_biological_age = vmi_util.determine_vmi13_dominant_storey_age(
             data_row[indices["vallitsevanjaksonika"]]
         )
+
+        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
+        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(

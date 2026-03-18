@@ -93,7 +93,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
 
-    peatland_type: Optional[SoilPeatlandCategory] = None
+    peatland_type: Optional[int] = None
     drained_peatland_type: Optional[int] = None
     under_storey: bool = False
     over_storey: bool = False
@@ -201,6 +201,11 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.ds_main_tree_species_biological_age = conv(row[34], float)
         self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
         self.region = conv(row[36], int)
+
+        self.peatland_type = conv(row[37], int)
+        self.drained_peatland_type = conv(row[38], int)
+        self.under_storey = conv(row[39], int)
+        self.over_storey = conv(row[40], int)
 
     @staticmethod
     def _sql_value(v):
@@ -430,5 +435,9 @@ def stand_as_internal_row(stand: ForestStand):
         stand.basal_area,
         stand.ds_main_tree_species_biological_age,
         stand.main_tree_species_dominant_storey,
-        stand.region
+        stand.region,
+        stand.peatland_type,
+        stand.drained_peatland_type,
+        stand.under_storey,
+        stand.over_storey,
     ]

@@ -31,7 +31,7 @@ STANDS_TYPES = {
     "forest_management_category": "REAL",
     "method_of_last_cutting": "INTEGER",
     "municipality_id": "INTEGER",
-    "dominant_storey_age": "REAL",
+    "ds_main_tree_species_biological_age": "REAL",
     "area_weight_factors": "TEXT",
     "fra_category": "TEXT",
     "land_use_category_detail": "TEXT",
@@ -40,8 +40,13 @@ STANDS_TYPES = {
     "lake_effect": "REAL",
     "basal_area": "REAL",
     "main_tree_species_dominant_storey": "INTEGER",
-    "dominant_height_dominant_storey": "REAL",
+    "ds_dominant_height": "REAL",
     "region": "INTEGER",
+    "peatland_type": "INTEGER",
+    "drained_peatland_type": "INTEGER",
+    "under_storey": "INTEGER",
+    "over_storey": "INTEGER",
+
 }
 
 TREES_TYPES = {
