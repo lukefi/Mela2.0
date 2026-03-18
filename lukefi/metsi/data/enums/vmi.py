@@ -367,6 +367,7 @@ class VmiDevelopmentClass(Enum):
 class VmiCuttingMethod(Enum):
     NO_CUTTING = '0'
     TENDING_OF_SEEDLING_STAND = '1'
+    TENDING_OF_SEEDLING_STAND_SPOT_METHOD = '2'
     FIRST_THINNING = '3'
     OTHER_THINNING = '4'
     OVER_STOREY_THINNING = '5'
@@ -375,7 +376,10 @@ class VmiCuttingMethod(Enum):
     CUTTING_FOR_NATURAL_REGENERATION = '8'
     NURSE_CROP_CUTTING = '9'
     SPECIAL_CUTTING = 'A'
-    NO_PROPOSED_CUTTING = 'B'
+    SELECTIVE_LOGGING = 'E'
+    GAP_FELLING = 'P'
+    GROWING_STOCK_REMOVAL_ON_DRAINED_BOG = 'S'
+
 
 class VmiTimeOfCutting(Enum):
     ONGOING_SEASON = '0'
