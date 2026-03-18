@@ -249,11 +249,9 @@ class Storey(MetsiEnum):
 
 class Origin(MetsiEnum):
     UNSET = -1
-    UNKNOWN = 0
-    NATURAL_SEED = 1
-    NATURAL_SPROUT = 2
-    PLANTED = 3
-    SEEDED = 4
+    NATURAL = 0
+    SEEDED = 1
+    PLANTED = 2
 
 
 class TreeType(StrEnum):
