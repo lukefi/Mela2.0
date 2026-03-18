@@ -204,8 +204,8 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         self.peatland_type = conv(row[37], int)
         self.drained_peatland_type = conv(row[38], int)
-        self.under_storey = conv(row[39], int)
-        self.over_storey = conv(row[40], int)
+        self.under_storey = row[39] == "True"
+        self.over_storey = row[40] == "True"
 
     @staticmethod
     def _sql_value(v):
