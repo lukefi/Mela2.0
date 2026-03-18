@@ -274,6 +274,7 @@ class TreeType(StrEnum):
 
 
 class TreeCategory(StrEnum):
+    UNSET = ''
     SMALL_TREE = '0'
     WASTE_TREE = '1'
     PULP_WOOD_TREE = '3'
@@ -287,6 +288,7 @@ class TreeCategory(StrEnum):
 
 
 class DamageType(StrEnum):
+    UNSET = ""
     NO_DAMAGE = '0'
     DEAD_STANDING_TREES = '1'
     FALLEN_OR_BROKEN_TREES = '2'
@@ -317,11 +319,13 @@ class DamageType(StrEnum):
 
 
 class TreeManagementCategory(MetsiEnum):
+    UNSET = -1
     NO_RESTRICTION = 1
     RETENTION_TREE = 2
 
 
 class DevelopmentClass(MetsiEnum):
+    UNKNOWN = 0
     NON_STOCKED_REGENERATION = 1
     YOUNG_SEEDLING_STAND = 2
     ADVANCED_SEEDLING_STAND = 3
