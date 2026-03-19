@@ -9,7 +9,8 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
-                                              TreeSpecies, DrainageCategory)
+                                              TreeSpecies, DrainageCategory,
+                                              PeatlandForestType, DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
@@ -202,8 +203,8 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
         self.region = conv(row[36], int)
 
-        self.peatland_type = conv(row[37], int)
-        self.drained_peatland_type = conv(row[38], int)
+        self.peatland_type = conv(row[37], PeatlandForestType)
+        self.drained_peatland_type = conv(row[38], DrainedPeatlandForestType)
         self.under_storey = row[39] == "True"
         self.over_storey = row[40] == "True"
 
