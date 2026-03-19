@@ -4,7 +4,7 @@ from typing import cast
 import pandas as pd
 from rpy2 import robjects
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
 from lukefi.metsi.data.formats.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
@@ -101,7 +101,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         )
         _dg_mean_kitumaa_loaded = True
 
-    if stand_land_use_cat == 2:
+    if stand_land_use_cat == LandUseCategory.SCRUB_LAND:
         vmispe_str = str(convert_vmi_numeric_to_species(VmiSpeciesNumeric(spevmi)).value)
         if geo_index in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[geo_index]:
             dgm: float = cast(float, _dg_mean_kitumaa.loc[geo_index][vmispe_str])

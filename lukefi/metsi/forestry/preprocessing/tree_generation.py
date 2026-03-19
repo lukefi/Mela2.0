@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
@@ -99,8 +99,8 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
                 0.0 and stratum.basal_area is not None and stratum.basal_area > 0.0 and method == 'weibull'):
             return TreeStrategy.WEIBULL_DISTRIBUTION
 
-        if stand.land_use_category == 2 and stratum.basal_area is not None and stratum.basal_area > 0.0 and \
-                method == 'lm':
+        if stand.land_use_category == LandUseCategory.SCRUB_LAND and stratum.basal_area is not None and \
+                stratum.basal_area > 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
 
         if all([

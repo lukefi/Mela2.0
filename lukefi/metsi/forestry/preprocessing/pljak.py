@@ -1,14 +1,22 @@
 from typing import cast
 
 import pandas as pd
+from lukefi.metsi.data.enums.internal import DevelopmentClass, LandUseCategory, StratumRank
 from lukefi.metsi.data.enums.vmi import VmiIteration
 
 _spe_proportions: pd.DataFrame
 _spe_proportions_loaded = False  # pylint: disable=invalid-name # this is not a constant
 
 
-def get_spe_proportions(land_use_class: int, county: int, development_class: int,
-                        asema: int, dgm: float, stems: float, spelm: int, nfi_iteration: VmiIteration) -> list[float]:
+def get_spe_proportions(
+        land_use_class: LandUseCategory,
+        county: int,
+        development_class: DevelopmentClass,
+        asema: StratumRank,
+        dgm: float,
+        stems: float,
+        spelm: int,
+        nfi_iteration: VmiIteration) -> list[float]:
     global _spe_proportions  # pylint: disable=global-statement
     global _spe_proportions_loaded  # pylint: disable=global-statement
 
@@ -20,12 +28,18 @@ def get_spe_proportions(land_use_class: int, county: int, development_class: int
 
     strtype = ""
 
-    if land_use_class == 2:
+    if land_use_class == LandUseCategory.SCRUB_LAND:
         strtype = "Kitumaa"
-    elif land_use_class == 1:
-        taimikko = ((development_class in (2, 3) and asema in (0, 1)) or
-                    (asema in (5, 6) and stems > 0) or
-                    asema == 9)
+    elif land_use_class == LandUseCategory.FOREST:
+        taimikko = (
+            (development_class in (
+                DevelopmentClass.YOUNG_SEEDLING_STAND,
+                DevelopmentClass.ADVANCED_SEEDLING_STAND) and asema in (
+                StratumRank.UNGROWABLE_SAPLINGS,
+                StratumRank.DOMINANT)) or (
+                asema in (
+                    StratumRank.UNDER_1,
+                    StratumRank.UNDER_2) and stems > 0) or asema == StratumRank.UNDER_4)
         if taimikko and stems >= 3000 and dgm > 0:
             strtype = "MetsaTiheaTaimikko"
         if taimikko and stems < 3000 and dgm > 0:

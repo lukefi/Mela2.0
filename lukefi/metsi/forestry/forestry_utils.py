@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable
 from typing import Iterable, Optional
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.enums.internal import TreeCategory, TreeSpecies, TreeType
 from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
@@ -145,8 +145,26 @@ def find_matching_storey_stratum_for_tree(
         diameter_threshold: float = 3.0) -> Optional[TreeStratum]:
     # a.	Tarkista, että puu on inventoinnissa mitattu (puutyypit vaihtelee inventointien välillä)
     #       ja se on elävä (elävillä puilla puuluokka on numeerinen).
-    if tree.tree_type not in ("", "V", "Y", "U", "S", "T", "N", " ") or \
-            tree.tree_category not in ("", "0", "1", "3", "4", "5", "6", "7", "8", "9"):
+    if tree.tree_type not in (
+        TreeType.UNSET,
+        TreeType.REMEASURED_TALLY_TREE,
+        TreeType.OLD_CHECKED_TALLY_TREE,
+        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+        TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+        TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
+        TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE
+    ) or tree.tree_category not in (
+        TreeCategory.UNSET,
+        TreeCategory.SMALL_TREE,
+        TreeCategory.WASTE_TREE,
+        TreeCategory.PULP_WOOD_TREE,
+        "4",
+        "5",
+        "6",
+        TreeCategory.SAW_LOG_TREE,
+        "8",
+        "9"
+    ):
         return None
 
     same_storey_strata = [
