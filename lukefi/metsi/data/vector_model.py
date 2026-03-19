@@ -421,13 +421,13 @@ class ReferenceTrees(VectorData):
             self.biological_age[i] if not np.isnan(self.biological_age[i]) else None,
             self.stems_per_ha[i],
             Origin(self.origin[i]),
-            self.management_category[i],
-            self.tree_category[i],
+            TreeManagementCategory(self.management_category[i]),
+            TreeCategory(self.tree_category[i]),
             Storey(self.storey[i]),
             self.sapling[i],
-            self.tree_type[i],
-            self.damage_type[i],
-            self.crown_class[i],
+            TreeType(self.tree_type[i]),
+            DamageType(self.damage_type[i]),
+            CrownClass(self.crown_class[i]),
             self.basal_area[i],
             self.volume[i]
         )
@@ -546,7 +546,7 @@ class TreeStrata(VectorData):
             Storey(self.storey[i]),
             self.sapling_stems_per_ha[i],
             self.number_of_generated_trees[i],
-            self.stratum_rank[i]
+            StratumRank(self.stratum_rank[i])
         )
 
     def as_internal_csv_row(self, i) -> list[str]:
