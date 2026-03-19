@@ -141,8 +141,10 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
         if params.get("scale_height_distribution_stems_by_ba", True):
             assert stratum.basal_area is not None
-            result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
-                _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
+            trees_with_diameter = result.breast_height_diameter > 0.0
+            result.stems_per_ha[trees_with_diameter] = result.stems_per_ha[trees_with_diameter] * stratum.basal_area / \
+                _calculate_basal_area_from_trees(result.stems_per_ha[trees_with_diameter],
+                                                 result.breast_height_diameter[trees_with_diameter])
 
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
         result = _trees_from_weibull(stratum, params["n_trees"])
