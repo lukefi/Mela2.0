@@ -156,7 +156,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return self.auxiliary_stand
 
     def is_forest_land(self):
-        return (self.land_use_category.value < 4) if self.land_use_category is not None else False
+        return (self.land_use_category < LandUseCategory.OTHER_FOREST) if self.land_use_category is not None else False
 
     def has_trees(self):
         return len(self.reference_trees) > 0
