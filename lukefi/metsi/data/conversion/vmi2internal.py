@@ -9,6 +9,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiLandUseCategory,
     VmiTreeCategory,
     VmiDrainageCategory, VmiStratumRank, VmiTreeStorey,
+    VmiDrainedPeatlandForestType, VmiPeatlandForestType
 )
 from lukefi.metsi.data.enums.internal import (
     Origin,
@@ -18,7 +19,9 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     LandUseCategory,
     DrainageCategory, Storey,
-    TreeCategory
+    TreeCategory,
+    PeatlandForestType,
+    DrainedPeatlandForestType
 )
 
 _species_map = {
@@ -155,6 +158,52 @@ _origin_map = {
 }
 
 
+_peatlandForestType_map = {
+    VmiPeatlandForestType.LEHTOKORPI: PeatlandForestType.LEHTOKORPI,
+    VmiPeatlandForestType.RUOHOKORPI: PeatlandForestType.RUOHOKORPI,
+    VmiPeatlandForestType.KANGASKORPI: PeatlandForestType.KANGASKORPI,
+    VmiPeatlandForestType.MUSTIKKAKORPI: PeatlandForestType.MUSTIKKAKORPI,
+    VmiPeatlandForestType.PUOLUKKAKORPI: PeatlandForestType.PUOLUKKAKORPI,
+    VmiPeatlandForestType.PALLOSARAKORPI: PeatlandForestType.PALLOSARAKORPI,
+    VmiPeatlandForestType.KORPIRAME: PeatlandForestType.KORPIRAME,
+    VmiPeatlandForestType.PALLOSARARAME: PeatlandForestType.PALLOSARARAME,
+    VmiPeatlandForestType.KANGASRAME: PeatlandForestType.KANGASRAME,
+    VmiPeatlandForestType.ISOVARPURAME: PeatlandForestType.ISOVARPURAME,
+    VmiPeatlandForestType.RAHKARAME: PeatlandForestType.RAHKARAME,
+    VmiPeatlandForestType.VARSINAINEN_LEHTOKORPI: PeatlandForestType.VARSINAINEN_LEHTOKORPI,
+    VmiPeatlandForestType.KOIVULETTOKORPI: PeatlandForestType.KOIVULETTOKORPI,
+    VmiPeatlandForestType.RUOHOINEN_SARAKORPI: PeatlandForestType.RUOHOINEN_SARAKORPI,
+    VmiPeatlandForestType.VARSINAINEN_SARAKORPI: PeatlandForestType.VARSINAINEN_SARAKORPI,
+    VmiPeatlandForestType.VARSINAINEN_LEHTORAME: PeatlandForestType.VARSINAINEN_LEHTORAME,
+    VmiPeatlandForestType.RUOHOINEN_SARARAME: PeatlandForestType.RUOHOINEN_SARARAME,
+    VmiPeatlandForestType.VARSINAINEN_SARARAME: PeatlandForestType.VARSINAINEN_SARARAME,
+    VmiPeatlandForestType.TUPAVILLASARARAME: PeatlandForestType.TUPAVILLASARARAME,
+    VmiPeatlandForestType.LYHYTKORSIRAME: PeatlandForestType.LYHYTKORSIRAME,
+    VmiPeatlandForestType.TUPAVILLARAME: PeatlandForestType.TUPAVILLARAME,
+    VmiPeatlandForestType.KEIDASRAME: PeatlandForestType.KEIDASRAME,
+    VmiPeatlandForestType.VARSINAINENLETTO: PeatlandForestType.VARSINAINENLETTO,
+    VmiPeatlandForestType.RIMPILETTO: PeatlandForestType.RIMPILETTO,
+    VmiPeatlandForestType.RUOHOINENSARANEVA: PeatlandForestType.RUOHOINENSARANEVA,
+    VmiPeatlandForestType.RUOHOINENRIMPINEVA: PeatlandForestType.RUOHOINENRIMPINEVA,
+    VmiPeatlandForestType.VARSINAINENSARANEVA: PeatlandForestType.VARSINAINENSARANEVA,
+    VmiPeatlandForestType.VARSINAINENRIMPINEVA: PeatlandForestType.VARSINAINENRIMPINEVA,
+    VmiPeatlandForestType.LYHYTKORSIKALVAKKANEVA: PeatlandForestType.LYHYTKORSIKALVAKKANEVA,
+    VmiPeatlandForestType.LYHYTKORSINEVA: PeatlandForestType.LYHYTKORSINEVA,
+    VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
+}
+
+_drainedPeatlandForestType_map = {
+    VmiDrainedPeatlandForestType.HERB_RICH_TYPE: DrainedPeatlandForestType.HERB_RICH_TYPE,
+    VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1,
+    VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2,
+    VmiDrainedPeatlandForestType.VACCINIUM_VITIS_IDAEA_TYPE: DrainedPeatlandForestType.VACCINIUM_VITIS_IDAEA_TYPE,
+    VmiDrainedPeatlandForestType.DEV_FROM_GENUINE_FORESTED_MIRE:
+    DrainedPeatlandForestType.DEV_FROM_GENUINE_FORESTED_MIRE,
+    VmiDrainedPeatlandForestType.DWARF_SHRUB_TYPE: DrainedPeatlandForestType.DWARF_SHRUB_TYPE,
+    VmiDrainedPeatlandForestType.CLADONIA_TYPE: DrainedPeatlandForestType.CLADONIA_TYPE,
+}
+
+
 TREE_CATEGORY_MAP: dict[VmiTreeCategory, TreeCategory] = {
     VmiTreeCategory.C0: TreeCategory.C0,
     VmiTreeCategory.C1: TreeCategory.C1,
@@ -195,7 +244,7 @@ def map_vmi_tree_category(raw: Optional[str]) -> Optional[TreeCategory]:
 
 
 def is_empty_vmi_str(candidate: str) -> bool:
-    return candidate in ('', ' ', '.', '\n')
+    return candidate in ('', ' ', '  ', '.', '\n')
 
 
 def convert_drainage_category(code):
@@ -261,3 +310,25 @@ def convert_origin(origin_code: str) -> Optional[Origin]:
         return None
     vmi_origin = VmiOrigin(origin_code)
     return _origin_map.get(vmi_origin)
+
+
+def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
+
+    if is_empty_vmi_str(code):
+        return None
+
+    if code == '0':
+        return None
+
+    vmi_code = VmiPeatlandForestType(code)
+    return _peatlandForestType_map[vmi_code]
+
+
+def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandForestType]:
+    if is_empty_vmi_str(code):
+        return None
+
+    if code == '0':
+        return None
+    vmi_code = VmiDrainedPeatlandForestType(code)
+    return _drainedPeatlandForestType_map[vmi_code]

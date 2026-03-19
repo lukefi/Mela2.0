@@ -571,9 +571,8 @@ class VMI10Builder(VMIBuilder):
             data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
-
-        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
-        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
 
         result.region = None
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
@@ -732,8 +731,8 @@ class VMI11Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_ikalisays"]],
         )
 
-        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
-        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
         result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
@@ -863,8 +862,8 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
 
-        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
-        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
         result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
@@ -1011,8 +1010,8 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["vallitsevanjaksonika"]]
         )
 
-        result.peatland_type = util.parse_type(data_row[indices["suotyy"]], int)
-        result.drained_peatland_type = util.parse_type(data_row[indices["tkgtyy"]], int)
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
         result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
