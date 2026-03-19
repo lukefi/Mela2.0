@@ -15,7 +15,7 @@ sqlite_decl = {
     "trees": [
         "tree_number", "species", "breast_height_diameter", "height", "measured_height", "breast_height_age",
         "biological_age", "stems_per_ha", "origin", "management_category",
-        "tree_category", "storey", "sapling", "tree_type", "tuhon_ilmiasu",
+        "tree_category", "storey", "sapling", "tree_type", "damage_type",
         "basal_area", "volume"
     ],
     "strata": [
