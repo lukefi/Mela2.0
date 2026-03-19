@@ -158,7 +158,7 @@ _origin_map = {
 }
 
 
-_peatlandForestType_map = {
+_peatland_forest_type_map = {
     VmiPeatlandForestType.LEHTOKORPI: PeatlandForestType.LEHTOKORPI,
     VmiPeatlandForestType.RUOHOKORPI: PeatlandForestType.RUOHOKORPI,
     VmiPeatlandForestType.KANGASKORPI: PeatlandForestType.KANGASKORPI,
@@ -192,7 +192,7 @@ _peatlandForestType_map = {
     VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
 }
 
-_drainedPeatlandForestType_map = {
+_drained_peatland_forest_type_map = {
     VmiDrainedPeatlandForestType.HERB_RICH_TYPE: DrainedPeatlandForestType.HERB_RICH_TYPE,
     VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1,
     VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2,
@@ -321,7 +321,7 @@ def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
         return None
 
     vmi_code = VmiPeatlandForestType(code)
-    return _peatlandForestType_map[vmi_code]
+    return _peatland_forest_type_map[vmi_code]
 
 
 def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandForestType]:
@@ -331,4 +331,4 @@ def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandF
     if code == '0':
         return None
     vmi_code = VmiDrainedPeatlandForestType(code)
-    return _drainedPeatlandForestType_map[vmi_code]
+    return _drained_peatland_forest_type_map[vmi_code]
