@@ -59,7 +59,7 @@ TREES_TYPES = {
     "storey": "INTEGER",
     "sapling": "INTEGER",
     "tree_type": "TEXT",
-    "tuhon_ilmiasu": "TEXT",
+    "damage_type": "TEXT",
     "basal_area": "REAL",
     "volume": "REAL",
     "stratum": "INTEGER"
