@@ -74,7 +74,7 @@ TREE_INTERNAL_CSV_COLUMNS = (
     "sapling",
     "storey",
     "tree_type",
-    "tuhon_ilmiasu",
+    "damage_type",
 )
 
 STRATUM_INTERNAL_CSV_COLUMNS = (
