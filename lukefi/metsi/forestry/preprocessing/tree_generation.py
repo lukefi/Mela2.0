@@ -143,8 +143,7 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
             assert stratum.basal_area is not None
             if result.breast_height_diameter.any():
                 result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
-                    _calculate_basal_area_from_trees(result.stems_per_ha,
-                                                     result.breast_height_diameter)
+                    _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
 
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
         result = _trees_from_weibull(stratum, params["n_trees"])
