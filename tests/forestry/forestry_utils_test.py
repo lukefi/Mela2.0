@@ -1,7 +1,7 @@
 import unittest
 
 from lukefi.metsi.forestry import forestry_utils as futil
-from lukefi.metsi.data.enums.internal import TreeSpecies, Storey
+from lukefi.metsi.data.enums.internal import CrownClass, TreeSpecies, Storey
 from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
@@ -149,7 +149,7 @@ class ForestryUtilsTest(unittest.TestCase):
                     Storey.UNDER.value,
                 ],
                 "mean_diameter": [6.0, 10.0],
-                "asema": [5, 5, 5]
+                "stratum_rank": [5, 5, 5]
             }
         )
         tree = ReferenceTree(
@@ -157,7 +157,7 @@ class ForestryUtilsTest(unittest.TestCase):
             species=TreeSpecies.DOWNY_BIRCH,
             storey=Storey.UNDER,
             breast_height_diameter=6.2,
-            crown_class="5"
+            crown_class=CrownClass.UNDER_STOREY_TREE
         )
 
         stratum = futil.find_matching_storey_stratum_for_tree(tree, strata)
