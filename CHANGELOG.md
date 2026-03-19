@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.15] - 2026-03-19
+
+### Added
+
+- Added optional basal area based `stems_per_ha` scaling for reference trees generated from height distribution
+
 ## [0.5.14] - 2026-03-19
 
 ### Fixed
