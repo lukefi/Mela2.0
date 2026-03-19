@@ -35,7 +35,7 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "sapling": (np.bool_, False),
     "tree_type": (np.dtype("U1"), TreeType.UNSET),
     "damage_type": (np.dtype("U2"), DamageType.UNSET),
-    "crown_class": (np.int32, CrownClass.UNSET),
+    "crown_class": (np.dtype("U1"), CrownClass.UNSET),
     "basal_area": (np.float64, 0.0),
     "volume": (np.float64, 0.0),
     "stratum": (np.int32, -1)
