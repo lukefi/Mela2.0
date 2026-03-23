@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import TreeStrata, ReferenceTrees
 
@@ -10,7 +11,7 @@ class TestForestDataModel(unittest.TestCase):
     def test_tree_strata_get_stratum(self):
         strata = TreeStrata()
         strata.create([{
-            "species": 1,
+            "species": TreeSpecies.PINE,
             "mean_height": 2.0,
             "mean_diameter": 1.0,
             "breast_height_age": 10.0,
@@ -20,7 +21,7 @@ class TestForestDataModel(unittest.TestCase):
 
         row = strata.get_stratum(0)
 
-        self.assertEqual(1, int(row.species))
+        self.assertEqual(TreeSpecies.PINE, int(row.species))
         self.assertEqual(2.0, row.mean_height)
         self.assertEqual(1.0, row.mean_diameter)
         self.assertEqual(10.0, row.breast_height_age)
@@ -30,7 +31,7 @@ class TestForestDataModel(unittest.TestCase):
     def test_reference_trees_get_tree(self):
         trees = ReferenceTrees()
         trees.create([{
-            "species": 1,
+            "species": TreeSpecies.PINE,
             "breast_height_diameter": 11.5,
             "biological_age": 10.0,
             "stems_per_ha": 100.0,
