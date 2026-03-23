@@ -349,16 +349,16 @@ class CuttingMethod(MetsiEnum):
 
 class StratumRank(MetsiEnum):
     UNSET = -1
-    UNGROWABLE_SAPLINGS = 0
-    DOMINANT = 1
-    OVER_1 = 2
-    OVER_2 = 3
-    OVER_3 = 4
-    UNDER_1 = 5
-    UNDER_2 = 6
-    UNDER_3 = 7
-    UNDER_4 = 9
-    REMOVAL = 8
+    UNPRODUCTIVE_SEEDLINGS = 0
+    DOMINANT_TREE_STOREY = 1
+    OVER_STOREY = 2
+    RETENTION_TREE_STOREY = 3
+    NURSE_CROP = 4
+    UNDER_STOREY_DEVELOPMENT_CAPABLE = 5
+    UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE = 6
+    NON_ESTABLISHED_SEEDLINGS = 7
+    DAMAGED_TREE_STRATUM = 8
+    SEEDLING_STRATUM = 9
 
 
 class CrownClass(StrEnum):

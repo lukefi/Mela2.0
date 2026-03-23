@@ -35,11 +35,11 @@ def get_spe_proportions(
             (development_class in (
                 DevelopmentClass.YOUNG_SEEDLING_STAND,
                 DevelopmentClass.ADVANCED_SEEDLING_STAND) and asema in (
-                StratumRank.UNGROWABLE_SAPLINGS,
-                StratumRank.DOMINANT)) or (
+                StratumRank.UNPRODUCTIVE_SEEDLINGS,
+                StratumRank.DOMINANT_TREE_STOREY)) or (
                 asema in (
-                    StratumRank.UNDER_1,
-                    StratumRank.UNDER_2) and stems > 0) or asema == StratumRank.UNDER_4)
+                    StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
+                    StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE) and stems > 0) or asema == StratumRank.SEEDLING_STRATUM)
         if taimikko and stems >= 3000 and dgm > 0:
             strtype = "MetsaTiheaTaimikko"
         if taimikko and stems < 3000 and dgm > 0:
