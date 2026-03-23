@@ -215,8 +215,8 @@ def _storey_match(stratum: TreeStratum, tree: ReferenceTree):
             CrownClass.RETENTION_INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY):  # jättöpuut vain jättöylispuujaksoon
         return stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
     if tree.crown_class in (
-            CrownClass.DOMINANT_TREE_IN_DOMINANT_TREE_STOREY,
-            CrownClass.INTERMEDIATE_TREE_IN_DOMINANT_TREE_STOREY,
-            CrownClass.SUPPRESSED_TREE_IN_DOMINANT_TREE_STOREY):  # valitseva jakso
+            CrownClass.DOMINANT_TREE_IN_DOMINANT_STOREY,
+            CrownClass.INTERMEDIATE_TREE_IN_DOMINANT_STOREY,
+            CrownClass.SUPPRESSED_TREE_IN_DOMINANT_STOREY):  # valitseva jakso
         return stratum.stratum_rank <= StratumRank.DOMINANT_TREE_STOREY
     return False
