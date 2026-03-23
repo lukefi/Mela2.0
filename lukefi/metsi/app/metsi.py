@@ -2,7 +2,6 @@ import os
 import sys
 import copy
 import sqlite3
-import traceback
 from typing import Optional
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
@@ -59,7 +58,7 @@ def main() -> int:
     except IOError:
         print(f"Application control file path '{control_file}' can not be read. Aborting....")
         return 1
-    
+
     app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
     prepare_target_directory(app_config.target_directory)
     print_logline("Reading input...")
@@ -103,7 +102,6 @@ def main() -> int:
 
     else:
         raise MetsiException("Can not determine input data for unknown run mode")
-
 
     # now run each slice in turn
     for _, stands in enumerate(input_data):
