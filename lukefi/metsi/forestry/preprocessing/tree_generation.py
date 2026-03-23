@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
@@ -50,7 +50,7 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     reference_trees.height = np.round(reference_trees.height, 2)
 
     retained = stratum.stratum_rank == 3
-    reference_trees.management_category.fill(2 if retained else 1)
+    reference_trees.management_category.fill(TreeManagementCategory.RETENTION_TREE if retained else 1)
     reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
 
     reference_trees.origin.fill(stratum.origin)
@@ -203,8 +203,8 @@ def adjust_retention_trees(stand: ForestStand,
         trees.breast_height_diameter[retention_trees_mask])
 
     g_generated_not_retention_trees = _calculate_basal_area_from_trees(
-        new_trees.stems_per_ha[new_trees.management_category != 2],
-        new_trees.breast_height_diameter[new_trees.management_category != 2])
+        new_trees.stems_per_ha[new_trees.management_category != TreeManagementCategory.RETENTION_TREE],
+        new_trees.breast_height_diameter[new_trees.management_category != TreeManagementCategory.RETENTION_TREE])
 
     scale_factor_stand = max((g_generated_not_retention_trees - g_retention) / g_generated_not_retention_trees, 0) \
         if g_generated_not_retention_trees > 0.0 else 1
@@ -222,7 +222,7 @@ def adjust_retention_trees(stand: ForestStand,
             itree = itree + 1
             g_stratum = g_stratum + new_trees.stems_per_ha[itree] * \
                 np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
-            if new_trees.management_category[itree] == 2:
+            if new_trees.management_category[itree] == TreeManagementCategory.RETENTION_TREE:
                 g_stratum_retention = g_stratum_retention + \
                     new_trees.stems_per_ha[itree] * np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
         g_stratum_scaled = scale_factor_stratum * g_stratum
@@ -239,14 +239,14 @@ def adjust_retention_trees(stand: ForestStand,
 
         for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
             itree = itree0 + i + 1
-            if new_trees.management_category[itree] != 2:
+            if new_trees.management_category[itree] != TreeManagementCategory.RETENTION_TREE:
                 new_trees.stems_per_ha[itree] = scale_factor_stratum * new_trees.stems_per_ha[itree]
 
     stand_tree_count = len(new_trees)
 
     for j, i in enumerate(np.where(retention_trees_mask)[0]):
         trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + j + 1}-tree"
-        trees.management_category[i] = 2
+        trees.management_category[i] = TreeManagementCategory.RETENTION_TREE
         trees.storey[i] = Storey.SPARE
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
         trees.breast_height_age[i] = breast_height_age

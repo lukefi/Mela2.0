@@ -131,19 +131,19 @@ class MarkTreesTest(unittest.TestCase):
 
         # Row 0: no stems marked -> attributes unchanged
         self.assertEqual("ORIGINAL", tree_types[0])
-        self.assertEqual(1, mgmt_cats[0])
+        self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[0])
 
         # Row 1: all stems marked -> attributes updated in-place
         self.assertEqual("SPARE", tree_types[1])
-        self.assertEqual(2, mgmt_cats[1])
+        self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[1])
 
         # Row 2: partial stems remain unmarked after split
         self.assertEqual("ORIGINAL", tree_types[2])
-        self.assertEqual(1, mgmt_cats[2])
+        self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[2])
 
         # Row 3: new row for the marked stems -> attributes set
         self.assertEqual("SPARE", tree_types[3])
-        self.assertEqual(2, mgmt_cats[3])
+        self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[3])
 
 
 if __name__ == "__main__":
