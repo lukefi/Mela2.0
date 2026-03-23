@@ -2,13 +2,19 @@ import unittest
 import numpy as np
 import pandas as pd
 from lukefi.metsi.data.enums.internal import (
+    CrownClass,
     CuttingMethod,
+    DamageType,
     DrainageCategory,
     LandUseCategory,
+    Origin,
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory,
-    TreeManagementCategory)
+    Storey,
+    TreeCategory,
+    TreeManagementCategory,
+    TreeType)
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -59,14 +65,14 @@ class TestSelectUnits(unittest.TestCase):
         self.trees.breast_height_age = np.ascontiguousarray(pd_trees.age13, dtype=np.float64)
         self.trees.biological_age = np.ascontiguousarray(pd_trees.ageb, dtype=np.float64)
         self.trees.stems_per_ha = np.ascontiguousarray(pd_trees.f, dtype=np.float64)
-        self.trees.origin = np.repeat(0, self.trees.size)
+        self.trees.origin = np.repeat(Origin.NATURAL, self.trees.size)
         self.trees.management_category = np.ascontiguousarray(pd_trees.manag_cat, np.int32)
-        self.trees.tree_category = np.repeat("", self.trees.size)
-        self.trees.storey = np.repeat(0, self.trees.size)
+        self.trees.tree_category = np.repeat(TreeCategory.UNSET, self.trees.size)
+        self.trees.storey = np.repeat(Storey.INDETERMINATE, self.trees.size)
         self.trees.sapling = np.repeat(False, self.trees.size)
-        self.trees.tree_type = np.repeat("", self.trees.size)
-        self.trees.damage_type = np.repeat("", self.trees.size)
-        self.trees.crown_class = np.repeat(0.0, self.trees.size)
+        self.trees.tree_type = np.repeat(TreeType.UNSET, self.trees.size)
+        self.trees.damage_type = np.repeat(DamageType.UNSET, self.trees.size)
+        self.trees.crown_class = np.repeat(CrownClass.CROWNLESS, self.trees.size)
         self.stand.reference_trees = self.trees
 
     def test_odds_units(self):
