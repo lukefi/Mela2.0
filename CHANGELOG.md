@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.17] - 2026-03-23
+
+### Fixed
+- Added apply_conversions to vmi9 and 10
+
 ## [0.5.16] - 2026-03-23
 
 ### Added
