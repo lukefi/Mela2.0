@@ -123,7 +123,7 @@ class ForestryUtilsTest(unittest.TestCase):
             species=TreeSpecies.SPRUCE,
             storey=Storey.DOMINANT,
             breast_height_diameter=11.0,
-            crown_class="2"
+            crown_class=CrownClass.DOMINANT_TREE_IN_DOMINANT_STOREY
         )
 
         stratum = futil.find_matching_storey_stratum_for_tree(tree, strata)
@@ -183,7 +183,7 @@ class ForestryUtilsTest(unittest.TestCase):
             species=TreeSpecies.SPRUCE,
             storey=Storey.DOMINANT,
             breast_height_diameter=0.0,
-            crown_class="2"
+            crown_class=CrownClass.DOMINANT_TREE_IN_DOMINANT_STOREY
         )
         idx_zero = futil.find_matching_storey_stratum_for_tree(tree_zero, strata)
         self.assertIsNone(idx_zero)
@@ -192,7 +192,7 @@ class ForestryUtilsTest(unittest.TestCase):
             identifier="t1",
             species=TreeSpecies.SPRUCE,
             storey=Storey.DOMINANT,
-            crown_class="2"
+            crown_class=CrownClass.DOMINANT_TREE_IN_DOMINANT_STOREY
         )
         idx_nan = futil.find_matching_storey_stratum_for_tree(tree_nan, strata)
         self.assertIsNone(idx_nan)
@@ -222,7 +222,7 @@ class ForestryUtilsTest(unittest.TestCase):
             species=TreeSpecies.SPRUCE,
             storey=Storey.DOMINANT,
             breast_height_diameter=40.0,
-            crown_class="2"
+            crown_class=CrownClass.DOMINANT_TREE_IN_DOMINANT_STOREY
         )
 
         # With default threshold=2.5, 40 is within [20/2.5, 20*2.5] = [8, 50] → match index 1
