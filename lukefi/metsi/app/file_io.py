@@ -261,6 +261,7 @@ def delete_existing_export_files(
                 td / "stands.csv",
                 td / "trees.csv",
                 td / "strata.csv",
+                td / "metadata.json",
             ])
         else:
             candidates.append(td / f"{preprocessing_base_name}.{fmt}")
