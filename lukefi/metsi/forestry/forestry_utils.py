@@ -1,7 +1,7 @@
 import math
 from collections.abc import Callable
 from typing import Iterable, Optional
-from lukefi.metsi.data.enums.internal import TreeCategory, TreeSpecies, TreeType
+from lukefi.metsi.data.enums.internal import CrownClass, StratumRank, TreeCategory, TreeSpecies, TreeType
 from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
@@ -201,13 +201,22 @@ def storey_match(stratum: TreeStratum, tree: ReferenceTree):
     #       VMI-ohje ei tunne vallitsevan jakson ja alikasvoksen jättöpuujaksoja.
 
     # alikasvosjakso, jättöaliksavospuita ei kohdisteta millekään ositteelle
-    if tree.crown_class == "5":
-        return stratum.stratum_rank in (5, 6, 9)
+    if tree.crown_class == CrownClass.UNDER_STOREY_TREE:
+        return stratum.stratum_rank in (
+            StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
+            StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE,
+            StratumRank.SEEDLING_STRATUM)
     # ylispuujakso, ei jättöpuu
-    if tree.crown_class in ("6", "7"):
-        return stratum.stratum_rank in (2, 4)
-    if tree.crown_class in ("F", "G"):  # jättöpuut vain jättöylispuujaksoon
-        return stratum.stratum_rank == 3
-    if tree.crown_class in ("2", "3", "4"):  # valitseva jakso
-        return stratum.stratum_rank <= 1
+    if tree.crown_class in (CrownClass.DOMINANT_TREE_IN_OVER_STOREY,
+                            CrownClass.INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY):
+        return stratum.stratum_rank in (StratumRank.OVER_STOREY, StratumRank.NURSE_CROP)
+    if tree.crown_class in (
+            CrownClass.RETENTION_DOMINANT_TREE_IN_OVER_STOREY,
+            CrownClass.RETENTION_INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY):  # jättöpuut vain jättöylispuujaksoon
+        return stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
+    if tree.crown_class in (
+            CrownClass.DOMINANT_TREE_IN_DOMINANT_TREE_STOREY,
+            CrownClass.INTERMEDIATE_TREE_IN_DOMINANT_TREE_STOREY,
+            CrownClass.SUPPRESSED_TREE_IN_DOMINANT_TREE_STOREY):  # valitseva jakso
+        return stratum.stratum_rank <= StratumRank.DOMINANT_TREE_STOREY
     return False
