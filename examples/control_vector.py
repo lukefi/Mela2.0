@@ -3,6 +3,7 @@ from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.generators import Sequence, Event
+from examples.declarations.sqlite import sqlite_decl
 
 
 control_structure = {
@@ -10,6 +11,7 @@ control_structure = {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         "strata_origin": 2,
         "run_modes": ["preprocess", "export_prepro", "simulate"],
+        "sqlite_decl": sqlite_decl,
     },
     "preprocessing_operations": [
         generate_reference_trees,  # reference trees from strata, replaces existing reference trees

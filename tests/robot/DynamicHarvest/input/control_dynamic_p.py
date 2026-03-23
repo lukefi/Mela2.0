@@ -1,5 +1,4 @@
 from user_events import Harvest20percent, FirstThinningMineralSoils
-from examples.declarations.export_prepro import mela_and_default_csv
 from lukefi.metsi.sim.treatment import do_nothing
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.sim_configuration import Transition
@@ -8,12 +7,15 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from examples.declarations.export_prepro import mela_and_default_csv
+from examples.declarations.sqlite import sqlite_decl
 
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
         # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
-        "run_modes": ["preprocess", "export_prepro", "simulate"]
+        "run_modes": ["preprocess", "export_prepro", "simulate"],
+        "sqlite_decl": sqlite_decl,
     },
     "preprocessing_operations": [
         scale_area_weight,
@@ -77,6 +79,8 @@ control_structure = {
         ]
     },
     'export_prepro': mela_and_default_csv
+
+
 }
 
 __all__ = ['control_structure']
