@@ -169,7 +169,7 @@ def find_matching_storey_stratum_for_tree(
 
     same_storey_strata = [
         strata.get_stratum(i) for i in range(len(strata))
-        if storey_match(strata.get_stratum(i), tree)
+        if _storey_match(strata.get_stratum(i), tree)
     ]
     same_species_strata, other_species_strata = split_list_by_predicate(
         same_storey_strata,
@@ -193,7 +193,7 @@ def find_matching_storey_stratum_for_tree(
     return selected_stratum
 
 
-def storey_match(stratum: TreeStratum, tree: ReferenceTree):
+def _storey_match(stratum: TreeStratum, tree: ReferenceTree):
     # b.	Puu voidaan kohdistaa vain ositteeseen jonka jaksotieto vastaa puun latvuskerrostietoa.
     # c.	Jättöpuu (latvuskerroskoodi kirjain) voidaan kohdistaa vain jättöylispuujaksoon
     #       (koodit F ja G), ja jättöpuujaksoon voidaan kohdistaa vain jättöpuita.
