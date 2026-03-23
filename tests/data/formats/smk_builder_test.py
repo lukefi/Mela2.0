@@ -6,6 +6,7 @@ import numpy as np
 
 from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
 from lukefi.metsi.data.enums.internal import (
+    Origin,
     OwnerCategory,
     SoilPeatlandCategory,
     SiteType,
@@ -132,8 +133,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[0]))
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
 
-        self.assertEqual(0, vec0.origin[0])
-        self.assertEqual(0, vec0.origin[1])
+        self.assertEqual(Origin.NATURAL, vec0.origin[0])
+        self.assertEqual(Origin.NATURAL, vec0.origin[1])
 
         self.assertEqual(0.0, vec0.stems_per_ha[0])
         self.assertEqual(0.0, vec0.stems_per_ha[1])
@@ -260,8 +261,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         vec0 = self.gpkg_stands[0].tree_strata
         self.assertEqual(TreeSpecies.PINE, TreeSpecies(vec0.species[0]))
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
-        self.assertEqual(-1, vec0.origin[0])
-        self.assertEqual(-1, vec0.origin[1])
+        self.assertEqual(Origin.UNSET, vec0.origin[0])
+        self.assertEqual(Origin.UNSET, vec0.origin[1])
         self.assertEqual(0.0, vec0.stems_per_ha[0])
         self.assertEqual(0.0, vec0.stems_per_ha[1])
         self.assertEqual(13.18, vec0.mean_diameter[0])
