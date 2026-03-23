@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional, Dict, Union, Iterable
+from typing import Any, Optional, Dict, Union, Iterable, Iterator
 from pathlib import Path
 import numpy as np
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
@@ -10,12 +10,223 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES,
+    Origin, Storey
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth, safe_storey_value
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
+
+
+UT_SPECIES_FIELDS = [
+    ("ma", TreeSpecies.PINE),
+    ("ku", TreeSpecies.SPRUCE),
+    ("ra", TreeSpecies.SILVER_BIRCH),
+    ("hi", TreeSpecies.DOWNY_BIRCH),
+    ("ha", TreeSpecies.ASPEN),
+    ("hl", TreeSpecies.GREY_ALDER),
+    ("tl", TreeSpecies.OTHER_DECIDUOUS),
+    ("mh", TreeSpecies.OTHER_CONIFEROUS),
+    ("ml", TreeSpecies.OTHER_DECIDUOUS),
+    ("_10", TreeSpecies.UNSET),
+]
+
+UT_CATEGORIES = [
+    ("kkp", "usable"),
+    ("klv", "unusable"),
+    ("vlj", "farmed"),
+]
+
+
+def _reference_tree_index_by_osid(rt: ReferenceTrees, osid: int) -> int | None:
+    target = str(int(osid))
+    for i, value in enumerate(rt.stratum.tolist()):
+        if str(value) == target:
+            return i
+    return None
+
+
+def _parse_int_id(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+    try:
+        x = int(float(value))
+        return x if x > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _next_osite_id(stand: ForestStand) -> int:
+    used: list[int] = []
+
+    rt = stand.reference_trees
+    if rt is not None and rt.size > 0:
+        for v in rt.stratum.tolist():
+            x = _parse_int_id(v)
+            if x is not None:
+                used.append(x)
+
+    ms = getattr(stand, "motti_state", None)
+    if ms is not None and ms.buffers is not None:
+        ut = ms.buffers.saplings
+        for layer in range(10):
+            for spe_name, _ in UT_SPECIES_FIELDS:
+                s = getattr(ut[0][layer], spe_name)
+                for cat_code, _ in UT_CATEGORIES:
+                    x = _parse_int_id(getattr(s, f"osid_{cat_code}", 0))
+                    if x is not None:
+                        used.append(x)
+
+    return (max(used) + 1) if used else 1
+
+
+def _reference_tree_index_by_osite_id(rt: ReferenceTrees, osite_id: int) -> int | None:
+    for i, value in enumerate(rt.tree_number.tolist()):
+        try:
+            if int(value) == int(osite_id):
+                return i
+        except (TypeError, ValueError):
+            pass
+    return None
+
+
+def _safe_origin(raw: float | int | None) -> int:
+    try:
+        v = int(raw)
+        return v if v >= 0 else int(Origin.UNSET)
+    except Exception:
+        return int(Origin.UNSET)
+
+
+def _next_reference_tree_number(rt: ReferenceTrees) -> int:
+    vals = []
+    for v in rt.tree_number.tolist():
+        try:
+            iv = int(v)
+            if iv > 0:
+                vals.append(iv)
+        except (TypeError, ValueError):
+            pass
+    return (max(vals) + 1) if vals else 1
+
+
+def _new_reference_tree_identity(stand: ForestStand) -> tuple[str, int]:
+    rt = stand.reference_trees
+    tree_number = _next_reference_tree_number(rt)
+    identifier = f"{stand.identifier}-{tree_number}-tree"
+    return identifier, tree_number
+
+
+def _safe_origin(raw: float | int | None) -> int:
+    try:
+        v = int(raw)
+        return v if v >= 0 else int(Origin.UNSET)
+    except Exception:
+        return int(Origin.UNSET)
+
+
+def _build_reference_tree_update(
+    *,
+    identifier: str,
+    tree_number: int,
+    osid: int,
+    species: TreeSpecies,
+    category_code: str,
+    stems_per_ha: float,
+    origin_raw: float,
+    height: float,
+    diameter: float,
+    age: float,
+    age13: float,
+    basal_area: float,
+    volume: float,
+) -> dict[str, Any]:
+    return {
+        "identifier": identifier,
+        "tree_number": int(tree_number),
+        "stratum": str(int(osid)),
+
+        "species": int(species),
+        "stems_per_ha": float(stems_per_ha),
+        "origin": _safe_origin(origin_raw),   # N == Origin
+        "height": float(height),
+        "breast_height_diameter": float(diameter),
+        "biological_age": float(age),
+        "breast_height_age": float(age13),
+        "sapling": True,
+        "tree_category": category_code,
+        "management_category": 1,
+        "storey": int(Storey.UNSET),
+        "basal_area": float(basal_area),
+        "volume": float(volume),
+    }
+
+
+def sync_ut_to_reference_trees(stand: ForestStand) -> None:
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.buffers is None:
+        return
+
+    ut = ms.buffers.saplings
+    rt = stand.reference_trees
+    next_osid = _next_osite_id(stand)
+
+    for layer in range(10):
+        for spe_name, internal_species in UT_SPECIES_FIELDS:
+            s = getattr(ut[0][layer], spe_name)
+
+            try:
+                if float(s.year) == -1.0:
+                    continue
+            except Exception:
+                continue
+
+            for cat_code, _cat_label in UT_CATEGORIES:
+                stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
+                if stems <= 0.0:
+                    continue
+
+                osid_raw = getattr(s, f"osid_{cat_code}", 0.0)
+                osid = _parse_int_id(osid_raw)
+
+                if osid is None:
+                    osid = next_osid
+                    next_osid += 1
+                    setattr(s, f"osid_{cat_code}", float(osid))
+
+                idx = _reference_tree_index_by_osid(rt, osid)
+
+                if idx is None:
+                    identifier, tree_number = _new_reference_tree_identity(stand)
+                else:
+                    identifier = str(rt.identifier[idx])
+                    tree_number = int(rt.tree_number[idx])
+
+                row = _build_reference_tree_update(
+                    identifier=identifier,
+                    tree_number=tree_number,
+                    osid=osid,
+                    species=internal_species,
+                    category_code=cat_code,
+                    stems_per_ha=stems,
+                    origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
+                    height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
+                    diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
+                    age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
+                    age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
+                    basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
+                    volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
+                )
+
+                if idx is None:
+                    rt.create(row)
+                else:
+                    rt.update(row, idx)
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -408,18 +619,18 @@ class MottiDLLPredictor:
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
 
-        # strata_py = _build_motti_strata_py(self.stand)
-        # yo = self.dll.new_strata(strata_py)
+        strata_py = _build_motti_strata_py(self.stand)
+        yo = self.dll.new_strata(strata_py)
 
         buffers = self.dll.alloc_state_buffers(ctrl=None)
 
-        # ntrees = self.dll.initialize_with_state(
-        #     yo=yo,
-        #     yy=yy,
-        #     yp=yp,
-        #     numtrees=int(ntrees),
-        #     buffers=buffers,
-        # )
+        ntrees = self.dll.initialize_with_state(
+            yo=yo,
+            yy=yy,
+            yp=yp,
+            numtrees=int(ntrees),
+            buffers=buffers,
+        )
 
         _strip_tree_strata(self.stand)
 
@@ -626,6 +837,8 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
         rt.biological_age = bio_age
         rt.breast_height_age = bh_age
+
+    sync_ut_to_reference_trees(stand)
 
     return stand, []
 
