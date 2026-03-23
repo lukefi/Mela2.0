@@ -408,18 +408,7 @@ class MottiDLLPredictor:
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
 
-        # strata_py = _build_motti_strata_py(self.stand)
-        # yo = self.dll.new_strata(strata_py)
-
         buffers = self.dll.alloc_state_buffers(ctrl=None)
-
-        # ntrees = self.dll.initialize_with_state(
-        #     yo=yo,
-        #     yy=yy,
-        #     yp=yp,
-        #     numtrees=int(ntrees),
-        #     buffers=buffers,
-        # )
 
         _strip_tree_strata(self.stand)
 
