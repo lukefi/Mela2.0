@@ -32,14 +32,17 @@ def get_spe_proportions(
         strtype = "Kitumaa"
     elif land_use_class == LandUseCategory.FOREST:
         taimikko = (
-            (development_class in (
+            development_class in (
                 DevelopmentClass.YOUNG_SEEDLING_STAND,
                 DevelopmentClass.ADVANCED_SEEDLING_STAND) and asema in (
                 StratumRank.UNPRODUCTIVE_SEEDLINGS,
-                StratumRank.DOMINANT_TREE_STOREY)) or (
-                asema in (
-                    StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
-                    StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE) and stems > 0) or asema == StratumRank.SEEDLING_STRATUM)
+                StratumRank.DOMINANT_TREE_STOREY)
+            or (asema in (
+                StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
+                StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE
+            ) and stems > 0)
+            or asema == StratumRank.SEEDLING_STRATUM
+        )
         if taimikko and stems >= 3000 and dgm > 0:
             strtype = "MetsaTiheaTaimikko"
         if taimikko and stems < 3000 and dgm > 0:
