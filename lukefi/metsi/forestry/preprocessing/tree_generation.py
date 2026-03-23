@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, StratumRank, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
@@ -49,7 +49,7 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
 
     reference_trees.height = np.round(reference_trees.height, 2)
 
-    retained = stratum.stratum_rank == 3
+    retained = stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
     reference_trees.management_category.fill(TreeManagementCategory.RETENTION_TREE if retained else 1)
     reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
 
@@ -90,7 +90,9 @@ def _trees_from_sapling_height_distribution(stratum: TreeStratum, n_trees: int) 
 def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, method='weibull') -> TreeStrategy:
     """ Solves the strategy of tree generation for given stratum """
 
-    if method == 'lm' and stratum.stratum_rank in (7, 8):
+    if method == 'lm' and stratum.stratum_rank in (
+            StratumRank.NON_ESTABLISHED_SEEDLINGS,
+            StratumRank.DAMAGED_TREE_STRATUM):
         return TreeStrategy.SKIP
 
     if stratum.mean_height > 1.3 or stratum.mean_diameter > 2:
