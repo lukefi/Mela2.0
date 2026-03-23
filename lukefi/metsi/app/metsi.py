@@ -11,6 +11,7 @@ from lukefi.metsi.app.preprocessor import (
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
 from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.app.export import export_preprocessed
 from lukefi.metsi.app.file_io import (
     init_sqlite_database,
@@ -35,7 +36,8 @@ def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data,
-                            base_name=config.preprocessing_output_file)
+                            base_name=config.preprocessing_output_file,
+                            app_configuration=control.get("app_configuration"))
     else:
         print_logline("Declaration for 'export_prerocessed' not found from control.")
         print_logline("Skipping export of preprocessing results.")
@@ -76,7 +78,9 @@ def main() -> int:
             db_base = app_config.simulation_output_file or "simulation_results"
             db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
             db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
-            create_database_tables(db)
+            sqlite_decl = control_structure['app_configuration'].get("sqlite_decl")
+            create_database_tables(db, sqlite_decl=sqlite_decl)
+            ForestStand.set_sqlite_decl(sqlite_decl)
 
         if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
             # 1) read full stand list

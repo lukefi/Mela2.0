@@ -2,6 +2,7 @@ from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.domain.events import GrowMetsi
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from examples.declarations.sqlite import sqlite_decl
 
 from user_events import Mounding
 
@@ -9,6 +10,7 @@ control_structure = {
     "app_configuration": {
         "state_format": "xml",
         "run_modes": ["preprocess", "simulate"],
+        "sqlite_decl": sqlite_decl,
     },
     "preprocessing_operations": [
         generate_reference_trees,
