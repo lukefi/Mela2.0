@@ -4,7 +4,7 @@ from typing import cast
 import pandas as pd
 from rpy2 import robjects
 
-from lukefi.metsi.data.enums.internal import LandUseCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import DamageType, LandUseCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
 from lukefi.metsi.data.formats.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
@@ -159,14 +159,24 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.stratum_number]
 
     tree_data = {
-        'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
-        'height': robjects.FloatVector([robjects.NA_Real
-                                        if source_trees.damage_type[i] in ('2', '61', '62', '71', '72') or
-                                        source_trees.measured_height[i] == 0
-                                        else (source_trees.measured_height[i]) for i in range(len(source_trees))]),
-        'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or
-                                     robjects.NA_Real for i in range(len(source_trees))])
-    }
+        'lpm': robjects.FloatVector(
+            [
+                source_trees.breast_height_diameter[i] for i in range(
+                    len(source_trees))]),
+        'height': robjects.FloatVector(
+            [
+                robjects.NA_Real if source_trees.damage_type[i] in (
+                    DamageType.FALLEN_OR_BROKEN_TREES,
+                    DamageType.BROKEN_TOP,
+                    DamageType.DEAD_LEADER_BRANCH,
+                    DamageType.LEADER_CHANGE_BY_LEADER_DAMAGE,
+                    DamageType.MULTIPLE_LEADERS) or source_trees.measured_height[i] == 0 else (
+                    source_trees.measured_height[i]) for i in range(
+                    len(source_trees))]),
+        'lkm': robjects.FloatVector(
+            [
+                source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(
+                    len(source_trees))])}
 
     gos_div = params.get('lm_gos_div', 1)
 
