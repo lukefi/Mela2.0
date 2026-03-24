@@ -75,7 +75,7 @@ class TestForestDataModel(unittest.TestCase):
         row = "stand;12345;2018;436.0;436.0;6834156.23;429291.91;None;EPSG:3067;1019.0;" \
               "4;1;2;" \
               "3;0;3;8;1984;None;2018;None;None;None;None;" \
-              "None;10;1;None;12;1;0;False;1.0;1.0;1;10;51;None;None"
+              "None;10;1;None;12;1;False;1.0;1.0;1;10;51;None;None"
         row = row.split(';')
         stand = ForestStand.from_csv_row(row)
 
