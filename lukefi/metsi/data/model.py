@@ -90,7 +90,7 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     fra_category: Optional[FraLandUseClass] = None  # VMI fra category
     # VMI land use category detail
-    land_use_category_detail: Optional[LandUseCategoryDetail] = None
+    land_use_category_detail: Optional[int] = None
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
     sea_effect: Optional[float] = None
@@ -198,7 +198,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.method_of_last_cutting = CuttingMethod(int(row[25])) if row[25] != 'None' else None
         self.municipality_id = conv(row[26], int)
         self.fra_category = conv(row[27], FraLandUseClass)
-        self.land_use_category_detail = convert_land_use_category_detail(self.land_use_category, row[28])
+        self.land_use_category_detail = conv(row[28], int)
         self.auxiliary_stand = row[29] == "True"
         self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
         self.stand_id = conv(row[32], int)
