@@ -1,4 +1,4 @@
-stand_identifier;identifier;tree_number;species;breast_height_diameter;height;measured_height;breast_height_age;biological_age;stems_per_ha;origin;management_category;tree_category;storey;sapling;tree_type;tuhon_ilmiasu;latvuskerros;basal_area;volume;stratum
+stand_identifier;identifier;tree_number;species;breast_height_diameter;height;measured_height;breast_height_age;biological_age;stems_per_ha;origin;management_category;tree_category;storey;sapling;tree_type;damage_type;crown_class;basal_area;volume;stratum
 2-002-035-01-1;2-002-035-01-1-01-tree;1;1;18.9;;;;;71.28801;0;1;3;1;False;;;;0.0;0.0;-1
 2-002-035-01-1;2-002-035-01-1-02-tree;2;1;19.9;;;;;64.3034;0;1;3;1;False;;;;0.0;0.0;-1
 2-002-035-01-1;2-002-035-01-1-03-tree;3;1;7.1;7.2;;44.0;57.0;505.15356;0;1;3;1;False;;0;;0.0;0.0;-1
