@@ -3,6 +3,119 @@ import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.data.enums.internal import (
+    TreeSpecies,
+    Origin,
+    Storey
+)
+
+
+UT_SPECIES_FIELDS = [
+    ("ma", TreeSpecies.PINE),
+    ("ku", TreeSpecies.SPRUCE),
+    ("ra", TreeSpecies.SILVER_BIRCH),
+    ("hi", TreeSpecies.DOWNY_BIRCH),
+    ("ha", TreeSpecies.ASPEN),
+    ("hl", TreeSpecies.GREY_ALDER),
+    ("tl", TreeSpecies.OTHER_DECIDUOUS),
+    ("mh", TreeSpecies.OTHER_CONIFEROUS),
+    ("ml", TreeSpecies.OTHER_DECIDUOUS),
+    ("_10", TreeSpecies.UNSET),
+]
+
+UT_CATEGORIES = [
+    ("kkp", "usable"),
+    ("klv", "unusable"),
+    ("vlj", "farmed"),
+]
+
+
+def storey_from_layer(stand: ForestStand, layer: int) -> int:
+    strata = getattr(stand, "tree_strata", None)
+    if strata is None or layer >= strata.size:
+        return int(Storey.UNSET)
+
+    try:
+        v = int(strata.storey[layer])
+        return v if v >= 0 else int(Storey.UNSET)
+    except (TypeError, ValueError):
+        return int(Storey.UNSET)
+
+
+def reference_tree_index_by_osid(rt: ReferenceTrees, osid: int) -> int | None:
+    target = str(int(osid))
+    for i, value in enumerate(rt.stratum.tolist()):
+        if str(value) == target:
+            return i
+    return None
+
+
+def parse_int_id(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+    try:
+        x = int(float(value))
+        return x if x > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def next_osite_id(stand: ForestStand) -> int:
+    used: list[int] = []
+
+    rt = stand.reference_trees
+    if rt is not None and rt.size > 0:
+        for v in rt.stratum.tolist():
+            x = parse_int_id(v)
+            if x is not None:
+                used.append(x)
+
+    ms = getattr(stand, "motti_state", None)
+    if ms is not None and ms.buffers is not None:
+        ut = ms.buffers.saplings
+        for layer in range(10):
+            for spe_name, _ in UT_SPECIES_FIELDS:
+                s = getattr(ut[0][layer], spe_name)
+                for cat_code, _ in UT_CATEGORIES:
+                    x = parse_int_id(getattr(s, f"osid_{cat_code}", 0))
+                    if x is not None:
+                        used.append(x)
+
+    return (max(used) + 1) if used else 1
+
+
+def safe_origin(raw: float | int | None) -> int:
+    if not raw:
+        return int(Origin.UNSET)
+    try:
+        v = int(raw)
+        return v if v >= 0 else int(Origin.UNSET)
+    except (ValueError, TypeError):
+        return int(Origin.UNSET)
+
+
+def next_reference_tree_number(rt: ReferenceTrees) -> int:
+    vals = []
+    for v in rt.tree_number.tolist():
+        try:
+            iv = int(v)
+            if iv > 0:
+                vals.append(iv)
+        except (TypeError, ValueError):
+            pass
+    return (max(vals) + 1) if vals else 1
+
+
+def new_reference_tree_identity(stand: ForestStand) -> tuple[str, int]:
+    rt = stand.reference_trees
+    tree_number = next_reference_tree_number(rt)
+    identifier = f"{stand.identifier}-{tree_number}-tree"
+    return identifier, tree_number
 
 
 def update_stand_growth(stand: ForestStand,

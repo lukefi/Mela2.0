@@ -20,7 +20,27 @@ from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     find_repo_root,
 )
 
-# ---------- helpers (SoA) ----------
+
+def make_empty_ut_buffers() -> Any:
+    blank_species = SimpleNamespace(
+        year=-1.0,
+        f_kkp=0.0, f_klv=0.0, f_vlj=0.0,
+        osid_kkp=0.0, osid_klv=0.0, osid_vlj=0.0,
+        N_kkp=0.0, N_klv=0.0, N_vlj=0.0,
+        h_kkp=0.0, h_klv=0.0, h_vlj=0.0,
+        d_kkp=0.0, d_klv=0.0, d_vlj=0.0,
+        age_kkp=0.0, age_klv=0.0, age_vlj=0.0,
+        age13_kkp=0.0, age13_klv=0.0, age13_vlj=0.0,
+        g_kkp=0.0, g_klv=0.0, g_vlj=0.0,
+        v_kkp=0.0, v_klv=0.0, v_vlj=0.0,
+    )
+    blank_layer = SimpleNamespace(
+        ma=blank_species, ku=blank_species, ra=blank_species,
+        hi=blank_species, ha=blank_species, hl=blank_species,
+        tl=blank_species, mh=blank_species, ml=blank_species,
+        _10=blank_species,
+    )
+    return [[blank_layer for _ in range(10)]]
 
 
 def make_empty_sapling() -> SimpleNamespace:
@@ -36,6 +56,7 @@ def make_empty_sapling() -> SimpleNamespace:
         crown_ratio=np.array([], dtype=float),
         origin=np.array([], dtype=int),
         tree_number=np.array([], dtype=int),
+        stratum=np.array([], dtype=str),
     )
 
 
@@ -64,6 +85,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         young_stand_tending_year=200,
         drainage_category=DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
         drainage_year=3,
+        stratum="123",
     )
 
 
@@ -89,7 +111,7 @@ def make_rt(
 
     n = stems.shape[0]
     tree_number = np.arange(1, n + 1, dtype=int)
-
+    stratum = np.asarray(origin, dtype=str)
     sapling = h < 1.3
 
     return SimpleNamespace(
@@ -104,6 +126,7 @@ def make_rt(
         origin=origin,
         tree_number=tree_number,
         sapling=sapling,
+        stratum=stratum,
     )
 # ---------- DLL stub ----------
 
@@ -117,6 +140,7 @@ class FakeDLL:
     def __init__(self) -> None:
         self.captured_trees_py: List[Dict[str, Any]] | None = None
         self.captured_site: Dict[str, Any] | None = None
+        self.captured_strata_py: List[Dict[str, Any]] | None = None
 
     def new_site(self, **kwargs: Any) -> SimpleNamespace:
         self.captured_site = dict(kwargs)
@@ -126,8 +150,26 @@ class FakeDLL:
         self.captured_trees_py = list(trees_py)
         return SimpleNamespace(buf="ok"), len(trees_py)
 
+    def new_strata(self, strata_py: List[Dict[str, Any]]) -> SimpleNamespace:
+        self.captured_strata_py = list(strata_py)
+        return SimpleNamespace(strata="ok")
+
     def alloc_state_buffers(self, ctrl: Any = None) -> Any:
-        return SimpleNamespace(buffers="ok", ctrl=ctrl)
+        return SimpleNamespace(
+            buffers="ok",
+            ctrl=ctrl,
+            saplings=make_empty_ut_buffers(),
+        )
+
+    def initialize_with_state(
+        self,
+        yo: Any,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: Any,
+    ) -> int:
+        return int(numtrees)
 
     def grow_with_state(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         if not self.captured_trees_py:
@@ -152,11 +194,8 @@ class FakeDLL:
             trees_age13=zeros,
         )
 
-    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
-        return self.grow_with_state(*_args, **_kwargs)
-
-
 # ---------- Tests ----------
+
 
 class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
     def setUp(self):
