@@ -269,15 +269,23 @@ _TREE_TYPE_MAP = {
     VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA: TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA,
     VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE:
         TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE,
-    VmiTreeType.OLD_CHECKED_TALLY_TREE: TreeType.OLD_CHECKED_TALLY_TREE}
+    VmiTreeType.OLD_CHECKED_TALLY_TREE: TreeType.OLD_CHECKED_TALLY_TREE
+}
 
 _TREE_CATEGORY_MAP = {
     VmiTreeCategory.SMALL_TREE: TreeCategory.SMALL_TREE,
     VmiTreeCategory.WASTE_TREE: TreeCategory.WASTE_TREE,
+    VmiTreeCategory.C2: TreeCategory.PULP_WOOD_TREE,
     VmiTreeCategory.PULP_WOOD_TREE: TreeCategory.PULP_WOOD_TREE,
+    VmiTreeCategory.C4: TreeCategory.PULP_WOOD_TREE,
+    VmiTreeCategory.C5: TreeCategory.SAW_LOG_TREE,
+    VmiTreeCategory.C6: TreeCategory.SAW_LOG_TREE,
     VmiTreeCategory.SAW_LOG_TREE: TreeCategory.SAW_LOG_TREE,
+    VmiTreeCategory.C8: TreeCategory.SAW_LOG_TREE,
+    VmiTreeCategory.C9: TreeCategory.PULP_WOOD_TREE,
     VmiTreeCategory.USABLE_STANDING_DEAD_TREE: TreeCategory.USABLE_STANDING_DEAD_TREE,
     VmiTreeCategory.USABLE_FALLEN_DEAD_TREE: TreeCategory.USABLE_FALLEN_DEAD_TREE,
+    VmiTreeCategory.C: TreeCategory.USABLE_STANDING_DEAD_TREE,
     VmiTreeCategory.UNUSABLE_DEAD_TREE: TreeCategory.UNUSABLE_DEAD_TREE,
     VmiTreeCategory.STUMP_ALIVE_WHEN_FELLING: TreeCategory.STUMP_ALIVE_WHEN_FELLING,
     VmiTreeCategory.STUMP_DEAD_STANDING_WHEN_FELLING: TreeCategory.STUMP_DEAD_STANDING_WHEN_FELLING,
