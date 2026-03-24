@@ -13,14 +13,13 @@ from lukefi.metsi.data.enums.internal import (
     DevelopmentClass,
     FraLandUseClass,
     LandUseCategory,
-    LandUseCategoryDetail,
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory,
     TreeManagementCategory,
     TreeSpecies,
     DrainageCategory)
-from lukefi.metsi.data.formats.util import convert_land_use_category_detail, convert_str_to_type as conv
+from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
