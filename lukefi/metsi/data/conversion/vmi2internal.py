@@ -3,17 +3,10 @@ from typing import Callable, Optional
 from lukefi.metsi.data.enums.vmi import (
     VmiCrownClass,
     VmiOrigin,
-    VmiArableLandDetail,
-    VmiBuildUpLandDetail,
     VmiCuttingMethod,
     VmiDamageType,
     VmiDevelopmentClass,
     VmiFraLandUseClass,
-    VmiInlandWaterDetail,
-    VmiLandUseCategoryDetail,
-    VmiOtherForestryLandDetail,
-    VmiPoorlyProductiveForestLandDetail,
-    VmiProductiveForestLandDetail,
     VmiSiteType,
     VmiOwnerCategory,
     VmiSoilPeatlandCategory,
@@ -25,22 +18,14 @@ from lukefi.metsi.data.enums.vmi import (
     VmiTreeStorey,
     VmiTimeOfCutting,
     VmiTreeType,
-    VmiUnproductiveLandDetail,
 )
 from lukefi.metsi.data.enums.internal import (
     CrownClass,
     Origin,
-    ArableLandDetail,
-    BuildUpLandDetail,
     CuttingMethod,
     DamageType,
     DevelopmentClass,
     FraLandUseClass,
-    InlandWaterDetail,
-    LandUseCategoryDetail,
-    OtherForestryLandDetail,
-    PoorlyProductiveForestLandDetail,
-    ProductiveForestLandDetail,
     SiteType,
     OwnerCategory,
     SoilPeatlandCategory,
@@ -50,7 +35,6 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     DrainageCategory, Storey,
     TreeType,
-    UnproductiveLandDetail,
 )
 
 _SPECIES_MAP = {
@@ -108,60 +92,6 @@ _LAND_USE_MAP = {
     VmiLandUseCategory.FRESHWATER: LandUseCategory.FRESHWATER,
     VmiLandUseCategory.SEA: LandUseCategory.SEA,
     VmiLandUseCategory.OBSOLETE: LandUseCategory.OTHER_FOREST
-}
-
-_LAND_USE_DETAIL_MAP: dict[VmiLandUseCategoryDetail, LandUseCategoryDetail] = {
-    VmiProductiveForestLandDetail.NORMAL: ProductiveForestLandDetail.NORMAL,
-    VmiProductiveForestLandDetail.PASTURE: ProductiveForestLandDetail.PASTURE,
-    VmiProductiveForestLandDetail.CONVERTED: ProductiveForestLandDetail.CONVERTED,
-
-    VmiPoorlyProductiveForestLandDetail.NORMAL: PoorlyProductiveForestLandDetail.NORMAL,
-    VmiPoorlyProductiveForestLandDetail.PASTURE: PoorlyProductiveForestLandDetail.PASTURE,
-    VmiPoorlyProductiveForestLandDetail.CONVERTED: PoorlyProductiveForestLandDetail.CONVERTED,
-
-    VmiUnproductiveLandDetail.VEGETATION_COVER: UnproductiveLandDetail.VEGETATION_COVER,
-    VmiUnproductiveLandDetail.NO_VEGETATION_COVER: UnproductiveLandDetail.NO_VEGETATION_COVER,
-
-    VmiOtherForestryLandDetail.OTHER_MINERAL_SOIL: OtherForestryLandDetail.OTHER_MINERAL_SOIL,
-    VmiOtherForestryLandDetail.OTHER_ORGANIC_SOIL: OtherForestryLandDetail.OTHER_ORGANIC_SOIL,
-    VmiOtherForestryLandDetail.SEED_PRODUCTION_FOREST: OtherForestryLandDetail.SEED_PRODUCTION_FOREST,
-    VmiOtherForestryLandDetail.FORESTRY_BUILDINGS: OtherForestryLandDetail.FORESTRY_BUILDINGS,
-    VmiOtherForestryLandDetail.FOREST_ROAD: OtherForestryLandDetail.FOREST_ROAD,
-    VmiOtherForestryLandDetail.SMALL_SCALE_PEAT_PRODUCTION: OtherForestryLandDetail.SMALL_SCALE_PEAT_PRODUCTION,
-    VmiOtherForestryLandDetail.GRAVEL_OR_SAND_PRODUCTION: OtherForestryLandDetail.GRAVEL_OR_SAND_PRODUCTION,
-
-    VmiArableLandDetail.FARMED_FIELDS_OR_FALLOWS: ArableLandDetail.FARMED_FIELDS_OR_FALLOWS,
-    VmiArableLandDetail.ABANDONED_FIELD_MINERAL_SOIL: ArableLandDetail.ABANDONED_FIELD_MINERAL_SOIL,
-    VmiArableLandDetail.ABANDONED_FIELD_ORGANIC_SOIL: ArableLandDetail.ABANDONED_FIELD_ORGANIC_SOIL,
-    VmiArableLandDetail.ABANDONED_FIELD_REFORESTING_MINERAL_SOIL:
-        ArableLandDetail.ABANDONED_FIELD_REFORESTING_MINERAL_SOIL,
-    VmiArableLandDetail.ABANDONED_FIELD_REFORESTING_ORGANIC_SOIL:
-        ArableLandDetail.ABANDONED_FIELD_REFORESTING_ORGANIC_SOIL,
-    VmiArableLandDetail.PASTURE_MEADOW: ArableLandDetail.PASTURE_MEADOW,
-    VmiArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_MINERAL_SOIL:
-        ArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_MINERAL_SOIL,
-    VmiArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_ORGANIC_SOIL:
-        ArableLandDetail.BIOENERGY_PRODUCTION_WOODY_PLANTS_ORGANIC_SOIL,
-    VmiArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_MINERAL_SOIL:
-        ArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_MINERAL_SOIL,
-    VmiArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_ORGANIC_SOIL:
-        ArableLandDetail.BIOENERGY_PRODUCTION_NON_WOODY_PLANTS_ORGANIC_SOIL,
-    VmiArableLandDetail.UNPRODUCTIVE_LAND: ArableLandDetail.UNPRODUCTIVE_LAND,
-    VmiArableLandDetail.BARNS_AND_OTHER_AGRICULTURAL_BUILDINGS: ArableLandDetail.BARNS_AND_OTHER_AGRICULTURAL_BUILDINGS,
-    VmiArableLandDetail.FRUIT_TREE_OR_BERRY_SHRUB_PLANTATION: ArableLandDetail.FRUIT_TREE_OR_BERRY_SHRUB_PLANTATION,
-
-    VmiBuildUpLandDetail.PEAT_PRODUCTION_PREPARATION: BuildUpLandDetail.PEAT_PRODUCTION_PREPARATION,
-    VmiBuildUpLandDetail.PEAT_PRODUCTION_OUT_OF_USE: BuildUpLandDetail.PEAT_PRODUCTION_OUT_OF_USE,
-    VmiBuildUpLandDetail.PEAT_PRODUCTION_MAINTENANCE: BuildUpLandDetail.PEAT_PRODUCTION_MAINTENANCE,
-    VmiBuildUpLandDetail.SURFACE_DRAINAGE_ON_PEAT_PRODUCTION: BuildUpLandDetail.SURFACE_DRAINAGE_ON_PEAT_PRODUCTION,
-    VmiBuildUpLandDetail.GREEN_HOUSE_YARD_HOME_GARDEN: BuildUpLandDetail.GREEN_HOUSE_YARD_HOME_GARDEN,
-    VmiBuildUpLandDetail.MINING_AREA: BuildUpLandDetail.MINING_AREA,
-    VmiBuildUpLandDetail.PEAT_PRODUCTION_ONGOING: BuildUpLandDetail.PEAT_PRODUCTION_ONGOING,
-    VmiBuildUpLandDetail.GRAVEL_OR_SAND_PRODUCTION: BuildUpLandDetail.GRAVEL_OR_SAND_PRODUCTION,
-    VmiBuildUpLandDetail.OTHER_BUILD_UP_LAND: BuildUpLandDetail.OTHER_BUILD_UP_LAND,
-
-    VmiInlandWaterDetail.NATURAL_WATER_BASIN: InlandWaterDetail.NATURAL_WATER_BASIN,
-    VmiInlandWaterDetail.ARTIFICIAL_LAKE_OR_TAMED_RIVER: InlandWaterDetail.ARTIFICIAL_LAKE_OR_TAMED_RIVER,
 }
 
 
@@ -405,28 +335,6 @@ def convert_land_use_category(lu_code: str) -> LandUseCategory:
     meaning that this conversion will fail e.g. if the parameter is a lower-case letter."""
     vmi_category = VmiLandUseCategory(lu_code)
     return _LAND_USE_MAP[vmi_category]
-
-
-def convert_land_use_category_detail(lu_cat: LandUseCategory, lud_code: str) -> Optional[LandUseCategoryDetail]:
-    vmi_cat_det: VmiLandUseCategoryDetail
-    if lu_cat == LandUseCategory.FOREST:
-        vmi_cat_det = VmiProductiveForestLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.SCRUB_LAND:
-        vmi_cat_det = VmiPoorlyProductiveForestLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.WASTE_LAND:
-        vmi_cat_det = VmiUnproductiveLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.OTHER_FOREST:
-        vmi_cat_det = VmiOtherForestryLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.AGRICULTURAL:
-        vmi_cat_det = VmiArableLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.BUILT_LAND:
-        vmi_cat_det = VmiBuildUpLandDetail(lud_code)
-    elif lu_cat == LandUseCategory.FRESHWATER:
-        vmi_cat_det = VmiInlandWaterDetail(lud_code)
-    else:
-        return None
-
-    return _LAND_USE_DETAIL_MAP[vmi_cat_det]
 
 
 def convert_species(species_code: str) -> TreeSpecies:

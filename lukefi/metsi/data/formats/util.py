@@ -1,21 +1,14 @@
 from enum import IntEnum
 from typing import Optional, Any, Union
 from lukefi.metsi.data.enums.internal import (
-    ArableLandDetail,
-    BuildUpLandDetail,
     DrainageCategory,
     FraLandUseClass,
-    InlandWaterDetail,
     LandUseCategory,
-    LandUseCategoryDetail,
-    OtherForestryLandDetail,
     OwnerCategory,
-    PoorlyProductiveForestLandDetail,
-    ProductiveForestLandDetail,
     SiteType,
     SoilPeatlandCategory,
     TreeSpecies,
-    UnproductiveLandDetail)
+)
 
 
 def parse_type[T:Union[int, float, str]](source, *ts: type[T]):
@@ -69,25 +62,3 @@ def convert_str_to_type[T:(int,
     if issubclass(ret_type, IntEnum):
         return ret_type(int(value))
     return ret_type(value)
-
-
-def convert_land_use_category_detail(
-        land_use_category: Optional[LandUseCategory],
-        code: str) -> Optional[LandUseCategoryDetail]:
-    if land_use_category is None or code == 'None':
-        return None
-    if land_use_category == LandUseCategory.FOREST:
-        return ProductiveForestLandDetail(int(code))
-    if land_use_category == LandUseCategory.SCRUB_LAND:
-        return PoorlyProductiveForestLandDetail(int(code))
-    if land_use_category == LandUseCategory.WASTE_LAND:
-        return UnproductiveLandDetail(int(code))
-    if land_use_category == LandUseCategory.OTHER_FOREST:
-        return OtherForestryLandDetail(int(code))
-    if land_use_category == LandUseCategory.AGRICULTURAL:
-        return ArableLandDetail(int(code))
-    if land_use_category == LandUseCategory.BUILT_LAND:
-        return BuildUpLandDetail(int(code))
-    if land_use_category == LandUseCategory.FRESHWATER:
-        return InlandWaterDetail(int(code))
-    return None

@@ -88,8 +88,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
 
     fra_category: Optional[FraLandUseClass] = None  # VMI fra category
-    # VMI land use category detail
-    land_use_category_detail: Optional[int] = None
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
     sea_effect: Optional[float] = None
@@ -197,14 +195,13 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.method_of_last_cutting = CuttingMethod(int(row[25])) if row[25] != 'None' else None
         self.municipality_id = conv(row[26], int)
         self.fra_category = conv(row[27], FraLandUseClass)
-        self.land_use_category_detail = conv(row[28], int)
-        self.auxiliary_stand = row[29] == "True"
-        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
-        self.stand_id = conv(row[32], int)
-        self.basal_area = conv(row[33], float)
-        self.dominant_storey_age = conv(row[34], float)
-        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
-        self.region = conv(row[36], int)
+        self.auxiliary_stand = row[28] == "True"
+        self.area_weight_factors = (conv(row[29], float) or 0.0, conv(row[30], float) or 0.0)
+        self.stand_id = conv(row[31], int)
+        self.basal_area = conv(row[32], float)
+        self.dominant_storey_age = conv(row[33], float)
+        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.region = conv(row[35], int)
 
     @staticmethod
     def _sql_value(v):
@@ -418,7 +415,6 @@ def stand_as_internal_row(stand: ForestStand):
         stand.method_of_last_cutting,
         stand.municipality_id,
         stand.fra_category,
-        stand.land_use_category_detail,
         stand.auxiliary_stand,
         stand.area_weight_factors[0],
         stand.area_weight_factors[1],

@@ -8,7 +8,7 @@ sqlite_decl = {
         "regeneration_area_cleaning_year", "development_class", "artificial_regeneration_year",
         "young_stand_tending_year", "cutting_year", "forestry_centre_id",
         "forest_management_category", "method_of_last_cutting", "municipality_id", "dominant_storey_age",
-        "area_weight_factors", "fra_category", "land_use_category_detail", "auxiliary_stand", "sea_effect",
+        "area_weight_factors", "fra_category", "auxiliary_stand", "sea_effect",
         "lake_effect", "basal_area", "main_tree_species_dominant_storey", "dominant_height_dominant_storey",
         "region"
     ],

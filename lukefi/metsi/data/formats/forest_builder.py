@@ -324,7 +324,6 @@ class VMIBuilder(ForestBuilder):
         result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
         result.fra_category = vmi2internal.convert_fra_land_use_class(data_row[indices["fra_class"]])
         result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]])
-        result.land_use_category_detail =  util.parse_int(data_row[indices["land_category_detail"]])
         result.site_type_category = vmi2internal.convert_site_type_category(data_row[indices["kasvupaikkatunnus"]])
         result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(data_row[indices["paatyyppi"]])
         result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
