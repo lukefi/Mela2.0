@@ -517,7 +517,7 @@ def determine_stratum_origin_vmi9(source_origin: str) -> Origin:
         return Origin.PLANTED
     if source_origin in ("4", "6"):
         return Origin.SEEDED
-    return Origin.UNSET
+    return Origin.NATURAL
 
 
 def determine_stratum_origin_vmi10(source_origin: str) -> Origin:
@@ -528,7 +528,7 @@ def determine_stratum_origin_vmi10(source_origin: str) -> Origin:
         return Origin.PLANTED
     if source_origin == "4":
         return Origin.SEEDED
-    return Origin.UNSET
+    return Origin.NATURAL
 
 
 def determine_stratum_age_values(biological_age_source: str,
