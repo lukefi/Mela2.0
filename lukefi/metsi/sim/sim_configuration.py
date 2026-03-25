@@ -1,10 +1,13 @@
 from collections.abc import Callable
-from typing import Any
+from copy import copy
+import sqlite3
+from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
@@ -30,8 +33,16 @@ class Transition[T: ComputationalUnit]:
         if self.init_fn is not None:
             self.init_fn(unit, self.parameters)
 
-    def __call__(self, state: T) -> OpTuple[T]:
-        return self.transition_fn(state, **self.parameters)
+    def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]) -> OpTuple[T]:
+        new_state, collected_data = self.transition_fn(payload.computational_unit, **self.parameters)
+
+        if db is not None:
+            transition_node_id = copy(payload.node_id)
+            transition_node_id.append(-1)
+            transition_payload = SimulationPayload(new_state, payload.operation_history, transition_node_id)
+            output_node_to_db(db, transition_payload, collected_data)
+
+        return new_state, collected_data
 
 
 class SimConfiguration[T: ComputationalUnit]:
