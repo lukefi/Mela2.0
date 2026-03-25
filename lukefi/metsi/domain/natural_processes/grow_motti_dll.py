@@ -8,6 +8,7 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
 )
 from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
+    Storey,
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES
 )
@@ -134,6 +135,57 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     rt.create(row)
                 else:
                     rt.update(row, idx)
+
+
+def sync_yp_to_reference_trees(stand: ForestStand) -> None:
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.yp is None:
+        return
+
+    yp = ms.yp
+    rt = stand.reference_trees
+
+    for i in range(int(ms.ntrees)):
+        t = yp[0][i]
+
+        sid = parse_int_id(getattr(t, "sid", 0))
+        if sid is None:
+            # fallback if needed, but ideally sid should always exist
+            continue
+
+        idx = reference_tree_index_by_osid(rt, sid)
+
+        if idx is None:
+            identifier, tree_number = new_reference_tree_identity(stand)
+            storey = int(Storey.UNSET)
+        else:
+            identifier = str(rt.identifier[idx])
+            tree_number = int(rt.tree_number[idx])
+            storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
+
+        row = {
+            "identifier": identifier,
+            "tree_number": int(tree_number),
+            "stratum": str(int(sid)),
+            "species": int(t.spe),
+            "stems_per_ha": float(t.f),
+            "origin": safe_origin(int(t.snt) - 1),
+            "height": float(t.h),
+            "breast_height_diameter": float(t.d13),
+            "biological_age": float(t.age),
+            "breast_height_age": float(t.age13),
+            "sapling": False,
+            "tree_category": "1",   # or whatever code you use for big/living tree
+            "management_category": 1,
+            "storey": int(storey),
+            "basal_area": float(t.ba) if getattr(t, "ba", None) is not None else 0.0,
+            "volume": float(t.vol) if getattr(t, "vol", None) is not None else 0.0,
+        }
+
+        if idx is None:
+            rt.create(row)
+        else:
+            rt.update(row, idx)
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -745,9 +797,60 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         rt.biological_age = bio_age
         rt.breast_height_age = bh_age
 
+    sync_yp_to_reference_trees(stand)
     sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
 
     return stand, []
+
+
+def collect_live_motti_ids(stand: ForestStand) -> set[int]:
+    live: set[int] = set()
+
+    ms = getattr(stand, "motti_state", None)
+    if ms is None:
+        return live
+
+    if ms.yp is not None:
+        for i in range(int(ms.ntrees)):
+            sid = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
+            if sid is not None:
+                live.add(sid)
+
+    if ms.buffers is not None:
+        ut = ms.buffers.saplings
+        for layer in range(10):
+            for spe_name, _ in UT_SPECIES_FIELDS:
+                s = getattr(ut[0][layer], spe_name)
+                for cat_code, _ in UT_CATEGORIES:
+                    stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
+                    if stems <= 0.0:
+                        continue
+                    osid = parse_int_id(getattr(s, f"osid_{cat_code}", 0))
+                    if osid is not None:
+                        live.add(osid)
+
+    return live
+
+
+def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
+    rt = stand.reference_trees
+    if rt is None or rt.size == 0:
+        return
+
+    live = collect_live_motti_ids(stand)
+    delete_idx = []
+
+    for i, value in enumerate(rt.stratum.tolist()):
+        sid = parse_int_id(value)
+        if sid is None:
+            # optional: decide whether legacy non-Motti trees should be kept
+            continue
+        if sid not in live:
+            delete_idx.append(i)
+
+    if delete_idx:
+        rt.delete(np.array(delete_idx, dtype=int))
 
 
 grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")

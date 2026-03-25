@@ -295,12 +295,13 @@ class Motti4DLL:
 
     def new_trees(self, trees_py: list[dict]) -> Tuple[object, int]:
         """
-            fields used: id, f, d13, h, spe, age, age13, cr, snt
+            fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
         """
         ffi = self.ffi
         yp = ffi.new("Motti4Trees *")
         for i, t in enumerate(trees_py):
             yp[0][i].id = int(t.get("id", i + 1))
+            yp[0][i].sid = float(t.get("sid", 0))
             yp[0][i].f = float(t.get("f", 0.0))
             yp[0][i].d13 = float(t.get("d13", 0.0))
             yp[0][i].h = float(t.get("h", 0.0))

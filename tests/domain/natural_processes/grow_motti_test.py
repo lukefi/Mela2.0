@@ -146,9 +146,30 @@ class FakeDLL:
         self.captured_site = dict(kwargs)
         return SimpleNamespace(site="ok", year=kwargs.get("year", 0), step=kwargs.get("step", 0))
 
-    def new_trees(self, trees_py: List[Dict[str, Any]]) -> tuple[SimpleNamespace, int]:
+    def new_trees(self, trees_py: List[Dict[str, Any]]) -> tuple[Any, int]:
         self.captured_trees_py = list(trees_py)
-        return SimpleNamespace(buf="ok"), len(trees_py)
+
+        yp_trees = []
+        for t in trees_py:
+            yp_trees.append(
+                SimpleNamespace(
+                    id=float(t.get("id", 0)),
+                    sid=float(t.get("sid", 0)),
+                    f=float(t.get("f", 0)),
+                    d13=float(t.get("d13", 0)),
+                    h=float(t.get("h", 0)),
+                    spe=float(t.get("spe", 0)),
+                    age=float(t.get("age", 0)),
+                    age13=float(t.get("age13", 0)),
+                    cr=float(t.get("cr", 0)),
+                    snt=float(t.get("snt", 0)),
+                    ba=float(t.get("ba", 0)),
+                    vol=float(t.get("vol", 0)),
+                )
+            )
+
+        yp = [yp_trees]
+        return yp, len(trees_py)
 
     def new_strata(self, strata_py: List[Dict[str, Any]]) -> SimpleNamespace:
         self.captured_strata_py = list(strata_py)
