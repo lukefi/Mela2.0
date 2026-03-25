@@ -190,11 +190,10 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
             adjust_ages(stand, new_trees)
 
         retention_trees = trees[retention_trees_mask]
-        new_trees = new_trees + retention_trees
 
         new_strata = TreeStrata(retention_trees.size)
         new_strata.stratum_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
-        trees.stratum[retention_trees_mask] = new_strata.stratum_number
+        retention_trees.stratum = new_strata.stratum_number
         new_strata.identifier = np.asarray([
             stand.identifier +
             "-" +
@@ -213,7 +212,8 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         new_strata.number_of_generated_trees = np.repeat(1, len(retention_trees))
 
         stand.tree_strata = stand.tree_strata + new_strata
-        stand.reference_trees = new_trees
+
+        stand.reference_trees = new_trees + retention_trees
 
         if operation_params.get("delete_strata", False):
             stand.tree_strata = TreeStrata()
