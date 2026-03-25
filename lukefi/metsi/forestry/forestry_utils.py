@@ -142,7 +142,7 @@ def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratu
 def find_matching_storey_stratum_for_tree(
         tree: ReferenceTree,
         strata: TreeStrata,
-        diameter_threshold: float = 3.0) -> Optional[str]:
+        diameter_threshold: float = 3.0) -> Optional[TreeStratum]:
     # a.	Tarkista, että puu on inventoinnissa mitattu (puutyypit vaihtelee inventointien välillä)
     #       ja se on elävä (elävillä puilla puuluokka on numeerinen).
     if tree.tree_type not in ("", "V", "Y", "U", "S", "T", "N", " ") or \
@@ -172,7 +172,7 @@ def find_matching_storey_stratum_for_tree(
     else:
         selected_stratum = None
 
-    return selected_stratum.identifier if selected_stratum is not None else None
+    return selected_stratum
 
 
 def storey_match(stratum: TreeStratum, tree: ReferenceTree):
