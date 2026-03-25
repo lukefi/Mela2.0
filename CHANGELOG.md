@@ -4,14 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.18] - 2026-03-26
+
+### Changed
+
+- Stratum attribute `tree_number` renamed to `stratum_number`
+- Reference trees are now linked to strata by `stratum_number` instead of `identifier`
+
+### Fixed
+
+- Retention trees and generated trees are now properly linked to strata
+
 ## [0.5.17] - 2026-03-23
 
 ### Fixed
+
 - Added apply_conversions to vmi9 and 10
 
 ## [0.5.16] - 2026-03-23
 
 ### Added
+
 - Added csv_exp and metadata.json #MELA2-175
 
 ## [0.5.15] - 2026-03-19
