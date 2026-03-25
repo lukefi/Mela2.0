@@ -156,7 +156,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'osuus': robjects.FloatVector(species_proportions)
     }
 
-    source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.identifier]
+    source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.stratum_number]
 
     tree_data = {
         'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
