@@ -6,6 +6,9 @@ from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+    apply_motti_yp_reduction_from_removed_reference_trees,
+)
 
 
 def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
@@ -63,6 +66,11 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
     if not trees.stems_per_ha.flags.writeable:
         trees.stems_per_ha = trees.stems_per_ha.copy()
     trees.stems_per_ha -= removed_f
+
+    # If this stand is backed by persistent Motti state, mirror the same removals
+    # to yp and let Motti refresh derived fields with a zero-step growth.
+    if getattr(stand, "motti_state", None):
+        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
 
     stand.cutting_year = stand.year
     stand.method_of_last_cutting = method

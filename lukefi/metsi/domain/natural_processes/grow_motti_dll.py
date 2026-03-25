@@ -630,6 +630,7 @@ class MottiDLLPredictor:
             int(state.ntrees),
             state.buffers,
             step=step,
+            refresh_import=False,
         )
 
         state.ntrees = len(growth.tree_ids)
@@ -802,6 +803,87 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     prune_reference_trees_not_in_motti(stand)
 
     return stand, []
+
+
+def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
+    """
+    Apply Python-side stem removals to the persistent Motti yp vector.
+
+    Returns True if any yp entry was changed. Sapling/ut rows are ignored on
+    purpose: treatments only modify the big-tree yp vector.
+    """
+    ms = getattr(stand, "motti_state", None)
+    rt = getattr(stand, "reference_trees", None)
+    if ms is None or ms.yp is None or rt is None or rt.size == 0:
+        return False
+
+    changed = False
+    for idx, delta in enumerate(np.asarray(removed_f, dtype=float).tolist()):
+        if delta <= 0.0:
+            continue
+        if bool(rt.sapling[idx]):
+            continue
+
+        sid = parse_int_id(rt.stratum[idx])
+        if sid is None:
+            continue
+
+        for i in range(int(ms.ntrees)):
+            t = ms.yp[0][i]
+            if parse_int_id(getattr(t, "sid", 0)) != sid:
+                continue
+
+            new_f = max(float(t.f) - float(delta), 0.0)
+            if new_f != float(t.f):
+                t.f = float(new_f)
+                changed = True
+            break
+
+    return changed
+
+
+def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
+    """
+    Rebuild Motti internal state after yp edits, run a zero-step refresh and
+    then synchronize the Python ReferenceTrees from yp/ut.
+    """
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.yp is None or ms.buffers is None:
+        return
+
+    growth = ms.dll.grow_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        step=0,
+        refresh_import=True,
+    )
+    ms.ntrees = len(growth.tree_ids)
+
+    sync_yp_to_reference_trees(stand)
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
+
+
+def apply_motti_yp_reduction_from_removed_reference_trees(
+    stand: ForestStand,
+    removed_f: np.ndarray,
+    *,
+    refresh: bool = True,
+) -> bool:
+    """
+    Generic helper for treatments that reduce tree amounts.
+
+    The treatment decides *which* ReferenceTrees lose stems. This helper maps
+    those removals to the persistent Motti yp vector via the shared stratum/sid,
+    optionally runs a zero-step Motti refresh, and synchronizes ReferenceTrees
+    back from the refreshed Motti state.
+    """
+    changed = _reduce_motti_yp_by_removed_reference_trees(stand, removed_f)
+    if changed and refresh:
+        refresh_reference_trees_from_motti_after_yp_change(stand)
+    return changed
 
 
 def collect_live_motti_ids(stand: ForestStand) -> set[int]:

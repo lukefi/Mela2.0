@@ -485,12 +485,20 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         step: int = 5,
+        refresh_import: bool = False,
     ) -> GrowthDeltas:
         """
         Growth using persistent buffers that are carried across calls.
-        Always calls UpdateAfterImport before Growth.
+
+        Set refresh_import=True after Python-side yp edits so Motti rebuilds
+        its internal state before Growth. step=0 performs a single zero-step
+        Growth call, which is useful for refreshing derived fields after
+        treatments that only change stem counts.
         """
         ffi, lib = self.ffi, self.lib
+
+        if refresh_import:
+            numtrees = self.update_after_import(yy, yp, int(numtrees), buffers)
 
         ntrees_p = ffi.new("int *", int(numtrees))
         rv = ffi.new("int *")
@@ -501,7 +509,8 @@ class Motti4DLL:
         prev_f: Dict[int, float] = {int(yp[0][i].id): float(yp[0][i].f) for i in range(ntrees_p[0])}
 
         remaining = int(step)
-        while remaining > 0:
+        runs_left = 1 if remaining <= 0 else None
+        while remaining > 0 or runs_left:
             # reset like C wrapper
             try:
                 yy.param_290 = 0.0
@@ -510,7 +519,8 @@ class Motti4DLL:
             for i in range(ntrees_p[0]):
                 yp[0][i].crerror = 0.0
 
-            step_p = ffi.new("int *", remaining)
+            current_step = remaining if remaining > 0 else 0
+            step_p = ffi.new("int *", current_step)
             rv[0] = 0
             with _maybe_chdir(self.data_dir):
                 lib.Motti4Growth(
@@ -538,6 +548,10 @@ class Motti4DLL:
                 acc_if[tid] = acc_if.get(tid, 0.0) + (nf - pf)
                 prev_f[tid] = nf
 
+            if runs_left:
+                runs_left -= 1
+                continue
+
             done = int(step_p[0])
             if done <= 0:
                 break
@@ -558,6 +572,37 @@ class Motti4DLL:
             trees_age=out_age,
             trees_age13=out_age13,
         )
+
+    def update_after_import(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+    ) -> int:
+        """
+        Rebuild Motti internal state after Python-side yp edits.
+        Needed before zero-step refreshes and after direct stem-count changes.
+        """
+        ffi, lib = self.ffi, self.lib
+        ntrees_p = ffi.new("int *", int(numtrees))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4UpdateAfterImport(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                rv,
+            )
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])
 
     def initialize_with_state(
         self,
@@ -593,18 +638,4 @@ class Motti4DLL:
         if rv[0] != 0 or err[0] != 0:
             raise RuntimeError(f"Motti4Init failed (rv={rv[0]}, err={err[0]})")
 
-        with _maybe_chdir(self.data_dir):
-            lib.Motti4UpdateAfterImport(
-                yy,
-                yp,
-                buffers.saplings,
-                buffers.kor_state,
-                buffers.vcr_state,
-                buffers.apv_state,
-                ntrees_p,
-                rv,
-            )
-        if rv[0] != 0:
-            raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
-
-        return int(ntrees_p[0])
+        return self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)
