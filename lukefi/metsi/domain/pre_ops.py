@@ -145,7 +145,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         retention_trees_mask = np.repeat(False, len(trees))
         if add_retention_trees:
-            retention_trees_mask = (trees.stratum == "") & (
+            retention_trees_mask = (trees.stratum == -1) & (
                 trees.management_category == 2) & np.isin(
                 trees.tree_type, ("", "V", "Y", "U", "S", "T", "N", " ")) & np.isin(
                 trees.tree_category, ("", "0", "1", "3", "7"))
