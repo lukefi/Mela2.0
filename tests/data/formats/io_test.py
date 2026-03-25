@@ -118,7 +118,7 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "basal_area",
                               "origin",
-                              "tree_number",
+                              "stratum_number",
                               "storey",
                               "sapling_stems_per_ha",
                               "number_of_generated_trees"]:

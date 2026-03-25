@@ -152,8 +152,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(vec0.basal_area[0]))
         self.assertEqual(5.2, vec0.basal_area[1])
 
-        self.assertEqual(1, vec0.tree_number[0])
-        self.assertEqual(2, vec0.tree_number[1])
+        self.assertEqual(1, vec0.stratum_number[0])
+        self.assertEqual(2, vec0.stratum_number[1])
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])
@@ -278,8 +278,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(13.56, vec0.basal_area[0])
         self.assertEqual(7.16, vec0.basal_area[1])
 
-        self.assertEqual(1, vec0.tree_number[0])
-        self.assertEqual(2, vec0.tree_number[1])
+        self.assertEqual(1, vec0.stratum_number[0])
+        self.assertEqual(2, vec0.stratum_number[1])
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])

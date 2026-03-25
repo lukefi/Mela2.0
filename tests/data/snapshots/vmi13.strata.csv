@@ -1,4 +1,4 @@
-stand_identifier;identifier;species;mean_diameter;mean_height;breast_height_age;biological_age;stems_per_ha;basal_area;origin;tree_number;storey;sapling_stems_per_ha;number_of_generated_trees;asema
+stand_identifier;identifier;species;mean_diameter;mean_height;breast_height_age;biological_age;stems_per_ha;basal_area;origin;stratum_number;storey;sapling_stems_per_ha;number_of_generated_trees;asema
 0-2-23-2-1;0-2-23-2-1-1-stratum;1;24.0;19.0;46.0;52.0;0.0;17.0;0;1;1;0.0;-1;1
 0-2-23-2-1;0-2-23-2-1-3-stratum;3;18.0;17.5;40.0;46.0;0.0;1.0;0;3;1;0.0;-1;1
 0-2-23-3-2;0-2-23-3-2-1-stratum;1;20.0;16.5;43.0;52.0;0.0;15.0;0;1;1;0.0;-1;1
