@@ -29,7 +29,7 @@ DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "latvuskerros": (np.dtype("U20"), ""),
     "basal_area": (np.float64, 0.0),
     "volume": (np.float64, 0.0),
-    "stratum": (np.dtype("U30"), "")
+    "stratum": (np.int32, -1)
 }
 
 DTYPES_STRATA: dict[str, DTypeDeclaration] = {
@@ -42,7 +42,7 @@ DTYPES_STRATA: dict[str, DTypeDeclaration] = {
     "stems_per_ha": (np.float64, 0.0),
     "basal_area": (np.float64, np.nan),
     "origin": (np.int32, -1),
-    "tree_number": (np.int32, -1),
+    "stratum_number": (np.int32, -1),
     "storey": (np.int32, -1),
     "sapling_stems_per_ha": (np.float64, 0.0),
     "number_of_generated_trees": (np.int32, -1),
@@ -78,7 +78,7 @@ STRATUM_INTERNAL_CSV_COLUMNS = (
     "breast_height_age",
     "biological_age",
     "basal_area",
-    "tree_number",
+    "stratum_number",
     "sapling_stems_per_ha",
     "storey",
 )
@@ -384,7 +384,7 @@ class ReferenceTrees(VectorData):
     latvuskerros: npt.NDArray[np.str_]
     basal_area: npt.NDArray[np.float64]
     volume: npt.NDArray[np.float64]
-    stratum: npt.NDArray[np.str_]
+    stratum: npt.NDArray[np.int32]
 
     def __init__(self, size: int = 0):
         super().__init__(DTYPES_TREE, size)
@@ -477,7 +477,7 @@ class TreeStratum:
     stems_per_ha: float = 0.0
     basal_area: Optional[float] = None
     origin: Origin = Origin.UNSET
-    tree_number: int = 0
+    stratum_number: int = 0
     storey: Storey = Storey.UNSET
     sapling_stems_per_ha: float = 0.0
     number_of_generated_trees: int = 0
@@ -502,7 +502,7 @@ class TreeStrata(VectorData):
     stems_per_ha: npt.NDArray[np.float64]
     basal_area: npt.NDArray[np.float64]
     origin: npt.NDArray[np.int32]
-    tree_number: npt.NDArray[np.int32]
+    stratum_number: npt.NDArray[np.int32]
     storey: npt.NDArray[np.int32]
     sapling_stems_per_ha: npt.NDArray[np.float64]
     number_of_generated_trees: npt.NDArray[np.int32]
@@ -533,7 +533,7 @@ class TreeStrata(VectorData):
             self.stems_per_ha[i],
             self.basal_area[i] if not np.isnan(self.basal_area[i]) else None,
             Origin(self.origin[i]),
-            self.tree_number[i],
+            self.stratum_number[i],
             Storey(self.storey[i]),
             self.sapling_stems_per_ha[i],
             self.number_of_generated_trees[i],
@@ -552,7 +552,7 @@ class TreeStrata(VectorData):
             str(self.breast_height_age[i]),
             str(self.biological_age[i]),
             str(self.basal_area[i]),
-            str(self.tree_number[i]),
+            str(self.stratum_number[i]),
             str(self.sapling_stems_per_ha[i]),
             str(self.storey[i])
         ]

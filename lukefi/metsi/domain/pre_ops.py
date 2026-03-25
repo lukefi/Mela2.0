@@ -193,12 +193,12 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         new_trees = new_trees + retention_trees
 
         new_strata = TreeStrata(retention_trees.size)
-        new_strata.tree_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
+        new_strata.stratum_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
         new_strata.identifier = np.asarray([
             stand.identifier +
             "-" +
-            str(tree_number) +
-            "-stratum" for tree_number in new_strata.tree_number])
+            str(stratum_number) +
+            "-stratum" for stratum_number in new_strata.stratum_number])
         new_strata.species = retention_trees.species
         new_strata.origin = retention_trees.origin
         new_strata.mean_diameter = retention_trees.breast_height_diameter

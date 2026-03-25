@@ -20,7 +20,7 @@ sqlite_decl = {
     ],
     "strata": [
         "species", "mean_diameter", "mean_height", "breast_height_age", "biological_age", "stems_per_ha",
-        "basal_area", "origin", "tree_number", "storey", "sapling_stems_per_ha", "number_of_generated_trees"
+        "basal_area", "origin", "stratum_number", "storey", "sapling_stems_per_ha", "number_of_generated_trees"
     ],
 }
 
