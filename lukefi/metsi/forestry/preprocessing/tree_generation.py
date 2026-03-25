@@ -48,6 +48,7 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
         reference_trees.management_category[i] = 2 if retained else 1
         reference_trees.storey[i] = Storey.SPARE if retained else stratum.storey
         reference_trees.origin[i] = stratum.origin
+        reference_trees.stratum[i] = stratum.stratum_number
 
     return reference_trees
 

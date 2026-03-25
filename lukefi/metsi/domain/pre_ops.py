@@ -139,9 +139,9 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         strata = stand.tree_strata
 
         for i in range(len(trees)):
-            stratum_id = find_matching_storey_stratum_for_tree(
+            matching_stratum = find_matching_storey_stratum_for_tree(
                 trees.get_tree(i), strata, stratum_association_diameter_threshold)
-            trees.stratum[i] = stratum_id if stratum_id is not None else ""
+            trees.stratum[i] = matching_stratum.stratum_number if matching_stratum is not None else -1
 
         retention_trees_mask = np.repeat(False, len(trees))
         if add_retention_trees:
