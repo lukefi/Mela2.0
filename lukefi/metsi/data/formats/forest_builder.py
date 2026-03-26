@@ -438,6 +438,8 @@ class VMI9Builder(VMIBuilder):
         )
 
         result.forest_management_category = vmi_util.determine_forest_management_category_vmi9(data_row, indices)
+
+        result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
     def build(self) -> StandList:
@@ -586,6 +588,8 @@ class VMI10Builder(VMIBuilder):
             )
         else:
             result.forest_management_category = 1
+
+        result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
     def build(self) -> StandList:
