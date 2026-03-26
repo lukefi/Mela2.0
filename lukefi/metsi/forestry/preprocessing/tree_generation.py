@@ -50,7 +50,8 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     reference_trees.height = np.round(reference_trees.height, 2)
 
     retained = stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
-    reference_trees.management_category.fill(TreeManagementCategory.RETENTION_TREE if retained else 1)
+    reference_trees.management_category.fill(
+        TreeManagementCategory.RETENTION_TREE if retained else TreeManagementCategory.NO_RESTRICTION)
     reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
 
     reference_trees.origin.fill(stratum.origin)
