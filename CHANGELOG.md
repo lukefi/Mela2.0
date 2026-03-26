@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.20] - 2026-03-26
+
+### Fixed
+
+- Mela enums are now IntEnums so that int conversions work implicitly
+
 ## [0.5.19] - 2026-03-26
 
 ### Changed
