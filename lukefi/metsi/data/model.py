@@ -354,7 +354,6 @@ def stand_as_rst_row(stand: ForestStand):
         stand.land_use_category.value if stand.land_use_category else None,
         stand.soil_peatland_category.value if stand.soil_peatland_category else None,
         stand.site_type_category.value if stand.site_type_category else None,
-
         stand.tax_class_reduction,
         stand.tax_class,
         stand.drainage_category,
