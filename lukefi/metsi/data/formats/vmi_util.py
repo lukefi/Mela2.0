@@ -173,58 +173,6 @@ def determine_soil_surface_preparation_year(sourcevalue: str, year: int) -> Opti
     return None
 
 
-def determine_forest_maintenance_details(cutting_type_class: str, sourcevalue: str, year: int):
-    """
-    Return a triplet of (young_stand_tending_year, cutting_year, cutting_method). VMI source data is exclusive
-    between cutting and tending, i.e. the codes are overloaded into the same year class variable. RST target format
-    allows separate value for both tending and cutting years, but this is impossible in source data.
-    """
-    operation_year = determine_forest_maintenance_year(sourcevalue, year)
-    method = determine_forest_maintenance_method(cutting_type_class, operation_year)
-
-    if cutting_type_class in ('1', '2'):
-        return operation_year, None, None
-    if method == 0:
-        # This case is necessary. Operations over 10 years old are listed as type 0, or no operation in VMI data.
-        # The actual year is still recorded, but we don't seem to want it in RST target. This is based on original
-        # implementation of this application.
-        return None, None, None
-    return None, operation_year, method
-
-
-def determine_forest_maintenance_year(sourcevalue: str, year: int) -> Optional[int]:
-    """Determine the year of last operation from given VMI source classes and the year of data set."""
-    if sourcevalue in ('0', '1', '2', '3', '4', '5'):
-        return year - int(sourcevalue)
-    if sourcevalue == '6':
-        return year - 7
-    if sourcevalue in {'A', 'a'}:
-        return year - 20
-    if sourcevalue in {'B', 'b'}:
-        return year - 40
-    return None
-
-
-def determine_forest_maintenance_method(sourcevalue: str, cutting_year: Optional[int]) -> int:
-    """Map VMI cutting method to RST cutting method if cutting year exists"""
-    if cutting_year is not None and cutting_year > 0:
-        if sourcevalue == '0':
-            return 0
-        if sourcevalue == '4':
-            return 1
-        if sourcevalue == '7':
-            return 2
-        if sourcevalue == '3':
-            return 3
-        if sourcevalue == '6':
-            return 4
-        if sourcevalue == '8':
-            return 5
-        if sourcevalue == '9':
-            return 6
-    return 0
-
-
 def determine_vmi12_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
     """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
     a = get_or_default(parse_float(ds_bh_age), 0.0)
