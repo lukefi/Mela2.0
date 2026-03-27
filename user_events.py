@@ -395,8 +395,8 @@ class PlantingPines(Event[ForestStand]):
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
         default_params: dict[str, Any] = {
-            "origin": 2,           # planted
-            "method": 2,
+            "origin": 2,
+            "method": 3,    # planted
             "species": 1,          # Pine
             "stems_per_ha": 1500.0,
             "height": 0.7,

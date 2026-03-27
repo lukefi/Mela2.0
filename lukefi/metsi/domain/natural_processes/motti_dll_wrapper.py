@@ -203,6 +203,10 @@ class Motti4DLL:
                           Motti4VcrArray *vcr, Motti4KorArray *apv, int *numtrees, Motti4FerArray *fer,
                           int *numfer, Motti4Ctrl *o, int *step, int *rv);
 
+        void Motti4Regenerate(float *method, Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+                      Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+                      int *numtrees, int *step, int *rv);
+
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
         float  Convert_Site(int Mela_site);
@@ -595,6 +599,60 @@ class Motti4DLL:
             )
         if rv[0] != 0:
             raise RuntimeError(f"Motti4UpdateAfterImport failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])
+
+    def regenerate_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        *,
+        method: list[float],
+        step: int = 0,
+    ) -> int:
+        """
+        Call Motti4Regenerate against persistent state buffers.
+
+        method:
+        [0] regeneration method (1 natural, 2 sowing, 3 planting)
+        [1] survival percent [0..100]
+        [2] cultivated tree species
+        [3] amount (pcs/ha)
+        [4] soil preparation type
+        [5] clearing (0/1)
+        [6] seed tree species
+        [7..9] unused, kept as 0.0
+        """
+        ffi, lib = self.ffi, self.lib
+
+        if len(method) > 10:
+            raise ValueError("Motti4Regenerate method vector may contain at most 10 values")
+
+        method_vec = [float(x) for x in method] + [0.0] * (10 - len(method))
+        method_p = ffi.new("float[10]", method_vec)
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        step_p = ffi.new("int *", int(step))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4Regenerate(
+                method_p,
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                step_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4Regenerate failed (rv={rv[0]})")
 
         return int(ntrees_p[0])
 

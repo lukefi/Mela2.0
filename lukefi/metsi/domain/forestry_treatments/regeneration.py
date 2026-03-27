@@ -3,6 +3,54 @@ from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+    species_to_motti,
+    sync_ut_to_reference_trees,
+    prune_reference_trees_not_in_motti,
+)
+
+
+def _regeneration_via_motti(
+    stand: ForestStand,
+    *,
+    method: int,
+    species: int,
+    stems_per_ha: float,
+    step: int,
+    survival_percent: float = 100.0,
+    soil_preparation_type: int = 0,
+    clearing: int = 0,
+    seed_tree_species: int = 0,
+) -> None:
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.buffers is None:
+        raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
+
+    cultivated_species = species_to_motti(species)
+    seed_species = species_to_motti(seed_tree_species) if seed_tree_species else 0
+
+    method_vec = [
+        float(method),                  # 1 natural, 2 sowing, 3 planting
+        float(survival_percent),        # %
+        float(cultivated_species),      # cultivated species
+        float(stems_per_ha),            # pcs / ha
+        float(soil_preparation_type),   # 1..5, or 0 if not used
+        float(clearing),                # 0/1
+        float(seed_species),            # seed tree species
+    ]
+
+    ms.ntrees = ms.dll.regenerate_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        method=method_vec,
+        step=int(step),
+    )
+
+    # Motti updates Ut; rebuild Python sapling trees from Ut
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
 
 
 def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
@@ -21,6 +69,8 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
         ntrees: Optional[int] = 10  # number of reference trees to create
         labels: Optional[list[str]] = None  # accepted, unused
         type: str                   # "artificial" | "natural"
+
+    - Motti path: if stand.motti_state exists, delegate sapling regeneration to Motti4Regenerate
     """
     stand = input_
 
@@ -32,6 +82,7 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
     regen_type = str(req(operation_parameters, "type"))
 
     # ---- optional ----
+    method = int(operation_parameters.get("method", 0))
     breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
     breast_height_age = operation_parameters.get("breast_height_age", None)
     ntrees = operation_parameters.get("ntrees", 10)
@@ -48,7 +99,26 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
     if regen_type == "artificial":
         stand.artificial_regeneration_year = stand.year
 
-    # ---- create trees ----
+    if getattr(stand, "motti_state", None) is not None:
+        if method not in (1, 2, 3):
+            raise MetsiException(
+                "When Motti is active, regeneration 'method' must be one of: "
+                "1=natural, 2=sowing, 3=planting"
+            )
+
+        _regeneration_via_motti(
+            stand,
+            method=method,
+            species=species,
+            stems_per_ha=stems_per_ha,
+            step=int(operation_parameters.get("istep", 0)),
+            survival_percent=float(operation_parameters.get("survival_percent", 100.0)),
+            soil_preparation_type=int(operation_parameters.get("soil_preparation_type", 0)),
+            clearing=int(operation_parameters.get("clearing", 0)),
+            seed_tree_species=int(operation_parameters.get("seed_tree_species", 0)),
+        )
+        return stand, []
+
     per_tree_stems = stems_per_ha / float(ntrees)
     start_idx = int(stand.reference_trees.size)
     new_rows = []
@@ -68,7 +138,6 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
         })
     stand.reference_trees.create(new_rows)
 
-    # No cdata here by design
     return stand, []
 
 
