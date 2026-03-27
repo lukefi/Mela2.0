@@ -405,7 +405,7 @@ def _determine_forest_maintenance_year(cutting_time_src: str, year: int) -> Opti
     """Determine the year of last operation from given VMI source classes and the year of data set."""
     if cutting_time_src in ('', ' ', '.'):
         return None
-    vmi_cutting_time = VmiTimeOfCutting(cutting_time_src)
+    vmi_cutting_time = VmiTimeOfCutting(cutting_time_src.upper())
     if vmi_cutting_time in (
             VmiTimeOfCutting.ONGOING_SEASON,
             VmiTimeOfCutting.PREVIOUS_SEASON,
