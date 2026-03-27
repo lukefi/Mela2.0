@@ -220,6 +220,7 @@ def determine_tax_class(sourcevalue: str) -> int:
     return 0
 
 
+# TODO: Should this mapping be used internally instead of the VMI one?
 def determine_owner_group(sourcevalue: str) -> int:
     """Map and transform integer valued source string as integer or raise on unknown values"""
     if sourcevalue in ['0', '1']:
