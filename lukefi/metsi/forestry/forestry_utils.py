@@ -158,12 +158,7 @@ def find_matching_storey_stratum_for_tree(
         TreeCategory.SMALL_TREE,
         TreeCategory.WASTE_TREE,
         TreeCategory.PULP_WOOD_TREE,
-        "4",
-        "5",
-        "6",
         TreeCategory.SAW_LOG_TREE,
-        "8",
-        "9"
     ):
         return None
 
