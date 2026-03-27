@@ -485,20 +485,14 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         step: int = 5,
-        refresh_import: bool = False,
     ) -> GrowthDeltas:
         """
         Growth using persistent buffers that are carried across calls.
 
-        Set refresh_import=True after Python-side yp edits so Motti rebuilds
-        its internal state before Growth. step=0 performs a single zero-step
-        Growth call, which is useful for refreshing derived fields after
-        treatments that only change stem counts.
+        step=0 performs a single zero-step Growth call, which is used to refresh
+        derived fields after Python-side yp edits.
         """
         ffi, lib = self.ffi, self.lib
-
-        if refresh_import:
-            numtrees = self.update_after_import(yy, yp, int(numtrees), buffers)
 
         ntrees_p = ffi.new("int *", int(numtrees))
         rv = ffi.new("int *")

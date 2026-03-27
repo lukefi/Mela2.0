@@ -630,7 +630,6 @@ class MottiDLLPredictor:
             int(state.ntrees),
             state.buffers,
             step=step,
-            refresh_import=False,
         )
 
         state.ntrees = len(growth.tree_ids)
@@ -857,7 +856,6 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
         int(ms.ntrees),
         ms.buffers,
         step=0,
-        refresh_import=True,
     )
     ms.ntrees = len(growth.tree_ids)
 
