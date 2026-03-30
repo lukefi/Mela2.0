@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-03-30
+
+### Added
+
+- New enumerated types for FDM attributes:
+    - `ForestStand`:
+        - `DevelopmentClass`
+        - `CuttingMethod`
+        - `FraLandUseClass`
+    - `ReferenceTrees`:
+        - `TreeManagementCategory`
+        - `TreeCategory`
+        - `TreeType`
+        - `DamageType`
+        - `CrownClass`
+    - `TreeStrata`:
+        - `StratumRank`
+
+### Changed
+    
+- Renamed FDM attributes:
+    - `tuhon_ilmiasu` -> `damage_type`
+    - `latvuskerros` -> `crown_class`
+    - `asema` -> `stratum_rank`
+- Removed `ForestStand` attribute `land_use_category_detail`
+
+### Fixed
+
+- Small fixes and enhancements to mapping NFI values to FDM
+
 ## [0.5.20] - 2026-03-26
 
 ### Fixed
