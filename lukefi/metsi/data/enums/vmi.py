@@ -245,7 +245,6 @@ class VmiTreeType(Enum):
     OLD_CHECKED_TALLY_TREE = 'Y'
 
 
-#TODO: Find proper names for older VMI categories
 class VmiTreeCategory(Enum):
     SMALL_TREE = '0'
     WASTE_TREE = '1'
