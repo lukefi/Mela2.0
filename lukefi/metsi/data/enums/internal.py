@@ -281,6 +281,9 @@ class CuttingMethod(MetsiEnum):
     OVER_STORY_REMOVAL = 4
     SEED_TREE_CUTTING = 5
     SHELTERWOOD_CUTTING = 6
+    TENDING_OF_SEEDLING_STAND = 7
+    SPECIAL_CUTTING = 8
+    CCF_CUTTING = 9
 
 
 class StratumRank(MetsiEnum):
