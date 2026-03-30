@@ -1,3 +1,5 @@
+from lukefi.metsi.data.conversion import vmi2internal
+from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import vmi_util
 from lukefi.metsi.data.formats.vmi_const import *
@@ -36,24 +38,6 @@ class TestConversion(test_util.ConverterTestSuite):
             (['', '', 2020], None)
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_artificial_regeneration_year)
-
-    def test_determine_development_class(self):
-        assertions = [
-            (['1'], 1),
-            (['2'], 2),
-            (['3'], 3),
-            (['4'], 4),
-            (['5'], 5),
-            (['6'], 6),
-            (['7'], 7),
-            (['8'], 8),
-            (['9'], 9),
-            (['10'], 0),
-            (['0'], 0),
-            ([0], 0),
-            ([0.0], 0)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_development_class)
 
     def test_determine_natural_renewal(self):
         assertions = [
@@ -124,22 +108,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi13_area_ha)
 
-    def test_determine_owner_group(self):
-        assertions = [
-            (['0'], 0),
-            (['1'], 0),
-            (['2'], 1),
-            (['3'], 1),
-            (['4'], 2),
-            (['5'], 2),
-            (['6'], 4),
-            (['7'], 3),
-            (['8'], 3),
-            (['9'], 4)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_owner_group)
-        self.assertRaises(Exception, vmi_util.determine_owner_group, '.')
-
     def test_tax_class_reduction(self):
         assertions = [
             (['0'], 0),
@@ -201,11 +169,10 @@ class TestConversion(test_util.ConverterTestSuite):
             (['0', '2', 2020], (None, None, None)),
             (['1', '2', 2020], (2018, None, None)),
             (['2', '3', 2020], (2017, None, None)),
-            (['3', '6', 2020], (None, 2013, 3)),
-            (['8', 'A', 2020], (None, 2000, 5)),
-            (['11', 'A', 2020], (None, None, None)),
+            (['3', '6', 2020], (None, 2013, CuttingMethod.FIRST_THINNING)),
+            (['8', 'A', 2020], (None, 2000, CuttingMethod.SEED_TREE_CUTTING)),
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_forest_maintenance_details)
+        self.run_with_test_assertions(assertions, vmi2internal.convert_forest_maintenance_details)
 
     def test_forest_maintenance_year(self):
         assertions = [
@@ -220,31 +187,28 @@ class TestConversion(test_util.ConverterTestSuite):
             (['A', 2020], 2000),
             (['b', 2020], 1980),
             (['B', 2020], 1980),
-            (['kissa123', 2020], None),
-            ([None, 2020], None)
+            (['', 2020], None)
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_forest_maintenance_year)
-        self.assertRaises(Exception, vmi_util.determine_forest_maintenance_year('kissa123', None))
-        self.assertRaises(Exception, vmi_util.determine_forest_maintenance_year('', '2020'))
+        self.run_with_test_assertions(assertions, vmi2internal._determine_forest_maintenance_year)
+        self.assertRaises(ValueError, vmi2internal._determine_forest_maintenance_year, 'kissa123', None)
+        self.assertRaises(ValueError, vmi2internal._determine_forest_maintenance_year, 'kissa123', 2020)
+        self.assertRaises(AttributeError, vmi2internal._determine_forest_maintenance_year, None, 2020)
 
     def test_forest_maintenance_method(self):
         assertions = [
-            (['0', 2007], 0),
-            (['4', 2007], 1),
-            (['7', 2007], 2),
-            (['3', 2007], 3),
-            (['6', 2007], 4),
-            (['8', 2007], 5),
-            (['9', 2007], 6),
-            (['9', -2007], 0),
-            (['0', None], 0),
-            (['4', None], 0),
-            (['kissa123', 2007], 0),
-            (['kissa123', -2007], 0),
-            (['kissa123', None], 0),
+            (['0', 2007], CuttingMethod.NO_CUTTING),
+            (['4', 2007], CuttingMethod.THINNING),
+            (['7', 2007], CuttingMethod.CLEARCUTTING),
+            (['3', 2007], CuttingMethod.FIRST_THINNING),
+            (['6', 2007], CuttingMethod.OVER_STORY_REMOVAL),
+            (['8', 2007], CuttingMethod.SEED_TREE_CUTTING),
+            (['9', 2007], CuttingMethod.SHELTERWOOD_CUTTING),
+            (['9', -2007], CuttingMethod.NO_CUTTING),
+            (['0', None], CuttingMethod.NO_CUTTING),
+            (['4', None], CuttingMethod.NO_CUTTING),
         ]
 
-        self.run_with_test_assertions(assertions, vmi_util.determine_forest_maintenance_method)
+        self.run_with_test_assertions(assertions, vmi2internal._convert_cutting_method)
 
     def test_convert_vmi12_geolocation(self):
         assertions = [
@@ -405,11 +369,10 @@ class TestConversion(test_util.ConverterTestSuite):
             (['2'], 0),
             (['3'], 2),
             (['4'], 1),
-            ([""], 0),
-            ([' '], 0),
-            (['kissa123'], 0)
+            ([""], None),
+            ([' '], None),
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_stratum_origin)
+        self.run_with_test_assertions(assertions, vmi2internal.convert_origin)
 
     def test_determine_stratum_age_values(self):
         assertions = [

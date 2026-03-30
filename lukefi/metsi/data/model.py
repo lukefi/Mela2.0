@@ -8,8 +8,17 @@ from dataclasses import dataclass
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
-                                              TreeSpecies, DrainageCategory)
+from lukefi.metsi.data.enums.internal import (
+    CuttingMethod,
+    DevelopmentClass,
+    FraLandUseClass,
+    LandUseCategory,
+    OwnerCategory,
+    SiteType,
+    SoilPeatlandCategory,
+    TreeManagementCategory,
+    TreeSpecies,
+    DrainageCategory)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
@@ -63,14 +72,14 @@ class ForestStand(Finalizable, ComputationalUnit):
     fertilization_year: Optional[int] = None
     soil_surface_preparation_year: Optional[int] = None
     regeneration_area_cleaning_year: Optional[int] = None
-    development_class: Optional[int] = None
+    development_class: Optional[DevelopmentClass] = None
     main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
     cutting_year: Optional[int] = None
     forestry_centre_id: Optional[int] = None
     forest_management_category: Optional[int | float] = None
-    method_of_last_cutting: Optional[int] = None
+    method_of_last_cutting: Optional[CuttingMethod] = None
     municipality_id: Optional[int] = None
     dominant_storey_age: Optional[float] = None
     dominant_height_dominant_storey: Optional[float] = None
@@ -78,9 +87,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
 
-    fra_category: Optional[str] = None  # VMI fra category
-    # VMI land use category detail
-    land_use_category_detail: Optional[str] = None
+    fra_category: Optional[FraLandUseClass] = None  # VMI fra category
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
     sea_effect: Optional[float] = None
@@ -146,7 +153,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return self.auxiliary_stand
 
     def is_forest_land(self):
-        return (self.land_use_category.value < 4) if self.land_use_category is not None else False
+        return (self.land_use_category < LandUseCategory.OTHER_FOREST) if self.land_use_category is not None else False
 
     def has_trees(self):
         return len(self.reference_trees) > 0
@@ -179,23 +186,22 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.fertilization_year = conv(row[16], int)
         self.soil_surface_preparation_year = conv(row[17], int)
         self.regeneration_area_cleaning_year = conv(row[18], int)
-        self.development_class = conv(row[19], int)
+        self.development_class = DevelopmentClass(int(row[19])) if row[19] != 'None' else None
         self.artificial_regeneration_year = conv(row[20], int)
         self.young_stand_tending_year = conv(row[21], int)
         self.cutting_year = conv(row[22], int)
         self.forestry_centre_id = conv(row[23], int)
         self.forest_management_category = conv(row[24], float)
-        self.method_of_last_cutting = conv(row[25], int)
+        self.method_of_last_cutting = CuttingMethod(int(row[25])) if row[25] != 'None' else None
         self.municipality_id = conv(row[26], int)
-        self.fra_category = conv(row[27], str)
-        self.land_use_category_detail = conv(row[28], str)
-        self.auxiliary_stand = row[29] == "True"
-        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
-        self.stand_id = conv(row[32], int)
-        self.basal_area = conv(row[33], float)
-        self.dominant_storey_age = conv(row[34], float)
-        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
-        self.region = conv(row[36], int)
+        self.fra_category = conv(row[27], FraLandUseClass)
+        self.auxiliary_stand = row[28] == "True"
+        self.area_weight_factors = (conv(row[29], float) or 0.0, conv(row[30], float) or 0.0)
+        self.stand_id = conv(row[31], int)
+        self.basal_area = conv(row[32], float)
+        self.dominant_storey_age = conv(row[33], float)
+        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.region = conv(row[35], int)
 
     @staticmethod
     def _sql_value(v):
@@ -309,7 +315,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         if len(self.reference_trees) == 0:
             return None
         trees = self.reference_trees
-        non_saved_trees_indices = np.flatnonzero(trees.management_category != 2)
+        non_saved_trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
         sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
         sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
         i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
@@ -409,7 +415,6 @@ def stand_as_internal_row(stand: ForestStand):
         stand.method_of_last_cutting,
         stand.municipality_id,
         stand.fra_category,
-        stand.land_use_category_detail,
         stand.auxiliary_stand,
         stand.area_weight_factors[0],
         stand.area_weight_factors[1],

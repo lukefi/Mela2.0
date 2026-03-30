@@ -1,7 +1,14 @@
 from enum import IntEnum
 from typing import Optional, Any, Union
 from lukefi.metsi.data.enums.internal import (
-    DrainageCategory, LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory, TreeSpecies)
+    DrainageCategory,
+    FraLandUseClass,
+    LandUseCategory,
+    OwnerCategory,
+    SiteType,
+    SoilPeatlandCategory,
+    TreeSpecies,
+)
 
 
 def parse_type[T:Union[int, float, str]](source, *ts: type[T]):
@@ -39,8 +46,17 @@ def get_or_default(maybe: Optional[Any], default: Any = None) -> Any:
     return default if maybe is None else maybe
 
 
-def convert_str_to_type[T:(int, float, str, OwnerCategory, LandUseCategory, SoilPeatlandCategory, SiteType,
-                           DrainageCategory, TreeSpecies)](value: str, ret_type: type[T]) -> Optional[T]:
+def convert_str_to_type[T:(int,
+                           float,
+                           str,
+                           OwnerCategory,
+                           LandUseCategory,
+                           SoilPeatlandCategory,
+                           SiteType,
+                           DrainageCategory,
+                           TreeSpecies,
+                           FraLandUseClass)](value: str,
+                                             ret_type: type[T]) -> Optional[T]:
     if value == "None":
         return None
     if issubclass(ret_type, IntEnum):

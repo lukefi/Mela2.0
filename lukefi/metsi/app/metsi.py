@@ -2,7 +2,6 @@ import os
 import sys
 import copy
 import sqlite3
-import traceback
 from typing import Optional
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
@@ -59,54 +58,50 @@ def main() -> int:
     except IOError:
         print(f"Application control file path '{control_file}' can not be read. Aborting....")
         return 1
-    try:
-        app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
-        prepare_target_directory(app_config.target_directory)
-        print_logline("Reading input...")
-        should_continue = delete_existing_export_files(
-            target_directory=app_config.target_directory,
-            export_prepro=control_structure.get("export_prepro"),
-            preprocessing_base_name=app_config.preprocessing_output_file,
-            simulation_base_name=app_config.simulation_output_file,
-            force_delete=force_delete,
-        )
-        if not should_continue:
-            return 0
-        db: sqlite3.Connection | None = None
-        if RunMode.SIMULATE in app_config.run_modes:
-            print_logline("Initializing output database")
-            db_base = app_config.simulation_output_file or "simulation_results"
-            db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
-            db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
-            sqlite_decl = control_structure['app_configuration'].get("sqlite_decl")
-            create_database_tables(db, sqlite_decl=sqlite_decl)
-            ForestStand.set_sqlite_decl(sqlite_decl)
 
-        if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
-            # 1) read full stand list
-            full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
+    app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
+    prepare_target_directory(app_config.target_directory)
+    print_logline("Reading input...")
+    should_continue = delete_existing_export_files(
+        target_directory=app_config.target_directory,
+        export_prepro=control_structure.get("export_prepro"),
+        preprocessing_base_name=app_config.preprocessing_output_file,
+        simulation_base_name=app_config.simulation_output_file,
+        force_delete=force_delete,
+    )
+    if not should_continue:
+        return 0
+    db: sqlite3.Connection | None = None
+    if RunMode.SIMULATE in app_config.run_modes:
+        print_logline("Initializing output database")
+        db_base = app_config.simulation_output_file or "simulation_results"
+        db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
+        db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
+        sqlite_decl = control_structure['app_configuration'].get("sqlite_decl")
+        create_database_tables(db, sqlite_decl=sqlite_decl)
+        ForestStand.set_sqlite_decl(sqlite_decl)
 
-            # 2) split it if slice_* parameters are given
-            pct = control_structure.get('slice_percentage')
-            sz = control_structure.get('slice_size')
-            if pct is not None:
-                stand_sublists = slice_list_by_percentage(full_stands, pct)
-            elif sz is not None:
-                stand_sublists = slice_list_by_size(full_stands, sz)
-            else:
-                stand_sublists = [full_stands]
+    if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
+        # 1) read full stand list
+        full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
 
-            input_data: list[StandList] = stand_sublists
-
-        elif app_config.run_modes[0] in [RunMode.POSTPROCESS, RunMode.EXPORT]:
-            raise MetsiException("Post-processing and export currently not implemented")
-
+        # 2) split it if slice_* parameters are given
+        pct = control_structure.get('slice_percentage')
+        sz = control_structure.get('slice_size')
+        if pct is not None:
+            stand_sublists = slice_list_by_percentage(full_stands, pct)
+        elif sz is not None:
+            stand_sublists = slice_list_by_size(full_stands, sz)
         else:
-            raise MetsiException("Can not determine input data for unknown run mode")
-    except Exception:  # pylint: disable=broad-exception-caught
-        traceback.print_exc()
-        print("Aborting run...")
-        return 1
+            stand_sublists = [full_stands]
+
+        input_data: list[StandList] = stand_sublists
+
+    elif app_config.run_modes[0] in [RunMode.POSTPROCESS, RunMode.EXPORT]:
+        raise MetsiException("Post-processing and export currently not implemented")
+
+    else:
+        raise MetsiException("Can not determine input data for unknown run mode")
 
     # now run each slice in turn
     for _, stands in enumerate(input_data):
@@ -143,4 +138,4 @@ def main() -> int:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

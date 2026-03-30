@@ -63,7 +63,6 @@ def stand_to_snapshot_row(s: ForestStand) -> list[str]:
         _safe_str(s.method_of_last_cutting),
         _safe_str(s.municipality_id),
         _safe_str(s.fra_category),
-        _safe_str(s.land_use_category_detail),
         _safe_str(s.auxiliary_stand),
         _safe_str(s.area_weight_factors[0] if s.area_weight_factors else None),
         _safe_str(s.area_weight_factors[1] if s.area_weight_factors else None),

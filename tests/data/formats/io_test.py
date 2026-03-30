@@ -104,7 +104,7 @@ class IoUtilsTest(ConverterTestSuite):
                               "sapling",
                               "tree_type",
                               "tree_category",
-                              "tuhon_ilmiasu"]:
+                              "damage_type"]:
                 self.assertTrue(np.all(
                     np.equal(
                         getattr(stand.reference_trees, attribute),

@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 
+from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import TreeStrata, ReferenceTrees
 
@@ -10,7 +11,7 @@ class TestForestDataModel(unittest.TestCase):
     def test_tree_strata_get_stratum(self):
         strata = TreeStrata()
         strata.create([{
-            "species": 1,
+            "species": TreeSpecies.PINE,
             "mean_height": 2.0,
             "mean_diameter": 1.0,
             "breast_height_age": 10.0,
@@ -20,7 +21,7 @@ class TestForestDataModel(unittest.TestCase):
 
         row = strata.get_stratum(0)
 
-        self.assertEqual(1, int(row.species))
+        self.assertEqual(TreeSpecies.PINE, int(row.species))
         self.assertEqual(2.0, row.mean_height)
         self.assertEqual(1.0, row.mean_diameter)
         self.assertEqual(10.0, row.breast_height_age)
@@ -30,7 +31,7 @@ class TestForestDataModel(unittest.TestCase):
     def test_reference_trees_get_tree(self):
         trees = ReferenceTrees()
         trees.create([{
-            "species": 1,
+            "species": TreeSpecies.PINE,
             "breast_height_diameter": 11.5,
             "biological_age": 10.0,
             "stems_per_ha": 100.0,
@@ -73,8 +74,8 @@ class TestForestDataModel(unittest.TestCase):
     def test_convert_csv_stand_row_with_missing_altitude(self):
         row = "stand;12345;2018;436.0;436.0;6834156.23;429291.91;None;EPSG:3067;1019.0;" \
               "4;1;2;" \
-              "3;0;3;8;1984;None;2018;None;0;None;None;" \
-              "None;10;1;None;12;1;0;False;1.0;1.0;1;10;51;None;None"
+              "3;0;3;8;1984;None;2018;None;None;None;None;" \
+              "None;10;1;None;12;1;False;1.0;1.0;1;10;51;None;None"
         row = row.split(';')
         stand = ForestStand.from_csv_row(row)
 

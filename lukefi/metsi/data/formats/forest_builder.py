@@ -7,7 +7,7 @@ import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.enums.internal import OwnerCategory, Origin
+from lukefi.metsi.data.enums.internal import CuttingMethod, OwnerCategory, Origin
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
@@ -46,7 +46,7 @@ def _append_stratum_row(
 
     identifier = vmi_util.generate_stratum_identifier(row, indices)
     species = vmi2internal.convert_species(row[indices["species"]])
-    origin = vmi_util.determine_stratum_origin(row[indices["origin"]])
+    origin = vmi2internal.convert_origin(row[indices["origin"]])
 
     stems_per_ha = util.get_or_default(util.parse_type(row[indices["stems_per_ha"]], float), 0.0)
     sapling_stems_per_ha = util.get_or_default(
@@ -65,7 +65,7 @@ def _append_stratum_row(
     basal_area = util.parse_type(row[indices["basal_area"]], float)
     stratum_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
-    asema = util.parse_type(row[indices["stratum_rank"]], int)
+    stratum_rank = vmi2internal.convert_stratum_rank(row[indices["stratum_rank"]])
 
     # Defaults / placeholders (match DTYPES_STRATA fields)
     number_of_generated_trees = None
@@ -84,7 +84,7 @@ def _append_stratum_row(
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
-        "asema": asema
+        "stratum_rank": stratum_rank
     }
 
     # Always append in DTYPES_STRATA order
@@ -112,10 +112,7 @@ def _append_tree_row(
     tree_number = util.parse_type(row[indices["tree_number"]], int)
 
     species = vmi2internal.convert_species(row[indices["species"]])
-    raw_tc = row[indices["tree_category"]]
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
-
-    tree_category = tc_enum.value if tc_enum else None
+    tree_category = vmi2internal.convert_tree_category(row[indices["tree_category"]])
 
     if vmi_version == VmiIteration.VMI11:
         breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
@@ -145,16 +142,16 @@ def _append_tree_row(
     if vmi_version in (VmiIteration.VMI12, VmiIteration.VMI13):
         origin = vmi2internal.convert_origin(row[indices["origin"]])
     else:
-        origin = Origin.UNKNOWN
+        origin = Origin.NATURAL
     management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
     storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
 
     sapling = False
-    tree_type = vmi_util.determine_tree_type(row[indices["tree_type"]])
+    tree_type = vmi2internal.convert_tree_type(row[indices["tree_type"]])
 
-    tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in ("  ", " ", ".", "") else tuhon_raw.strip()
-    latvuskerros = row[indices["latvuskerros"]]
+    damage_raw = row[indices["tuhon_ilmiasu"]]
+    damage_type = None if damage_raw in ("  ", " ", ".", "") else damage_raw.strip()
+    crown_class = vmi2internal.convert_crown_class(row[indices["latvuskerros"]])
 
     basal_area = None
     volume = None
@@ -175,10 +172,10 @@ def _append_tree_row(
         "storey": storey,
         "sapling": sapling,
         "tree_type": tree_type,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": basal_area,
         "volume": volume,
-        "latvuskerros": latvuskerros
+        "crown_class": crown_class
     }
 
     for key in DTYPES_TREE:
@@ -325,22 +322,13 @@ class VMIBuilder(ForestBuilder):
 
         result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
         result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
-
-        fra_raw = data_row[indices["fra_class"]].strip()
-        result.fra_category = None if fra_raw in ("", ".") else fra_raw
-
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]].strip())
-        result.land_use_category_detail = data_row[indices["land_category_detail"]]
-        result.site_type_category = vmi2internal.convert_site_type_category(
-            data_row[indices["kasvupaikkatunnus"]].strip())
-
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(
-            data_row[indices["paatyyppi"]].strip())
-
+        result.fra_category = vmi2internal.convert_fra_land_use_class(data_row[indices["fra_class"]])
+        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]])
+        result.site_type_category = vmi2internal.convert_site_type_category(data_row[indices["kasvupaikkatunnus"]])
+        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(data_row[indices["paatyyppi"]])
         result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
         result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
         result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
-
         result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(data_row[indices["municipality"]]))
 
@@ -407,7 +395,7 @@ class VMI9Builder(VMIBuilder):
 
         result.year = parsed.year
         result.start_year = parsed.year
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
 
         area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
         result.set_area(area_ha)
@@ -522,7 +510,7 @@ class VMI10Builder(VMIBuilder):
 
         result.year = parsed.year
         result.start_year = parsed.year
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
 
         area_ha = vmi_util.get_vmi10_area_ha(
             vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
@@ -551,11 +539,10 @@ class VMI10Builder(VMIBuilder):
             result.year,
         )
 
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
-            result.year,
-        )
+            result.year)
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
@@ -667,7 +654,7 @@ class VMI11Builder(VMIBuilder):
 
         result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
         result.start_year = result.year
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
@@ -718,11 +705,10 @@ class VMI11Builder(VMIBuilder):
             result.year,
         )
 
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
-            result.year,
-        )
+            result.year)
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
@@ -845,7 +831,7 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["viljely"]],
             data_row[indices["viljely_aika"]],
             result.year)
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
             result.year
@@ -858,7 +844,7 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
 
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
@@ -990,7 +976,7 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["viljely"]],
             data_row[indices["viljely_aika"]],
             result.year)
-        maintenance_details = vmi_util.determine_forest_maintenance_details(
+        maintenance_details = vmi2internal.convert_forest_maintenance_details(
             data_row[indices["hakkuu_tapa"]],
             data_row[indices["hakkuu_aika"]],
             result.year)
@@ -1001,7 +987,7 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["vallitsevanjaksonika"]]
         )
 
-        result.development_class = vmi_util.determine_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
             data_row[indices["main_tree_species_dominant_storey"]],
             result.site_type_category,
@@ -1103,24 +1089,25 @@ class XMLBuilder(ForestCentreBuilder):
             (oper_type, oper_year) = oper
             if oper_type in (1,):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 4  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.OVER_STORY_REMOVAL  # RST record 31
             elif oper_type in (2, 13, 20):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 3  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.FIRST_THINNING  # RST record 31
             elif oper_type in (3, 11, 12, 14, 91, 94):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 1  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.THINNING  # RST record 31
             elif oper_type in (4, 15, 100):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 6 if stand.soil_peatland_category in (1, 2, 3) else 5
+                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING if stand.soil_peatland_category in (
+                    1, 2, 3) else CuttingMethod.SEED_TREE_CUTTING
             elif oper_type in (6, 7, 102, 116, 123, 124):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 6  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING  # RST record 31
             elif oper_type in (8, 101, 103, 104, 105, 106, 107, 108, 109,
                                110, 111, 112, 113, 114, 115, 117, 118,
                                119, 120, 121, 122, 125, 126, 127, 128):
                 stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = 5  # RST record 31
+                stand.method_of_last_cutting = CuttingMethod.SEED_TREE_CUTTING  # RST record 31
             elif oper_type in (200, 201, 202, 203, 204, 205, 206, 207, 208,
                                209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
                                221, 222, 223, 224, 225, 226, 227, 228, 300, 301, 302, 303,
@@ -1168,7 +1155,7 @@ class XMLBuilder(ForestCentreBuilder):
         # RST record 18 is '0' by default
         operations = smk_util.parse_stand_operations(entry, target_operations='past')
         stand = self.set_stand_operations(stand, operations)  # RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
-        stand.development_class = smk_util.parse_development_class(0)  # RST record 24
+        stand.development_class = None  # RST record 24
         stand.forestry_centre_id = None  # RST record 29
         stand.forest_management_category = smk_util.parse_forest_management_category(
             stand_basic_data.CuttingRestriction) or 1  # 30
@@ -1237,8 +1224,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
             util.parse_type(entry.drainagestate, int, str),
             fc2internal.convert_drainage_category)  # RST record 16
 
-        stand.development_class = smk_util.parse_development_class(
-            util.parse_type(entry.developmentclass, str))  # RST record 24
+        stand.development_class = None  # RST record 24
         stand.forestry_centre_id = None  # RST record 29
         restrictioncode = entry.restrictioncode if entry.restrictiontype == 1 else 1
         stand.forest_management_category = smk_util.parse_forest_management_category(

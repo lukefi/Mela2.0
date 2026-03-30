@@ -8,14 +8,14 @@ sqlite_decl = {
         "regeneration_area_cleaning_year", "development_class", "artificial_regeneration_year",
         "young_stand_tending_year", "cutting_year", "forestry_centre_id",
         "forest_management_category", "method_of_last_cutting", "municipality_id", "dominant_storey_age",
-        "area_weight_factors", "fra_category", "land_use_category_detail", "auxiliary_stand", "sea_effect",
+        "area_weight_factors", "fra_category", "auxiliary_stand", "sea_effect",
         "lake_effect", "basal_area", "main_tree_species_dominant_storey", "dominant_height_dominant_storey",
         "region"
     ],
     "trees": [
         "tree_number", "species", "breast_height_diameter", "height", "measured_height", "breast_height_age",
         "biological_age", "stems_per_ha", "origin", "management_category",
-        "tree_category", "storey", "sapling", "tree_type", "tuhon_ilmiasu",
+        "tree_category", "storey", "sapling", "tree_type", "damage_type",
         "basal_area", "volume"
     ],
     "strata": [
