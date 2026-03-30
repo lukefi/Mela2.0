@@ -67,6 +67,7 @@ TREES_TYPES = {
     "tuhon_ilmiasu": "TEXT",
     "basal_area": "REAL",
     "volume": "REAL",
+    "stratum": "INTEGER"
 }
 STRATA_TYPES = {
     "species": "INTEGER",
@@ -77,7 +78,7 @@ STRATA_TYPES = {
     "stems_per_ha": "REAL",
     "basal_area": "REAL",
     "origin": "INTEGER",
-    "tree_number": "INTEGER",
+    "stratum_number": "INTEGER",
     "storey": "INTEGER",
     "sapling_stems_per_ha": "REAL",
     "number_of_generated_trees": "INTEGER",

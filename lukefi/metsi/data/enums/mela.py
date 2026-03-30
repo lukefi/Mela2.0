@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import IntEnum
 
 # index starts at 0 for variables which start at 0 in the MELA doc, same for those starting at 1
 
 
-class MelaOwnerCategory(Enum):
+class MelaOwnerCategory(IntEnum):
     PRIVATE = 0
     ENTERPRISE = 1
     STATE = 2
@@ -11,7 +11,7 @@ class MelaOwnerCategory(Enum):
     COMMUNITY = 4
 
 
-class MelaLandUseCategory(Enum):
+class MelaLandUseCategory(IntEnum):
     FOREST_LAND = 1
     SCRUB_LAND = 2
     WASTE_LAND = 3
@@ -23,7 +23,7 @@ class MelaLandUseCategory(Enum):
     SEA = 9
 
 
-class MelaSoilAndPeatlandCategory(Enum):
+class MelaSoilAndPeatlandCategory(IntEnum):
     MINERAL_SOIL = 1
     PEATLAND_SPRUCE_MIRE = 2
     PEATLAND_PINE_MIRE = 3
@@ -31,7 +31,7 @@ class MelaSoilAndPeatlandCategory(Enum):
     PEATLAND_RICH_TREELESS_MIRE = 5
 
 
-class MelaSiteTypeCategory(Enum):
+class MelaSiteTypeCategory(IntEnum):
     VERY_RICH_SITE = 1
     RICH_SITE = 2
     DAMP_SITE = 3
@@ -42,7 +42,7 @@ class MelaSiteTypeCategory(Enum):
     OPEN_MOUNTAINS = 8
 
 
-class MelaReductionOfForestTaxationClass(Enum):
+class MelaReductionOfForestTaxationClass(IntEnum):
     NO_REDUCTION = 0
     STONY_SOIL = 1
     WET_SOIL = 2
@@ -50,7 +50,7 @@ class MelaReductionOfForestTaxationClass(Enum):
     UNFAVOURABLE_LOCATION = 4
 
 
-class MelaSiteFertilityCategory(Enum):
+class MelaSiteFertilityCategory(IntEnum):
     '''Finnish forest taxation class or site fertility category'''
     IA_RESPECTIVE_TO_VERY_RICH_OR_RICH_SITES = 1
     IB_RESPECTIVE_TO_DAMP_SITES = 2
@@ -61,7 +61,7 @@ class MelaSiteFertilityCategory(Enum):
     WASTE_LAND = 7
 
 
-class MelaDrainageCategory(Enum):
+class MelaDrainageCategory(IntEnum):
     UNDRAINED_MINERAL_SOIL = 0
     DITCHED_MINERAL_SOIL = 1
     UNDRAINED_MIRE = 2
@@ -70,7 +70,7 @@ class MelaDrainageCategory(Enum):
     TRANSFORMED_MIRE = 5
 
 
-class MelaForestryCentre(Enum):
+class MelaForestryCentre(IntEnum):
     AHVENANMAA = 0
     RANNIKKO = 1
     LOUNAIS_SUOMI = 2
@@ -87,7 +87,7 @@ class MelaForestryCentre(Enum):
     LAPPI = 13
 
 
-class MelaForestManagementCategory(Enum):
+class MelaForestManagementCategory(IntEnum):
     FOREST_LAND_NO_RESTRICTIONS_FOR_TIMBER_PRODUCTION = 1
     FOREST_LAND_ADMINISTRATIONAL_RESTRICTIONS_FOR_TIMBER_PRODUCTION = 2
     SCRUB_LAND_NO_RESTRICTIONS_FOR_TIMBER_PRODUCTION = 3
@@ -95,7 +95,7 @@ class MelaForestManagementCategory(Enum):
     FOREST_SCRUB_OR_WASTE_LAND_NO_TIMBER_PRODUCTION_ALLOWED = 7
 
 
-class MelaMethodOfTheLastCutting(Enum):
+class MelaMethodOfTheLastCutting(IntEnum):
     NO_CUTTING = 0
     THINNING = 1
     CLEARCUTTING = 2
@@ -105,7 +105,7 @@ class MelaMethodOfTheLastCutting(Enum):
     SHELTERWOOD_CUTTING = 6
 
 
-class MelaTreeSpecies(Enum):
+class MelaTreeSpecies(IntEnum):
     SCOTS_PINE = 1
     NORWAY_SPRUCE = 2
     SILVER_BIRCH = 3
@@ -116,7 +116,7 @@ class MelaTreeSpecies(Enum):
     OTHER_DECIDUOUS = 8
 
 
-class MelaTreeOrigin(Enum):
+class MelaTreeOrigin(IntEnum):
     NATURAL = 0
     SEEDED = 1
     PLANTED = 2

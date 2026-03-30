@@ -14,7 +14,7 @@ def _enum_value(x: Any) -> Any:
 
 
 def _safe_str(x: Any) -> str:
-    """Stable stringification for diffs ."""
+    """Stable stringification for diffs."""
     if x is None:
         return "None"
     if isinstance(x, tuple):
@@ -88,19 +88,17 @@ def stands_to_snapshot_lines(stands: Iterable[ForestStand]) -> list[str]:
       - Tree lines
     Uses vector_model.as_internal_csv_row for trees & strata.
     """
-
     rows: list[list[str]] = []
     for s in stands:
         rows.append(stand_to_snapshot_row(s))
 
-        # strata
         if s.tree_strata is not None:
             for idx, _ in sorted(
                 enumerate(s.tree_strata.identifier),
                 key=lambda pair: str(pair[1]),
             ):
                 rows.append(s.tree_strata.as_internal_csv_row(idx))
-        # trees
+
         if s.reference_trees is not None:
             for idx, _ in sorted(
                 enumerate(s.reference_trees.identifier),
@@ -108,28 +106,18 @@ def stands_to_snapshot_lines(stands: Iterable[ForestStand]) -> list[str]:
             ):
                 rows.append(s.reference_trees.as_internal_csv_row(idx))
 
-    # Write rows to CSV lines
     out_lines: list[str] = []
     for r in rows:
         out_lines.append(",".join(r))
     return out_lines
 
 
-def assert_snapshot(testcase, *, name: str, stands: Iterable[ForestStand]) -> None:
-    """
-    Compare current snapshot to file.
-    """
+def _assert_snapshot_text(testcase, *, snap_path: Path, actual_text: str, label: str) -> None:
     SNAP_DIR.mkdir(parents=True, exist_ok=True)
-    snap_path = SNAP_DIR / f"{name}.csv"
-
-    actual_lines = stands_to_snapshot_lines(stands)
-    actual_text = "\n".join(actual_lines) + "\n"
-
     update = os.environ.get("UPDATE_MELA_SNAPSHOTS", "") == "1"
 
     if update:
-        snap_path.write_text(actual_text, encoding="utf-8")
-        # If updating, don't fail.
+        snap_path.write_text(actual_text, encoding="utf-8", newline="")
         return
 
     expected_text = snap_path.read_text(encoding="utf-8")
@@ -144,7 +132,32 @@ def assert_snapshot(testcase, *, name: str, stands: Iterable[ForestStand]) -> No
             )
         )
         testcase.fail(
-            f"Snapshot mismatch for '{name}'.\n\n"
+            f"Snapshot mismatch for '{label}'.\n\n"
             f"If the change is intended, run: pytest --update-snapshots to regenerate references.\n\n"
             f"Diff:\n{diff}\n"
         )
+
+
+def assert_snapshot(testcase, *, name: str, stands: Iterable[ForestStand]) -> None:
+    """
+    Compare current stand snapshot to file.
+    """
+    snap_path = SNAP_DIR / f"{name}.csv"
+    actual_lines = stands_to_snapshot_lines(stands)
+    actual_text = "\n".join(actual_lines) + "\n"
+    _assert_snapshot_text(testcase, snap_path=snap_path, actual_text=actual_text, label=name)
+
+
+def assert_file_snapshot(testcase, *, snapshot_name: str, actual_file: str | Path) -> None:
+    """
+    Compare an exported file against a text snapshot file under tests/data/snapshots.
+    """
+    actual_path = Path(actual_file)
+    actual_text = actual_path.read_text(encoding="utf-8")
+    snap_path = SNAP_DIR / snapshot_name
+    _assert_snapshot_text(
+        testcase,
+        snap_path=snap_path,
+        actual_text=actual_text,
+        label=snapshot_name,
+    )

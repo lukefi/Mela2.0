@@ -36,7 +36,8 @@ def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data,
-                            base_name=config.preprocessing_output_file)
+                            base_name=config.preprocessing_output_file,
+                            app_configuration=control.get("app_configuration"))
     else:
         print_logline("Declaration for 'export_prerocessed' not found from control.")
         print_logline("Skipping export of preprocessing results.")

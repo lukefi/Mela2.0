@@ -63,7 +63,7 @@ def _append_stratum_row(
     )
 
     basal_area = util.parse_type(row[indices["basal_area"]], float)
-    tree_number = util.parse_int(row[indices["stratum_number"]])
+    stratum_number = util.parse_int(row[indices["stratum_number"]])
     storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
     asema = util.parse_type(row[indices["stratum_rank"]], int)
 
@@ -80,7 +80,7 @@ def _append_stratum_row(
         "stems_per_ha": stems_per_ha,
         "basal_area": basal_area,
         "origin": origin,
-        "tree_number": tree_number,
+        "stratum_number": stratum_number,
         "storey": storey,
         "sapling_stems_per_ha": sapling_stems_per_ha,
         "number_of_generated_trees": number_of_generated_trees,
@@ -192,9 +192,9 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
 
     sd = smk_util.parse_stratum_data(estratum)
 
-    tree_number = util.parse_type(sd.StratumNumber, int)
+    stratum_number = util.parse_type(sd.StratumNumber, int)
     raw_id = util.parse_type(sd.id, str)
-    identifier = f"{stand_identifier}.{tree_number or raw_id}-stratum"
+    identifier = f"{stand_identifier}.{stratum_number or raw_id}-stratum"
 
     basal_area = util.parse_type(sd.BasalArea, float)
 
@@ -208,7 +208,7 @@ def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratu
         "biological_age": util.parse_type(sd.Age, float),
         "basal_area": basal_area,
         "origin": 0,
-        "tree_number": tree_number,
+        "stratum_number": stratum_number,
         "storey": fc2internal.convert_storey(sd.Storey),
         "sapling_stems_per_ha": 0.0,
         "number_of_generated_trees": None,
@@ -222,9 +222,9 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
     """Append one GeoPackage stratum row into an SoA attribute dict.
     """
 
-    tree_number = util.parse_type(rowj.stratumnumber, int)
+    stratum_number = util.parse_type(rowj.stratumnumber, int)
     raw_id = util.parse_type(rowj.treestratumid, str)
-    identifier = f"{stand_identifier}.{tree_number or raw_id}-stratum"
+    identifier = f"{stand_identifier}.{stratum_number or raw_id}-stratum"
 
     basal_area = util.parse_type(rowj.basalarea, float)
 
@@ -238,7 +238,7 @@ def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj:
         "biological_age": util.parse_type(rowj.age, float),
         "basal_area": basal_area,
         "origin": None,
-        "tree_number": tree_number,
+        "stratum_number": stratum_number,
         "storey": util.parse_type(rowj.storey, int),
         "sapling_stems_per_ha": 0.0,
         "number_of_generated_trees": None,
@@ -438,6 +438,8 @@ class VMI9Builder(VMIBuilder):
         )
 
         result.forest_management_category = vmi_util.determine_forest_management_category_vmi9(data_row, indices)
+
+        result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
     def build(self) -> StandList:
@@ -589,6 +591,8 @@ class VMI10Builder(VMIBuilder):
             )
         else:
             result.forest_management_category = 1
+
+        result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
     def build(self) -> StandList:

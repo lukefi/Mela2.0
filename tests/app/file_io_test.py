@@ -76,7 +76,7 @@ class TestFileReading(unittest.TestCase):
         ec = ExportableContainer(export_objects=data, additional_vars=None)
 
         file_io.prepare_target_directory("outdir")
-        file_io.csv_writer(Path("outdir", "output.csv"), ec)
+        file_io.csv_legacy_writer(Path("outdir", "output.csv"), ec)
         result = file_io.csv_content_to_stands(file_io.csv_file_reader(Path("outdir/output.csv")))
         self.assertEqual(len(result), 1)
         result_stand = result[0]

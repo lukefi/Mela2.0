@@ -126,9 +126,10 @@ class ForestryUtilsTest(unittest.TestCase):
             latvuskerros="2"
         )
 
-        idx = futil.find_matching_storey_stratum_for_tree(tree, strata)
+        stratum = futil.find_matching_storey_stratum_for_tree(tree, strata)
         # 11 cm is closer to 10 cm than 20 cm => index 0
-        self.assertEqual("s1", idx)
+        self.assertIsNotNone(stratum)
+        self.assertEqual("s1", stratum.identifier)
 
     def test_matching_storey_stratum_similar_deciduous_species(self):
         """
@@ -159,9 +160,9 @@ class ForestryUtilsTest(unittest.TestCase):
             latvuskerros="5"
         )
 
-        idx = futil.find_matching_storey_stratum_for_tree(tree, strata)
+        stratum = futil.find_matching_storey_stratum_for_tree(tree, strata)
         # 6.2 cm is closer to mean_diameter 6.0 than 10.0 => index 0
-        self.assertEqual("s1", idx)
+        self.assertEqual("s1", stratum.identifier)
 
     def test_matching_storey_stratum_invalid_diameter(self):
         """
@@ -225,9 +226,9 @@ class ForestryUtilsTest(unittest.TestCase):
         )
 
         # With default threshold=2.5, 40 is within [20/2.5, 20*2.5] = [8, 50] → match index 1
-        idx_default = futil.find_matching_storey_stratum_for_tree(tree, strata)
-        self.assertEqual("s2", idx_default)
+        stratum_default = futil.find_matching_storey_stratum_for_tree(tree, strata)
+        self.assertEqual("s2", stratum_default.identifier)
 
         # With stricter threshold, 40 is outside allowed range -> None
-        idx_strict = futil.find_matching_storey_stratum_for_tree(tree, strata, diameter_threshold=1.5)
-        self.assertIsNone(idx_strict)
+        stratum_strict = futil.find_matching_storey_stratum_for_tree(tree, strata, diameter_threshold=1.5)
+        self.assertIsNone(stratum_strict)

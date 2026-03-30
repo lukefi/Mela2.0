@@ -29,25 +29,32 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     stratum.number_of_generated_trees = n_trees
 
     for i in range(n_trees):
-        reference_trees.species[i] = stratum.species if reference_trees.species[i] in (
-            TreeSpecies.UNKNOWN, TreeSpecies.UNSET, TreeSpecies.TREELESS) else reference_trees.species[i]
-
-        reference_trees.breast_height_age[i] = max(stratum.get_breast_height_age(), 1) if \
-            reference_trees.height[i] > 1.3 else 0.0
-
-        reference_trees.biological_age[i] = stratum.biological_age
         reference_trees.tree_number[i] = i + 1
-        reference_trees.stems_per_ha[i] = round(ng_scale * reference_trees.stems_per_ha[i], 2)
-        reference_trees.breast_height_diameter[i] = round(reference_trees.breast_height_diameter[i], 2)
 
-        if reference_trees.height[i] > 1.3:
-            reference_trees.breast_height_diameter[i] = max(reference_trees.breast_height_diameter[i], 0.1)
+    reference_trees.species[np.isin(reference_trees.species, (TreeSpecies.UNKNOWN,
+                                    TreeSpecies.UNSET, TreeSpecies.TREELESS))] = stratum.species
 
-        reference_trees.height[i] = round(reference_trees.height[i], 2)
-        retained = stratum.asema == 3
-        reference_trees.management_category[i] = 2 if retained else 1
-        reference_trees.storey[i] = Storey.SPARE if retained else stratum.storey
-        reference_trees.origin[i] = stratum.origin
+    big_trees = reference_trees.height > 1.3
+    reference_trees.breast_height_age[big_trees] = max(stratum.get_breast_height_age(), 1)
+    reference_trees.breast_height_age[~big_trees] = 0.0
+
+    reference_trees.biological_age.fill(stratum.biological_age)
+
+    reference_trees.stems_per_ha = np.round(ng_scale * reference_trees.stems_per_ha, 2)
+
+    reference_trees.breast_height_diameter = np.round(reference_trees.breast_height_diameter, 2)
+
+    reference_trees.breast_height_diameter[big_trees] = np.maximum(
+        reference_trees.breast_height_diameter[big_trees], 0.1)
+
+    reference_trees.height = np.round(reference_trees.height, 2)
+
+    retained = stratum.asema == 3
+    reference_trees.management_category.fill(2 if retained else 1)
+    reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
+
+    reference_trees.origin.fill(stratum.origin)
+    reference_trees.stratum.fill(stratum.stratum_number)
 
     return reference_trees
 
@@ -139,6 +146,11 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
 
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
+        if params.get("scale_height_distribution_stems_by_ba", True):
+            assert stratum.basal_area is not None
+            if result.breast_height_diameter.any():
+                result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
+                    _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
 
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
         result = _trees_from_weibull(stratum, params["n_trees"])

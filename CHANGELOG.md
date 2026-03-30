@@ -4,10 +4,65 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.20] - 2026-03-26
+
+### Fixed
+
+- Mela enums are now IntEnums so that int conversions work implicitly
+
+## [0.5.19] - 2026-03-26
+
+### Changed
+
+- Minor refactoring of the tree generation helper function `_finalize_trees`
+
+## [0.5.18] - 2026-03-26
+
+### Changed
+
+- Stratum attribute `tree_number` renamed to `stratum_number`
+- Reference trees are now linked to strata by `stratum_number` instead of `identifier`
+
+### Fixed
+
+- Retention trees and generated trees are now properly linked to strata
+
+## [0.5.17] - 2026-03-23
+
+### Fixed
+
+- Added apply_conversions to vmi9 and 10
+
+## [0.5.16] - 2026-03-23
+
+### Added
+
+- Added csv_exp and metadata.json #MELA2-175
+
+## [0.5.15] - 2026-03-19
+
+### Added
+
+- Added optional basal area based `stems_per_ha` scaling for reference trees generated from height distribution
+
+## [0.5.14] - 2026-03-19
+
+### Fixed
+
+- Fixed tree species mapping for age model
+
+## [0.5.13] - 2026-03-18
+
+### Fixed
+
+- Value scaling fixed in pljak_osuuspaino.csv files for VMI9, VMI10 and VMI11
+
 ## [0.5.12] - 2026-03-18
 
 ### Changed
+
 - Refactor model.ReferenceTree and model.TreeStratum away
+
 ### Added
 - vector_model.update_many and csv export logic
 

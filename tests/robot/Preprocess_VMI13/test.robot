@@ -25,3 +25,24 @@ Preprocessed VMI13 Data Exported As RST Should Match Reference
     ...    ${REFERENCE_PATH}/preprocessing_result.rst
     ...    ${ABSOLUTE_TOLERANCE}
     ...    ${RELATIVE_TOLERANCE}
+	
+Preprocessed VMI13 Stands As CSV Should Match Reference
+    Compare Files With Numeric In Text
+    ...    ${OUTPUT_PATH}/stands.csv
+    ...    ${REFERENCE_PATH}/stands.csv
+    ...    ${ABSOLUTE_TOLERANCE}
+    ...    ${RELATIVE_TOLERANCE}
+	
+Preprocessed VMI13 Trees As CSV Should Match Reference
+    Compare Files With Numeric In Text
+    ...    ${OUTPUT_PATH}/trees.csv
+    ...    ${REFERENCE_PATH}/trees.csv
+    ...    ${ABSOLUTE_TOLERANCE}
+    ...    ${RELATIVE_TOLERANCE}
+	
+Preprocessed VMI13 Strata As CSV Should Match Reference
+    Compare Files With Numeric In Text
+    ...    ${OUTPUT_PATH}/strata.csv
+    ...    ${REFERENCE_PATH}/strata.csv
+    ...    ${ABSOLUTE_TOLERANCE}
+    ...    ${RELATIVE_TOLERANCE}
