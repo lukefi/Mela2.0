@@ -1,4 +1,4 @@
 stand_identifier;year;area;area_weight;geo_lat;geo_lon;geo_height;geo_crs;degree_days;owner_category;land_use_category;soil_peatland_category;site_type_category;tax_class_reduction;tax_class;drainage_category;drainage_year;fertilization_year;soil_surface_preparation_year;regeneration_area_cleaning_year;development_class;artificial_regeneration_year;young_stand_tending_year;cutting_year;forestry_centre_id;forest_management_category;method_of_last_cutting;municipality_id;fra_category;land_use_category_detail;auxiliary_stand;area_weight_factor_0;area_weight_factor_1;stand_id;basal_area;dominant_storey_age;main_tree_species_dominant_storey;region
-0-315-020-05-1;2014;100.39;100.39;6321496.0;3231497.0;4.8;EPSG:2393;1278.0;1;1;1;3;1;3;1;;;;;4;;;;0;1;;062;1;0;False;0.0;1.0;1;18.0;29.0;3;
-0-316-021-02-1;2014;100.39;100.39;6321496.0;3231497.0;8.5;EPSG:2393;1274.0;1;1;1;3;1;4;1;;;;;3;;;;0;1;;062;1;0;False;0.0;1.0;2;5.0;17.0;3;
-0-313-022-01-1;2014;100.39;100.39;6731700.0;2311500.0;;EPSG:2393;;0;10;;;0;0;;;;;;0;;;;0;1;;062;;0;False;0.0;1.0;3;;0.0;;
+0-315-020-05-1;2014;100.39;100.39;6321496.0;3231497.0;4.8;EPSG:2393;1278.0;1;1;1;3;1;3;1;;;;;4;;;;0;1;;062;1;0;False;0.0;1.0;1;18.0;29.0;3;;;;False;True
+0-316-021-02-1;2014;100.39;100.39;6321496.0;3231497.0;8.5;EPSG:2393;1274.0;1;1;1;3;1;4;1;;;;;3;;;;0;1;;062;1;0;False;0.0;1.0;2;5.0;17.0;3;;;;False;True
+0-313-022-01-1;2014;100.39;100.39;6731700.0;2311500.0;;EPSG:2393;;0;10;;;0;0;;;;;;0;;;;0;1;;062;;0;False;0.0;1.0;3;;0.0;;;;;False;False
