@@ -220,22 +220,6 @@ def determine_tax_class(sourcevalue: str) -> int:
     return 0
 
 
-# TODO: Should this mapping be used internally instead of the VMI one?
-def determine_owner_group(sourcevalue: str) -> int:
-    """Map and transform integer valued source string as integer or raise on unknown values"""
-    if sourcevalue in ['0', '1']:
-        return 0
-    if sourcevalue in ['2', '3']:
-        return 1
-    if sourcevalue in ['4', '5']:
-        return 2
-    if sourcevalue in ['7', '8']:
-        return 3
-    if sourcevalue in ['6', '9']:
-        return 4
-    raise MetsiException('Unknown source value for owner_group')
-
-
 def determine_forest_management_category(land_use_category: int,
                                          county: int,
                                          owner_group: int,

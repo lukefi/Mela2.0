@@ -108,22 +108,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_vmi13_area_ha)
 
-    def test_determine_owner_group(self):
-        assertions = [
-            (['0'], 0),
-            (['1'], 0),
-            (['2'], 1),
-            (['3'], 1),
-            (['4'], 2),
-            (['5'], 2),
-            (['6'], 4),
-            (['7'], 3),
-            (['8'], 3),
-            (['9'], 4)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_owner_group)
-        self.assertRaises(Exception, vmi_util.determine_owner_group, '.')
-
     def test_tax_class_reduction(self):
         assertions = [
             (['0'], 0),
