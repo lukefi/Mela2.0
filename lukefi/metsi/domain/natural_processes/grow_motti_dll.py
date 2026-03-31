@@ -7,6 +7,7 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     GrowthDeltas,
 )
 from lukefi.metsi.data.enums.internal import (
+    LandUseCategory,
     TreeSpecies,
     Storey,
     CONIFEROUS_SPECIES,
@@ -718,7 +719,7 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         stand.year = (stand.year or 0) + step
         return stand, []
 
-    if stand.land_use_category and stand.land_use_category.value >= 3:
+    if stand.land_use_category and stand.land_use_category >= LandUseCategory.WASTE_LAND:
         # No growth, just advance time/ages
         base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         base_h = np.nan_to_num(rt.height, nan=0.0)

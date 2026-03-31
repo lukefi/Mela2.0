@@ -1,6 +1,7 @@
 from typing import Any, Optional
-import numpy as np
 from pathlib import Path
+import numpy as np
+from lukefi.metsi.data.enums.internal import TreeManagementCategory
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
@@ -93,7 +94,7 @@ class MarkRetentionTrees(Event[ForestStand]):
               3) trees with diameter > 15 cm
           * marked trees get attributes like:
               tree_type = "SPARE"
-              management_category = 2
+              management_category = TreeManagementCategory.RETENTION_TREE
     """
 
     def __init__(
@@ -159,7 +160,7 @@ class MarkRetentionTrees(Event[ForestStand]):
             "mode": "odds_units",
             "attributes": {
                 "tree_type": "SPARE",
-                "management_category": 2,
+                "management_category": TreeManagementCategory.RETENTION_TREE,
             },
         }
 

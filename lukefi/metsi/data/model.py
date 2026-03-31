@@ -1,4 +1,5 @@
 from copy import copy
+from enum import Enum
 import dataclasses
 import sqlite3
 from typing import Optional, override, Any, cast
@@ -7,10 +8,20 @@ from dataclasses import dataclass
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.data.enums.internal import (LandUseCategory, OwnerCategory, SiteType, SoilPeatlandCategory,
-                                              TreeSpecies, DrainageCategory, Storey)
+from lukefi.metsi.data.enums.internal import (
+    CuttingMethod,
+    DevelopmentClass,
+    FraLandUseClass,
+    LandUseCategory,
+    OwnerCategory,
+    SiteType,
+    SoilPeatlandCategory,
+    TreeManagementCategory,
+    TreeSpecies,
+    DrainageCategory)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
 
@@ -24,269 +35,6 @@ from lukefi.metsi.sim.finalizable import Finalizable
 #   methods run when copied. don't add a (non-trivial) __init__ method to any class here.
 # * if you add any containers on any class here, you need to add a manual copy
 #   in the __deepcopy__ method. see ForestStand.__deepcopy__ for an example.
-
-
-@dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
-           slots=False, weakref_slot=False, eq=False)
-class TreeStratum():
-    # VMI data type 2
-    # SMK data type TreeStratum
-
-    stand: Optional["ForestStand"] = None
-
-    # identifier of the stratum within the container stand
-    identifier: Optional[str] = None
-
-    species: Optional[TreeSpecies] = None
-    origin: Optional[int] = None
-    stems_per_ha: Optional[float] = None  # stem count within a hectare
-    mean_diameter: Optional[float] = None  # in decimeters
-    mean_height: Optional[float] = None  # in meters
-    # age in years when reached breast height
-    breast_height_age: Optional[float] = None
-    biological_age: Optional[float] = None  # age in years
-    basal_area: Optional[float] = None  # stratum basal area
-    tree_number: Optional[int] = None
-
-    # sapling stem count within a hectare
-    sapling_stems_per_ha: Optional[float] = None
-    storey: Optional[Storey] = None
-    number_of_generated_trees: Optional[int] = None
-    asema: Optional[int] = None
-
-    def __hash__(self):
-        return id(self)
-
-    def __eq__(self, other):
-        return id(self) == id(other)
-
-    def __deepcopy__(self, memo: dict) -> 'TreeStratum':
-        s = TreeStratum.__new__(TreeStratum)
-        s.__dict__.update(self.__dict__)
-        return s
-
-    def has_height(self):
-        if self.mean_height is None:
-            return False
-        if self.mean_height > 0.0:
-            return True
-        return False
-
-    def has_sapling_stems_per_ha(self) -> bool:
-        if self.sapling_stems_per_ha is None:
-            return False
-        if self.sapling_stems_per_ha > 0.0:
-            return True
-        return False
-
-    def has_stems_per_ha(self) -> bool:
-        if self.stems_per_ha is None:
-            return False
-        if self.stems_per_ha > 0.0:
-            return True
-        return False
-
-    def has_diameter(self) -> bool:
-        if self.mean_diameter is None:
-            return False
-        if self.mean_diameter > 0.0:
-            return True
-        return False
-
-    def has_breast_height_age(self) -> bool:
-        if self.breast_height_age is None:
-            return False
-        if self.breast_height_age > 0.0:
-            return True
-        return False
-
-    def has_biological_age(self) -> bool:
-        if self.biological_age is None:
-            return False
-        if self.biological_age > 0.0:
-            return True
-        return False
-
-    def has_basal_area(self) -> bool:
-        if self.basal_area is None:
-            return False
-        if self.basal_area > 0.0:
-            return True
-        return False
-
-    def has_height_over_130_cm(self) -> bool:
-        if self.mean_height is None:
-            return False
-        if self.mean_height > 1.3:
-            return True
-        return False
-
-    def compare_species(self, other: "TreeStratum") -> bool:
-        if self.species is None or other.species is None:
-            return False
-        if self.species == other.species:
-            return True
-        return False
-
-    def to_sapling_reference_tree(self) -> "ReferenceTree":
-        result = ReferenceTree()
-        result.stems_per_ha = self.sapling_stems_per_ha
-        result.species = self.species
-        result.breast_height_diameter = self.mean_diameter
-        result.height = self.mean_height
-        result.breast_height_age = self.breast_height_age
-        result.biological_age = self.biological_age
-        result.origin = self.origin
-        result.management_category = 1
-        result.sapling = True
-        return result
-
-    def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
-        if self.breast_height_age is not None and self.breast_height_age > 0.0:
-            return self.breast_height_age
-        if self.biological_age is not None and self.biological_age > 0.0:
-            new_breast_height_age = self.biological_age - subtrahend
-            return 0.0 if new_breast_height_age <= 0.0 else new_breast_height_age
-        return 0.0
-
-    def as_internal_csv_row(self) -> list[str]:
-        return [
-            "stratum",
-            str(self.identifier),
-            str(self.species),
-            str(self.origin),
-            str(self.stems_per_ha),
-            str(self.mean_diameter),
-            str(self.mean_height),
-            str(self.breast_height_age),
-            str(self.biological_age),
-            str(self.basal_area),
-            str(self.tree_number),
-            str(self.sapling_stems_per_ha),
-            str(self.storey)
-        ]
-
-    @classmethod
-    def from_csv_row(cls, row) -> "TreeStratum":
-        result = cls()
-        result.identifier = conv(row[1], str)
-        result.species = TreeSpecies(int(row[2]))
-        result.origin = conv(row[3], int)
-        result.stems_per_ha = conv(row[4], float)
-        result.mean_diameter = conv(row[5], float)
-        result.mean_height = conv(row[6], float)
-        result.breast_height_age = conv(row[7], float)
-        result.biological_age = conv(row[8], float)
-        result.basal_area = conv(row[9], float)
-        result.tree_number = conv(row[10], int)
-
-        result.sapling_stems_per_ha = conv(row[11], float)
-        result.storey = Storey(int(row[12])) if row[12] != "None" else None
-        return result
-
-
-@dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
-           slots=False, weakref_slot=False, eq=False)
-class ReferenceTree():
-    # VMI data type 3
-    # No SMK equivalent
-
-    stand: Optional["ForestStand"] = None
-
-    # identifier of the tree within the container stand
-    identifier: Optional[str] = None
-
-    stems_per_ha: Optional[float] = None
-    species: Optional[TreeSpecies] = None
-    # diameter at 1.3 m height
-    breast_height_diameter: Optional[float] = None
-    height: Optional[float] = None  # model height in meters
-    measured_height: Optional[float] = None  # measurement tree height
-    # age in years when reached 1.3 m height
-    breast_height_age: Optional[float] = None
-    biological_age: Optional[float] = None  # age in years
-
-    # 0-3; natural, seeded, planted, supplementary planted
-    origin: Optional[int] = None
-    # default is the order of appearance (or in sample plot)
-    tree_number: Optional[int] = None
-    management_category: Optional[int] = None
-
-    # VMI tree_category for living/dead/otherwise unusable tree
-    tree_category: Optional[str] = None
-    sapling: bool = False
-    storey: Optional[Storey] = None
-    tree_type: Optional[str] = None
-    latvuskerros: Optional[str] = None
-
-    # VMI tuhon ilmiasu
-    tuhon_ilmiasu: Optional[str] = None
-
-    def __eq__(self, other):
-        return id(self) == id(other)
-
-    def __deepcopy__(self, memo: dict) -> 'ReferenceTree':
-        t = ReferenceTree.__new__(ReferenceTree)
-        t.__dict__.update(self.__dict__)
-        return t
-
-    def __hash__(self):
-        return id(self)
-
-    def validate(self):
-        pass
-
-    def has_biological_age(self) -> bool:
-        if self.biological_age is None:
-            return False
-        if self.biological_age > 0.0:
-            return True
-        return False
-
-    def has_diameter(self) -> bool:
-        if self.breast_height_diameter is None:
-            return False
-        if self.breast_height_diameter > 0.0:
-            return True
-        return False
-
-    def has_height_over_130_cm(self) -> bool:
-        if self.height is None:
-            return False
-        if self.height > 1.3:
-            return True
-        return False
-
-    def is_living(self) -> bool:
-        return self.tree_category in (None, "0", "1", "3", "7")
-
-    def compare_species(self, other: "ReferenceTree") -> bool:
-        if self.species is None or other.species is None:
-            return False
-        if self.species == other.species:
-            return True
-        return False
-
-    @classmethod
-    def from_csv_row(cls, row) -> "ReferenceTree":
-        result = cls()
-        result.identifier = conv(row[1], str)
-        result.species = TreeSpecies(int(row[2]))
-        result.origin = conv(row[3], int)
-        result.stems_per_ha = conv(row[4], float)
-        result.breast_height_diameter = conv(row[5], float)
-        result.height = conv(row[6], float)
-        result.measured_height = conv(row[7], float)
-        result.breast_height_age = conv(row[8], float)
-        result.biological_age = conv(row[9], float)
-        result.tree_number = conv(row[10], int)
-        result.management_category = conv(row[11], int)
-        result.tree_category = conv(row[12], str)
-        result.sapling = row[13] == "True"
-        result.storey = Storey(int(row[14])) if row[14] != 'None' else None
-        result.tree_type = conv(row[15], str)
-        result.tuhon_ilmiasu = conv(row[16], str)
-        return result
 
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
@@ -325,14 +73,14 @@ class ForestStand(Finalizable, ComputationalUnit):
     fertilization_year: Optional[int] = None
     soil_surface_preparation_year: Optional[int] = None
     regeneration_area_cleaning_year: Optional[int] = None
-    development_class: Optional[int] = None
+    development_class: Optional[DevelopmentClass] = None
     main_tree_species_dominant_storey: Optional[TreeSpecies] = None
     artificial_regeneration_year: Optional[int] = None
     young_stand_tending_year: Optional[int] = None
     cutting_year: Optional[int] = None
     forestry_centre_id: Optional[int] = None
     forest_management_category: Optional[int | float] = None
-    method_of_last_cutting: Optional[int] = None
+    method_of_last_cutting: Optional[CuttingMethod] = None
     municipality_id: Optional[int] = None
     dominant_storey_age: Optional[float] = None
     dominant_height_dominant_storey: Optional[float] = None
@@ -340,9 +88,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
 
-    fra_category: Optional[str] = None  # VMI fra category
-    # VMI land use category detail
-    land_use_category_detail: Optional[str] = None
+    fra_category: Optional[FraLandUseClass] = None  # VMI fra category
     # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
     sea_effect: Optional[float] = None
@@ -354,6 +100,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     weighted_mean_height: Optional[float] = None
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
+
+    sqlite_decl: Optional[dict] = None
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -406,7 +154,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return self.auxiliary_stand
 
     def is_forest_land(self):
-        return (self.land_use_category.value < 4) if self.land_use_category is not None else False
+        return (self.land_use_category < LandUseCategory.OTHER_FOREST) if self.land_use_category is not None else False
 
     def has_trees(self):
         return len(self.reference_trees) > 0
@@ -439,23 +187,52 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.fertilization_year = conv(row[16], int)
         self.soil_surface_preparation_year = conv(row[17], int)
         self.regeneration_area_cleaning_year = conv(row[18], int)
-        self.development_class = conv(row[19], int)
+        self.development_class = DevelopmentClass(int(row[19])) if row[19] != 'None' else None
         self.artificial_regeneration_year = conv(row[20], int)
         self.young_stand_tending_year = conv(row[21], int)
         self.cutting_year = conv(row[22], int)
         self.forestry_centre_id = conv(row[23], int)
         self.forest_management_category = conv(row[24], float)
-        self.method_of_last_cutting = conv(row[25], int)
+        self.method_of_last_cutting = CuttingMethod(int(row[25])) if row[25] != 'None' else None
         self.municipality_id = conv(row[26], int)
-        self.fra_category = conv(row[27], str)
-        self.land_use_category_detail = conv(row[28], str)
-        self.auxiliary_stand = row[29] == "True"
-        self.area_weight_factors = (conv(row[30], float) or 0.0, conv(row[31], float) or 0.0)
-        self.stand_id = conv(row[32], int)
-        self.basal_area = conv(row[33], float)
-        self.dominant_storey_age = conv(row[34], float)
-        self.main_tree_species_dominant_storey = conv(row[35], TreeSpecies)
-        self.region = conv(row[36], int)
+        self.fra_category = conv(row[27], FraLandUseClass)
+        self.auxiliary_stand = row[28] == "True"
+        self.area_weight_factors = (conv(row[29], float) or 0.0, conv(row[30], float) or 0.0)
+        self.stand_id = conv(row[31], int)
+        self.basal_area = conv(row[32], float)
+        self.dominant_storey_age = conv(row[33], float)
+        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.region = conv(row[35], int)
+
+    @staticmethod
+    def _sql_value(v):
+        if v is None:
+            return None
+        if isinstance(v, Enum):
+            return v.value
+        # numpy scalar -> python scalar
+        if isinstance(v, (np.generic,)):
+            return v.item()
+        # tuples / arrays that is store as TEXT
+        if isinstance(v, (tuple, list)):
+            return str(tuple(v))
+        # numpy array row [x,y,z] -> (x, y, z)
+        if isinstance(v, np.ndarray):
+            return str(tuple(v.tolist()))
+        # for bool as bool
+        return v
+
+    @classmethod
+    def _decl_cols(cls, table: str, default: list[str]) -> list[str]:
+        decl = cls.sqlite_decl
+        if not decl:
+            return default
+        return list(decl.get(table, default))
+
+    @classmethod
+    def set_sqlite_decl(cls, decl: Optional[dict]) -> None:
+        """ User's db output list are stored here """
+        cls.sqlite_decl = decl
 
     @classmethod
     def from_csv_row(cls, row) -> "ForestStand":
@@ -483,107 +260,35 @@ class ForestStand(Finalizable, ComputationalUnit):
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
 
-        cur.execute(
-            """--sql
-            INSERT INTO stands
-            VALUES
-                (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-            """,
-            (
-                node,
-                self.identifier,
-                self.year,
-                self.stand_id,
-                self.area,
-                self.area_weight,
-                str(self.geo_location),
-                self.degree_days,
-                self.owner_category,
-                self.land_use_category,
-                self.soil_peatland_category,
-                self.site_type_category,
-                self.tax_class_reduction,
-                self.tax_class,
-                self.drainage_category,
-                self.drainage_year,
-                self.fertilization_year,
-                self.soil_surface_preparation_year,
-                self.regeneration_area_cleaning_year,
-                self.development_class,
-                self.artificial_regeneration_year,
-                self.young_stand_tending_year,
-                self.cutting_year,
-                self.forestry_centre_id,
-                self.forest_management_category,
-                self.method_of_last_cutting,
-                self.municipality_id,
-                self.dominant_storey_age,
-                str(self.area_weight_factors),
-                self.fra_category,
-                self.land_use_category_detail,
-                self.auxiliary_stand,
-                self.sea_effect,
-                self.lake_effect,
-                self.basal_area,
-                self.main_tree_species_dominant_storey,
-                self.dominant_height_dominant_storey,
-                self.region))
-        for i in range(self.reference_trees.size):
+        def insert(table: str, cols: list[str], values: list):
             cur.execute(
-                """--sql
-                INSERT INTO trees
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    node,
-                    self.identifier,
-                    self.reference_trees.identifier[i],
-                    int(self.reference_trees.tree_number[i]),
-                    int(self.reference_trees.species[i]),
-                    self.reference_trees.breast_height_diameter[i],
-                    self.reference_trees.height[i],
-                    self.reference_trees.measured_height[i],
-                    self.reference_trees.breast_height_age[i],
-                    self.reference_trees.biological_age[i],
-                    self.reference_trees.stems_per_ha[i],
-                    int(self.reference_trees.origin[i]),
-                    int(self.reference_trees.management_category[i]),
-                    self.reference_trees.tree_category[i],
-                    int(self.reference_trees.storey[i]),
-                    bool(self.reference_trees.sapling[i]),
-                    self.reference_trees.tree_type[i],
-                    self.reference_trees.tuhon_ilmiasu[i],
-                    self.reference_trees.basal_area[i],
-                    self.reference_trees.volume[i]
-                )
+                f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join(['?'] * len(cols))})",
+                tuple(values),
             )
-        for i in range(self.tree_strata.size):
 
-            cur.execute(
-                """--sql
-                INSERT INTO strata
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    node,
-                    self.identifier,
-                    self.tree_strata.identifier[i],
-                    int(self.tree_strata.species[i]),
-                    self.tree_strata.mean_diameter[i],
-                    self.tree_strata.mean_height[i],
-                    self.tree_strata.breast_height_age[i],
-                    self.tree_strata.biological_age[i],
-                    self.tree_strata.stems_per_ha[i],
-                    self.tree_strata.basal_area[i],
-                    int(self.tree_strata.origin[i]),
-                    int(self.tree_strata.tree_number[i]),
-                    int(self.tree_strata.storey[i]),
-                    self.tree_strata.sapling_stems_per_ha[i],
-                    int(self.tree_strata.number_of_generated_trees[i])
-                )
-            )
+        # ---- stands ----
+        stand_cols = self._decl_cols("stands", list(STANDS_TYPES.keys()))
+        insert(
+            "stands",
+            ["node", "identifier"] + stand_cols,
+            [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in stand_cols],
+        )
+
+        # ---- trees ----
+        tree_cols = self._decl_cols("trees", list(TREES_TYPES.keys()))
+        tree_insert_cols = ["node", "stand", "identifier"] + tree_cols
+        trees = self.reference_trees
+        for i in range(trees.size):
+            row = [self._sql_value(getattr(trees, c)[i]) for c in tree_cols]
+            insert("trees", tree_insert_cols, [node, self.identifier, trees.identifier[i]] + row)
+
+        # ---- strata ----
+        strata_cols = self._decl_cols("strata", list(STRATA_TYPES.keys()))
+        strata_insert_cols = ["node", "stand", "identifier"] + strata_cols
+        strata = self.tree_strata
+        for i in range(strata.size):
+            row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
+            insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
 
     def update_aggregates(self):
         trees = self.reference_trees
@@ -611,7 +316,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         if len(self.reference_trees) == 0:
             return None
         trees = self.reference_trees
-        non_saved_trees_indices = np.flatnonzero(trees.management_category != 2)
+        non_saved_trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
         sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
         sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
         i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
@@ -696,11 +401,10 @@ def stand_as_rst_row(stand: ForestStand):
         stand.stand_id,
         stand.geo_location[2] if stand.geo_location else None,
         stand.degree_days,
-        stand.owner_category.value if stand.owner_category else None,
-        stand.land_use_category.value if stand.land_use_category else None,
-        stand.soil_peatland_category.value if stand.soil_peatland_category else None,
-        stand.site_type_category.value if stand.site_type_category else None,
-
+        stand.owner_category,
+        stand.land_use_category,
+        stand.soil_peatland_category,
+        stand.site_type_category,
         stand.tax_class_reduction,
         stand.tax_class,
         stand.drainage_category,
@@ -756,7 +460,6 @@ def stand_as_internal_row(stand: ForestStand):
         stand.method_of_last_cutting,
         stand.municipality_id,
         stand.fra_category,
-        stand.land_use_category_detail,
         stand.auxiliary_stand,
         stand.area_weight_factors[0],
         stand.area_weight_factors[1],

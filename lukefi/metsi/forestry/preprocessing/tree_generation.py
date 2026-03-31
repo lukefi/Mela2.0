@@ -5,13 +5,15 @@ from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, StratumRank, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing import distributions
+from lukefi.metsi.forestry.preprocessing.height import predict_tree_height
 from lukefi.metsi.forestry.preprocessing.naslund import naslund_height, naslund_correction
 from lukefi.metsi.forestry.preprocessing.ages import ages
-from lukefi.metsi.forestry.preprocessing.tree_generation_lm import tree_generation_lm
+from lukefi.metsi.forestry.preprocessing.tree_generation_lm import determine_hmalli_value, tree_generation_lm
 
 
 class TreeStrategy(StrEnum):
@@ -27,25 +29,33 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     stratum.number_of_generated_trees = n_trees
 
     for i in range(n_trees):
-        reference_trees.species[i] = stratum.species if reference_trees.species[i] in (
-            TreeSpecies.UNKNOWN, TreeSpecies.UNSET, TreeSpecies.TREELESS) else reference_trees.species[i]
-
-        reference_trees.breast_height_age[i] = max(stratum.get_breast_height_age(), 1) if \
-            reference_trees.height[i] > 1.3 else 0.0
-
-        reference_trees.biological_age[i] = stratum.biological_age
         reference_trees.tree_number[i] = i + 1
-        reference_trees.stems_per_ha[i] = round(ng_scale * reference_trees.stems_per_ha[i], 2)
-        reference_trees.breast_height_diameter[i] = round(reference_trees.breast_height_diameter[i], 2)
 
-        if reference_trees.height[i] > 1.3:
-            reference_trees.breast_height_diameter[i] = max(reference_trees.breast_height_diameter[i], 0.1)
+    reference_trees.species[np.isin(reference_trees.species, (TreeSpecies.UNKNOWN,
+                                    TreeSpecies.UNSET, TreeSpecies.TREELESS))] = stratum.species
 
-        reference_trees.height[i] = round(reference_trees.height[i], 2)
-        retained = stratum.asema == 3
-        reference_trees.management_category[i] = 2 if retained else 1
-        reference_trees.storey[i] = Storey.SPARE if retained else stratum.storey
-        reference_trees.origin[i] = stratum.origin
+    big_trees = reference_trees.height > 1.3
+    reference_trees.breast_height_age[big_trees] = max(stratum.get_breast_height_age(), 1)
+    reference_trees.breast_height_age[~big_trees] = 0.0
+
+    reference_trees.biological_age.fill(stratum.biological_age)
+
+    reference_trees.stems_per_ha = np.round(ng_scale * reference_trees.stems_per_ha, 2)
+
+    reference_trees.breast_height_diameter = np.round(reference_trees.breast_height_diameter, 2)
+
+    reference_trees.breast_height_diameter[big_trees] = np.maximum(
+        reference_trees.breast_height_diameter[big_trees], 0.1)
+
+    reference_trees.height = np.round(reference_trees.height, 2)
+
+    retained = stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
+    reference_trees.management_category.fill(
+        TreeManagementCategory.RETENTION_TREE if retained else TreeManagementCategory.NO_RESTRICTION)
+    reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
+
+    reference_trees.origin.fill(stratum.origin)
+    reference_trees.stratum.fill(stratum.stratum_number)
 
     return reference_trees
 
@@ -81,17 +91,19 @@ def _trees_from_sapling_height_distribution(stratum: TreeStratum, n_trees: int) 
 def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, method='weibull') -> TreeStrategy:
     """ Solves the strategy of tree generation for given stratum """
 
-    if method == 'lm' and stratum.asema in (7, 8):
+    if method == 'lm' and stratum.stratum_rank in (
+            StratumRank.NON_ESTABLISHED_SEEDLINGS,
+            StratumRank.DAMAGED_TREE_STRATUM):
         return TreeStrategy.SKIP
 
-    if stratum.mean_height > 1.3:
+    if stratum.mean_height > 1.3 or stratum.mean_diameter > 2:
         # big trees
         if (stratum.mean_diameter > 0.0 and stratum.mean_height >
                 0.0 and stratum.basal_area is not None and stratum.basal_area > 0.0 and method == 'weibull'):
             return TreeStrategy.WEIBULL_DISTRIBUTION
 
-        if stand.land_use_category == 2 and stratum.basal_area is not None and stratum.basal_area > 0.0 and \
-                method == 'lm':
+        if stand.land_use_category == LandUseCategory.SCRUB_LAND and stratum.basal_area is not None and \
+                stratum.basal_area > 0.0 and method == 'lm':
             return TreeStrategy.LM_TREES
 
         if all([
@@ -137,6 +149,11 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
 
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
         result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
+        if params.get("scale_height_distribution_stems_by_ba", True):
+            assert stratum.basal_area is not None
+            if result.breast_height_diameter.any():
+                result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
+                    _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
 
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
         result = _trees_from_weibull(stratum, params["n_trees"])
@@ -176,7 +193,8 @@ def _determine_ages(stand: ForestStand,
 
 def adjust_retention_trees(stand: ForestStand,
                            new_trees: ReferenceTrees,
-                           retention_trees_mask: npt.NDArray[np.bool_]):
+                           retention_trees_mask: npt.NDArray[np.bool_],
+                           nfi_iteration: VmiIteration):
     # Scales the stem counts so that basal area does not increase
     # Basal area may increse if the basal area of the retention trees is greater than
     # basal area of the reference trees
@@ -188,8 +206,8 @@ def adjust_retention_trees(stand: ForestStand,
         trees.breast_height_diameter[retention_trees_mask])
 
     g_generated_not_retention_trees = _calculate_basal_area_from_trees(
-        new_trees.stems_per_ha[new_trees.management_category != 2],
-        new_trees.breast_height_diameter[new_trees.management_category != 2])
+        new_trees.stems_per_ha[new_trees.management_category != TreeManagementCategory.RETENTION_TREE],
+        new_trees.breast_height_diameter[new_trees.management_category != TreeManagementCategory.RETENTION_TREE])
 
     scale_factor_stand = max((g_generated_not_retention_trees - g_retention) / g_generated_not_retention_trees, 0) \
         if g_generated_not_retention_trees > 0.0 else 1
@@ -207,7 +225,7 @@ def adjust_retention_trees(stand: ForestStand,
             itree = itree + 1
             g_stratum = g_stratum + new_trees.stems_per_ha[itree] * \
                 np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
-            if new_trees.management_category[itree] == 2:
+            if new_trees.management_category[itree] == TreeManagementCategory.RETENTION_TREE:
                 g_stratum_retention = g_stratum_retention + \
                     new_trees.stems_per_ha[itree] * np.pi * ((new_trees.breast_height_diameter[itree] / 200)**2)
         g_stratum_scaled = scale_factor_stratum * g_stratum
@@ -224,18 +242,29 @@ def adjust_retention_trees(stand: ForestStand,
 
         for i in range(stand.tree_strata.number_of_generated_trees[i_stratum]):
             itree = itree0 + i + 1
-            if new_trees.management_category[itree] != 2:
+            if new_trees.management_category[itree] != TreeManagementCategory.RETENTION_TREE:
                 new_trees.stems_per_ha[itree] = scale_factor_stratum * new_trees.stems_per_ha[itree]
 
     stand_tree_count = len(new_trees)
 
     for j, i in enumerate(np.where(retention_trees_mask)[0]):
         trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + j + 1}-tree"
-        trees.management_category[i] = 2
+        trees.management_category[i] = TreeManagementCategory.RETENTION_TREE
         trees.storey[i] = Storey.SPARE
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
         trees.breast_height_age[i] = breast_height_age
         trees.biological_age[i] = biological_age
+        if np.isnan(trees.height[i]) or trees.height[i] == 0:
+            trees.height[i] = predict_tree_height(
+                nfi_iteration,
+                determine_hmalli_value(
+                    TreeSpecies(
+                        trees.species[i])),
+                stand.degree_days or 0.0,
+                float(trees.breast_height_diameter[i]),
+                float(trees.breast_height_diameter[i]),
+                1.0
+            )
 
 
 def adjust_ages(stand: ForestStand, trees: ReferenceTrees):

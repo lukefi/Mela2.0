@@ -5,6 +5,7 @@ import unittest
 from types import SimpleNamespace
 from typing import Any, Dict, List
 import numpy as np
+from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
 
@@ -67,9 +68,9 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         geo_location=(6900000.0, 3400000.0, 150.0),
         lake_effect=0.0,
         sea_effect=0.0,
-        land_use_category=SimpleNamespace(value=1),
-        site_type_category=SimpleNamespace(value=3),
-        soil_peatland_category=SimpleNamespace(value=1),
+        land_use_category=LandUseCategory.FOREST,
+        site_type_category=SiteType.DAMP_SITE,
+        soil_peatland_category=SoilPeatlandCategory.MINERAL_SOIL,
         tax_class=1,
         tax_class_reduction=0,
         reference_trees=rt,

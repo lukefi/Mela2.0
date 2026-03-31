@@ -1,6 +1,7 @@
 """ Operations related for manipulating the exporting related formats.
 NOTE: Only for pipeline component 'export_prepro' """
 import numpy as np
+from lukefi.metsi.data.enums.internal import TreeCategory
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.conversion.internal2mela import mela_stand
 from lukefi.metsi.app.utils import ConfigurationException
@@ -30,10 +31,13 @@ def prepare_rst_output(stands: StandList, **operation_params) -> StandList:
             continue
 
         # SoA version of ReferenceTree.is_living
-        living_mask = np.isin(
-            trees.tree_category,
-            np.array(["", "0", "1", "3", "7"], dtype=trees.tree_category.dtype)
-        )
+        living_mask = np.isin(trees.tree_category,
+                              np.array(["",
+                                        TreeCategory.SMALL_TREE,
+                                        TreeCategory.WASTE_TREE,
+                                        TreeCategory.PULP_WOOD_TREE,
+                                        TreeCategory.SAW_LOG_TREE],
+                                       dtype=trees.tree_category.dtype))
 
         # Filter to living trees only (VectorBase.__getitem__ handles boolean masks)
         trees = trees[living_mask]

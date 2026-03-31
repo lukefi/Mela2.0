@@ -3,9 +3,17 @@ from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.ba_nfi import BA_NFI, BA_NFI_RET
-from lukefi.metsi.data.enums.internal import LandUseCategory, Storey, TreeSpecies
+from lukefi.metsi.data.conversion import vmi2internal
+from lukefi.metsi.data.enums.internal import (
+    LandUseCategory,
+    Storey,
+    TreeCategory,
+    TreeManagementCategory,
+    TreeSpecies,
+    TreeType)
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
@@ -137,16 +145,29 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         strata = stand.tree_strata
 
         for i in range(len(trees)):
-            stratum_id = find_matching_storey_stratum_for_tree(
+            matching_stratum = find_matching_storey_stratum_for_tree(
                 trees.get_tree(i), strata, stratum_association_diameter_threshold)
-            trees.stratum[i] = stratum_id if stratum_id is not None else ""
+            trees.stratum[i] = matching_stratum.stratum_number if matching_stratum is not None else -1
 
         retention_trees_mask = np.repeat(False, len(trees))
         if add_retention_trees:
-            retention_trees_mask = (trees.stratum == "") & (
-                trees.management_category == 2) & np.isin(
-                trees.tree_type, ("", "V", "Y", "U", "S", "T", "N", " ")) & np.isin(
-                trees.tree_category, ("", "0", "1", "3", "7"))
+            retention_trees_mask = (
+                trees.stratum == -1) & (
+                trees.management_category == TreeManagementCategory.RETENTION_TREE) & np.isin(
+                trees.tree_type,
+                (TreeType.UNSET,
+                 TreeType.REMEASURED_TALLY_TREE,
+                 TreeType.OLD_CHECKED_TALLY_TREE,
+                 TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+                 TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+                 TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
+                 TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE)) & np.isin(
+                trees.tree_category,
+                (TreeCategory.UNSET,
+                 TreeCategory.SMALL_TREE,
+                 TreeCategory.WASTE_TREE,
+                 TreeCategory.PULP_WOOD_TREE,
+                 TreeCategory.SAW_LOG_TREE))
 
         stratum_ordering = np.argsort(stand.tree_strata.identifier)
         stand.tree_strata = stand.tree_strata[stratum_ordering]
@@ -177,7 +198,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         # lisätään irralliset säästöpuut
         if add_retention_trees and np.any(retention_trees_mask):
-            adjust_retention_trees(stand, new_trees, retention_trees_mask)
+            adjust_retention_trees(stand, new_trees, retention_trees_mask, operation_params['nfi_iteration'])
         if operation_params.get('age_model', False):
             for i in range(len(new_trees)):
                 if new_trees.breast_height_diameter[i] > 0:
@@ -188,15 +209,15 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
             adjust_ages(stand, new_trees)
 
         retention_trees = trees[retention_trees_mask]
-        new_trees = new_trees + retention_trees
 
         new_strata = TreeStrata(retention_trees.size)
-        new_strata.tree_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
+        new_strata.stratum_number = np.arange(1, len(retention_trees) + 1) + len(stand.tree_strata)
+        retention_trees.stratum = new_strata.stratum_number
         new_strata.identifier = np.asarray([
             stand.identifier +
             "-" +
-            str(tree_number) +
-            "-stratum" for tree_number in new_strata.tree_number])
+            str(stratum_number) +
+            "-stratum" for stratum_number in new_strata.stratum_number])
         new_strata.species = retention_trees.species
         new_strata.origin = retention_trees.origin
         new_strata.mean_diameter = retention_trees.breast_height_diameter
@@ -210,7 +231,8 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
         new_strata.number_of_generated_trees = np.repeat(1, len(retention_trees))
 
         stand.tree_strata = stand.tree_strata + new_strata
-        stand.reference_trees = new_trees
+
+        stand.reference_trees = new_trees + retention_trees
 
         if operation_params.get("delete_strata", False):
             stand.tree_strata = TreeStrata()
@@ -218,9 +240,11 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_basal_area_at_county_level(stands: StandList) -> StandList:
-    """Scale basal area at the county level to match basal areas by species in NFI data.
-       NOTE: It is supposed that all stands belong to same county and represent the whole county.
+def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
+    """Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
+       for NFI iterations 12 and up, forestry centre for earlier.
+       NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
+       (or fc).
 
     Args:
         stands (StandList): the list of stands to update
@@ -245,7 +269,7 @@ def scale_basal_area_at_county_level(stands: StandList) -> StandList:
 
         trees = stand.reference_trees
         bhd_positive = trees.breast_height_diameter > 0
-        is_retained = trees.management_category == 2
+        is_retained = trees.management_category == TreeManagementCategory.RETENTION_TREE
         is_not_retained = ~is_retained
 
         for species in TreeSpecies:
@@ -260,16 +284,37 @@ def scale_basal_area_at_county_level(stands: StandList) -> StandList:
                 np.sum(trees.stems_per_ha[mask2] * ((trees.breast_height_diameter[mask2] / 200) ** 2))
 
     # scale coefficients
-    ba_targets: list[list[list[float]]] = [[x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 1],
-                                           [x.ppa for x in BA_NFI if x.maakunta == county and x.maalk == 2]]
-    ba_target_ret = [x.ppa for x in BA_NFI_RET if x.maakunta == county][0]
+    forest_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_metsamaa.csv',
+                                 sep=' ',
+                                 index_col="maakunta")
+    scrub_land_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_kitumaa.csv',
+                                sep=' ',
+                                index_col="maakunta")
+    retention_trees_ba = pd.read_csv(f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/PPA_saastopuut.csv',
+                                     sep=' ',
+                                     index_col="maakunta")
+
+    ba_targets = [np.full(max(TreeSpecies), 0.0, dtype=np.float64),
+                  np.full(max(TreeSpecies), 0.0, dtype=np.float64)]
+
+    geo_index = stands[0].forestry_centre_id if nfi_iteration in (
+        VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else county
+
+    assert geo_index is not None
+
+    for species_col in forest_land_ba:
+        ba_targets[0][vmi2internal.convert_species(str(species_col)) - 1] = forest_land_ba[species_col][geo_index]
+    for species_col in scrub_land_ba:
+        ba_targets[1][vmi2internal.convert_species(str(species_col)) - 1] = scrub_land_ba[species_col][geo_index]
+
+    ba_target_ret: np.float64 = retention_trees_ba.V2[geo_index]
 
     if len(ba_targets) == 0:
         scale_coeffs = [[1] * max(TreeSpecies), [1] * max(TreeSpecies)]
     else:
         scale_coeffs = [[], []]
         for i in range(2):
-            for target, generated in zip(ba_targets[i][0], ba_sums[i]):
+            for target, generated in zip(ba_targets[i], ba_sums[i]):
                 coeff = target / generated if generated > 0 else -1
                 scale_coeffs[i].append(coeff)
     scale_coeff_ret = ba_target_ret / ba_sum_ret if ba_sum_ret > 0 else -1
@@ -281,7 +326,7 @@ def scale_basal_area_at_county_level(stands: StandList) -> StandList:
             continue
 
         trees = stand.reference_trees
-        is_retained = trees.management_category == 2
+        is_retained = trees.management_category == TreeManagementCategory.RETENTION_TREE
         is_not_retained = ~is_retained
         scale_coeffs_for_trees = np.asarray(scale_coeffs[stand.land_use_category - 1])[trees.species - 1]
         mask = is_not_retained & (scale_coeffs_for_trees >= 0)

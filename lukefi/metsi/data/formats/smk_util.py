@@ -1,14 +1,13 @@
 import datetime
-import math
 from types import SimpleNamespace
 from typing import Optional
 from xml.etree.ElementTree import Element
-
+import numpy as np
 import geopandas
 from shapely.geometry import Polygon, Point
 from lukefi.metsi.data.enums.internal import SiteType, TreeSpecies
 from lukefi.metsi.data.formats import util
-from lukefi.metsi.data.model import TreeStratum
+from lukefi.metsi.data.vector_model import TreeStrata
 
 NS = {
     "schema_location": "http://standardit.tapio.fi/schemas/forestData ForestData.xsd",
@@ -147,18 +146,6 @@ def parse_drainage_category(source: str) -> int | None:
     return util.parse_int(source)
 
 
-def parse_development_class(source) -> int:
-    """ TODO: Waiting for future implementation.
-
-    At the moment (22.9.2023) development class variable is extracted
-    from .gpkg (not in .xml) format but not used by any model in simulation.
-    For that reason constant zero is returned.
-
-    :returns: zero """
-    _ = source
-    return 0
-
-
 def parse_forest_management_category(source: str | None) -> int | float | None:
     if source is None:
         return None
@@ -236,16 +223,19 @@ def parse_coordinates(estand: Element) -> tuple[float, float, str] | tuple[None,
     return (float(latitude), float(longitude), crs)
 
 
-def calculate_stand_basal_area(strata: list[TreeStratum]) -> float:
-    def f(s):
-        try:
-            return round(math.pi / 4 * math.pow(s.mean_diameter / 100, 2) * s.stems_per_ha, 2)
-        except TypeError:
-            return 0.0
-    basal_areas = [stratum.basal_area if stratum.basal_area is not None else f(stratum) for stratum in strata]
-    for bs, s in zip(basal_areas, strata):
-        s.basal_area = bs
-    return sum(basal_areas)
+def calculate_stand_basal_area(strata: TreeStrata) -> float:
+    if strata.size == 0:
+        return 0.0
+
+    computed = np.round(
+        np.pi / 4 * np.power(strata.mean_diameter / 100.0, 2) * strata.stems_per_ha,
+        2,
+    )
+    missing = np.isnan(strata.basal_area)
+    if np.any(missing):
+        strata.update_many({"basal_area": computed[missing]}, np.where(missing)[0])
+
+    return float(np.sum(strata.basal_area))
 
 
 def determine_main_tree_species_dominant_storey(site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:

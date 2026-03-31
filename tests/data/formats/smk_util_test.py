@@ -4,9 +4,15 @@ import xml.etree.ElementTree as ET
 from types import SimpleNamespace
 from lukefi.metsi.data.formats import smk_util
 from tests.data import test_util
-from lukefi.metsi.data.model import TreeStratum
+from lukefi.metsi.data.vector_model import TreeStrata
 
-def generate_test_data(stand_data_element='', point_element='', polygon_element='', tree_stand_element='', operations_element='') -> ET.Element:
+
+def generate_test_data(
+        stand_data_element='',
+        point_element='',
+        polygon_element='',
+        tree_stand_element='',
+        operations_element='') -> ET.Element:
     """ Generates test data for smk xml test suites
 
         The returned xml element corresponds to a single xml stand
@@ -32,10 +38,11 @@ def generate_test_data(stand_data_element='', point_element='', polygon_element=
             </st:Stands>
         </ForestPropertyData>
     """.format(stand_data_element=stand_data_element, point_element=point_element,
-        polygon_element=polygon_element, tree_stand_element=tree_stand_element,
-        operations_element=operations_element)
+               polygon_element=polygon_element, tree_stand_element=tree_stand_element,
+               operations_element=operations_element)
     root = ET.fromstring(source_data)
     return root[0][0]
+
 
 class TestSmkXMLConversion(test_util.ConverterTestSuite):
 
@@ -43,13 +50,13 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         assertion = SimpleNamespace(
             id='111',
             CompleteState='1',
-            StandBasicDataDate='2015-02-17', # year
-            Area='1.73', # area & areaweight
-            MainGroup='1', # land_use
-            SubGroup='1', # soil
-            FertilityClass='3', # site
-            DrainageState='1', # drain_class
-            CuttingRestriction='0', # mana_cate
+            StandBasicDataDate='2015-02-17',  # year
+            Area='1.73',  # area & areaweight
+            MainGroup='1',  # land_use
+            SubGroup='1',  # soil
+            FertilityClass='3',  # site
+            DrainageState='1',  # drain_class
+            CuttingRestriction='0',  # mana_cate
         )
         test_element = """
             <st:CompleteState>1</st:CompleteState>
@@ -91,7 +98,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
     def test_parse_stand_operation_data(self):
         ...
 
-
     def test_parse_stand_stratum_data(self):
         assertion = SimpleNamespace(
             id='233',
@@ -126,10 +132,10 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
             </ts:TreeStandDataDate>
         """
         reference_stand = generate_test_data(tree_stand_element=test_element)
-        estratum = reference_stand.find('ts:TreeStandData/ts:TreeStandDataDate/tst:TreeStrata/tst:TreeStratum', smk_util.NS)
+        estratum = reference_stand.find(
+            'ts:TreeStandData/ts:TreeStandDataDate/tst:TreeStrata/tst:TreeStratum', smk_util.NS)
         sns = smk_util.parse_stratum_data(estratum)
         self.assertEqual(assertion, sns)
-
 
     def test_parse_year(self):
         assertions = [
@@ -143,7 +149,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, smk_util.parse_year)
 
-
     def test_parse_land_use_category(self):
         assertions = [
             (['1'], 1),
@@ -153,7 +158,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
             (['kissa123'], None)
         ]
         self.run_with_test_assertions(assertions, smk_util.parse_land_use_category)
-
 
     def test_parse_drainage_category(self):
         assertions = [
@@ -168,7 +172,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
             (['kissa123'], None)
         ]
         self.run_with_test_assertions(assertions, smk_util.parse_drainage_category)
-
 
     def test_parse_forest_management_category(self):
         assertions = [
@@ -187,7 +190,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, smk_util.parse_forest_management_category)
 
-
     def test_point_series(self):
         assertions = [
             ('123456.123,7654321.123', 1),
@@ -198,7 +200,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
             self.assertEqual(123456.123, result[0][0])
             self.assertEqual(2, len(result[0]))
             self.assertEqual(i[1], len(result))
-
 
     def test_parse_centroid(self):
         point_element = """
@@ -226,12 +227,12 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
              './gml:coordinates',
              './st:StandBasicData/gdt:PolygonGeometry/gml:pointProperty/gml:Point',
              (506093.8555, 6775744.2412, 'EPSG:3067')
-            ),
+             ),
             ('polygon',
              './gml:exterior/gml:LinearRing/gml:coordinates',
              './st:StandBasicData/gdt:PolygonGeometry/gml:polygonProperty/gml:Polygon',
              (506093.8625353831, 6775744.33567775, 'EPSG:3067')
-            )
+             )
         ]
         assertions = []
         for config in test_config:
@@ -239,9 +240,8 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
             sns.geometry_type = config[0]
             sns.coord_xpath = config[1]
             sns.egeometry = reference_stand.find(config[2], smk_util.NS)
-            assertions.append( ([sns], config[3]) )
+            assertions.append(([sns], config[3]))
         self.run_with_test_assertions(assertions, smk_util.parse_centroid)
-
 
     def test_parse_coordinates_from_point(self):
         point_element = """
@@ -254,7 +254,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         reference_stand = generate_test_data(point_element=point_element)
         result = smk_util.parse_coordinates(reference_stand)
         self.assertEqual((6775744.2412, 506093.8555, 'EPSG:3067'), result)
-
 
     def test_parse_coordinates_from_polygon(self):
         polygon_element = """
@@ -272,12 +271,10 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         result = smk_util.parse_coordinates(reference_stand)
         self.assertEqual((6775744.33567775, 506093.8625353831, 'EPSG:3067'), result)
 
-
     def test_parse_coordinates_none(self):
         reference_stand = generate_test_data()
         result = smk_util.parse_coordinates(reference_stand)
         self.assertEqual((None, None, None), result)
-
 
     def test_parse_date(self):
         self.assertEqual(datetime.date(2000, 1, 1), smk_util.parse_date('2000-01-01'))
@@ -285,7 +282,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         self.assertRaises(TypeError, smk_util.parse_date, '2000-01')
         self.assertRaises(ValueError, smk_util.parse_date, 'asd-01-01')
         self.assertRaises(ValueError, smk_util.parse_date, 'kissa123')
-
 
     def test_parse_past_operations(self):
         operations_element = """
@@ -315,7 +311,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         result = smk_util.parse_past_operations(eoperations)
         self.assertEqual(fixture, result)
 
-
     def test_parse_future_operations(self):
         operations_element = """
             <op:Operation id="443" mainType="2">
@@ -343,7 +338,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         }
         result = smk_util.parse_future_operations(eoperations)
         self.assertEqual(fixture, result)
-
 
     def test_parse_stand_operations(self):
         operations_element = """
@@ -374,7 +368,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         self.assertEqual(oper2[0], 410)
         self.assertEqual(oper2[1], 2022)
 
-
     def test_parse_stand_operations_only_past(self):
         operations_element = """
             <op:Operation id="1234" mainType="1">
@@ -400,7 +393,6 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         oper = result.get(1234)
         self.assertEqual(oper[0], 3)
         self.assertEqual(oper[1], 2026)
-
 
     def test_parse_stand_operations_only_future(self):
         operations_element = """
@@ -429,9 +421,12 @@ class TestSmkXMLConversion(test_util.ConverterTestSuite):
         self.assertEqual(oper[1], 2041)
 
     def test_calculate_stand_basal_area(self):
-        s1 = TreeStratum(basal_area=1.99)
-        s2 = TreeStratum(basal_area=2.00)
-        stratum = [s1, s2]
-        result = smk_util.calculate_stand_basal_area(stratum)
+        strata = TreeStrata()
+        strata.create([
+            {"basal_area": 1.99},
+            {"basal_area": 2.00},
+        ])
+
+        result = smk_util.calculate_stand_basal_area(strata)
+
         self.assertEqual(result, 3.99)
-        
