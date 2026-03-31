@@ -579,8 +579,7 @@ class Motti4DLL:
         buffers: MottiStateBuffers,
     ) -> int:
         """
-        Rebuild Motti internal state after Python-side yp edits.
-        Needed before zero-step refreshes and after direct stem-count changes.
+        Called after Motti4Init
         """
         ffi, lib = self.ffi, self.lib
         ntrees_p = ffi.new("int *", int(numtrees))
