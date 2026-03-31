@@ -32,7 +32,6 @@ STAND_INTERNAL_COLUMNS: list[str] = [
     "method_of_last_cutting",
     "municipality_id",
     "fra_category",
-    "land_use_category_detail",
     "auxiliary_stand",
     "area_weight_factor_0",
     "area_weight_factor_1",

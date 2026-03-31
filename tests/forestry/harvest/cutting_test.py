@@ -2,6 +2,7 @@ import unittest
 from typing import cast
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -57,7 +58,7 @@ class CuttingTest(unittest.TestCase):
             },
             "mode": "odds_units",
             "select_from_all": True,
-            "cutting_method": 7,
+            "cutting_method": CuttingMethod.CLEARCUTTING,
         }
 
         before = stand.reference_trees.stems_per_ha.copy()
@@ -69,7 +70,7 @@ class CuttingTest(unittest.TestCase):
         np.testing.assert_allclose(rt.stems_per_ha, before * 0.5, rtol=0, atol=1e-9)
         # Bookkeeping fields set only when provided
         self.assertEqual(2030, updated.cutting_year)
-        self.assertEqual(7, updated.method_of_last_cutting)
+        self.assertEqual(CuttingMethod.CLEARCUTTING, updated.method_of_last_cutting)
 
         # Expected removals: 50%, so resulting stems are halved
         expected_after = before * 0.5

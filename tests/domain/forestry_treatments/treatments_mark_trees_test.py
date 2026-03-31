@@ -4,6 +4,7 @@ from unittest.mock import patch
 import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.enums.internal import TreeManagementCategory, TreeType
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -28,8 +29,8 @@ class MarkTreesTest(unittest.TestCase):
                 {
                     "identifier": f"{stand.identifier}-tree-{i}",
                     "stems_per_ha": s,
-                    "tree_type": "ORIGINAL",
-                    "management_category": 1,
+                    "tree_type": TreeType.UNSET,
+                    "management_category": TreeManagementCategory.NO_RESTRICTION,
                 }
             )
 
@@ -56,7 +57,9 @@ class MarkTreesTest(unittest.TestCase):
                 stand,
                 select_from_all=True,
                 mode="odds_units",
-                attributes={"tree_type": "SPARE", "management_category": 2},
+                attributes={
+                    "tree_type": TreeType.OLD_CHECKED_TALLY_TREE,
+                    "management_category": TreeManagementCategory.RETENTION_TREE},
             )
 
     @patch("lukefi.metsi.domain.forestry_treatments.mark_trees.select_units")
@@ -105,8 +108,8 @@ class MarkTreesTest(unittest.TestCase):
             "select_from_all": True,
             "mode": "odds_units",
             "attributes": {
-                "tree_type": "SPARE",
-                "management_category": 2,
+                "tree_type": TreeType.OLD_CHECKED_TALLY_TREE,
+                "management_category": TreeManagementCategory.RETENTION_TREE,
             },
         }
 
@@ -129,20 +132,20 @@ class MarkTreesTest(unittest.TestCase):
         mgmt_cats = list(updated.reference_trees.management_category)
 
         # Row 0: no stems marked -> attributes unchanged
-        self.assertEqual("ORIGINAL", tree_types[0])
-        self.assertEqual(1, mgmt_cats[0])
+        self.assertEqual(TreeType.UNSET, tree_types[0])
+        self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[0])
 
         # Row 1: all stems marked -> attributes updated in-place
-        self.assertEqual("SPARE", tree_types[1])
-        self.assertEqual(2, mgmt_cats[1])
+        self.assertEqual(TreeType.OLD_CHECKED_TALLY_TREE, tree_types[1])
+        self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[1])
 
         # Row 2: partial stems remain unmarked after split
-        self.assertEqual("ORIGINAL", tree_types[2])
-        self.assertEqual(1, mgmt_cats[2])
+        self.assertEqual(TreeType.UNSET, tree_types[2])
+        self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[2])
 
         # Row 3: new row for the marked stems -> attributes set
-        self.assertEqual("SPARE", tree_types[3])
-        self.assertEqual(2, mgmt_cats[3])
+        self.assertEqual(TreeType.OLD_CHECKED_TALLY_TREE, tree_types[3])
+        self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[3])
 
 
 if __name__ == "__main__":

@@ -29,7 +29,6 @@ sqlite_decl = {
         "ds_main_tree_species_biological_age",
         "area_weight_factors",
         "fra_category",
-        "land_use_category_detail",
         "auxiliary_stand",
         "sea_effect",
         "lake_effect",
@@ -42,6 +41,9 @@ sqlite_decl = {
         "under_storey",
         "over_storey"
     ],
+
+
+
     "trees": [
         "tree_number",
         "species",
@@ -57,9 +59,11 @@ sqlite_decl = {
         "storey",
         "sapling",
         "tree_type",
-        "tuhon_ilmiasu",
+        "damage_type",
         "basal_area",
-        "volume"],
+        "volume"
+    ],
+
     "strata": [
         "species", "mean_diameter", "mean_height", "breast_height_age", "biological_age", "stems_per_ha",
         "basal_area", "origin", "stratum_number", "storey", "sapling_stems_per_ha", "number_of_generated_trees"

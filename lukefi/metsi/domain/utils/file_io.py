@@ -34,7 +34,6 @@ STANDS_TYPES = {
     "ds_main_tree_species_biological_age": "REAL",
     "area_weight_factors": "TEXT",
     "fra_category": "TEXT",
-    "land_use_category_detail": "TEXT",
     "auxiliary_stand": "INTEGER",
     "sea_effect": "REAL",
     "lake_effect": "REAL",
@@ -64,7 +63,7 @@ TREES_TYPES = {
     "storey": "INTEGER",
     "sapling": "INTEGER",
     "tree_type": "TEXT",
-    "tuhon_ilmiasu": "TEXT",
+    "damage_type": "TEXT",
     "basal_area": "REAL",
     "volume": "REAL",
     "stratum": "INTEGER"

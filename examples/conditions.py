@@ -1,3 +1,4 @@
+from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.domain.events import GrowActa
@@ -69,7 +70,7 @@ control_structure = {
         ],
         filter_stands: [
             {
-                "remove": lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0) 
+                "remove": lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0)
             }
         ],
         filter_trees: [
@@ -90,8 +91,9 @@ control_structure = {
                                   # Here do_a_thing will be performed if the year is 2025 or any time that the last
                                   # cutting method was 1.
                                   ForestCondition(lambda x: x.computational_unit.time == 2025) |
-                                  ForestCondition(lambda x: x.computational_unit.method_of_last_cutting == 1)
-                              ]),
+                                  ForestCondition(
+                                      lambda x: x.computational_unit.method_of_last_cutting == CuttingMethod.THINNING)
+                        ]),
                         Event(Treatment(do_another_thing),
                               preconditions=[
                                   # Combined conditions can also be expressed with just one lambda:.
@@ -100,13 +102,13 @@ control_structure = {
                                   ForestCondition(
                                       lambda x: (x.computational_unit.time == 2030) and
                                       (not x.computational_unit.auxiliary_stand))
-                              ]),
+                        ]),
                         Event(Treatment(do_yet_another_thing),
                               # More complex conditions can be formulated in separate modules, such as pre-made
                               # libraries, and combined freely in non-trivial ways.
                               preconditions=[
                                   (first_condition & second_condition) | (third_condition)
-                              ])
+                        ])
                     ]),
                     GrowActa()
                 ])
