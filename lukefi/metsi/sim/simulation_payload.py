@@ -11,12 +11,12 @@ class SimulationPayload[T: ComputationalUnit]:
     operation calls. """
     computational_unit: T
     operation_history: OperationHistory
-    node_id: list[int]
+    node_id: list[str]
 
     def __init__(self,
                  computational_unit: T,
                  operation_history: Optional[OperationHistory] = None,
-                 node_id: Optional[list[int]] = None) -> None:
+                 node_id: Optional[list[str]] = None) -> None:
         self.computational_unit = computational_unit
 
         if operation_history is None:
@@ -25,7 +25,7 @@ class SimulationPayload[T: ComputationalUnit]:
             self.operation_history = operation_history
 
         if node_id is None:
-            self.node_id = [0]
+            self.node_id = ["0"]
         else:
             self.node_id = node_id
 

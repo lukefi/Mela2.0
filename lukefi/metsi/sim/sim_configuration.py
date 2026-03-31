@@ -7,7 +7,7 @@ from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
@@ -17,6 +17,7 @@ class Transition[T: ComputationalUnit]:
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
     init_fn: TransitionInitFn[T] | None
+    name: str
 
     def __init__(
         self,
@@ -28,6 +29,7 @@ class Transition[T: ComputationalUnit]:
         self.transition_fn = transition_fn
         self.parameters = parameters
         self.init_fn = init_fn
+        self.name = transition_fn.__name__
 
     def initialize(self, unit: T) -> None:
         if self.init_fn is not None:
@@ -38,9 +40,11 @@ class Transition[T: ComputationalUnit]:
 
         if db is not None:
             transition_node_id = copy(payload.node_id)
-            transition_node_id.append(-1)
-            transition_payload = SimulationPayload(new_state, payload.operation_history, transition_node_id)
-            output_node_to_db(db, transition_payload, collected_data)
+            transition_node_id.append("T")
+            temp_history: OperationHistory = [
+                (payload.computational_unit.time, self.name, self.parameters, set())]
+            transition_payload = SimulationPayload(new_state, temp_history, transition_node_id)
+            output_node_to_db(db, transition_payload, collected_data, output_state=False)
 
         return new_state, collected_data
 

@@ -64,7 +64,7 @@ class EventTree[T: ComputationalUnit]:
         except ConditionFailed:
             return
 
-        current.node_id.append(node)
+        current.node_id.append(str(node))
 
         if db is not None and self.db_output:
             output_node_to_db(db, current, collected_data, self.tags)

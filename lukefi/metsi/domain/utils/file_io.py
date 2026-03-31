@@ -157,7 +157,9 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
 def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                             current: SimulationPayload[T],
                                             collected_data: list[CollectedData],
-                                            tags: Optional[set[str]] = None):
+                                            tags: Optional[set[str]] = None,
+                                            output_state: bool = True,
+                                            output_collected_data: bool = True):
     """
     Writes current simulation state and collected data to database.
 
@@ -167,7 +169,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     """
     if tags is None:
         tags = set()
-    node_str = "-".join(map(str, current.node_id))
+    node_str = "-".join(current.node_id)
     cur = db.cursor()
     cur.execute(
         """--sql
@@ -179,10 +181,12 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
          current.computational_unit.identifier,
          current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing",
          str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}",
-         str(tags)))
-    current.computational_unit.output_to_db(db, node_str)
-    for datum in collected_data:
-        datum.output_to_db(db, node_str, current.computational_unit.identifier)
+         str(tags) if len(tags) > 0 else "{}"))
+    if output_state:
+        current.computational_unit.output_to_db(db, node_str)
+    if output_collected_data:
+        for datum in collected_data:
+            datum.output_to_db(db, node_str, current.computational_unit.identifier)
 
 
 def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
