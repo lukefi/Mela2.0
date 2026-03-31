@@ -67,8 +67,7 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         trees.stems_per_ha = trees.stems_per_ha.copy()
     trees.stems_per_ha -= removed_f
 
-    # If this stand is backed by persistent Motti state, mirror the same removals
-    # to yp and let Motti refresh derived fields with a zero-step growth.
+    # If Motti is in use, update removed trees to yp vector
     if getattr(stand, "motti_state", None):
         apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
 

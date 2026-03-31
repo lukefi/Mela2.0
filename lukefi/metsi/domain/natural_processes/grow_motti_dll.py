@@ -806,10 +806,8 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
 def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
     """
-    Apply Python-side stem removals to the persistent Motti yp vector.
-
-    Returns True if any yp entry was changed. Sapling/ut rows are ignored on
-    purpose: treatments only modify the big-tree yp vector.
+    Apply stem removals to the Motti yp vector.
+    Returns True if any yp entry was changed.
     """
     ms = getattr(stand, "motti_state", None)
     rt = getattr(stand, "reference_trees", None)
@@ -843,8 +841,8 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
 
 def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
     """
-    Rebuild Motti internal state after yp edits, run a zero-step refresh and
-    then synchronize the Python ReferenceTrees from yp/ut.
+    Rebuild Motti internal state after yp edits, run grow(step=0) and
+    then synchronize ReferenceTrees from yp/ut.
     """
     ms = getattr(stand, "motti_state", None)
     if ms is None or ms.yp is None or ms.buffers is None:
@@ -872,9 +870,7 @@ def apply_motti_yp_reduction_from_removed_reference_trees(
 ) -> bool:
     """
     Generic helper for treatments that reduce tree amounts.
-
-    The treatment decides *which* ReferenceTrees lose stems. This helper maps
-    those removals to the persistent Motti yp vector via the shared stratum/sid,
+    This helper maps removed trees to the yp vector via the shared stratum/sid,
     optionally runs a zero-step Motti refresh, and synchronizes ReferenceTrees
     back from the refreshed Motti state.
     """

@@ -509,7 +509,6 @@ class Motti4DLL:
         remaining = int(step)
         runs_left = 1 if remaining <= 0 else None
         while remaining > 0 or runs_left:
-            # reset like C wrapper
             try:
                 yy.param_290 = 0.0
             except AttributeError:

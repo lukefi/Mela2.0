@@ -4,7 +4,6 @@ from typing import Any
 
 import numpy as np
 
-# These imports assume the test is added inside the project test suite.
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.internal import (

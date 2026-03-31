@@ -30,13 +30,13 @@ def _regeneration_via_motti(
     seed_species = species_to_motti(seed_tree_species) if seed_tree_species else 0
 
     method_vec = [
-        float(method),                  # 1 natural, 2 sowing, 3 planting
-        float(survival_percent),        # %
-        float(cultivated_species),      # cultivated species
-        float(stems_per_ha),            # pcs / ha
-        float(soil_preparation_type),   # 1..5, or 0 if not used
-        float(clearing),                # 0/1
-        float(seed_species),            # seed tree species
+        float(method),
+        float(survival_percent),
+        float(cultivated_species),
+        float(stems_per_ha),
+        float(soil_preparation_type),
+        float(clearing),
+        float(seed_species),
     ]
 
     ms.ntrees = ms.dll.regenerate_with_state(
@@ -48,7 +48,6 @@ def _regeneration_via_motti(
         step=int(step),
     )
 
-    # Motti updates Ut; rebuild Python sapling trees from Ut
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
