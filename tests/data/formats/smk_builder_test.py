@@ -6,6 +6,7 @@ import numpy as np
 
 from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
 from lukefi.metsi.data.enums.internal import (
+    Origin,
     OwnerCategory,
     SoilPeatlandCategory,
     SiteType,
@@ -94,9 +95,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(None, self.smk_stands[1].soil_surface_preparation_year)
         self.assertEqual(None, self.smk_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.smk_stands[1].regeneration_area_cleaning_year)
-        # Development class default value 0
-        self.assertEqual(0, self.smk_stands[0].development_class)
-        self.assertEqual(0, self.smk_stands[1].development_class)
+        self.assertEqual(None, self.smk_stands[0].development_class)
+        self.assertEqual(None, self.smk_stands[1].development_class)
         self.assertEqual(None, self.smk_stands[0].artificial_regeneration_year)
         self.assertEqual(None, self.smk_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.smk_stands[0].young_stand_tending_year)
@@ -133,8 +133,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[0]))
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
 
-        self.assertEqual(0, vec0.origin[0])
-        self.assertEqual(0, vec0.origin[1])
+        self.assertEqual(Origin.NATURAL, vec0.origin[0])
+        self.assertEqual(Origin.NATURAL, vec0.origin[1])
 
         self.assertEqual(0.0, vec0.stems_per_ha[0])
         self.assertEqual(0.0, vec0.stems_per_ha[1])
@@ -152,8 +152,8 @@ class TestXMLBuilder(unittest.TestCase):
         self.assertTrue(np.isnan(vec0.basal_area[0]))
         self.assertEqual(5.2, vec0.basal_area[1])
 
-        self.assertEqual(1, vec0.tree_number[0])
-        self.assertEqual(2, vec0.tree_number[1])
+        self.assertEqual(1, vec0.stratum_number[0])
+        self.assertEqual(2, vec0.stratum_number[1])
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])
@@ -225,9 +225,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(None, self.gpkg_stands[1].soil_surface_preparation_year)
         self.assertEqual(None, self.gpkg_stands[0].regeneration_area_cleaning_year)
         self.assertEqual(None, self.gpkg_stands[1].regeneration_area_cleaning_year)
-        # Development class default value 0
-        self.assertEqual(0, self.gpkg_stands[0].development_class)
-        self.assertEqual(0, self.gpkg_stands[1].development_class)
+        self.assertEqual(None, self.gpkg_stands[0].development_class)
+        self.assertEqual(None, self.gpkg_stands[1].development_class)
         self.assertEqual(None, self.gpkg_stands[0].artificial_regeneration_year)
         self.assertEqual(None, self.gpkg_stands[1].artificial_regeneration_year)
         self.assertEqual(None, self.gpkg_stands[0].young_stand_tending_year)
@@ -262,8 +261,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         vec0 = self.gpkg_stands[0].tree_strata
         self.assertEqual(TreeSpecies.PINE, TreeSpecies(vec0.species[0]))
         self.assertEqual(TreeSpecies.SPRUCE, TreeSpecies(vec0.species[1]))
-        self.assertEqual(-1, vec0.origin[0])
-        self.assertEqual(-1, vec0.origin[1])
+        self.assertEqual(Origin.UNSET, vec0.origin[0])
+        self.assertEqual(Origin.UNSET, vec0.origin[1])
         self.assertEqual(0.0, vec0.stems_per_ha[0])
         self.assertEqual(0.0, vec0.stems_per_ha[1])
         self.assertEqual(13.18, vec0.mean_diameter[0])
@@ -278,8 +277,8 @@ class TestGeoPackageBuilder(unittest.TestCase):
         self.assertEqual(13.56, vec0.basal_area[0])
         self.assertEqual(7.16, vec0.basal_area[1])
 
-        self.assertEqual(1, vec0.tree_number[0])
-        self.assertEqual(2, vec0.tree_number[1])
+        self.assertEqual(1, vec0.stratum_number[0])
+        self.assertEqual(2, vec0.stratum_number[1])
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])

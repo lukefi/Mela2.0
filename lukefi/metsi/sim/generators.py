@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import os
-from typing import Any, Generic, Optional, TypeVar, override
+from typing import Any, Generic, Mapping, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -81,7 +81,7 @@ class Event(EventGeneratorBase[T]):
     simulation state."""
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
-    dynamic_parameters: dict[str, Callable[[T], Any]]
+    dynamic_parameters: Mapping[str, Callable[[T], Any]]
     file_parameters: dict[str, str]
     preconditions: list[Condition[T]]
     postconditions: list[Condition[T]]
@@ -91,7 +91,7 @@ class Event(EventGeneratorBase[T]):
     def __init__(self,
                  treatment: Treatment[T],
                  static_parameters: Optional[dict[str, Any]] = None,
-                 dynamic_parameters: Optional[dict[str, Callable[[T], Any]]] = None,
+                 dynamic_parameters: Optional[Mapping[str, Callable[[T], Any]]] = None,
                  preconditions: Optional[list[Condition[T]]] = None,
                  postconditions: Optional[list[Condition[T]]] = None,
                  file_parameters: Optional[dict[str, str]] = None,

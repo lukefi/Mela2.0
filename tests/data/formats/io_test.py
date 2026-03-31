@@ -104,7 +104,7 @@ class IoUtilsTest(ConverterTestSuite):
                               "sapling",
                               "tree_type",
                               "tree_category",
-                              "tuhon_ilmiasu"]:
+                              "damage_type"]:
                 self.assertTrue(np.all(
                     np.equal(
                         getattr(stand.reference_trees, attribute),
@@ -118,7 +118,7 @@ class IoUtilsTest(ConverterTestSuite):
                               "stems_per_ha",
                               "basal_area",
                               "origin",
-                              "tree_number",
+                              "stratum_number",
                               "storey",
                               "sapling_stems_per_ha",
                               "number_of_generated_trees"]:

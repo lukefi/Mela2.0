@@ -4,10 +4,152 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-03-30
+
+### Added
+
+- New enumerated types for FDM attributes:
+    - `ForestStand`:
+        - `DevelopmentClass`
+        - `CuttingMethod`
+        - `FraLandUseClass`
+    - `ReferenceTrees`:
+        - `TreeManagementCategory`
+        - `TreeCategory`
+        - `TreeType`
+        - `DamageType`
+        - `CrownClass`
+    - `TreeStrata`:
+        - `StratumRank`
+
+### Changed
+    
+- Renamed FDM attributes:
+    - `tuhon_ilmiasu` -> `damage_type`
+    - `latvuskerros` -> `crown_class`
+    - `asema` -> `stratum_rank`
+- Removed `ForestStand` attribute `land_use_category_detail`
+
+### Fixed
+
+- Small fixes and enhancements to mapping NFI values to FDM
+
+## [0.5.20] - 2026-03-26
+
+### Fixed
+
+- Mela enums are now IntEnums so that int conversions work implicitly
+
+## [0.5.19] - 2026-03-26
+
+### Changed
+
+- Minor refactoring of the tree generation helper function `_finalize_trees`
+
+## [0.5.18] - 2026-03-26
+
+### Changed
+
+- Stratum attribute `tree_number` renamed to `stratum_number`
+- Reference trees are now linked to strata by `stratum_number` instead of `identifier`
+
+### Fixed
+
+- Retention trees and generated trees are now properly linked to strata
+
+## [0.5.17] - 2026-03-23
+
+### Fixed
+
+- Added apply_conversions to vmi9 and 10
+
+## [0.5.16] - 2026-03-23
+
+### Added
+
+- Added csv_exp and metadata.json #MELA2-175
+
+## [0.5.15] - 2026-03-19
+
+### Added
+
+- Added optional basal area based `stems_per_ha` scaling for reference trees generated from height distribution
+
+## [0.5.14] - 2026-03-19
+
+### Fixed
+
+- Fixed tree species mapping for age model
+
+## [0.5.13] - 2026-03-18
+
+### Fixed
+
+- Value scaling fixed in pljak_osuuspaino.csv files for VMI9, VMI10 and VMI11
+
+## [0.5.12] - 2026-03-18
+
+### Changed
+
+- Refactor model.ReferenceTree and model.TreeStratum away
+
+### Added
+- vector_model.update_many and csv export logic
+
+## [0.5.11] - 2026-03-16
+
+### Added
+
+- Option to reduce db output fields by sqlite_decl list
+
+## [0.5.10] - 2026-03-16
+
+### Added
+
+- Separate tree height models for different VMI iterations
+- Height is now calculated for retention trees missing it
+
+## [0.5.9] - 2026-03-16
+
+### Changed
+
+- Refactor ykjtm35 to python #MELA2-170
+
+## [0.5.8] - 2026-03-16
+
+### Added
+
+- VMI12 robot test
+
+## [0.5.7] - 2026-03-12
+
+### Added
+
+- `rho` parameter for reference tree generation (lm)
+- stem parameters fetched for tree generation (lm) by stand and VMI iteration
+
+## [0.5.6] - 2026-03-12
+
+### Fixed
+
+- Tree generation strategy selection now works for strata without mean height
+
+## [0.5.5] - 2026-03-10
+
+### Added
+
+- Separate parameter files for different VMI iterations
+
+## [0.5.4] - 2026-03-10
+
+### Fixed
+- Added development_class in VMI9-10
+
 ## [0.5.3] - 2026-03-05
 
 ### Fixed
 - unified forest_management_category vmi 11-13
+
 ### Added
  - Same logic to vmi10
 

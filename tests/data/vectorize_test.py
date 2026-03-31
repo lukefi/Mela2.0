@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from lukefi.metsi.data.enums.internal import Origin, TreeSpecies, TreeType
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 
@@ -9,7 +10,7 @@ class TestVectorize(unittest.TestCase):
         vec = ReferenceTrees().vectorize({
             "identifier": ["t-1", "t-2"],
             "tree_number": [1, 2],
-            "species": [1, 2],
+            "species": [TreeSpecies.PINE, TreeSpecies.SPRUCE],
             # intentionally leave other fields missing -> defaults
         })
 
@@ -21,16 +22,16 @@ class TestVectorize(unittest.TestCase):
         # Missing float fields default to NaN
         self.assertTrue(np.isnan(vec.height[0]))
         # Missing ints default to -1
-        self.assertEqual(int(vec.origin[0]), -1)
+        self.assertEqual(int(vec.origin[0]), Origin.UNSET)
         # Missing bools default to False
         self.assertFalse(bool(vec.sapling[0]))
         # Missing strings default to empty string
-        self.assertEqual(str(vec.tree_type[0]), "")
+        self.assertEqual(str(vec.tree_type[0]), TreeType.UNSET)
 
     def test_tree_strata_vectorize_and_slice(self):
         strata = TreeStrata().vectorize({
             "identifier": ["s-1", "s-2", "s-3"],
-            "species": [1, 2, 3],
+            "species": [TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.SILVER_BIRCH],
             "stems_per_ha": [100.0, 200.0, 300.0],
         })
 

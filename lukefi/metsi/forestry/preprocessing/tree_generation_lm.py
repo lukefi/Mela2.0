@@ -1,14 +1,16 @@
 from pathlib import Path
 import math
-from typing import Any
+from typing import cast
+import pandas as pd
 from rpy2 import robjects
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.enums.internal import DamageType, LandUseCategory, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
+from lukefi.metsi.data.formats.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions
-from lukefi.metsi.forestry.preprocessing.dhkertoimet import DHCOEFF
-from lukefi.metsi.forestry.preprocessing.dgmean_kitumaa import DGMEAN_KITUMAA
+from lukefi.metsi.forestry.r.hdmod.hdmod_files import HDMOD_FILE_PATH_MAP
 
 SPECIES_INT2LM = [
     # Mänty 1, Kuusi 2, Rkoivu 3, Hkoivu 4,Haapa 5,Hleppä 6, Tleppä 7, Muu
@@ -39,10 +41,15 @@ SPECIES_LM2INT: list[TreeSpecies] = [
     TreeSpecies(24), TreeSpecies(25), TreeSpecies(26), TreeSpecies(9), TreeSpecies(37)
 ]
 
+
 lm_tree_generation_loaded = False  # pylint: disable=invalid-name
+_dg_mean_kitumaa: pd.DataFrame
+_dg_mean_kitumaa_loaded = False  # pylint: disable=invalid-name
+_dh_kertoimet: pd.DataFrame
+_dh_kertoimet_loaded = False  # pylint: disable=invalid-name
 
 
-def _determine_hmalli_value(species: TreeSpecies):
+def determine_hmalli_value(species: TreeSpecies):
     if species in (TreeSpecies.PINE, TreeSpecies.OTHER_PINE, TreeSpecies.SHORE_PINE):
         return 1
     if species.is_coniferous():
@@ -52,6 +59,11 @@ def _determine_hmalli_value(species: TreeSpecies):
 
 def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> ReferenceTrees:
     global lm_tree_generation_loaded  # pylint: disable=global-statement
+    global _dg_mean_kitumaa  # pylint: disable=global-statement
+    global _dg_mean_kitumaa_loaded  # pylint: disable=global-statement
+    global _dh_kertoimet  # pylint: disable=global-statement
+    global _dh_kertoimet_loaded  # pylint: disable=global-statement
+
     dir_ = Path(__file__).parent.parent.resolve() / "r"
     growth_script_file = dir_ / "lm_tree_generation.R"
     if not lm_tree_generation_loaded:
@@ -67,17 +79,35 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     if stand_municipality in (47, 148, 890):
         stand_county = 30
 
+    nfi_iteration: VmiIteration = params["nfi_iteration"]
+
+    geo_index = stand.forestry_centre_id if nfi_iteration in (
+        VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else stand_county
+
     nos = stratum.stems_per_ha
     gos = stratum.basal_area
 
     spevmi = SPECIES_INT2LM[stratum.species.value - 1]
 
+    stems_params = get_stems_params(nfi_iteration, stand.forestry_centre_id, stand.ahvkeilaus)
+
     # kitumaalle keskiläpimitta taulukosta
-    if stand_land_use_cat == 2:
-        dgmean: dict[str, Any] = next(
-            (item for item in DGMEAN_KITUMAA if item["maakunta"] == stand_county and item["species"] == spevmi), {
-                "maakunta": 0, "species": 0, "DGM": 0.0})
-        dgm: float = dgmean["DGM"]
+
+    if not _dg_mean_kitumaa_loaded:
+        _dg_mean_kitumaa = pd.read_csv(
+            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DGMean_kitumaa.csv',
+            sep=' ',
+            index_col="maakunta"
+        )
+        _dg_mean_kitumaa_loaded = True
+
+    if stand_land_use_cat == LandUseCategory.SCRUB_LAND:
+        vmispe_str = str(convert_vmi_numeric_to_species(VmiSpeciesNumeric(spevmi)).value)
+        if geo_index in _dg_mean_kitumaa.index and vmispe_str in _dg_mean_kitumaa.loc[geo_index]:
+            dgm: float = cast(float, _dg_mean_kitumaa.loc[geo_index][vmispe_str])
+        else:
+            dgm = 0.0
+
     else:
         dgm = stratum.mean_diameter
 
@@ -91,38 +121,62 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'Nos': robjects.FloatVector([nos or robjects.NA_Real])
     }
 
-    dhcoeffs = next(
-        (item for item in DHCOEFF
-         if item["maakunta"] == stand_county and
-         item["maalk"] == stand_land_use_cat and
-         item["puulaji"] == spevmi),
-        {"maakunta": 0, "maalk": 0, "puulaji": 0, "dfactor": None, "hfactor": None}
-    )
-    dhcoeffs_vec = robjects.FloatVector([dhcoeffs["dfactor"], dhcoeffs["hfactor"]]) if dhcoeffs["dfactor"] is not None \
-        else None
+    if not _dh_kertoimet_loaded:
+        _dh_kertoimet = pd.read_csv(
+            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DHkertoimet.csv',
+            sep=' ',
+            index_col=["maakunta", "maalk", "puulaji"])
+        _dh_kertoimet_loaded = True
 
+    assert geo_index is not None
     assert stand_land_use_cat is not None
-    assert stand_county is not None
     assert stand_development_class is not None
 
-    species_proportions = get_spe_proportions(stand_land_use_cat, stand_county, stand_development_class,
-                                              stratum.asema, stratum.mean_diameter, stratum.stems_per_ha, spevmi)
+    if (geo_index, stand_land_use_cat, spevmi) in _dh_kertoimet.index:
+        dhcoeffs: pd.Series = cast(pd.Series,
+                                   _dh_kertoimet.loc[geo_index].loc[stand_land_use_cat.value].loc[spevmi])
+        dfactor = dhcoeffs["dfactor"]
+        hfactor = dhcoeffs["hfactor"]
+    else:
+        dfactor = None
+        hfactor = None
+    dhcoeffs_vec = robjects.FloatVector([dfactor, hfactor]) if dfactor is not None else None
+
+    species_proportions = get_spe_proportions(
+        stand_land_use_cat,
+        geo_index,
+        stand_development_class,
+        stratum.stratum_rank,
+        stratum.mean_diameter,
+        stratum.stems_per_ha,
+        spevmi,
+        nfi_iteration)
     proportions_data = {
         'puulaji': robjects.FloatVector(list(range(1, len(species_proportions) + 1))),
         'osuus': robjects.FloatVector(species_proportions)
     }
 
-    source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.identifier]
+    source_trees: ReferenceTrees = stand.reference_trees[stand.reference_trees.stratum == stratum.stratum_number]
 
     tree_data = {
-        'lpm': robjects.FloatVector([source_trees.breast_height_diameter[i] for i in range(len(source_trees))]),
-        'height': robjects.FloatVector([robjects.NA_Real
-                                        if source_trees.tuhon_ilmiasu[i] in ('2', '61', '62', '71', '72') or
-                                        source_trees.measured_height[i] == 0
-                                        else (source_trees.measured_height[i]) for i in range(len(source_trees))]),
-        'lkm': robjects.FloatVector([source_trees.stems_per_ha[i] or
-                                     robjects.NA_Real for i in range(len(source_trees))])
-    }
+        'lpm': robjects.FloatVector(
+            [
+                source_trees.breast_height_diameter[i] for i in range(
+                    len(source_trees))]),
+        'height': robjects.FloatVector(
+            [
+                robjects.NA_Real if source_trees.damage_type[i] in (
+                    DamageType.FALLEN_OR_BROKEN_TREES,
+                    DamageType.BROKEN_TOP,
+                    DamageType.DEAD_LEADER_BRANCH,
+                    DamageType.LEADER_CHANGE_BY_LEADER_DAMAGE,
+                    DamageType.MULTIPLE_LEADERS) or source_trees.measured_height[i] == 0 else (
+                    source_trees.measured_height[i]) for i in range(
+                    len(source_trees))]),
+        'lkm': robjects.FloatVector(
+            [
+                source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(
+                    len(source_trees))])}
 
     gos_div = params.get('lm_gos_div', 1)
 
@@ -139,6 +193,8 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     if sum(species_proportions) > 0:
         ntrees = ntrees / sum(species_proportions)
 
+    hdmod_path = HDMOD_FILE_PATH_MAP[nfi_iteration]
+
     df = robjects.DataFrame(stratum_data)
     df2 = robjects.DataFrame(tree_data)
     dfplos = robjects.DataFrame(proportions_data) if stand_land_use_cat == 1 else None
@@ -146,16 +202,22 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     r_args_all = {
         'ositerivi': df,
         'lukupuut': df2,
-        'path': str(dir_) + '/',
         'tapa': params.get('lm_mode', 'dcons'),
+        'HDpath': hdmod_path,
         'width': params.get('lm_fix_width', 2),
         'n': ntrees,
-        'hmalli': _determine_hmalli_value(stratum.species),
+        'hmalli': determine_hmalli_value(stratum.species),
         'shdef': params.get('lm_shdef', 5),
         'shinit': 0.1,
+        'q': stems_params.q,
+        'r1': stems_params.r1,
+        'r2': stems_params.r2,
+        'd1': stems_params.d1,
+        'd2': stems_params.d2,
         'plos': dfplos,
         'nmax': params.get('lm_stems_nmax', 2000),
-        'dhfactor': dhcoeffs_vec
+        'dhfactor': dhcoeffs_vec,
+        'rho': params.get('rho', 1.6)
     }
 
     r_args = {k: v for k, v in r_args_all.items() if v is not None}

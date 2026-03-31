@@ -5,7 +5,8 @@ from datetime import datetime as dt
 from shapely.geometry import Point
 from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, SiteType, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
@@ -111,12 +112,6 @@ def determine_artificial_regeneration_year(regeneration: str, regeneration_year:
     return None
 
 
-def determine_development_class(dev_class_source: str) -> int:
-    if dev_class_source in {'1', '2', '3', '4', '5', '6', '7', '8', '9'}:
-        return int(dev_class_source)
-    return 0
-
-
 def determine_main_tree_species_dominant_storey(species_source: str,
                                                 site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
     if species_source in [' ', '.']:
@@ -178,58 +173,6 @@ def determine_soil_surface_preparation_year(sourcevalue: str, year: int) -> Opti
     return None
 
 
-def determine_forest_maintenance_details(cutting_type_class: str, sourcevalue: str, year: int):
-    """
-    Return a triplet of (young_stand_tending_year, cutting_year, cutting_method). VMI source data is exclusive
-    between cutting and tending, i.e. the codes are overloaded into the same year class variable. RST target format
-    allows separate value for both tending and cutting years, but this is impossible in source data.
-    """
-    operation_year = determine_forest_maintenance_year(sourcevalue, year)
-    method = determine_forest_maintenance_method(cutting_type_class, operation_year)
-
-    if cutting_type_class in ('1', '2'):
-        return operation_year, None, None
-    if method == 0:
-        # This case is necessary. Operations over 10 years old are listed as type 0, or no operation in VMI data.
-        # The actual year is still recorded, but we don't seem to want it in RST target. This is based on original
-        # implementation of this application.
-        return None, None, None
-    return None, operation_year, method
-
-
-def determine_forest_maintenance_year(sourcevalue: str, year: int) -> Optional[int]:
-    """Determine the year of last operation from given VMI source classes and the year of data set."""
-    if sourcevalue in ('0', '1', '2', '3', '4', '5'):
-        return year - int(sourcevalue)
-    if sourcevalue == '6':
-        return year - 7
-    if sourcevalue in {'A', 'a'}:
-        return year - 20
-    if sourcevalue in {'B', 'b'}:
-        return year - 40
-    return None
-
-
-def determine_forest_maintenance_method(sourcevalue: str, cutting_year: Optional[int]) -> int:
-    """Map VMI cutting method to RST cutting method if cutting year exists"""
-    if cutting_year is not None and cutting_year > 0:
-        if sourcevalue == '0':
-            return 0
-        if sourcevalue == '4':
-            return 1
-        if sourcevalue == '7':
-            return 2
-        if sourcevalue == '3':
-            return 3
-        if sourcevalue == '6':
-            return 4
-        if sourcevalue == '8':
-            return 5
-        if sourcevalue == '9':
-            return 6
-    return 0
-
-
 def determine_vmi12_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
     """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
     a = get_or_default(parse_float(ds_bh_age), 0.0)
@@ -275,21 +218,6 @@ def determine_tax_class(sourcevalue: str) -> int:
     if sourcevalue == '4':
         return 5
     return 0
-
-
-def determine_owner_group(sourcevalue: str) -> int:
-    """Map and transform integer valued source string as integer or raise on unknown values"""
-    if sourcevalue in ['0', '1']:
-        return 0
-    if sourcevalue in ['2', '3']:
-        return 1
-    if sourcevalue in ['4', '5']:
-        return 2
-    if sourcevalue in ['7', '8']:
-        return 3
-    if sourcevalue in ['6', '9']:
-        return 4
-    raise MetsiException('Unknown source value for owner_group')
 
 
 def determine_forest_management_category(land_use_category: int,
@@ -458,8 +386,10 @@ def determine_tree_age_values(chest_height_age_source: str, age_increase_source:
     return None if chest_height_age == 0 else chest_height_age, computed_age
 
 
-def determine_tree_management_category(sourcevalue: str) -> int:
-    return 2 if sourcevalue.lower() in ('b', 'c', 'd', 'e', 'f', 'g') else 1
+def determine_tree_management_category(latvuskerros: str) -> TreeManagementCategory:
+    return TreeManagementCategory.RETENTION_TREE \
+        if latvuskerros.lower() in ('b', 'c', 'd', 'e', 'f', 'g') \
+        else TreeManagementCategory.NO_RESTRICTION
 
 
 def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10.0) -> Optional[float]:
@@ -478,7 +408,7 @@ def determine_tree_height(height_sourcevalue: str, conversion_factor: float = 10
 
 def determine_stems_per_ha(
     diameter_cm: float,
-    vmi_version: int = 13,
+    vmi_version: VmiIteration = VmiIteration.VMI13,
     forestry_centre_id: int | None = None,
     ahvkeilaus: str | None = None,
 ) -> float:
@@ -486,7 +416,7 @@ def determine_stems_per_ha(
     stems_per_ha logic for VMI9..VMI13.
     """
 
-    p = _get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
+    p = get_stems_params(vmi_version, forestry_centre_id, ahvkeilaus)
 
     d = float(diameter_cm)
     if d <= 0.0:
@@ -512,38 +442,26 @@ def determine_stratum_tree_height(source_height: str) -> Optional[float]:
     return None
 
 
-def determine_stratum_origin(source_origin: str) -> int:
-    # return value explanations:
-    # 0 is natural
-    # 1 is seeded
-    # 2 is planted
-    if source_origin == "3":
-        return 2
-    if source_origin == "4":
-        return 1
-    return 0
-
-
-def determine_stratum_origin_vmi9(source_origin: str) -> str:
+def determine_stratum_origin_vmi9(source_origin: str) -> Origin:
 
     if source_origin in ("1", "2"):
-        return "0"  # Natural
+        return Origin.NATURAL
     if source_origin in ("3", "5", "7", "8"):
-        return "2"  # Planted
+        return Origin.PLANTED
     if source_origin in ("4", "6"):
-        return "1"  # Seeded
-    return ""
+        return Origin.SEEDED
+    return Origin.NATURAL
 
 
-def determine_stratum_origin_vmi10(source_origin: str) -> str:
+def determine_stratum_origin_vmi10(source_origin: str) -> Origin:
 
     if source_origin in ("0", "1", "2"):
-        return "0"  # Natural
+        return Origin.NATURAL
     if source_origin == "3":
-        return "2"  # Planted
+        return Origin.PLANTED
     if source_origin == "4":
-        return "1"  # Seeded
-    return ""
+        return Origin.SEEDED
+    return Origin.NATURAL
 
 
 def determine_stratum_age_values(biological_age_source: str,
@@ -821,8 +739,8 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
 
     species = vmi2internal.convert_species(row[indices["species"]])
 
-    raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
+    raw_tc = row[indices["tree_category"]].strip()
+    tc_enum = vmi2internal.convert_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
@@ -841,14 +759,14 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         row[indices["total_age"]],
     )
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=9,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI9,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
     storey = determine_storey_for_tree(row[indices["latvuskerros"]])
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
+    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
 
     values = {
         "identifier": identifier,
@@ -871,7 +789,7 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         "lowest_living_branch_height": lowest_living_branch_height,
         "sapling": False,
         "tree_type": None,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": None,
     }
 
@@ -888,8 +806,8 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
 
     species = vmi2internal.convert_species(row[indices["species"]])
 
-    raw_tc = row[indices["tree_category"]].strip() or None
-    tc_enum = vmi2internal.map_vmi_tree_category(raw_tc)
+    raw_tc = row[indices["tree_category"]].strip()
+    tc_enum = vmi2internal.convert_tree_category(raw_tc)
 
     tree_category = tc_enum.value if tc_enum else None
     breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
@@ -905,7 +823,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     breast_height_age = parse_type(row[indices["d13_age"]], float)
     biological_age = parse_type(row[indices["total_age"]], float)
 
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=10,
+    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI10,
                                           forestry_centre_id=forestry_centre_id)
 
     management_category = determine_tree_management_category(row[indices["latvuskerros"]])
@@ -913,7 +831,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
     tree_type = determine_tree_type(row[indices["tree_type"]])
 
     tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    tuhon_ilmiasu = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
+    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
 
     values = {
         "identifier": identifier,
@@ -936,7 +854,7 @@ def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_cen
         "lowest_living_branch_height": lowest_living_branch_height,
         "sapling": False,
         "tree_type": tree_type,
-        "tuhon_ilmiasu": tuhon_ilmiasu,
+        "damage_type": damage_type,
         "basal_area": None,
     }
 
@@ -1043,7 +961,7 @@ def append_vmi10_strata_from_stand_row(
         mean_height = _parse_float0(seg_h_dm_raw) / 10.0
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)
+        syntytapa = determine_stratum_origin_vmi10(seg_syntytapa_raw)
         storey = determine_storey_for_segment(seg_asema_raw)
 
         running_numb += 1
@@ -1063,7 +981,7 @@ def append_vmi10_strata_from_stand_row(
             "saw_log_volume_reduction_factor": None,
             "cutting_year": 0,
             "age_when_10cm_diameter_at_breast_height": 0,
-            "tree_number": running_numb,
+            "stratum_number": running_numb,
             "stand_origin_relative_position": (0.0, 0.0, 0.0),
             "lowest_living_branch_height": 0.0,
             "storey": int(storey),
@@ -1079,7 +997,7 @@ def append_vmi10_strata_from_stand_row(
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = determine_stratum_origin_vmi10(stand_row[indices[f"jakso{seg_no}_syntytapa"]])
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
         d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
         h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
@@ -1144,7 +1062,7 @@ def append_vmi9_strata_from_stand_row(
         mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = _parse_int0(seg_syntytapa_raw)
+        syntytapa = determine_stratum_origin_vmi9(seg_syntytapa_raw)
         storey = determine_storey_for_segment(seg_asema_raw)
 
         running_numb += 1
@@ -1164,7 +1082,7 @@ def append_vmi9_strata_from_stand_row(
             "saw_log_volume_reduction_factor": None,
             "cutting_year": 0,
             "age_when_10cm_diameter_at_breast_height": 0,
-            "tree_number": running_numb,
+            "stratum_number": running_numb,
             "stand_origin_relative_position": (0.0, 0.0, 0.0),
             "lowest_living_branch_height": 0.0,
             "storey": int(storey),
@@ -1180,7 +1098,7 @@ def append_vmi9_strata_from_stand_row(
         ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
 
         asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = determine_stratum_origin_vmi9(stand_row[indices[f"jakso{seg_no}_syntytapa"]])
+        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
 
         stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
         d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
@@ -1269,19 +1187,12 @@ def determine_vmi11_area_ha(
 
 
 @dataclass(frozen=True)
-class _StemsParams:
+class StemsParams:
     q: float
     r1: float
     r2: float
     d1: float
     d2: float
-
-
-def _is_south_finland(forestry_centre_id: Optional[int]) -> bool:
-    # Treat None as "south" (safe default; callers should pass real value when available)
-    if forestry_centre_id is None:
-        return True
-    return 0 <= forestry_centre_id <= 10
 
 
 def _is_north_finland(forestry_centre_id: Optional[int]) -> bool:
@@ -1296,7 +1207,10 @@ def _is_ahvenanmaa(forestry_centre_id: Optional[int], ahvkeilaus: Optional[str])
     return False
 
 
-def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvkeilaus: Optional[str]) -> _StemsParams:
+def get_stems_params(
+        vmi_version: VmiIteration,
+        forestry_centre_id: Optional[int],
+        ahvkeilaus: Optional[str]) -> StemsParams:
     """
     Parameters from the provided R-document.
     forestry_centre_id:
@@ -1305,20 +1219,20 @@ def _get_stems_params(vmi_version: int, forestry_centre_id: Optional[int], ahvke
       11..13     => Pohjois-Suomi
     """
 
-    if vmi_version == 13:
-        return _StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI13:
+        return StemsParams(q=1.5, r1=4.0, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 12:
-        return _StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
+    if vmi_version == VmiIteration.VMI12:
+        return StemsParams(q=1.5, r1=5.64, r2=9.0, d1=4.5, d2=9.5)
 
-    if vmi_version == 11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
-        return _StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
+    if vmi_version == VmiIteration.VMI11 and _is_ahvenanmaa(forestry_centre_id, ahvkeilaus):
+        return StemsParams(q=1.0, r1=9.0, r2=9.0, d1=18.0, d2=9999.0)
 
-    if vmi_version in (9, 10, 11):
+    if vmi_version in (VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11):
         if _is_north_finland(forestry_centre_id):
-            return _StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
+            return StemsParams(q=1.5, r1=12.45, r2=12.45, d1=30.49615, d2=9999.0)
         # South (includes Ahvenanmaa for 9/10 and non-special 11)
-        return _StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
+        return StemsParams(q=2.0, r1=12.52, r2=12.52, d1=35.41191, d2=9999.0)
 
     raise MetsiException(f"Unsupported VMI version for stems_per_ha: {vmi_version}")
 
