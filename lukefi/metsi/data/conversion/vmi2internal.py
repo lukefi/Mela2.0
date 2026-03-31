@@ -41,7 +41,7 @@ from lukefi.metsi.data.enums.internal import (
     DrainedPeatlandForestType,
 )
 
-_peatland_forest_type_map = {
+_PEATLAND_FOREST_TYPE_MAP = {
     VmiPeatlandForestType.LEHTOKORPI: PeatlandForestType.LEHTOKORPI,
     VmiPeatlandForestType.RUOHOKORPI: PeatlandForestType.RUOHOKORPI,
     VmiPeatlandForestType.KANGASKORPI: PeatlandForestType.KANGASKORPI,
@@ -75,7 +75,7 @@ _peatland_forest_type_map = {
     VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
 }
 
-_drained_peatland_forest_type_map = {
+_DRAINED_PEATLAND_FOREST_TYPE_MAP = {
     VmiDrainedPeatlandForestType.HERB_RICH_TYPE: DrainedPeatlandForestType.HERB_RICH_TYPE,
     VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1,
     VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2,
@@ -355,38 +355,30 @@ _CROWN_CLASS_MAP = {
 }
 
 
-def is_empty_vmi_str(candidate: str) -> bool:
-    return candidate in ('', ' ', '  ', '.', '\n')
-
-
-def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
-
-    if is_empty_vmi_str(code):
-        return None
-
-    if code == '0':
-        return None
-
-    vmi_code = VmiPeatlandForestType(code)
-    return _peatland_forest_type_map[vmi_code]
-
-
-def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandForestType]:
-    if is_empty_vmi_str(code):
-        return None
-
-    if code == '0':
-        return None
-    vmi_code = VmiDrainedPeatlandForestType(code)
-    return _drained_peatland_forest_type_map[vmi_code]
-
-
 def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
     def inner(code: str):
         if code in ('', ' ', '  ', '.'):
             return None
         return func(code)
     return inner
+
+
+@check_empty_vmi
+def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
+    if code == '0':
+        return None
+
+    vmi_code = VmiPeatlandForestType(code)
+    return _PEATLAND_FOREST_TYPE_MAP[vmi_code]
+
+
+@check_empty_vmi
+def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandForestType]:
+    if code == '0':
+        return None
+
+    vmi_code = VmiDrainedPeatlandForestType(code)
+    return _DRAINED_PEATLAND_FOREST_TYPE_MAP[vmi_code]
 
 
 @check_empty_vmi
