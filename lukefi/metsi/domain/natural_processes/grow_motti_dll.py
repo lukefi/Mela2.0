@@ -16,6 +16,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import (
+    validate_unique_tree_identifiers,
     update_stand_growth, safe_storey_value,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
@@ -25,7 +26,7 @@ from lukefi.metsi.domain.natural_processes.util import (
     new_reference_tree_identity,
     storey_from_layer,
     find_reference_tree_index_by_tree_number,
-    validate_unique_tree_identifiers
+
 
 )
 from lukefi.metsi.sim.collected_data import OpTuple
