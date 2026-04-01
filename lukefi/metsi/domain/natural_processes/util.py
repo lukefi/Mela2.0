@@ -43,11 +43,44 @@ def storey_from_layer(stand: ForestStand, layer: int) -> int:
         return int(Storey.UNSET)
 
 
-def reference_tree_index_by_osid(rt: ReferenceTrees, osid: int) -> int | None:
+def reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int]:
     target = str(int(osid))
+    retval: list[int] = []
     for i, value in enumerate(rt.stratum.tolist()):
         if str(value) == target:
-            return i
+            retval.append(i)
+    return retval
+
+
+def reference_tree_index_by_osid(rt: ReferenceTrees, osid: int) -> int | None:
+    """Backward-compatible helper: returns the first match for a stratum id."""
+    matches = reference_tree_indices_by_stratum(rt, osid)
+    return matches[0] if matches else None
+
+
+def find_reference_tree_index_by_tree_number(rt: ReferenceTrees, tree_number: int) -> int | None:
+    target = int(tree_number)
+    for i, value in enumerate(rt.tree_number.tolist()):
+        if bool(rt.sapling[i]):
+            continue
+        try:
+            if int(value) == target:
+                return i
+        except (TypeError, ValueError):
+            continue
+    return None
+
+
+def find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
+    target_tree_number = int(tree_number)
+    for i in reference_tree_indices_by_stratum(rt, osid):
+        if bool(rt.sapling[i]):
+            continue
+        try:
+            if int(rt.tree_number[i]) == target_tree_number:
+                return i
+        except (TypeError, ValueError):
+            continue
     return None
 
 
@@ -150,3 +183,21 @@ def safe_storey_value(v: Any) -> float:
     if v is None:
         return 0.0
     return float(getattr(v, "value", v))
+
+
+# debug
+
+def validate_unique_tree_identifiers(stand: ForestStand) -> None:
+    rt = stand.reference_trees
+    ids = [str(x) for x in rt.identifier.tolist()]
+    dup = len(ids) != len(set(ids))
+    if dup:
+        raise ValueError(
+            f"Duplicate reference tree identifiers in stand {stand.identifier}: {ids}"
+        )
+
+    nums = [int(x) for x in rt.tree_number.tolist() if int(x) > 0]
+    if len(nums) != len(set(nums)):
+        raise ValueError(
+            f"Duplicate tree_number values in stand {stand.identifier}: {nums}"
+        )

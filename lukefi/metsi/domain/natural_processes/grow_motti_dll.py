@@ -19,12 +19,13 @@ from lukefi.metsi.domain.natural_processes.util import (
     update_stand_growth, safe_storey_value,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
-    reference_tree_index_by_osid,
     parse_int_id,
     next_osite_id,
     safe_origin,
     new_reference_tree_identity,
     storey_from_layer,
+    find_reference_tree_index_by_tree_number,
+    validate_unique_tree_identifiers
 
 )
 from lukefi.metsi.sim.collected_data import OpTuple
@@ -68,6 +69,19 @@ def _build_reference_tree_update(
     }
 
 
+def _grouped_yp_indices_by_sid(ms: MottiState) -> dict[int, list[int]]:
+    grouped: dict[int, list[int]] = {}
+    for i in range(int(ms.ntrees)):
+        sid = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
+        if sid is None:
+            continue
+        grouped.setdefault(sid, []).append(i)
+
+    for sid, indices in grouped.items():
+        indices.sort(key=lambda j: int(getattr(ms.yp[0][j], "id", 0) or 0))
+    return grouped
+
+
 def sync_ut_to_reference_trees(stand: ForestStand) -> None:
     ms = getattr(stand, "motti_state", None)
     if ms is None or ms.buffers is None:
@@ -100,7 +114,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     next_osid += 1
                     setattr(s, f"osid_{cat_code}", float(osid))
 
-                idx = reference_tree_index_by_osid(rt, osid)
+                idx = find_sapling_reference_tree_index(rt, osid)
 
                 if idx is None:
                     identifier, tree_number = new_reference_tree_identity(stand)
@@ -151,22 +165,33 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
 
         sid = parse_int_id(getattr(t, "sid", 0))
         if sid is None:
-            # fallback if needed, but ideally sid should always exist
             continue
 
-        idx = reference_tree_index_by_osid(rt, sid)
+        yp_tree_id = parse_int_id(getattr(t, "id", 0))
 
-        if idx is None:
+        # If YP tree has no valid id yet, assign a new global tree_number
+        if yp_tree_id is None:
             identifier, tree_number = new_reference_tree_identity(stand)
+            yp_tree_id = tree_number
+            t.id = float(tree_number)
+            idx = None
             storey = int(Storey.UNSET)
         else:
-            identifier = str(rt.identifier[idx])
-            tree_number = int(rt.tree_number[idx])
-            storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
+            idx = find_reference_tree_index_by_tree_number(rt, yp_tree_id)
+
+            if idx is None:
+                identifier, tree_number = new_reference_tree_identity(stand)
+                yp_tree_id = tree_number
+                t.id = float(tree_number)   # normalize YP id to the global tree_number
+                storey = int(Storey.UNSET)
+            else:
+                identifier = str(rt.identifier[idx])
+                tree_number = int(rt.tree_number[idx])
+                storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
 
         row = {
             "identifier": identifier,
-            "tree_number": int(tree_number),
+            "tree_number": int(yp_tree_id),
             "stratum": str(int(sid)),
             "species": int(t.spe),
             "stems_per_ha": float(t.f),
@@ -176,7 +201,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             "biological_age": float(t.age),
             "breast_height_age": float(t.age13),
             "sapling": False,
-            "tree_category": "1",   # or whatever code you use for big/living tree
+            "tree_category": "1",
             "management_category": 1,
             "storey": int(storey),
             "basal_area": float(t.ba) if getattr(t, "ba", None) is not None else 0.0,
@@ -508,7 +533,6 @@ class MottiDLLPredictor:
             return None
 
         n = rt.size
-        rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
         spedom = _spedom(self.stand.reference_trees)
 
@@ -543,7 +567,15 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        ids = np.arange(1, n + 1, dtype=int)
+        # ids = np.arange(1, n + 1, dtype=int)
+        ids = rt.tree_number.astype(int).copy()
+        for i in range(n):
+            if ids[i] <= 0:
+                identifier, new_id = new_reference_tree_identity(self.stand)
+                ids[i] = new_id
+                rt.tree_number[i] = new_id
+                rt.identifier[i] = identifier
+
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         h = np.nan_to_num(rt.height, nan=0.0)
@@ -798,6 +830,7 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         rt.biological_age = bio_age
         rt.breast_height_age = bh_age
 
+    validate_unique_tree_identifiers(stand)  # debug
     sync_yp_to_reference_trees(stand)
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
@@ -806,10 +839,6 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
 
 def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
-    """
-    Apply stem removals to the Motti yp vector.
-    Returns True if any yp entry was changed.
-    """
     ms = getattr(stand, "motti_state", None)
     rt = getattr(stand, "reference_trees", None)
     if ms is None or ms.yp is None or rt is None or rt.size == 0:
@@ -826,9 +855,15 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
         if sid is None:
             continue
 
+        tree_number = int(rt.tree_number[idx])
+        if tree_number <= 0:
+            continue
+
         for i in range(int(ms.ntrees)):
             t = ms.yp[0][i]
             if parse_int_id(getattr(t, "sid", 0)) != sid:
+                continue
+            if parse_int_id(getattr(t, "id", 0)) != tree_number:
                 continue
 
             new_f = max(float(t.f) - float(delta), 0.0)
@@ -881,8 +916,8 @@ def apply_motti_yp_reduction_from_removed_reference_trees(
     return changed
 
 
-def collect_live_motti_ids(stand: ForestStand) -> set[int]:
-    live: set[int] = set()
+def collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
+    live: set[tuple[str, int, int | None]] = set()
 
     ms = getattr(stand, "motti_state", None)
     if ms is None:
@@ -890,9 +925,13 @@ def collect_live_motti_ids(stand: ForestStand) -> set[int]:
 
     if ms.yp is not None:
         for i in range(int(ms.ntrees)):
-            sid = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
-            if sid is not None:
-                live.add(sid)
+            t = ms.yp[0][i]
+
+            sid = parse_int_id(getattr(t, "sid", 0))
+            tree_id = parse_int_id(getattr(t, "id", 0))
+
+            if sid is not None and tree_id is not None:
+                live.add(("yp", sid, tree_id))
 
     if ms.buffers is not None:
         ut = ms.buffers.saplings
@@ -905,7 +944,7 @@ def collect_live_motti_ids(stand: ForestStand) -> set[int]:
                         continue
                     osid = parse_int_id(getattr(s, f"osid_{cat_code}", 0))
                     if osid is not None:
-                        live.add(osid)
+                        live.add(("ut", osid, None))
 
     return live
 
@@ -915,15 +954,24 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
     if rt is None or rt.size == 0:
         return
 
-    live = collect_live_motti_ids(stand)
+    live = collect_live_motti_keys(stand)
     delete_idx = []
 
     for i, value in enumerate(rt.stratum.tolist()):
         sid = parse_int_id(value)
         if sid is None:
-            # optional: decide whether legacy non-Motti trees should be kept
             continue
-        if sid not in live:
+
+        if bool(rt.sapling[i]):
+            key = ("ut", sid, None)
+        else:
+            try:
+                tree_number = int(rt.tree_number[i])
+            except (TypeError, ValueError):
+                tree_number = -1
+            key = ("yp", sid, tree_number)
+
+        if key not in live:
             delete_idx.append(i)
 
     if delete_idx:
