@@ -102,8 +102,8 @@ class ForestStand(Finalizable, ComputationalUnit):
     region: Optional[int] = None
     ahvkeilaus: Optional[str] = None  # only used in VMI11
 
-    peatland_type: Optional[int] = None
-    drained_peatland_type: Optional[int] = None
+    peatland_type: Optional[PeatlandForestType] = None
+    drained_peatland_type: Optional[DrainedPeatlandForestType] = None
     under_storey: bool = False
     over_storey: bool = False
     ds_main_tree_species: Optional[TreeSpecies] = None
