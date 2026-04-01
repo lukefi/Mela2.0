@@ -211,8 +211,8 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
         self.region = conv(row[35], int)
 
-        self.peatland_type = conv(row[36], PeatlandForestType)
-        self.drained_peatland_type = conv(row[37], DrainedPeatlandForestType)
+        self.peatland_type = PeatlandForestType(int(row[36])) if row[36] != "None" else None
+        self.drained_peatland_type = DrainedPeatlandForestType(int(row[37])) if row[37] != "None" else None
         self.under_storey = row[38] == "True"
         self.over_storey = row[39] == "True"
 
