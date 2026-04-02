@@ -3,6 +3,7 @@ from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     species_to_motti,
     sync_ut_to_reference_trees,
@@ -119,14 +120,12 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
         return stand, []
 
     per_tree_stems = stems_per_ha / float(ntrees)
-    start_idx = int(stand.reference_trees.size)
-    new_rows = []
-    for i in range(ntrees):
-        global_idx = start_idx + i
-        identifier = f"{stand.identifier}-{global_idx + 1}-tree"
-        new_rows.append({
+
+    for _ in range(ntrees):
+        identifier, tree_number = new_reference_tree_identity(stand)
+        stand.reference_trees.create({
             "identifier": identifier,
-            "tree_number": global_idx,
+            "tree_number": tree_number,
             "species": species,
             "origin": origin,
             "stems_per_ha": per_tree_stems,
@@ -135,7 +134,6 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
             "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
             "breast_height_age": None if breast_height_age is None else float(breast_height_age),
         })
-    stand.reference_trees.create(new_rows)
 
     return stand, []
 
