@@ -564,7 +564,7 @@ class VMI10Builder(VMIBuilder):
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
 
         result.region = None
-        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
@@ -726,7 +726,7 @@ class VMI11Builder(VMIBuilder):
         result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
-        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,

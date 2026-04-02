@@ -328,6 +328,7 @@ class CuttingMethod(MetsiEnum):
     TENDING_OF_SEEDLING_STAND = 7
     SPECIAL_CUTTING = 8
     CCF_CUTTING = 9
+    HIGH_GRADING_SELECTIVE_CUTTING = 10
 
 
 class StratumRank(MetsiEnum):
