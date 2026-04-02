@@ -564,10 +564,13 @@ class VMI10Builder(VMIBuilder):
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
 
         result.region = None
-        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
+
+            county = 21 if result.forestry_centre_id == 0 else result.forestry_centre_id
+
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
-                result.forestry_centre_id,
+                county,
                 result.owner_category,
                 data_row[indices["puuntuotannon_rajoitus"]],
                 data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
@@ -726,10 +729,11 @@ class VMI11Builder(VMIBuilder):
         result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
-        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
+            county = 21 if result.forestry_centre_id == 0 else result.forestry_centre_id
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
-                result.forestry_centre_id,
+                county,
                 result.owner_category,
                 data_row[indices["puuntuotannon_rajoitus"]],
                 data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
@@ -870,7 +874,7 @@ class VMI12Builder(VMIBuilder):
             data_row[indices["kitukunta"]],
         )
 
-        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,
@@ -1018,7 +1022,7 @@ class VMI13Builder(VMIBuilder):
             data_row[indices["kitukunta"]],
         )
 
-        if result.land_use_category and result.forestry_centre_id and result.owner_category:
+        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 result.forestry_centre_id,

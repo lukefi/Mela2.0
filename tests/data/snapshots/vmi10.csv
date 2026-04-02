@@ -1,4 +1,4 @@
-stand,0-003-017-01-1,2008,132.35806,132.35806,2645250.0,4163000.0,0.0,EPSG:2393,None,0,10,None,None,0,0,None,None,None,None,None,0,None,None,None,0,1,None,318,None,False,1.0,1.0,1,None,None,None,None,None,None,False,False
+stand,0-003-017-01-1,2008,132.35806,132.35806,2645250.0,4163000.0,0.0,EPSG:2393,None,0,10,None,None,0,0,None,None,None,None,None,0,None,None,None,0,7.7,None,318,None,False,1.0,1.0,1,None,None,None,None,None,None,False,False
 stand,0-005-017-08-1,2008,132.35806,132.35806,2390013.0,1543252.0,6.3,EPSG:2393,1299.0,1,2,1,7,0,0,1,None,None,None,None,0,None,None,None,0,7.7,None,318,1,False,1.0,1.0,2,6.0,None,None,None,None,None,False,False
 stratum,0-005-017-08-1-1-stratum,4,0,0.0,0.0,7.5,45.0,60.0,4.800000000000001,1,0.0,1
 stratum,0-005-017-08-1-2-stratum,7,0,0.0,0.0,7.5,45.0,60.0,1.2000000000000002,2,0.0,1
