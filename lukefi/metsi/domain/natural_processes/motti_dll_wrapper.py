@@ -22,6 +22,7 @@ class MottiStateBuffers:
 @dataclass
 class GrowthDeltas:
     tree_ids: List[int]   # IDs of trees that survived in the DLL after growth
+    tree_sids: List[int | None]  # stratum ids
     trees_id: List[float]   # diameter increments (xd)
     trees_ih: List[float]   # height increments (xh)
     trees_if: List[float]   # stems/ha delta (Δf)
@@ -383,6 +384,14 @@ class Motti4DLL:
             remaining -= done
 
         ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
+        sids_now = []
+        for i in range(ntrees_p[0]):
+            raw_sid = getattr(yp[0][i], "sid", 0)
+            try:
+                sid = int(float(raw_sid))
+                sids_now.append(sid if sid > 0 else None)
+            except (TypeError, ValueError):
+                sids_now.append(None)
         out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
         out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
         out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
@@ -391,6 +400,7 @@ class Motti4DLL:
 
         return GrowthDeltas(
             tree_ids=ids_now,
+            tree_sids=sids_now,
             trees_id=out_id,
             trees_ih=out_ih,
             trees_if=out_if,
@@ -555,6 +565,14 @@ class Motti4DLL:
             remaining -= done
 
         ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
+        sids_now = []
+        for i in range(ntrees_p[0]):
+            raw_sid = getattr(yp[0][i], "sid", 0)
+            try:
+                sid = int(float(raw_sid))
+                sids_now.append(sid if sid > 0 else None)
+            except (TypeError, ValueError):
+                sids_now.append(None)
         out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
         out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
         out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
@@ -563,6 +581,7 @@ class Motti4DLL:
 
         return GrowthDeltas(
             tree_ids=ids_now,
+            tree_sids=sids_now,
             trees_id=out_id,
             trees_ih=out_ih,
             trees_if=out_if,

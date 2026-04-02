@@ -560,6 +560,9 @@ class VMI10Builder(VMIBuilder):
             data_row[indices["maanmuokkaus_aika"]],
             result.year
         )
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
+
         result.region = None
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
@@ -713,10 +716,15 @@ class VMI11Builder(VMIBuilder):
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
 
-        result.dominant_storey_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]],
         )
+
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         if result.land_use_category and result.forestry_centre_id and result.owner_category:
             result.forest_management_category = vmi_util.determine_forest_management_category(
@@ -839,10 +847,15 @@ class VMI12Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.dominant_storey_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
             data_row[indices["vallitsevanjakson_d13ika"]],
             data_row[indices["vallitsevanjakson_ikalisays"]]
         )
+
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
@@ -983,9 +996,14 @@ class VMI13Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.dominant_storey_age = vmi_util.determine_vmi13_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi13_dominant_storey_age(
             data_row[indices["vallitsevanjaksonika"]]
         )
+
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
+        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
+        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(

@@ -31,6 +31,21 @@ UT_CATEGORIES = [
 ]
 
 
+def find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
+    target_osid = int(osid)
+
+    for i in reference_tree_indices_by_stratum(rt, osid):
+        if not bool(rt.sapling[i]):
+            continue
+        try:
+            if int(rt.stratum[i]) == target_osid:
+                return i
+        except (TypeError, ValueError):
+            continue
+
+    return None
+
+
 def storey_from_layer(stand: ForestStand, layer: int) -> int:
     strata = getattr(stand, "tree_strata", None)
     if strata is None or layer >= strata.size:
@@ -196,8 +211,23 @@ def validate_unique_tree_identifiers(stand: ForestStand) -> None:
             f"Duplicate reference tree identifiers in stand {stand.identifier}: {ids}"
         )
 
-    nums = [int(x) for x in rt.tree_number.tolist() if int(x) > 0]
-    if len(nums) != len(set(nums)):
+    keys = []
+    for i in range(rt.size):
+        if bool(rt.sapling[i]):
+            continue
+
+        sid = parse_int_id(rt.stratum[i])
+        try:
+            tree_number = int(rt.tree_number[i])
+        except (TypeError, ValueError):
+            continue
+
+        if sid is None or tree_number <= 0:
+            continue
+
+        keys.append((sid, tree_number))
+
+    if len(keys) != len(set(keys)):
         raise ValueError(
-            f"Duplicate tree_number values in stand {stand.identifier}: {nums}"
+            f"Duplicate (stratum, tree_number) values in stand {stand.identifier}: {keys}"
         )

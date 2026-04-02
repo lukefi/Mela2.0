@@ -75,7 +75,7 @@ class TestForestDataModel(unittest.TestCase):
         row = "stand;12345;2018;436.0;436.0;6834156.23;429291.91;None;EPSG:3067;1019.0;" \
               "4;1;2;" \
               "3;0;3;8;1984;None;2018;None;None;None;None;" \
-              "None;10;1;None;12;1;False;1.0;1.0;1;10;51;None;None"
+              "None;10;1;None;12;1;False;1.0;1.0;1;10;51;None;None;1;1;0;0"
         row = row.split(';')
         stand = ForestStand.from_csv_row(row)
 
@@ -96,5 +96,5 @@ class TestForestDataModel(unittest.TestCase):
 
         self.assertAlmostEqual(58.8, stand.stems_per_ha or 0)
         self.assertAlmostEqual(23.60403760335, stand.basal_area or 0)
-        self.assertAlmostEqual(14.81238229506, stand.weighted_mean_diameter or 0)
-        self.assertAlmostEqual(5.902974074951, stand.weighted_mean_height or 0)
+        self.assertAlmostEqual(14.81238229506, stand.ds_ba_weighted_mean_diameter or 0)
+        self.assertAlmostEqual(5.902974074951, stand.ds_ba_weighted_mean_height or 0)

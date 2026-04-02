@@ -25,7 +25,8 @@ from lukefi.metsi.domain.natural_processes.util import (
     safe_origin,
     new_reference_tree_identity,
     storey_from_layer,
-    find_reference_tree_index_by_tree_number,
+    find_non_sapling_reference_tree_index,
+    find_sapling_reference_tree_index
 
 
 )
@@ -167,10 +168,8 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         sid = parse_int_id(getattr(t, "sid", 0))
         if sid is None:
             continue
-
         yp_tree_id = parse_int_id(getattr(t, "id", 0))
 
-        # If YP tree has no valid id yet, assign a new global tree_number
         if yp_tree_id is None:
             identifier, tree_number = new_reference_tree_identity(stand)
             yp_tree_id = tree_number
@@ -178,12 +177,12 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             idx = None
             storey = int(Storey.UNSET)
         else:
-            idx = find_reference_tree_index_by_tree_number(rt, yp_tree_id)
+            idx = find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
 
             if idx is None:
                 identifier, tree_number = new_reference_tree_identity(stand)
                 yp_tree_id = tree_number
-                t.id = float(tree_number)   # normalize YP id to the global tree_number
+                t.id = float(tree_number)
                 storey = int(Storey.UNSET)
             else:
                 identifier = str(rt.identifier[idx])
@@ -568,14 +567,18 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        # ids = np.arange(1, n + 1, dtype=int)
         ids = rt.tree_number.astype(int).copy()
         for i in range(n):
             if ids[i] <= 0:
                 identifier, new_id = new_reference_tree_identity(self.stand)
                 ids[i] = new_id
-                rt.tree_number[i] = new_id
-                rt.identifier[i] = identifier
+                rt.update(
+                    {
+                        "tree_number": new_id,
+                        "identifier": identifier,
+                    },
+                    i,
+                )
 
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
@@ -743,17 +746,14 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     predictor = operation_parameters.get("predictor", None)
 
     stand = input_
-
     sim_year: int = stand.year or 0
 
     rt = stand.reference_trees
     if rt.size == 0:
-        # Update year but skip rest of process for empty stand
         stand.year = (stand.year or 0) + step
         return stand, []
 
     if stand.land_use_category and stand.land_use_category >= LandUseCategory.WASTE_LAND:
-        # No growth, just advance time/ages
         base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         base_h = np.nan_to_num(rt.height, nan=0.0)
         base_f = np.nan_to_num(rt.stems_per_ha, nan=0.0)
@@ -762,71 +762,101 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
     # Construct predictor
     if predictor is None:
-        resolved_dir = resolve_dir_or_file(data_dir)  # handles None -> default
+        resolved_dir = resolve_dir_or_file(data_dir)
         pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
 
     growth = pred.evolve(step=step, sim_year=sim_year)
 
-    # Map deltas by returned IDs (subset of original if deaths occurred)
-    id_to_delta_d = {int(i): float(d) for i, d in zip(growth.tree_ids, growth.trees_id)}
-    id_to_delta_h = {int(i): float(h) for i, h in zip(growth.tree_ids, growth.trees_ih)}
-    id_to_delta_f = {int(i): float(f) for i, f in zip(growth.tree_ids, growth.trees_if)}
-    id_to_age = {int(i): float(a) for i, a in zip(growth.tree_ids, growth.trees_age)}
-    id_to_age13 = {int(i): float(a13) for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
+    # Build delta maps keyed by (sid, tree_number)
+    key_to_delta_d: dict[tuple[int, int], float] = {}
+    key_to_delta_h: dict[tuple[int, int], float] = {}
+    key_to_delta_f: dict[tuple[int, int], float] = {}
+    key_to_age: dict[tuple[int, int], float] = {}
+    key_to_age13: dict[tuple[int, int], float] = {}
 
-    n = rt.size
-    ids = np.arange(1, n + 1, dtype=int)
+    for sid_raw, tid_raw, d, h, f, age, age13 in zip(
+        growth.tree_sids,
+        growth.tree_ids,
+        growth.trees_id,
+        growth.trees_ih,
+        growth.trees_if,
+        growth.trees_age,
+        growth.trees_age13,
+    ):
+        if sid_raw is None:
+            continue
+
+        sid = int(sid_raw)
+        tid = int(tid_raw)
+        key = (sid, tid)
+
+        key_to_delta_d[key] = float(d)
+        key_to_delta_h[key] = float(h)
+        key_to_delta_f[key] = float(f)
+        key_to_age[key] = float(age)
+        key_to_age13[key] = float(age13)
 
     base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
     base_h = np.nan_to_num(rt.height, nan=0.0)
     base_f = np.nan_to_num(rt.stems_per_ha, nan=0.0)
 
-    # Build updated arrays in the original order:
-    # - If ID present in DLL result: add deltas
-    # - If missing: stems -> 0 (dead/removed), keep d/h unchanged
     d_new = base_d.copy()
     h_new = base_h.copy()
     f_new = base_f.copy()
 
-    for idx, tid in enumerate(ids.tolist()):
-        if tid in id_to_delta_d:
-            d_new[idx] = base_d[idx] + id_to_delta_d[tid]
-            h_new[idx] = base_h[idx] + id_to_delta_h[tid]
-            f_new[idx] = max(base_f[idx] + id_to_delta_f[tid], 0.0)
+    n = rt.size
+    for idx in range(n):
+        sid = parse_int_id(rt.stratum[idx])
+
+        try:
+            tid = int(rt.tree_number[idx])
+        except (TypeError, ValueError):
+            tid = -1
+
+        if sid is None or tid <= 0:
+            f_new[idx] = 0.0
+            continue
+
+        key = (sid, tid)
+
+        if key in key_to_delta_d:
+            d_new[idx] = base_d[idx] + key_to_delta_d[key]
+            h_new[idx] = base_h[idx] + key_to_delta_h[key]
+            f_new[idx] = max(base_f[idx] + key_to_delta_f[key], 0.0)
         else:
+            # tree missing from returned live Motti trees => dead/removed
             f_new[idx] = 0.0
 
-    # Apply vectorized update (also advances ages etc. inside util)
+    # This advances stand.year and also updates sapling flag logic
     update_stand_growth(stand, d_new, h_new, f_new, step)
 
+    # Re-fetch in case update_stand_growth replaced arrays
     rt = stand.reference_trees
-    n = rt.size
 
-    if growth.trees_age:
-        id_to_age = {int(i): float(a)
-                     for i, a in zip(growth.tree_ids, growth.trees_age)}
-    else:
-        id_to_age = {}
-
-    if growth.trees_age13:
-        id_to_age13 = {int(i): float(a13)
-                       for i, a13 in zip(growth.tree_ids, growth.trees_age13)}
-    else:
-        id_to_age13 = {}
-
-    if id_to_age or id_to_age13:
-        ids = np.arange(1, n + 1, dtype=int)
-
+    # Override ages with exact values returned by Motti
+    if key_to_age or key_to_age13:
         bio_age = rt.biological_age.copy()
         bh_age = rt.breast_height_age.copy()
 
-        for idx, tid in enumerate(ids.tolist()):
-            if tid in id_to_age:
-                bio_age[idx] = id_to_age[tid]
-            if tid in id_to_age13:
-                bh_age[idx] = id_to_age13[tid]
+        for idx in range(rt.size):
+            sid = parse_int_id(rt.stratum[idx])
+
+            try:
+                tid = int(rt.tree_number[idx])
+            except (TypeError, ValueError):
+                tid = -1
+
+            if sid is None or tid <= 0:
+                continue
+
+            key = (sid, tid)
+
+            if key in key_to_age:
+                bio_age[idx] = key_to_age[key]
+            if key in key_to_age13:
+                bh_age[idx] = key_to_age13[key]
 
         rt.biological_age = bio_age
         rt.breast_height_age = bh_age
