@@ -16,6 +16,7 @@ from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soi
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.domain.domain_tables import min_stems_table
+from lukefi.metsi.domain.forestry_treatments.pct import pct
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -456,11 +457,47 @@ class Harvest20percent(Event[ForestStand]):
         )
 
 
+class SaplingTreatmentMotti(Event[ForestStand]):
+    """
+    Example event that uses Motti4PCT.
+
+    This is a thin wrapper around the Motti-backed treatment.
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {
+            "remaining_n": 1600,
+        }
+
+        merged_params = default_params | (parameters or {})
+
+        # Example only: run once at relative year 10 unless caller overrides/adds more.
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(10, regeneration),
+        ]
+
+        super().__init__(
+            treatment=pct,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_pct", "sapling_treatment"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
     "FirstThinningMineralSoils",
     "PlantingPines",
     "MarkRetentionTrees",
-    "Harvest20percent"
+    "Harvest20percent",
+    "SaplingTreatmentMotti",
 ]

@@ -11,7 +11,12 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
-from user_events import Harvest20percent, FirstThinningMineralSoils, PlantingPines
+from user_events import (
+    Harvest20percent,
+    FirstThinningMineralSoils,
+    PlantingPines,
+    SaplingTreatmentMotti,
+)
 
 control_structure = {
     "app_configuration": {
@@ -64,8 +69,12 @@ control_structure = {
                         Harvest20percent(),
                         FirstThinningMineralSoils(),
 
+
                     ]),
-                    PlantingPines(),
+                    Sequence[ForestStand]([
+                        PlantingPines(),
+                        SaplingTreatmentMotti(parameters={"remaining_n": 1800}),
+                    ]),
                 ])
             ]
         )

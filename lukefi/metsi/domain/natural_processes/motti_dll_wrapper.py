@@ -208,6 +208,10 @@ class Motti4DLL:
                       Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                       int *numtrees, int *step, int *rv);
 
+        void Motti4PCT(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+                       Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+                       int *numtrees, int *remaingN, int *rv);
+
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
         float  Convert_Site(int Mela_site);
@@ -670,6 +674,47 @@ class Motti4DLL:
 
         if rv[0] != 0:
             raise RuntimeError(f"Motti4Regenerate failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])
+
+    def pct_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        *,
+        remaining_n: int,
+    ) -> int:
+        """
+        Call Motti4PCT against persistent state buffers.
+
+        Assumption:
+          - remaingN is a single integer pointer as the current doc suggests.
+          - If the DLL really expects a species-wise array, replace `int *remaingN`
+            with the correct array type
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        remaining_n_p = ffi.new("int *", int(remaining_n))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4PCT(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                remaining_n_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4PCT failed (rv={rv[0]})")
 
         return int(ntrees_p[0])
 
