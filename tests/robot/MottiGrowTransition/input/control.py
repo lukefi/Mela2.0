@@ -50,13 +50,19 @@ control_structure = {
     "simulation_instructions": [
 
         SimulationInstruction(
-            conditions=[TimePoints([2020, 2025, 2030])],
+            conditions=[TimePoints([2025, 2030, 2035])],
             events=[
                 DoNothing()
             ]
         )
     ],
-    "transition": Transition[ForestStand](grow_motti_dll_fn, {NaturalProcessInfo}, step=5),
+    "transition": Transition[ForestStand](grow_motti_dll_fn,
+                                          {NaturalProcessInfo},
+                                          name="grow_motti",
+                                          db_output=True,
+                                          db_output_state=True,
+                                          db_output_cd=True,
+                                          step=5),
     "end_condition": Condition[ForestStand](lambda x: x.computational_unit.year > 2030)
 }
 
