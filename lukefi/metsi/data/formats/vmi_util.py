@@ -221,7 +221,7 @@ def determine_tax_class(sourcevalue: str) -> int:
 
 
 def determine_forest_management_category(land_use_category: int,
-                                         county: int,
+                                         is_ahvenanmaa: bool,
                                          owner_group: int,
                                          production_limitation: str,
                                          production_limitation_detail: str,
@@ -321,7 +321,7 @@ def determine_forest_management_category(land_use_category: int,
         decimals = 0.7
 
     # Ahvenanmaa;
-    if (county == 21 and (aland_area_code != '1' or other_values == '2') and vmi_pt > 1):
+    if (is_ahvenanmaa and (aland_area_code != '1' or other_values == '2') and vmi_pt > 1):
         vmi_pt = 1
         decimals = 0.7
 
