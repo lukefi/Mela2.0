@@ -2,6 +2,7 @@ import sqlite3
 from typing import override
 
 import numpy as np
+import numpy.typing as npt
 
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import CollectedData
@@ -159,7 +160,16 @@ class NaturalProcessInfo(CollectedData):
             if identifier == after.identifier[i]:
                 return after.breast_height_diameter[i]
 
-        # TODO: Implement ba-weighted average of split tree diameters
+        # BA-weighted average of split tree diameters
+        split_mask = after.stratum == before.stratum[index]
+        stems = after.stems_per_ha[split_mask]
+        bhd = after.breast_height_diameter[split_mask]
+
+        if np.any(bhd):
+            ba = _basal_area(stems, bhd)
+            return np.sum(ba * bhd) / np.sum(ba)
+
+        # Avoid division by zero if diameters are all zero
         return 0.0
 
     def _get_height_after(self, index: int) -> float:
@@ -171,5 +181,20 @@ class NaturalProcessInfo(CollectedData):
             if identifier == after.identifier[i]:
                 return after.height[i]
 
-        # TODO: Implement ba-weighted average of split tree heights
-        return 0.0
+        # BA-weighted average of split tree heights
+        split_mask = after.stratum == before.stratum[index]
+        stems = after.stems_per_ha[split_mask]
+        h = after.height[split_mask]
+        bhd = after.breast_height_diameter[split_mask]
+
+        if np.any(bhd):
+            ba = _basal_area(stems, bhd)
+            return np.sum(ba * h) / np.sum(ba)
+
+        # Fallback to stems-weighted average if all diameters are zero
+        return np.sum(stems * h) / np.sum(stems)
+
+
+def _basal_area(stems_per_ha: npt.NDArray[np.float64],
+                breast_height_diameter: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    return np.pi * stems_per_ha * ((breast_height_diameter / 200) ** 2)
