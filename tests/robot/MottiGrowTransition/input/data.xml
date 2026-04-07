@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ForestPropertyData xsi:schemaLocation="http://standardit.tapio.fi/schemas/forestData ForestData.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:gml="http://www.opengis.net/gml" xmlns:gdt="http://standardit.tapio.fi/schemas/forestData/common/geometricDataTypes" xmlns:co="http://standardit.tapio.fi/schemas/forestData/common" xmlns:sf="http://standardit.tapio.fi/schemas/forestData/specialFeature" xmlns:op="http://standardit.tapio.fi/schemas/forestData/operation" xmlns:dts="http://standardit.tapio.fi/schemas/forestData/deadTreeStrata" xmlns:tss="http://standardit.tapio.fi/schemas/forestData/treeStandSummary" xmlns:tst="http://standardit.tapio.fi/schemas/forestData/treeStratum" xmlns:ts="http://standardit.tapio.fi/schemas/forestData/treeStand" xmlns:st="http://standardit.tapio.fi/schemas/forestData/Stand" xmlns="http://standardit.tapio.fi/schemas/forestData">
+  <st:Stands>
+    <st:Stand id="39801178">
+      <st:StandBasicData>
+        <st:CompleteState>1</st:CompleteState>
+        <st:Identifiers>
+          <st:Identifier>
+            <co:IdentifierType>5</co:IdentifierType>
+            <co:IdentifierValue>1 Metsäkeskus</co:IdentifierValue>
+          </st:Identifier>
+          <st:Identifier>
+            <co:IdentifierType>6</co:IdentifierType>
+            <co:IdentifierValue>4101</co:IdentifierValue>
+          </st:Identifier>
+        </st:Identifiers>
+        <st:StandNumber>67</st:StandNumber>
+        <st:MainGroup>1</st:MainGroup>
+        <st:SubGroup>1</st:SubGroup>
+        <st:FertilityClass>4</st:FertilityClass>
+        <st:SoilType>10</st:SoilType>
+        <st:DrainageState>1</st:DrainageState>
+        <st:DevelopmentClass>03</st:DevelopmentClass>
+        <st:MainTreeSpecies>1</st:MainTreeSpecies>
+        <st:Accessibility>2</st:Accessibility>
+        <st:StandBasicDataDate>2020-06-13</st:StandBasicDataDate>
+        <co:DataSource>11</co:DataSource>
+        <st:GrowthPlaceDataSource>4</st:GrowthPlaceDataSource>
+        <st:Area>11.75</st:Area>
+        <st:AreaDecrease>0.000</st:AreaDecrease>
+        <gdt:PolygonGeometry>
+          <gml:pointProperty>
+            <gml:Point srsName="EPSG:3067">
+              <gml:coordinates>435258.3414,6988648.5354</gml:coordinates>
+            </gml:Point>
+          </gml:pointProperty>
+          <gml:polygonProperty>
+            <gml:Polygon srsName="EPSG:3067">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:coordinates>435086.8303,6988715.4433 435089.173,6988723.827 435092.9371,6988732.5298 435096.0101,6988735.9899 435095.164,6988743.2848 435095.0348,6988749.7416 435096.0101,6988751.9899 435094.286,6988762.486 435091.5489,6988770.5287 435086.9101,6988776.8904 435083.6618,6988779.6416 435062.1466,6988788.1264 435054.3084,6988793.2882 435040.4326,6988805.8798 435037.3506,6988807.3506 435038.6376,6988811.1022 435040.4112,6988814.6511 435042.4742,6988818.2663 435044.8169,6988822.0449 435047.5348,6988825.6427 435047.7337,6988825.9225 435050.2062,6988829.6169 435052.8787,6988832.536 435056.1438,6988835.5376 435059.6843,6988838.7697 435063.4006,6988842.1708 435067.2163,6988845.6079 435070.7674,6988848.7393 435074.5,6988851.7034 435074.6258,6988851.8056 435074.7416,6988851.9056 435078.6365,6988855.3466 435082.5854,6988858.8067 435086.5393,6988862.0994 435090.7343,6988865.5225 435095.0202,6988868.9006 435099.2764,6988872.0522 435103.7191,6988875.4191 435113.0815,6988881.5691 435113.3618,6988881.7652 435117.9815,6988885.1921 435118.1388,6988885.3129 435122.636,6988888.8848 435127.0904,6988892.5169 435127.182,6988892.5933 435131.3843,6988896.2028 435135.6444,6988899.4685 435140.073,6988902.736 435144.0101,6988905.6685 435144.0101,6988903.9416 435145.5298,6988887.0315 435144.3837,6988880.5635 435141.0067,6988875.9933 435127.1011,6988864.8989 435121.7522,6988858.2478 435119.377,6988853.2747 435118.7129,6988848.9073 435119.886,6988844.0169 435122.9258,6988839.6938 435128.0101,6988835.9899 435134.7556,6988834.7331 435142.7303,6988830.7107 435156.7051,6988817.6854 435162.468,6988814.4927 435167.2961,6988813.5376 435174.0685,6988813.7556 435184.0101,6988815.9899 435188.4955,6988819.5045 435192.0101,6988823.9899 435191.3017,6988829.1348 435183.7096,6988849.4163 435185.2185,6988857.1837 435196.5365,6988864.141 435199.2185,6988867.5702 435200.0101,6988871.9899 435223.0837,6988877.9163 435249.7522,6988886.2478 435260.8152,6988887.3354 435269.1955,6988886.1758 435282.4169,6988879.5112 435285.8174,6988878.7764 435289.8192,6988881.4776 435448.0909,6988689.0209 435117.109,6988406.7 435111.9945,6988402.336 435106.8193,6988408.4032 435098.4904,6988410.4702 435085.5517,6988417.532 435064.4416,6988426.5685 435058.3494,6988432.8011 435056.0101,6988435.9899 435051.6264,6988437.3399 435045.9275,6988437.3236 435028.641,6988432.5702 435024.0101,6988431.9899 435007.5972,6988443.5775 434996.0101,6988453.7169 434989.3118,6988457.8079 434986.4904,6988463.6831 434987.1523,6988470.5196 434980.4083,6988473.7596 434981.9119,6988476.8892 434982.9319,6988482.3532 434981.0505,6988488.5082 434978.5343,6988488.8567 434979.5912,6988491.1006 434980.0101,6988491.9899 434980.3946,6988493.1613 434977.9857,6988493.9526 434977.9149,6988494.0821 434981.306,6988495.9381 434981.4511,6988501.4618 434978.8198,6988506.2682 434979.5562,6988506.6713 434969.4522,6988519.5792 434968.0101,6988523.9899 434965.1579,6988542.0028 434965.3354,6988551.6646 434967.5506,6988560.4376 434964.4942,6988562.417 434971.5068,6988573.251 434972.9108,6988574.9478 434983.1401,6988587.3099 434989.094,6988593.2158 434996.1708,6988601.4864 435001.5149,6988609.1661 435007.7704,6988607.2969 435036.8045,6988605.3482 435052.6407,6988601.669 435054.0995,6988601.6391 435054.0753,6988600.5056 435064.0101,6988599.9899 435065.4522,6988595.5792 435070.0742,6988590.0421 435076.0101,6988585.9899 435086.7876,6988581.3011 435092.0101,6988579.9899 435101.0938,6988584.986 435132.4466,6988609.5534 435135.2287,6988612.9219 435136.8466,6988616.736 435137.3096,6988621.7281 435136.0101,6988627.9899 435129.0146,6988633.2146 435122.1466,6988640.1264 435109.9646,6988656.9444 435102.2584,6988665.0275 435100.0101,6988667.9899 435097.7657,6988669.7461 435096.0101,6988671.9899 435088.0101,6988687.9899 435089.2045,6988691.1567 435089.4697,6988694.3489 435086.5629,6988709.6371 435086.8303,6988715.4433</gml:coordinates>
+                </gml:LinearRing>
+              </gml:exterior>
+              <gml:interior>
+                <gml:LinearRing>
+                  <gml:coordinates>435224.4202,6988781.3478 435212.7051,6988783.8461 435202.2904,6988788.7489 435199.0258,6988788.7742 435194.973,6988786.7534 435191.9949,6988783.0051 435189.5994,6988776.4006 435188.1399,6988767.1107 435188.0101,6988759.9899 435196.0101,6988759.9899 435209.4753,6988744.4556 435220.7051,6988733.6854 435227.2253,6988730.2051 435247.4837,6988725.4635 435251.6618,6988723.6416 435264.3725,6988713.5635 435268.0101,6988711.9899 435284.4949,6988704.4747 435294.527,6988701.6421 435305.3365,6988701.6579 435316.0101,6988703.9899 435318.5433,6988707.0629 435319.082,6988709.6039 435317.359,6988714.0354 435308.0067,6988724.9871 435297.0893,6988734.9893 435293.2152,6988739.9837 435292.0101,6988743.9899 435288.0893,6988746.6028 435275.5753,6988759.5551 435270.5208,6988763.5011 435254.2747,6988771.2551 435236.1719,6988775.3124 435224.4202,6988781.3478</gml:coordinates>
+                </gml:LinearRing>
+              </gml:interior>
+            </gml:Polygon>
+          </gml:polygonProperty>
+        </gdt:PolygonGeometry>
+      </st:StandBasicData>
+      <ts:TreeStandData>
+        <ts:TreeStandDataDate type="1" date="2020-06-13">
+          <tst:TreeStrata>
+            <tst:TreeStratum id="238109316">
+              <tst:StratumNumber>1</tst:StratumNumber>
+              <tst:TreeSpecies>1</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>56</tst:Age>
+              <tst:BasalArea>11.3</tst:BasalArea>
+              <tst:MeanDiameter>16.3</tst:MeanDiameter>
+              <tst:MeanHeight>13.9</tst:MeanHeight>
+              <tst:Volume>78.1</tst:Volume>
+            </tst:TreeStratum>
+            <tst:TreeStratum id="238109317">
+              <tst:StratumNumber>2</tst:StratumNumber>
+              <tst:TreeSpecies>2</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>35</tst:Age>
+              <tst:BasalArea>2.9</tst:BasalArea>
+              <tst:MeanDiameter>14.7</tst:MeanDiameter>
+              <tst:MeanHeight>12.8</tst:MeanHeight>
+              <tst:Volume>18.9</tst:Volume>
+            </tst:TreeStratum>
+          </tst:TreeStrata>
+        </ts:TreeStandDataDate>
+        <ts:TreeStandDataDate type="2" date="2025-01-01">
+          <tst:TreeStrata>
+            <tst:TreeStratum id="285694177">
+              <tst:StratumNumber>1</tst:StratumNumber>
+              <tst:TreeSpecies>1</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>61</tst:Age>
+              <tst:BasalArea>13.9</tst:BasalArea>
+              <tst:StemCount>775</tst:StemCount>
+              <tst:MeanDiameter>17.7</tst:MeanDiameter>
+              <tst:MeanHeight>14.9</tst:MeanHeight>
+              <tst:Volume>103.6</tst:Volume>
+              <tst:SawLogVolume>19.4</tst:SawLogVolume>
+              <tst:PulpWoodVolume>80.7</tst:PulpWoodVolume>
+              <tst:VolumeGrowth>4.97</tst:VolumeGrowth>
+              <tst:LeafBiomass>3.05</tst:LeafBiomass>
+              <tst:BranchBiomass>9.65</tst:BranchBiomass>
+              <tst:StemBiomass>41.24</tst:StemBiomass>
+              <tst:StumpBiomass>11.92</tst:StumpBiomass>
+            </tst:TreeStratum>
+            <tst:TreeStratum id="285694178">
+              <tst:StratumNumber>2</tst:StratumNumber>
+              <tst:TreeSpecies>2</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>40</tst:Age>
+              <tst:BasalArea>3.7</tst:BasalArea>
+              <tst:StemCount>266</tst:StemCount>
+              <tst:MeanDiameter>15.8</tst:MeanDiameter>
+              <tst:MeanHeight>13.7</tst:MeanHeight>
+              <tst:Volume>25.2</tst:Volume>
+              <tst:SawLogVolume>3.7</tst:SawLogVolume>
+              <tst:PulpWoodVolume>20.0</tst:PulpWoodVolume>
+              <tst:VolumeGrowth>1.33</tst:VolumeGrowth>
+              <tst:LeafBiomass>2.35</tst:LeafBiomass>
+              <tst:BranchBiomass>3.01</tst:BranchBiomass>
+              <tst:StemBiomass>9.64</tst:StemBiomass>
+              <tst:StumpBiomass>4.39</tst:StumpBiomass>
+            </tst:TreeStratum>
+          </tst:TreeStrata>
+          <tss:TreeStandSummary id="140304653">
+            <tss:MeanAge>57</tss:MeanAge>
+            <tss:BasalArea>17.6</tss:BasalArea>
+            <tss:StemCount>1042</tss:StemCount>
+            <tss:MeanDiameter>17.3</tss:MeanDiameter>
+            <tss:MeanHeight>14.6</tss:MeanHeight>
+            <tss:Volume>128.8</tss:Volume>
+            <tss:SawLogVolume>23.1</tss:SawLogVolume>
+            <tss:PulpWoodVolume>100.6</tss:PulpWoodVolume>
+            <tss:VolumeGrowth>6.30</tss:VolumeGrowth>
+            <tss:LeafBiomass>5.41</tss:LeafBiomass>
+            <tss:BranchBiomass>12.66</tss:BranchBiomass>
+            <tss:StemBiomass>50.88</tss:StemBiomass>
+            <tss:StumpBiomass>16.30</tss:StumpBiomass>
+          </tss:TreeStandSummary>
+        </ts:TreeStandDataDate>
+        <ts:TreeStandDataDate type="3" date="2035-01-01">
+          <tss:TreeStandSummary id="160142522">
+            <tss:MeanAge>66</tss:MeanAge>
+            <tss:BasalArea>23.8</tss:BasalArea>
+            <tss:StemCount>998</tss:StemCount>
+            <tss:MeanDiameter>19.8</tss:MeanDiameter>
+            <tss:MeanHeight>16.4</tss:MeanHeight>
+            <tss:Volume>190.6</tss:Volume>
+            <tss:SawLogVolume>59.4</tss:SawLogVolume>
+            <tss:PulpWoodVolume>127.0</tss:PulpWoodVolume>
+            <tss:VolumeGrowth>6.50</tss:VolumeGrowth>
+            <tss:DevelopmentClass>03</tss:DevelopmentClass>
+            <tss:MainTreeSpecies>1</tss:MainTreeSpecies>
+          </tss:TreeStandSummary>
+        </ts:TreeStandDataDate>
+      </ts:TreeStandData>
+    </st:Stand>
+    <st:Stand id="39801179">
+      <st:StandBasicData>
+        <st:CompleteState>1</st:CompleteState>
+        <st:Identifiers>
+          <st:Identifier>
+            <co:IdentifierType>5</co:IdentifierType>
+            <co:IdentifierValue>1 Metsäkeskus</co:IdentifierValue>
+          </st:Identifier>
+          <st:Identifier>
+            <co:IdentifierType>6</co:IdentifierType>
+            <co:IdentifierValue>4101</co:IdentifierValue>
+          </st:Identifier>
+        </st:Identifiers>
+        <st:StandNumber>40</st:StandNumber>
+        <st:MainGroup>1</st:MainGroup>
+        <st:SubGroup>1</st:SubGroup>
+        <st:FertilityClass>4</st:FertilityClass>
+        <st:SoilType>11</st:SoilType>
+        <st:DrainageState>1</st:DrainageState>
+        <st:DevelopmentClass>03</st:DevelopmentClass>
+        <st:MainTreeSpecies>1</st:MainTreeSpecies>
+        <st:StandBasicDataDate>2020-06-13</st:StandBasicDataDate>
+        <co:DataSource>11</co:DataSource>
+        <st:GrowthPlaceDataSource>4</st:GrowthPlaceDataSource>
+        <st:Area>6.25</st:Area>
+        <st:AreaDecrease>0.000</st:AreaDecrease>
+        <gdt:PolygonGeometry>
+          <gml:pointProperty>
+            <gml:Point srsName="EPSG:3067">
+              <gml:coordinates>435042.9754,6988950.4275</gml:coordinates>
+            </gml:Point>
+          </gml:pointProperty>
+          <gml:polygonProperty>
+            <gml:Polygon srsName="EPSG:3067">
+              <gml:exterior>
+                <gml:LinearRing>
+                  <gml:coordinates>435114.228,6989094.5196 435101.8568,6989109.5135 435100.0101,6989099.9899 435093.0124,6989093.8478 435087.2899,6989090.9719 435083.3225,6989090.4635 435074.5,6989092.4798 435056.5511,6989100.4865 435048.45,6989102.0281 435028.0584,6989099.9899 435024.0101,6989099.9899 435018.791,6989098.2185 435009.4258,6989098.0579 435002.8253,6989099.7674 434992.0101,6989103.9899 434991.9494,6989100.0017 434989.5371,6989083.1146 434990.3,6989065.0017 434989.3208,6989060.4062 434986.3629,6989055.6371 434981.8736,6989052.1264 434974.809,6989049.8427 434959.0258,6989049.0478 434953.8326,6989047.032 434946.1197,6989040.8803 434940.0309,6989037.9691 434931.1062,6989036.2163 434920.0101,6989035.9899 434918.5787,6989030.623 434916.0101,6989023.9899 434916.077,6989010.9174 434917.1096,6989003.0899 434919.8135,6988995.1163 434924.0101,6988987.9899 434922.1337,6988980.2618 434919.2169,6988972.7949 434914.9725,6988966.2388 434912.0101,6988963.9899 434898.7303,6988941.2697 434885.9247,6988927.0747 434880.4809,6988922.8421 434876.0174,6988920.5916 434872.0101,6988919.9899 434873.0079,6988916.3787 434878.3629,6988908.6163 434881.7826,6988901.9315 434884.0101,6988891.9899 434882.8264,6988886.768 434881.9449,6988875.3376 434880.0393,6988866.5011 434872.0101,6988847.9899 434875.9944,6988845.441 434888.8624,6988839.1045 434891.7584,6988835.9079 434892.8213,6988831.8242 434892.1494,6988825.3343 434892.8444,6988825.5483 434893.568,6988825.723 434894.591,6988825.814 434901.2264,6988825.8348 434902.2713,6988825.7449 434912.2657,6988823.9944 434912.9185,6988823.8416 434935.2264,6988817.2865 434935.4961,6988817.2006 434968.7489,6988805.7017 434993.7191,6988798.1736 434993.9921,6988798.0843 435019.1281,6988789.1713 435019.791,6988790.0831 435021.5893,6988794.8455 435022.3815,6988798.7376 435022.4551,6988799.0539 435023.4792,6988802.9831 435024.5382,6988806.9404 435024.659,6988807.3365 435027.4354,6988815.427 435027.7247,6988816.109 435029.7511,6988820.1629 435029.9067,6988820.4545 435032.1129,6988824.3219 435032.218,6988824.4966 435034.7635,6988828.6028 435035.0753,6988829.0573 435037.8562,6988832.7382 435040.4865,6988836.6697 435040.877,6988837.1899 435041.0483,6988837.3854 435044.2034,6988840.8303 435044.5669,6988841.1949 435048.0382,6988844.386 435051.5876,6988847.627 435055.3337,6988851.0551 435059.232,6988854.5663 435062.9466,6988857.8421 435063.0584,6988857.9382 435063.1843,6988858.041 435066.9146,6988861.0028 435070.7096,6988864.3556 435074.7337,6988867.8815 435074.8399,6988867.9725 435078.9067,6988871.3584 435083.2258,6988874.8831 435087.6624,6988878.3809 435087.8067,6988878.491 435092.0815,6988881.6562 435096.632,6988885.1051 435096.9618,6988885.3376 435106.35,6988891.5051 435110.7528,6988894.7708 435115.1124,6988898.2331 435119.4478,6988901.7685 435123.718,6988905.4365 435123.9511,6988905.6253 435128.432,6988909.059 435132.927,6988912.3758 435137.3725,6988915.6876 435141.7596,6988918.9371 435145.8961,6988922.123 435154.2152,6988928.3899 435158.2236,6988931.6213 435158.332,6988931.7067 435162.582,6988934.9736 435166.8826,6988938.3213 435171.1831,6988941.7073 435175.4871,6988945.1382 435179.7933,6988948.6365 435183.9421,6988952.2185 435187.7685,6988955.8781 435191.127,6988959.4742 435196.8522,6988967.8242 435198.9258,6988971.7039 435200.3062,6988976.1225 435201.7292,6988980.7803 435203.7292,6988986.0443 435203.0236,6988986.8995 435139.6573,6989063.6994 435114.228,6989094.5196</gml:coordinates>
+                </gml:LinearRing>
+              </gml:exterior>
+            </gml:Polygon>
+          </gml:polygonProperty>
+        </gdt:PolygonGeometry>
+      </st:StandBasicData>
+      <ts:TreeStandData>
+        <ts:TreeStandDataDate type="1" date="2020-06-13">
+          <tst:TreeStrata>
+            <tst:TreeStratum id="43852964">
+              <tst:StratumNumber>1</tst:StratumNumber>
+              <tst:TreeSpecies>1</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>52</tst:Age>
+              <tst:BasalArea>12.0</tst:BasalArea>
+              <tst:MeanDiameter>15.2</tst:MeanDiameter>
+              <tst:MeanHeight>13.0</tst:MeanHeight>
+              <tst:Volume>78.3</tst:Volume>
+            </tst:TreeStratum>
+            <tst:TreeStratum id="43852965">
+              <tst:StratumNumber>2</tst:StratumNumber>
+              <tst:TreeSpecies>2</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>31</tst:Age>
+              <tst:BasalArea>1.5</tst:BasalArea>
+              <tst:MeanDiameter>12.9</tst:MeanDiameter>
+              <tst:MeanHeight>11.2</tst:MeanHeight>
+              <tst:Volume>8.5</tst:Volume>
+            </tst:TreeStratum>
+          </tst:TreeStrata>
+        </ts:TreeStandDataDate>
+        <ts:TreeStandDataDate type="2" date="2025-01-01">
+          <tst:TreeStrata>
+            <tst:TreeStratum id="285691812">
+              <tst:StratumNumber>1</tst:StratumNumber>
+              <tst:TreeSpecies>1</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>57</tst:Age>
+              <tst:BasalArea>15.0</tst:BasalArea>
+              <tst:StemCount>762</tst:StemCount>
+              <tst:MeanDiameter>16.8</tst:MeanDiameter>
+              <tst:MeanHeight>14.1</tst:MeanHeight>
+              <tst:Volume>106.7</tst:Volume>
+              <tst:SawLogVolume>15.3</tst:SawLogVolume>
+              <tst:PulpWoodVolume>88.7</tst:PulpWoodVolume>
+              <tst:VolumeGrowth>5.57</tst:VolumeGrowth>
+              <tst:LeafBiomass>3.40</tst:LeafBiomass>
+              <tst:BranchBiomass>10.44</tst:BranchBiomass>
+              <tst:StemBiomass>42.48</tst:StemBiomass>
+              <tst:StumpBiomass>12.51</tst:StumpBiomass>
+            </tst:TreeStratum>
+            <tst:TreeStratum id="285691813">
+              <tst:StratumNumber>2</tst:StratumNumber>
+              <tst:TreeSpecies>2</tst:TreeSpecies>
+              <tst:Storey>5</tst:Storey>
+              <tst:Age>36</tst:Age>
+              <tst:BasalArea>2.1</tst:BasalArea>
+              <tst:StemCount>227</tst:StemCount>
+              <tst:MeanDiameter>13.7</tst:MeanDiameter>
+              <tst:MeanHeight>12.0</tst:MeanHeight>
+              <tst:Volume>12.5</tst:Volume>
+              <tst:SawLogVolume>0.0</tst:SawLogVolume>
+              <tst:PulpWoodVolume>11.2</tst:PulpWoodVolume>
+              <tst:VolumeGrowth>0.78</tst:VolumeGrowth>
+              <tst:LeafBiomass>1.28</tst:LeafBiomass>
+              <tst:BranchBiomass>1.59</tst:BranchBiomass>
+              <tst:StemBiomass>4.83</tst:StemBiomass>
+              <tst:StumpBiomass>2.34</tst:StumpBiomass>
+            </tst:TreeStratum>
+          </tst:TreeStrata>
+          <tss:TreeStandSummary id="140303329">
+            <tss:MeanAge>54</tss:MeanAge>
+            <tss:BasalArea>17.1</tss:BasalArea>
+            <tss:StemCount>989</tss:StemCount>
+            <tss:MeanDiameter>16.5</tss:MeanDiameter>
+            <tss:MeanHeight>13.8</tss:MeanHeight>
+            <tss:Volume>119.3</tss:Volume>
+            <tss:SawLogVolume>15.3</tss:SawLogVolume>
+            <tss:PulpWoodVolume>99.9</tss:PulpWoodVolume>
+            <tss:VolumeGrowth>6.35</tss:VolumeGrowth>
+            <tss:LeafBiomass>4.68</tss:LeafBiomass>
+            <tss:BranchBiomass>12.04</tss:BranchBiomass>
+            <tss:StemBiomass>47.31</tss:StemBiomass>
+            <tss:StumpBiomass>14.85</tss:StumpBiomass>
+          </tss:TreeStandSummary>
+        </ts:TreeStandDataDate>
+        <ts:TreeStandDataDate type="3" date="2035-01-01">
+          <tss:TreeStandSummary id="160141210">
+            <tss:MeanAge>64</tss:MeanAge>
+            <tss:BasalArea>23.4</tss:BasalArea>
+            <tss:StemCount>954</tss:StemCount>
+            <tss:MeanDiameter>19.2</tss:MeanDiameter>
+            <tss:MeanHeight>15.7</tss:MeanHeight>
+            <tss:Volume>182.0</tss:Volume>
+            <tss:SawLogVolume>55.5</tss:SawLogVolume>
+            <tss:PulpWoodVolume>122.8</tss:PulpWoodVolume>
+            <tss:VolumeGrowth>6.57</tss:VolumeGrowth>
+            <tss:DevelopmentClass>03</tss:DevelopmentClass>
+            <tss:MainTreeSpecies>1</tss:MainTreeSpecies>
+          </tss:TreeStandSummary>
+        </ts:TreeStandDataDate>
+      </ts:TreeStandData>
+    </st:Stand>
+  </st:Stands>
+</ForestPropertyData>
