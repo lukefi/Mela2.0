@@ -40,7 +40,7 @@ class Transition[T: ComputationalUnit]:
         self.db_output = db_output
         self.db_output_state = db_output_state
         self.db_output_cd = db_output_cd
-        
+
         if name is not None:
             self.name = name
         else:
