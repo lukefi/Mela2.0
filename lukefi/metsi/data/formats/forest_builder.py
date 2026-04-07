@@ -566,7 +566,7 @@ class VMI10Builder(VMIBuilder):
         result.region = None
         if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
 
-            is_ahvenanmaa = True if result.forestry_centre_id == 0 else False
+            is_ahvenanmaa = result.forestry_centre_id == 0
 
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
@@ -730,7 +730,7 @@ class VMI11Builder(VMIBuilder):
         result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
 
         if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
-            is_ahvenanmaa = True if result.forestry_centre_id == 0 else False
+            is_ahvenanmaa = result.forestry_centre_id == 0
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 is_ahvenanmaa,
@@ -876,7 +876,7 @@ class VMI12Builder(VMIBuilder):
 
         if result.land_use_category and result.region is not None and result.owner_category is not None:
 
-            is_ahvenanmaa = True if result.region == 21 else False
+            is_ahvenanmaa = result.region == 21
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 is_ahvenanmaa,
@@ -1025,7 +1025,7 @@ class VMI13Builder(VMIBuilder):
         )
 
         if result.land_use_category and result.region is not None and result.owner_category is not None:
-            is_ahvenanmaa = True if result.region == 21 else False
+            is_ahvenanmaa = result.region == 21
             result.forest_management_category = vmi_util.determine_forest_management_category(
                 result.land_use_category,
                 is_ahvenanmaa,
