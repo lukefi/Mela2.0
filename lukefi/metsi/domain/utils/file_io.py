@@ -159,7 +159,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                             collected_data: list[CollectedData],
                                             tags: Optional[set[str]] = None,
                                             output_state: bool = True,
-                                            output_collected_data: bool = True):
+                                            output_collected_data: bool = True,
+                                            is_transition: bool = False):
     """
     Writes current simulation state and collected data to database.
 
@@ -170,6 +171,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     if tags is None:
         tags = set()
     node_str = "-".join(current.node_id)
+    if is_transition:
+        node_str += "-T"
     cur = db.cursor()
     cur.execute(
         """--sql

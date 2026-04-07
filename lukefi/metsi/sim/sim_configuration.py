@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from copy import copy
 import sqlite3
 from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -18,10 +17,12 @@ class Transition[T: ComputationalUnit]:
     parameters: dict[str, Any]
     init_fn: TransitionInitFn[T] | None
     name: str
+    collected_data: CollectableDataTypes
 
     def __init__(
         self,
         transition_fn: TransitionFn[T],
+        collected_data: Optional[CollectableDataTypes] = None,
         *,
         init_fn: TransitionInitFn[T] | None = None,
         **parameters,
@@ -30,6 +31,10 @@ class Transition[T: ComputationalUnit]:
         self.parameters = parameters
         self.init_fn = init_fn
         self.name = transition_fn.__name__
+        if collected_data is not None:
+            self.collected_data = collected_data
+        else:
+            self.collected_data = set()
 
     def initialize(self, unit: T) -> None:
         if self.init_fn is not None:
@@ -39,12 +44,10 @@ class Transition[T: ComputationalUnit]:
         new_state, collected_data = self.transition_fn(payload.computational_unit, **self.parameters)
 
         if db is not None:
-            transition_node_id = copy(payload.node_id)
-            transition_node_id.append("T")
             temp_history: OperationHistory = [
                 (payload.computational_unit.time, self.name, self.parameters, set())]
-            transition_payload = SimulationPayload(new_state, temp_history, transition_node_id)
-            output_node_to_db(db, transition_payload, collected_data, output_state=False)
+            transition_payload = SimulationPayload(new_state, temp_history, payload.node_id)
+            output_node_to_db(db, transition_payload, collected_data, output_state=False, is_transition=True)
 
         return new_state, collected_data
 
@@ -85,10 +88,10 @@ class SimConfiguration[T: ComputationalUnit]:
         self.transition = transition
         self.instructions = simulation_instructions
         self.end_condition = end_condition
-        self._get_collected_data_types(self.instructions)
+        self._get_collected_data_types()
 
-    def _get_collected_data_types(self, instructions: list["SimulationInstruction[T]"]):
-        collected_data = set()
-        for instruction in instructions:
+    def _get_collected_data_types(self):
+        collected_data = self.transition.collected_data
+        for instruction in self.instructions:
             collected_data.update(instruction.event_generator.get_types_of_collected_data())
         self.collected_data = collected_data
