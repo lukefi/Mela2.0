@@ -194,14 +194,18 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
 
 def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
     cur = db.cursor()
+    node_id = "-".join(map(str, leaf_node.node_id))
     cur.execute(
         """--sql
         UPDATE nodes
         SET leaf = 1
         WHERE
-            identifier = ? AND
-            stand = ?;
+            (identifier = ? OR identifier = ?)
+            AND stand = ?;
         """,
-        ("-".join(map(str, leaf_node.node_id)),
-            leaf_node.computational_unit.identifier)
+        (
+            node_id,
+            node_id + "-T",
+            leaf_node.computational_unit.identifier
+        )
     )
