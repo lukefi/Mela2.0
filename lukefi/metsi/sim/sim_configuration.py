@@ -18,11 +18,18 @@ class Transition[T: ComputationalUnit]:
     init_fn: TransitionInitFn[T] | None
     name: str
     collected_data: CollectableDataTypes
+    db_output: bool
+    db_output_state: bool
+    db_output_cd: bool
 
     def __init__(
         self,
         transition_fn: TransitionFn[T],
         collected_data: Optional[CollectableDataTypes] = None,
+        name: Optional[str] = None,
+        db_output: bool = True,
+        db_output_state: bool = False,
+        db_output_cd: bool = True,
         *,
         init_fn: TransitionInitFn[T] | None = None,
         **parameters,
@@ -30,7 +37,15 @@ class Transition[T: ComputationalUnit]:
         self.transition_fn = transition_fn
         self.parameters = parameters
         self.init_fn = init_fn
-        self.name = transition_fn.__name__
+        self.db_output = db_output
+        self.db_output_state = db_output_state
+        self.db_output_cd = db_output_cd
+        
+        if name is not None:
+            self.name = name
+        else:
+            self.name = transition_fn.__name__
+
         if collected_data is not None:
             self.collected_data = collected_data
         else:
@@ -43,11 +58,13 @@ class Transition[T: ComputationalUnit]:
     def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]) -> OpTuple[T]:
         new_state, collected_data = self.transition_fn(payload.computational_unit, **self.parameters)
 
-        if db is not None:
+        if db is not None and self.db_output:
             temp_history: OperationHistory = [
-                (payload.computational_unit.time, self.name, self.parameters, set())]
+                (payload.computational_unit.time, self.name, self.parameters, set())
+            ]
             transition_payload = SimulationPayload(new_state, temp_history, payload.node_id)
-            output_node_to_db(db, transition_payload, collected_data, output_state=False, is_transition=True)
+            output_node_to_db(db, transition_payload, collected_data, output_state=self.db_output_state,
+                              output_collected_data=self.db_output_cd, is_transition=True)
 
         return new_state, collected_data
 
