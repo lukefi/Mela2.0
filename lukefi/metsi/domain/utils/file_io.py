@@ -170,7 +170,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     """
     if tags is None:
         tags = set()
-    node_str = "-".join(current.node_id)
+    node_str = "-".join(map(str, current.node_id))
     if is_transition:
         node_str += "-T"
     cur = db.cursor()
