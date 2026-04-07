@@ -167,8 +167,10 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
             [
                 robjects.NA_Real if source_trees.damage_type[i] in (
                     DamageType.FALLEN_OR_BROKEN_TREES,
+                    DamageType.BROKEN_OR_DEAD_LEADER,
                     DamageType.BROKEN_TOP,
                     DamageType.DEAD_LEADER_BRANCH,
+                    DamageType.DEFORMED_LEADER,
                     DamageType.LEADER_CHANGE_BY_LEADER_DAMAGE,
                     DamageType.MULTIPLE_LEADERS) or source_trees.measured_height[i] == 0 else (
                     source_trees.measured_height[i]) for i in range(
