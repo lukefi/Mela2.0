@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.3] - 2026-04-07
+
+### Fixed
+- Ahvenanmaa logic bug fixed
+
 ## [0.6.2] - 2026-04-01
 
 ### Fixed
