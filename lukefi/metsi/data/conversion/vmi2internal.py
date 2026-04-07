@@ -18,6 +18,8 @@ from lukefi.metsi.data.enums.vmi import (
     VmiTreeStorey,
     VmiTimeOfCutting,
     VmiTreeType,
+    VmiDrainedPeatlandForestType,
+    VmiPeatlandForestType,
 )
 from lukefi.metsi.data.enums.internal import (
     CrownClass,
@@ -35,7 +37,55 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     DrainageCategory, Storey,
     TreeType,
+    PeatlandForestType,
+    DrainedPeatlandForestType,
 )
+
+_PEATLAND_FOREST_TYPE_MAP = {
+    VmiPeatlandForestType.LEHTOKORPI: PeatlandForestType.LEHTOKORPI,
+    VmiPeatlandForestType.RUOHOKORPI: PeatlandForestType.RUOHOKORPI,
+    VmiPeatlandForestType.KANGASKORPI: PeatlandForestType.KANGASKORPI,
+    VmiPeatlandForestType.MUSTIKKAKORPI: PeatlandForestType.MUSTIKKAKORPI,
+    VmiPeatlandForestType.PUOLUKKAKORPI: PeatlandForestType.PUOLUKKAKORPI,
+    VmiPeatlandForestType.PALLOSARAKORPI: PeatlandForestType.PALLOSARAKORPI,
+    VmiPeatlandForestType.KORPIRAME: PeatlandForestType.KORPIRAME,
+    VmiPeatlandForestType.PALLOSARARAME: PeatlandForestType.PALLOSARARAME,
+    VmiPeatlandForestType.KANGASRAME: PeatlandForestType.KANGASRAME,
+    VmiPeatlandForestType.ISOVARPURAME: PeatlandForestType.ISOVARPURAME,
+    VmiPeatlandForestType.RAHKARAME: PeatlandForestType.RAHKARAME,
+    VmiPeatlandForestType.VARSINAINEN_LEHTOKORPI: PeatlandForestType.VARSINAINEN_LEHTOKORPI,
+    VmiPeatlandForestType.KOIVULETTOKORPI: PeatlandForestType.KOIVULETTOKORPI,
+    VmiPeatlandForestType.RUOHOINEN_SARAKORPI: PeatlandForestType.RUOHOINEN_SARAKORPI,
+    VmiPeatlandForestType.VARSINAINEN_SARAKORPI: PeatlandForestType.VARSINAINEN_SARAKORPI,
+    VmiPeatlandForestType.VARSINAINEN_LEHTORAME: PeatlandForestType.VARSINAINEN_LEHTORAME,
+    VmiPeatlandForestType.RUOHOINEN_SARARAME: PeatlandForestType.RUOHOINEN_SARARAME,
+    VmiPeatlandForestType.VARSINAINEN_SARARAME: PeatlandForestType.VARSINAINEN_SARARAME,
+    VmiPeatlandForestType.TUPAVILLASARARAME: PeatlandForestType.TUPAVILLASARARAME,
+    VmiPeatlandForestType.LYHYTKORSIRAME: PeatlandForestType.LYHYTKORSIRAME,
+    VmiPeatlandForestType.TUPAVILLARAME: PeatlandForestType.TUPAVILLARAME,
+    VmiPeatlandForestType.KEIDASRAME: PeatlandForestType.KEIDASRAME,
+    VmiPeatlandForestType.VARSINAINENLETTO: PeatlandForestType.VARSINAINENLETTO,
+    VmiPeatlandForestType.RIMPILETTO: PeatlandForestType.RIMPILETTO,
+    VmiPeatlandForestType.RUOHOINENSARANEVA: PeatlandForestType.RUOHOINENSARANEVA,
+    VmiPeatlandForestType.RUOHOINENRIMPINEVA: PeatlandForestType.RUOHOINENRIMPINEVA,
+    VmiPeatlandForestType.VARSINAINENSARANEVA: PeatlandForestType.VARSINAINENSARANEVA,
+    VmiPeatlandForestType.VARSINAINENRIMPINEVA: PeatlandForestType.VARSINAINENRIMPINEVA,
+    VmiPeatlandForestType.LYHYTKORSIKALVAKKANEVA: PeatlandForestType.LYHYTKORSIKALVAKKANEVA,
+    VmiPeatlandForestType.LYHYTKORSINEVA: PeatlandForestType.LYHYTKORSINEVA,
+    VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
+}
+
+_DRAINED_PEATLAND_FOREST_TYPE_MAP = {
+    VmiDrainedPeatlandForestType.HERB_RICH_TYPE: DrainedPeatlandForestType.HERB_RICH_TYPE,
+    VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1,
+    VmiDrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2,
+    VmiDrainedPeatlandForestType.VACCINIUM_VITIS_IDAEA_TYPE: DrainedPeatlandForestType.VACCINIUM_VITIS_IDAEA_TYPE,
+    VmiDrainedPeatlandForestType.DEV_FROM_GENUINE_FORESTED_MIRE:
+    DrainedPeatlandForestType.DEV_FROM_GENUINE_FORESTED_MIRE,
+    VmiDrainedPeatlandForestType.DWARF_SHRUB_TYPE: DrainedPeatlandForestType.DWARF_SHRUB_TYPE,
+    VmiDrainedPeatlandForestType.CLADONIA_TYPE: DrainedPeatlandForestType.CLADONIA_TYPE,
+}
+
 
 _SPECIES_MAP = {
     VmiSpecies.PINE: TreeSpecies.PINE,
@@ -307,10 +357,28 @@ _CROWN_CLASS_MAP = {
 
 def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
     def inner(code: str):
-        if code in ('', ' ', '.'):
+        if code in ('', ' ', '  ', '.'):
             return None
         return func(code)
     return inner
+
+
+@check_empty_vmi
+def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
+    if code == '0':
+        return None
+
+    vmi_code = VmiPeatlandForestType(code)
+    return _PEATLAND_FOREST_TYPE_MAP[vmi_code]
+
+
+@check_empty_vmi
+def convert_drained_peatland_forest_type(code: str) -> Optional[DrainedPeatlandForestType]:
+    if code == '0':
+        return None
+
+    vmi_code = VmiDrainedPeatlandForestType(code)
+    return _DRAINED_PEATLAND_FOREST_TYPE_MAP[vmi_code]
 
 
 @check_empty_vmi
