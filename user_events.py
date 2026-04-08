@@ -471,9 +471,7 @@ class SaplingTreatmentMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params = {
-            "remaining_n": 1600,
-        }
+        default_params = {}
 
         merged_params = default_params | (parameters or {})
 

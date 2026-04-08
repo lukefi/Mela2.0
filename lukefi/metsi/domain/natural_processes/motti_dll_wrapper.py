@@ -208,6 +208,10 @@ class Motti4DLL:
                       Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                       int *numtrees, int *step, int *rv);
 
+        void Motti4PCTGuidelines(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+            Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+            int *numtrees, int *remaingN, int *rv);
+
         void Motti4PCT(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
                        Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                        int *numtrees, int *remaingN, int *rv);
@@ -677,6 +681,74 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    def _normalize_remaining_n_array(self, remaining_n: Any) -> list[int]:
+        """
+        Normalize remainingN into a 10-slot int list where indices 1..9 are species.
+        Index 0 is kept as 0 because Motti species slots are documented as 1..9.
+        Accepts:
+          - list/tuple/ndarray of length 9  -> mapped to slots 1..9
+          - list/tuple/ndarray of length 10 -> used as-is
+          - dict {species_slot: stems}
+        """
+        if isinstance(remaining_n, dict):
+            arr = [0] * 10
+            for key, value in remaining_n.items():
+                idx = int(key)
+                if not 1 <= idx <= 9:
+                    raise ValueError(f"remaining_n species index must be 1..9, got {idx}")
+                arr[idx] = max(int(value), 0)
+            return arr
+
+        vals = [int(x) for x in remaining_n]
+
+        if len(vals) == 9:
+            return [0] + [max(v, 0) for v in vals]
+
+        if len(vals) == 10:
+            out = [max(v, 0) for v in vals]
+            out[0] = 0
+            return out
+
+        raise ValueError(
+            "remaining_n must be dict or an array of length 9 (species 1..9) "
+            "or length 10 (slot 0 unused, species in 1..9)"
+        )
+
+    def pct_guidelines_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+    ) -> list[int]:
+        """
+        Call Motti4PCTGuidelines against persistent state buffers and return
+        a 10-slot list where indices 1..9 correspond to remaining stem count for each species.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        remaining_n_p = ffi.new("int[10]", [0] * 10)
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4PCTGuidelines(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                remaining_n_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4PCTGuidelines failed (rv={rv[0]})")
+
+        return [int(remaining_n_p[i]) for i in range(10)]
+
     def pct_with_state(
         self,
         yy: Any,
@@ -684,20 +756,23 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
-        remaining_n: int,
+        remaining_n: Any,
     ) -> int:
         """
         Call Motti4PCT against persistent state buffers.
 
-        Assumption:
-          - remaingN is a single integer pointer as the current doc suggests.
-          - If the DLL really expects a species-wise array, replace `int *remaingN`
-            with the correct array type
+        remaining_n must describe species-wise remaining stem counts for
+        species slots 1..9. Accepted forms:
+          - dict {species_slot: stems}
+          - list/tuple length 9
+          - list/tuple length 10 (slot 0 unused)
         """
         ffi, lib = self.ffi, self.lib
 
+        remaining_arr = self._normalize_remaining_n_array(remaining_n)
+
         ntrees_p = ffi.new("int *", int(numtrees))
-        remaining_n_p = ffi.new("int *", int(remaining_n))
+        remaining_n_p = ffi.new("int[10]", remaining_arr)
         rv = ffi.new("int *")
 
         with _maybe_chdir(self.data_dir):
