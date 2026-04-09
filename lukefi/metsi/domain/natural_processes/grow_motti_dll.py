@@ -529,7 +529,7 @@ class MottiDLLPredictor:
             return self.stand.motti_state
 
         rt = self.stand.reference_trees
-        if not rt or rt.size == 0:
+        if not rt:
             return None
 
         n = rt.size
@@ -649,12 +649,16 @@ class MottiDLLPredictor:
             ms.signature = tuple(ids.tolist())
             self.stand.motti_state = ms
 
+        sync_yp_to_reference_trees(self.stand)
+        sync_ut_to_reference_trees(self.stand)
+        prune_reference_trees_not_in_motti(self.stand)
+
         return self.stand.motti_state
 
     def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
         state = self.ensure_state(step=step, sim_year=sim_year)
         if state is None:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+            return GrowthDeltas(tree_ids=[], tree_sids=[], trees_id=[], trees_ih=[], trees_if=[],
                                 trees_age=[], trees_age13=[]
                                 )
 

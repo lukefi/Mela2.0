@@ -40,8 +40,6 @@ def ensure_motti_initialized(unit: Any, config: SimConfiguration) -> None:
     for stand in _iter_stands(unit):
         if getattr(stand, "motti_state", None) is not None:
             continue
-        if not stand.has_trees():
-            continue
 
         predictor = MottiDLLPredictor(stand, data_dir=data_dir)
         predictor.ensure_state(step=5, sim_year=int(stand.year))
