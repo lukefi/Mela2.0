@@ -255,6 +255,13 @@ class VmiPeatlandForestType(Enum):
     LYHYTKORSIKALVAKKANEVA = '29'
     LYHYTKORSINEVA = '30'
     RAHKANEVA = '31'
+    RAHKAINEN_LETTORAME = '32'
+    RUOHOKANGASKORPI = '33'
+    METSAKORTEKORPI = '34'
+    MUURAINKORPI = '35'
+    TUPASVILLAKORPI = '36'
+    VAIVAISKOIVURAME = '37'
+    SARARIMPINEVA = '38'
 
 
 class VmiDrainedPeatlandForestType(Enum):

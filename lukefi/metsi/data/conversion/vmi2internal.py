@@ -73,6 +73,13 @@ _PEATLAND_FOREST_TYPE_MAP = {
     VmiPeatlandForestType.LYHYTKORSIKALVAKKANEVA: PeatlandForestType.LYHYTKORSIKALVAKKANEVA,
     VmiPeatlandForestType.LYHYTKORSINEVA: PeatlandForestType.LYHYTKORSINEVA,
     VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
+    VmiPeatlandForestType.RAHKAINEN_LETTORAME: PeatlandForestType.RAHKAINEN_LETTORAME,
+    VmiPeatlandForestType.RUOHOKANGASKORPI: PeatlandForestType.RUOHOKANGASKORPI,
+    VmiPeatlandForestType.METSAKORTEKORPI: PeatlandForestType.METSAKORTEKORPI,
+    VmiPeatlandForestType.MUURAINKORPI: PeatlandForestType.MUURAINKORPI,
+    VmiPeatlandForestType.TUPASVILLAKORPI: PeatlandForestType.TUPASVILLAKORPI,
+    VmiPeatlandForestType.VAIVAISKOIVURAME: PeatlandForestType.VAIVAISKOIVURAME,
+    VmiPeatlandForestType.SARARIMPINEVA: PeatlandForestType.SARARIMPINEVA,
 }
 
 _DRAINED_PEATLAND_FOREST_TYPE_MAP = {
