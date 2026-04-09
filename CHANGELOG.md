@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.5] - 2026-04-09
+
+### Fixed
+
+- Added missing cutting methods for upper layer thinning variants
+
 ## [0.6.4] - 2026-04-07
 
 ### Added
