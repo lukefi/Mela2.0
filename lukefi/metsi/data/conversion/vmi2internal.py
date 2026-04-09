@@ -374,7 +374,7 @@ def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
     if code == '0':
         return None
 
-    vmi_code = VmiPeatlandForestType(code)
+    vmi_code = VmiPeatlandForestType(code.strip())
     return _PEATLAND_FOREST_TYPE_MAP[vmi_code]
 
 
