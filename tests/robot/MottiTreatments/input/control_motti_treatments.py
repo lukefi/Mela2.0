@@ -73,8 +73,13 @@ control_structure = {
                     ]),
                     Sequence[ForestStand]([
                         PlantingPines(),
-                        SaplingTreatmentMotti(parameters={"remaining_n": 1800}),
+                        SaplingTreatmentMotti(parameters={"remaining_n": {
+                            1: 1200,  # pine
+                            2: 300,   # spruce
+                            3: 100,   # silver birch
+                        }}),
                     ]),
+
                 ])
             ]
         )
