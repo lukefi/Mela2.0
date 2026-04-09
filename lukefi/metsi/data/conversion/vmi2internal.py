@@ -60,19 +60,26 @@ _PEATLAND_FOREST_TYPE_MAP = {
     VmiPeatlandForestType.VARSINAINEN_LEHTORAME: PeatlandForestType.VARSINAINEN_LEHTORAME,
     VmiPeatlandForestType.RUOHOINEN_SARARAME: PeatlandForestType.RUOHOINEN_SARARAME,
     VmiPeatlandForestType.VARSINAINEN_SARARAME: PeatlandForestType.VARSINAINEN_SARARAME,
-    VmiPeatlandForestType.TUPAVILLASARARAME: PeatlandForestType.TUPAVILLASARARAME,
+    VmiPeatlandForestType.TUPASVILLASARARAME: PeatlandForestType.TUPASVILLASARARAME,
     VmiPeatlandForestType.LYHYTKORSIRAME: PeatlandForestType.LYHYTKORSIRAME,
-    VmiPeatlandForestType.TUPAVILLARAME: PeatlandForestType.TUPAVILLARAME,
+    VmiPeatlandForestType.TUPASVILLARAME: PeatlandForestType.TUPASVILLARAME,
     VmiPeatlandForestType.KEIDASRAME: PeatlandForestType.KEIDASRAME,
-    VmiPeatlandForestType.VARSINAINENLETTO: PeatlandForestType.VARSINAINENLETTO,
+    VmiPeatlandForestType.VARSINAINEN_LETTO: PeatlandForestType.VARSINAINEN_LETTO,
     VmiPeatlandForestType.RIMPILETTO: PeatlandForestType.RIMPILETTO,
-    VmiPeatlandForestType.RUOHOINENSARANEVA: PeatlandForestType.RUOHOINENSARANEVA,
-    VmiPeatlandForestType.RUOHOINENRIMPINEVA: PeatlandForestType.RUOHOINENRIMPINEVA,
-    VmiPeatlandForestType.VARSINAINENSARANEVA: PeatlandForestType.VARSINAINENSARANEVA,
-    VmiPeatlandForestType.VARSINAINENRIMPINEVA: PeatlandForestType.VARSINAINENRIMPINEVA,
+    VmiPeatlandForestType.RUOHOINEN_SARANEVA: PeatlandForestType.RUOHOINEN_SARANEVA,
+    VmiPeatlandForestType.RUOHOINEN_RIMPINEVA: PeatlandForestType.RUOHOINEN_RIMPINEVA,
+    VmiPeatlandForestType.VARSINAINEN_SARANEVA: PeatlandForestType.VARSINAINEN_SARANEVA,
+    VmiPeatlandForestType.VARSINAINEN_RIMPINEVA: PeatlandForestType.VARSINAINEN_RIMPINEVA,
     VmiPeatlandForestType.LYHYTKORSIKALVAKKANEVA: PeatlandForestType.LYHYTKORSIKALVAKKANEVA,
     VmiPeatlandForestType.LYHYTKORSINEVA: PeatlandForestType.LYHYTKORSINEVA,
     VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
+    VmiPeatlandForestType.RAHKAINEN_LETTORAME: PeatlandForestType.RAHKAINEN_LETTORAME,
+    VmiPeatlandForestType.RUOHOKANGASKORPI: PeatlandForestType.RUOHOKANGASKORPI,
+    VmiPeatlandForestType.METSAKORTEKORPI: PeatlandForestType.METSAKORTEKORPI,
+    VmiPeatlandForestType.MUURAINKORPI: PeatlandForestType.MUURAINKORPI,
+    VmiPeatlandForestType.TUPASVILLAKORPI: PeatlandForestType.TUPASVILLAKORPI,
+    VmiPeatlandForestType.VAIVAISKOIVURAME: PeatlandForestType.VAIVAISKOIVURAME,
+    VmiPeatlandForestType.SARARIMPINEVA: PeatlandForestType.SARARIMPINEVA,
 }
 
 _DRAINED_PEATLAND_FOREST_TYPE_MAP = {
@@ -374,7 +381,7 @@ def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
     if code == '0':
         return None
 
-    vmi_code = VmiPeatlandForestType(code)
+    vmi_code = VmiPeatlandForestType(code.strip())
     return _PEATLAND_FOREST_TYPE_MAP[vmi_code]
 
 
