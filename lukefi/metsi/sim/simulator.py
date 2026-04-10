@@ -21,8 +21,6 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         payload = SimulationPayload(unit)
         payload.computational_unit.update_aggregates()
 
-        ensure_motti_initialized(payload.computational_unit, simconfig)
-
         if db is not None:
             # Write initial state to database
             output_node_to_db(db, payload, [], {"initial"})
@@ -33,6 +31,7 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          config: SimConfiguration[T],
                                          db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
     retval = []
+    ensure_motti_initialized(payload.computational_unit, config)
     if not config.end_condition(payload):
         offset = 0
         all_instructions_failed = True

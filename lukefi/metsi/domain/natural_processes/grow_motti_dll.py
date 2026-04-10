@@ -16,7 +16,6 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import (
-    validate_unique_tree_identifiers,
     update_stand_growth, safe_storey_value,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
@@ -865,7 +864,6 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         rt.biological_age = bio_age
         rt.breast_height_age = bh_age
 
-    validate_unique_tree_identifiers(stand)  # debug
     sync_yp_to_reference_trees(stand)
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)

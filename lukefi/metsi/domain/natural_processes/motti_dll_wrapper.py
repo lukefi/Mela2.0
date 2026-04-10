@@ -216,6 +216,10 @@ class Motti4DLL:
                        Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                        int *numtrees, int *remaingN, int *rv);
 
+        void Motti4EarlyCare(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+                             Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+                             int *numtrees, float *info, int *imode, int *rv);
+
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
         float  Convert_Site(int Mela_site);
@@ -748,6 +752,53 @@ class Motti4DLL:
             raise RuntimeError(f"Motti4PCTGuidelines failed (rv={rv[0]})")
 
         return [int(remaining_n_p[i]) for i in range(10)]
+
+    def earlycare_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        *,
+        imode: int = 0,
+    ) -> list[float]:
+        """
+        Call Motti4EarlyCare against persistent state buffers.
+
+        Returns info array where:
+          info[0] = remaining stem count
+          info[1] = removed stem count
+          info[2] = removed d13 (cm)
+          info[3] = removed height (m)
+        """
+        ffi, lib = self.ffi, self.lib
+
+        if imode not in (0, 1):
+            raise ValueError("imode must be 0 or 1")
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        info_p = ffi.new("float[10]", [0.0] * 10)
+        imode_p = ffi.new("int *", int(imode))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4EarlyCare(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                info_p,
+                imode_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4EarlyCare failed (rv={rv[0]})")
+
+        return [float(info_p[i]) for i in range(10)]
 
     def pct_with_state(
         self,

@@ -198,36 +198,3 @@ def safe_storey_value(v: Any) -> float:
     if v is None:
         return 0.0
     return float(getattr(v, "value", v))
-
-
-# debug
-
-def validate_unique_tree_identifiers(stand: ForestStand) -> None:
-    rt = stand.reference_trees
-    ids = [str(x) for x in rt.identifier.tolist()]
-    dup = len(ids) != len(set(ids))
-    if dup:
-        raise ValueError(
-            f"Duplicate reference tree identifiers in stand {stand.identifier}: {ids}"
-        )
-
-    keys = []
-    for i in range(rt.size):
-        if bool(rt.sapling[i]):
-            continue
-
-        sid = parse_int_id(rt.stratum[i])
-        try:
-            tree_number = int(rt.tree_number[i])
-        except (TypeError, ValueError):
-            continue
-
-        if sid is None or tree_number <= 0:
-            continue
-
-        keys.append((sid, tree_number))
-
-    if len(keys) != len(set(keys)):
-        raise ValueError(
-            f"Duplicate (stratum, tree_number) values in stand {stand.identifier}: {keys}"
-        )

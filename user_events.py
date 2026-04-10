@@ -17,6 +17,7 @@ from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.pct import pct
+from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -490,6 +491,41 @@ class SaplingTreatmentMotti(Event[ForestStand]):
         )
 
 
+class EarlyCareMotti(Event[ForestStand]):
+    """
+    Example event that uses Motti4EarlyCare.
+
+    Thin wrapper around the Motti-backed early care treatment.
+    imode:
+      0 = preserve cultivated trees
+      1 = also take from cultivated trees if needed
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {"imode": 0}
+
+        merged_params = default_params | (parameters or {})
+
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(5, regeneration),
+        ]
+
+        super().__init__(
+            treatment=earlycare,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_earlycare", "earlycare"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -498,4 +534,5 @@ __all__ = [
     "MarkRetentionTrees",
     "Harvest20percent",
     "SaplingTreatmentMotti",
+    "EarlyCareMotti",
 ]

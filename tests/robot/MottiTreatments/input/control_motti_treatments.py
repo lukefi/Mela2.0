@@ -16,8 +16,9 @@ from user_events import (
     FirstThinningMineralSoils,
     PlantingPines,
     SaplingTreatmentMotti,
+    EarlyCareMotti,
 )
-
+from lukefi.metsi.domain.natural_processes.motti_bootstrap import ensure_motti_initialized
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",
@@ -28,7 +29,7 @@ control_structure = {
         generate_reference_trees,
         compute_location_metadata,
         filter_stands,
-        filter_trees
+        filter_trees,
     ],
     "preprocessing_params": {
         generate_reference_trees: [
@@ -73,13 +74,9 @@ control_structure = {
                     ]),
                     Sequence[ForestStand]([
                         PlantingPines(),
-                        SaplingTreatmentMotti(parameters={"remaining_n": {
-                            1: 1200,  # pine
-                            2: 300,   # spruce
-                            3: 100,   # silver birch
-                        }}),
+                        SaplingTreatmentMotti(parameters={"remaining_n": 1800}),
+                        EarlyCareMotti(parameters={"imode": 0}),
                     ]),
-
                 ])
             ]
         )

@@ -8,7 +8,6 @@ import numpy as np
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
-
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
@@ -94,13 +93,12 @@ def make_rt(
     stems=(100.0, 120.0),
     d=(10.0, 12.0),
     h=(12.0, 14.0),
-    species=(3, 7),          # 7 -> 6 (alder collapse)
+    species=(3, 7),
     bio_age=(30.0, 32.0),
     bh_age=(20.0, 22.0),
     crown_ratio=(0.3, 0.4),
     origin=(0, 0),
 ):
-    """Create a simple SoA (vector) reference tree container with required fields."""
     stems = np.asarray(stems, dtype=float)
     d = np.asarray(d, dtype=float)
     h = np.asarray(h, dtype=float)
@@ -115,7 +113,7 @@ def make_rt(
     stratum = np.asarray(origin, dtype=str)
     sapling = h < 1.3
 
-    return SimpleNamespace(
+    rt = SimpleNamespace(
         size=n,
         stems_per_ha=stems,
         breast_height_diameter=d,
@@ -129,6 +127,16 @@ def make_rt(
         sapling=sapling,
         stratum=stratum,
     )
+
+    def delete(index):
+        idx = np.asarray(index, dtype=int)
+        for name, value in vars(rt).items():
+            if isinstance(value, np.ndarray):
+                setattr(rt, name, np.delete(value, idx, axis=0))
+        rt.size = len(rt.stems_per_ha)
+
+    rt.delete = delete
+    return rt
 # ---------- DLL stub ----------
 
 
@@ -197,6 +205,7 @@ class FakeDLL:
         if not self.captured_trees_py:
             return GrowthDeltas(
                 tree_ids=[],
+                tree_sids=[],
                 trees_id=[],
                 trees_ih=[],
                 trees_if=[],
@@ -206,9 +215,11 @@ class FakeDLL:
 
         n = len(self.captured_trees_py)
         ids = list(range(1, n + 1))
+        sids = list(range(1, n + 1))
         zeros = [0.0] * n
         return GrowthDeltas(
             tree_ids=ids,
+            tree_sids=sids,
             trees_id=zeros,
             trees_ih=zeros,
             trees_if=zeros,
@@ -389,6 +400,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
             d=(10.0, 12.0),
             h=(12.0, 14.0),
             species=(2, 3),
+            origin=(2, 2),
         )
         stand = make_stand_vec(rt)
 
@@ -397,6 +409,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
                 # Only tree id=1 grows / survives
                 return GrowthDeltas(
                     tree_ids=[1],
+                    tree_sids=[2],
                     trees_id=[+0.7],    # Δd
                     trees_ih=[+1.2],    # Δh
                     trees_if=[-5.0],    # Δf
@@ -407,11 +420,17 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         dll_stub = GrowingDLL()
         pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        out_stand, _ = grow_motti.grow_motti_dll_fn(
-            stand,  # type: ignore[arg-type]
-            predictor=pred,
-            step=5,
-        )
+        orig_prune = grow_motti.prune_reference_trees_not_in_motti
+        try:
+            grow_motti.prune_reference_trees_not_in_motti = lambda stand: None
+
+            out_stand, _ = grow_motti.grow_motti_dll_fn(
+                stand,
+                predictor=pred,
+                step=5,
+            )
+        finally:
+            grow_motti.prune_reference_trees_not_in_motti = orig_prune
 
         # Make linters happy: ensure we got a vector trees container back
         self.assertIsNotNone(out_stand.reference_trees)
