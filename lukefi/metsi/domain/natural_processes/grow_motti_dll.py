@@ -16,6 +16,7 @@ from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
+from lukefi.metsi.forestry.treatment_utils import prune_zero_stems_transition
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
@@ -455,6 +456,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 @natural_process_transition
+@prune_zero_stems_transition
 def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:

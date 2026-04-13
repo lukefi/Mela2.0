@@ -2,12 +2,14 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.forestry.treatment_utils import prune_zero_stems_treatment
 from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.sim.treatment import Treatment
 
 
+@prune_zero_stems_treatment
 def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     cutting treatment:
