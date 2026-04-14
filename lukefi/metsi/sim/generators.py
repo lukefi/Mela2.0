@@ -27,6 +27,13 @@ class EventGeneratorBase(ABC, Generic[T]):
     def get_types_of_collected_data(self) -> CollectableDataTypes:
         pass
 
+    @abstractmethod
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: Optional[sqlite3.Connection] = None
+                 ) -> Generator[SimulationPayload[T]]:
+        pass
+
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
