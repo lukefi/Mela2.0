@@ -1,17 +1,23 @@
 from copy import copy
+from enum import IntEnum
+from typing import Mapping
 
 import numpy as np
+import numpy.typing as npt
+
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.mela import (
     MelaOwnerCategory,
     MelaSiteTypeCategory,
     MelaSoilAndPeatlandCategory,
+    MelaTreeOrigin,
     MelaTreeSpecies,
     MelaLandUseCategory,
     MelaDrainageCategory
 )
 from lukefi.metsi.data.enums.internal import (
+    Origin,
     SiteType,
     SoilPeatlandCategory,
     TreeSpecies,
@@ -24,7 +30,7 @@ from lukefi.metsi.data.conversion.util import apply_mappers
 from lukefi.metsi.app.utils import MetsiException
 
 
-species_map = {
+_SPECIES_MAP = {
     TreeSpecies.PINE: MelaTreeSpecies.SCOTS_PINE,
     TreeSpecies.SPRUCE: MelaTreeSpecies.NORWAY_SPRUCE,
     TreeSpecies.SILVER_BIRCH: MelaTreeSpecies.SILVER_BIRCH,
@@ -64,8 +70,14 @@ species_map = {
     TreeSpecies.HAZEL: MelaTreeSpecies.OTHER_DECIDUOUS
 }
 
+_ORIGIN_MAP = {
+    Origin.UNSET: MelaTreeOrigin.NATURAL,
+    Origin.NATURAL: MelaTreeOrigin.NATURAL,
+    Origin.SEEDED: MelaTreeOrigin.SEEDED,
+    Origin.PLANTED: MelaTreeOrigin.PLANTED
+}
 
-land_use_map = {
+_LAND_USE_MAP = {
     LandUseCategory.FOREST: MelaLandUseCategory.FOREST_LAND,
     LandUseCategory.SCRUB_LAND: MelaLandUseCategory.SCRUB_LAND,
     LandUseCategory.WASTE_LAND: MelaLandUseCategory.WASTE_LAND,
@@ -81,8 +93,7 @@ land_use_map = {
     LandUseCategory.WATER_BODY: MelaLandUseCategory.LAKES_AND_RIVERS
 }
 
-
-owner_map = {
+_OWNER_MAP = {
     OwnerCategory.UNKNOWN: MelaOwnerCategory.PRIVATE,
     OwnerCategory.PRIVATE: MelaOwnerCategory.PRIVATE,
     OwnerCategory.FOREST_INDUSTRY: MelaOwnerCategory.ENTERPRISE,
@@ -97,7 +108,7 @@ owner_map = {
 }
 
 
-_site_type_map = {
+_SITE_TYPE_MAP = {
     SiteType.VERY_RICH_SITE: MelaSiteTypeCategory.VERY_RICH_SITE,
     SiteType.RICH_SITE: MelaSiteTypeCategory.RICH_SITE,
     SiteType.DAMP_SITE: MelaSiteTypeCategory.DAMP_SITE,
@@ -110,16 +121,14 @@ _site_type_map = {
     SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA: MelaSiteTypeCategory.OPEN_MOUNTAINS
 }
 
-
 # this doesn't have a mapping for TREELESS_MIRE, as its mapping to MELA values is determined by the SiteType category.
-_soil_peatland_map = {
+_SOIL_PEATLAND_MAP = {
     SoilPeatlandCategory.MINERAL_SOIL: MelaSoilAndPeatlandCategory.MINERAL_SOIL,
     SoilPeatlandCategory.SPRUCE_MIRE: MelaSoilAndPeatlandCategory.PEATLAND_SPRUCE_MIRE,
     SoilPeatlandCategory.PINE_MIRE: MelaSoilAndPeatlandCategory.PEATLAND_PINE_MIRE,
 }
 
-
-_rich_mire_types = [
+_RICH_MIRE_TYPES = [
     SiteType.VERY_RICH_SITE,
     SiteType.RICH_SITE,
     SiteType.DAMP_SITE
@@ -127,7 +136,7 @@ _rich_mire_types = [
 
 
 def site_type_mapper(target):
-    target.site_type_category = _site_type_map.get(target.site_type_category)
+    target.site_type_category = _SITE_TYPE_MAP.get(target.site_type_category)
     return target
 
 
@@ -161,70 +170,45 @@ def soil_peatland_mapper(target):
         if target.site_type_category is None:
             target.soil_peatland_category = None
 
-        elif target.site_type_category in _rich_mire_types:
+        elif target.site_type_category in _RICH_MIRE_TYPES:
             target.soil_peatland_category = MelaSoilAndPeatlandCategory.PEATLAND_RICH_TREELESS_MIRE
         else:
             target.soil_peatland_category = MelaSoilAndPeatlandCategory.PEATLAND_BARREN_TREELESS_MIRE
     else:
-        target.soil_peatland_category = _soil_peatland_map.get(target.soil_peatland_category)
+        target.soil_peatland_category = _SOIL_PEATLAND_MAP.get(target.soil_peatland_category)
 
     return target
 
 
 def land_use_mapper(target):
     """in-place mapping from internal LandUseCategory to MelaLandUseCategory"""
-    target.land_use_category = land_use_map.get(target.land_use_category)
+    target.land_use_category = _LAND_USE_MAP.get(target.land_use_category)
     return target
 
 
 def owner_mapper(target):
     """in-place mapping from internal land owner category to mela owner category"""
-    target.owner_category = owner_map.get(target.owner_category)
-    return target
-
-
-# Faster species conversion
-_MAX_INTERNAL_SPECIES = max(s.value for s in TreeSpecies)
-_DEFAULT_MELA_SPECIES = MelaTreeSpecies.OTHER_DECIDUOUS.value
-_SPECIES_LUT = np.full((_MAX_INTERNAL_SPECIES + 1,), _DEFAULT_MELA_SPECIES, dtype=np.int32)
-for internal_species, mela_species in species_map.items():
-    _SPECIES_LUT[int(internal_species.value)] = int(mela_species.value)
-
-
-def species_mapper(target):
-    """in-place mapping from internal tree species to mela tree species"""
-    target.species = species_map.get(target.species, MelaTreeSpecies.OTHER_DECIDUOUS)
+    target.owner_category = _OWNER_MAP.get(target.owner_category)
     return target
 
 
 def mela_trees(trees: ReferenceTrees) -> ReferenceTrees:
     """
     Convert SoA ReferenceTrees so that enumerated category variables are converted to Mela value space.
-
     """
     rt = copy(trees)
 
-    if rt.size == 0:
-        return rt
-
-    # --- Species conversion: internal TreeSpecies int -> MELA int ---
-    if rt.species is not None:
-        src = rt.species
-
-        missing_mask = src == -1
-
-        # Clip to LUT domain to avoid index errors if unexpected values appear.
-        clipped = np.clip(src, 0, _MAX_INTERNAL_SPECIES).astype(np.int32, copy=False)
-        mapped = _SPECIES_LUT[clipped]
-
-        # Apply the old convention for missing
-        if np.any(missing_mask):
-            mapped = mapped.copy()
-            mapped[missing_mask] = 0
-
-        rt.species = mapped.astype(np.int32, copy=False)
+    rt.species = _convert_vector(rt.species, _SPECIES_MAP)
+    rt.origin = _convert_vector(rt.origin, _ORIGIN_MAP)
 
     return rt
+
+
+def _convert_vector[T: IntEnum](array: npt.NDArray[np.int32],
+                                conversions: Mapping[T, IntEnum]) -> npt.NDArray[np.int32]:
+    for i, original_value in enumerate(array):
+        array[i] = conversions[original_value]
+    return array
 
 
 def stand_location_converter(target):
@@ -247,12 +231,6 @@ def stand_location_converter(target):
     return target
 
 
-def mela_stratum(stratum):
-    """Convert a TreeStratum so that enumerated category variables are converted to Mela value space"""
-    result = copy(stratum)
-    return apply_mappers(result, *default_mela_stratum_mappers)
-
-
 def mela_stand(stand: ForestStand) -> ForestStand:
     """Convert a ForestStand so that enumerated category variables are converted to Mela value space"""
     result = copy(stand)
@@ -272,8 +250,6 @@ def mela_stand(stand: ForestStand) -> ForestStand:
     return result
 
 
-default_mela_tree_mappers = [species_mapper]
-default_mela_stratum_mappers = [species_mapper]
 default_mela_stand_mappers = [stand_location_converter,
                               owner_mapper,
                               land_use_mapper,
