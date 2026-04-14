@@ -436,34 +436,40 @@ class VMI9Builder(VMIBuilder):
         stratum_attrs: dict[str, dict[str, list]] = {}
 
         for i, row in enumerate(self.forest_stands):
-            idx = self._select_stand_indices(row)
-            stand = self.convert_stand_entry(idx, row, i + 1)
-            result[stand.identifier] = stand
+            try:
+                idx = self._select_stand_indices(row)
+                stand = self.convert_stand_entry(idx, row, i + 1)
+                result[stand.identifier] = stand
 
-            sattr = stratum_attrs.setdefault(stand.identifier, {})
-            vmi_util.append_vmi9_strata_from_stand_row(
-                sattr,
-                idx,
-                row,
-                stand.identifier,
-                stand_basal_area=stand.basal_area or 0.0,
-            )
+                sattr = stratum_attrs.setdefault(stand.identifier, {})
+                vmi_util.append_vmi9_strata_from_stand_row(
+                    sattr,
+                    idx,
+                    row,
+                    stand.identifier,
+                    stand_basal_area=stand.basal_area or 0.0,
+                )
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {i}: {row} failed: {e}") from e
 
         if self.builder_flags.get("measured_trees", False):
-            for row in self.reference_trees:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
+            for i, row in enumerate(self.reference_trees):
+                try:
+                    stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
 
-                stand2 = result.get(stand_id)
-                if stand2 is None:
-                    continue
+                    stand2 = result.get(stand_id)
+                    if stand2 is None:
+                        continue
 
-                attr_dict = tree_attrs.setdefault(stand_id, {})
-                vmi_util.append_tree_row_vmi9(
-                    attr_dict,
-                    VMI9_TREE_INDICES,
-                    row,
-                    forestry_centre_id=stand2.forestry_centre_id,
-                )
+                    attr_dict = tree_attrs.setdefault(stand_id, {})
+                    vmi_util.append_tree_row_vmi9(
+                        attr_dict,
+                        VMI9_TREE_INDICES,
+                        row,
+                        forestry_centre_id=stand2.forestry_centre_id,
+                    )
+                except Exception as e:
+                    raise MetsiException(f"Parsing tree row {i}: {row} failed: {e}") from e
 
         out = StandList()
         for sid, stand in result.items():
@@ -594,30 +600,38 @@ class VMI10Builder(VMIBuilder):
         stratum_attrs: dict[str, dict[str, list]] = {}
 
         for i, row in enumerate(self.forest_stands):
-            stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
-            result[stand.identifier] = stand
+            try:
+                stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
+                result[stand.identifier] = stand
 
-            sattr = stratum_attrs.setdefault(stand.identifier, {})
-            vmi_util.append_vmi10_strata_from_stand_row(
-                sattr,
-                VMI10_STAND_INDICES,
-                row,
-                stand.identifier,
-                stand_basal_area=stand.basal_area or 0.0,
-            )
+                sattr = stratum_attrs.setdefault(stand.identifier, {})
+                vmi_util.append_vmi10_strata_from_stand_row(
+                    sattr,
+                    VMI10_STAND_INDICES,
+                    row,
+                    stand.identifier,
+                    stand_basal_area=stand.basal_area or 0.0,
+                )
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {i}: {row} failed: {e}") from e
+
 
         if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
-                if stand_id not in result:
-                    continue
-                attr_dict = tree_attrs.setdefault(stand_id, {})
-                stand2 = result.get(stand_id)
-                if stand2 is None:
-                    continue
+            for i, row in enumerate(self.reference_trees):
+                try:
+                    stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
+                    if stand_id not in result:
+                        continue
+                    attr_dict = tree_attrs.setdefault(stand_id, {})
+                    stand2 = result.get(stand_id)
+                    if stand2 is None:
+                        continue
 
-                vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row,
-                                               forestry_centre_id=stand2.forestry_centre_id)
+                    vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row,
+                                                forestry_centre_id=stand2.forestry_centre_id)
+                except Exception as e:
+                    raise MetsiException(f"Parsing tree row {i}: {row} failed: {e}") from e
+
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
@@ -756,34 +770,43 @@ class VMI11Builder(VMIBuilder):
 
         # Build stands
         for i, row in enumerate(self.forest_stands):
-            stand = self.convert_stand_entry(VMI11_STAND_INDICES, row, i + 1)
-            result[stand.identifier] = stand
+            try:
+                stand = self.convert_stand_entry(VMI11_STAND_INDICES, row, i + 1)
+                result[stand.identifier] = stand
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {i}: {row} failed: {e}") from e
 
         # Strata
         if self.builder_flags.get('strata', False):
-            for row in self.tree_strata:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_STRATUM_INDICES)
-                attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                _append_stratum_row(attr_dict, VMI11_STRATUM_INDICES, row)
+            for i, row in enumerate(self.tree_strata):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_STRATUM_INDICES)
+                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
+                    _append_stratum_row(attr_dict, VMI11_STRATUM_INDICES, row)
+                except Exception as e:
+                    raise MetsiException(f"Parsing stratum row {i}: {row} failed: {e}") from e
 
         # Trees
         if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
-                attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand2 = result.get(stand_identifier)
-                if stand2 is None:
-                    continue
-                _append_tree_row(
-                    attr_dict,
-                    VMI11_TREE_INDICES,
-                    row,
-                    vmi_version=VmiIteration.VMI11,
-                    forestry_centre_id=stand2.forestry_centre_id,
-                    ahvkeilaus=stand2.ahvkeilaus,
-                    height_conversion_factor=10.0,            # VMI11 pituus is in dm
-                    measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
-                )
+            for i, row in enumerate(self.reference_trees):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
+                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
+                    stand2 = result.get(stand_identifier)
+                    if stand2 is None:
+                        continue
+                    _append_tree_row(
+                        attr_dict,
+                        VMI11_TREE_INDICES,
+                        row,
+                        vmi_version=VmiIteration.VMI11,
+                        forestry_centre_id=stand2.forestry_centre_id,
+                        ahvkeilaus=stand2.ahvkeilaus,
+                        height_conversion_factor=10.0,            # VMI11 pituus is in dm
+                        measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
+                    )
+                except Exception as e:
+                    raise MetsiException(f"Parsing tree row {i}: {row} failed: {e}") from e
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
@@ -909,25 +932,35 @@ class VMI12Builder(VMIBuilder):
         tree_attrs: dict[str, dict[str, list]] = {}
 
         for i, row in enumerate(self.forest_stands):
-            stand = self.convert_stand_entry(VMI12_STAND_INDICES, row, i + 1)
-            result[stand.identifier] = stand
+            try:
+                stand = self.convert_stand_entry(VMI12_STAND_INDICES, row, i + 1)
+                result[stand.identifier] = stand
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {i}: {row} failed: {e}") from e
 
         if self.builder_flags.get('strata', False):
 
-            for row in self.tree_strata:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_STRATUM_INDICES)
-                attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row)
+            for i, row in enumerate(self.tree_strata):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_STRATUM_INDICES)
+                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
+                    _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row)
+                except Exception as e:
+                    raise MetsiException(f"Parsing stratum row {i}: {row} failed: {e}") from e
 
         if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
-                attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand2 = result.get(stand_identifier)
-                if stand2 is None:
-                    continue
-                _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
-                                 vmi_version=VmiIteration.VMI12, forestry_centre_id=stand2.forestry_centre_id)
+            for i, row in enumerate(self.reference_trees):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
+                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
+                    stand2 = result.get(stand_identifier)
+                    if stand2 is None:
+                        continue
+                    _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
+                                    vmi_version=VmiIteration.VMI12, forestry_centre_id=stand2.forestry_centre_id)
+                except Exception as e:
+                    raise MetsiException(f"Parsing tree row {i}: {row} failed: {e}") from e
+
 
         for stand_id, stand in result.items():
             stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
@@ -1056,27 +1089,36 @@ class VMI13Builder(VMIBuilder):
 
         # Build stands
         for i, row in enumerate(self.forest_stands):
-            stand = self.convert_stand_entry(VMI13_STAND_INDICES, row, i + 1)
-            result[stand.identifier] = stand
+            try:
+                stand = self.convert_stand_entry(VMI13_STAND_INDICES, row, i + 1)
+                result[stand.identifier] = stand
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {i}: {row} failed: {e}") from e
 
         # Strata → TreeStrata SoA
         if self.builder_flags.get('strata', False):
-            for row in self.tree_strata:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_STRATUM_INDICES)
-                attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row)
+            for i, row in enumerate(self.tree_strata):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_STRATUM_INDICES)
+                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
+                    _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row)
+                except Exception as e:
+                    raise MetsiException(f"Parsing stratum row {i}: {row} failed: {e}") from e
 
         # Trees → ReferenceTrees SoA
         if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
-                attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                stand2 = result.get(stand_identifier)
-                if stand2 is None:
-                    continue
+            for i, row in enumerate(self.reference_trees):
+                try:
+                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
+                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
+                    stand2 = result.get(stand_identifier)
+                    if stand2 is None:
+                        continue
 
-                _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
-                                 vmi_version=VmiIteration.VMI13, forestry_centre_id=stand2.forestry_centre_id)
+                    _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
+                                     vmi_version=VmiIteration.VMI13, forestry_centre_id=stand2.forestry_centre_id)
+                except Exception as e:
+                    raise MetsiException(f"Parsing tree row {i}: {row} failed: {e}") from e
 
         # Attach SoA containers to stands
         for stand_id, stand in result.items():
@@ -1193,17 +1235,24 @@ class XMLBuilder(ForestCentreBuilder):
     def build(self) -> StandList:
         stands = []
         estands = self.root.findall(self.xpath_stand, smk_util.NS)
-        for estand in estands:
-            stand = self.convert_stand_entry(estand)
-            stratum_attr: dict[str, list] = {}
+        for i, estand in enumerate(estands):
+            try:
+                stand = self.convert_stand_entry(estand)
+                stratum_attr: dict[str, list] = {}
 
-            estrata = estand.findall(self.xpath_strata, smk_util.NS)
-            for estratum in estrata:
-                _append_fc_stratum_row(stratum_attr, stand.identifier, estratum)
+                estrata = estand.findall(self.xpath_strata, smk_util.NS)
+                for i, estratum in enumerate(estrata):
+                    try:
+                        _append_fc_stratum_row(stratum_attr, stand.identifier, estratum)
+                    except Exception as e:
+                        raise MetsiException(f"Parsing stratum {i}: {estratum} failed: {e}") from e
 
-            stand.tree_strata = TreeStrata().vectorize(stratum_attr)
-            stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
-            stands.append(stand)
+                stand.tree_strata = TreeStrata().vectorize(stratum_attr)
+                stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
+                stands.append(stand)
+            except Exception as e:
+                raise MetsiException(f"Parsing stand {i}: {estand} failed: {e}") from e
+
         return stands
 
 
@@ -1265,15 +1314,22 @@ class GeoPackageBuilder(ForestCentreBuilder):
         :return: List of ForestStand objects
         """
         stands = []
-        for _, rowi in self.stands.iterrows():
-            stand = self.convert_stand_entry(rowi)
-            stratum_attr: dict[str, list] = {}
-            i_strata = self.strata[self.strata['standid'] == stand.identifier]
-            for _, rowj in i_strata.iterrows():
-                _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
+        for i, rowi in self.stands.iterrows():
+            try:
+                stand = self.convert_stand_entry(rowi)
+                stratum_attr: dict[str, list] = {}
+                i_strata = self.strata[self.strata['standid'] == stand.identifier]
+                for j, rowj in i_strata.iterrows():
+                    try:
+                        _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
+                    except Exception as e:
+                        raise MetsiException(f"Parsing stratum {j}: {rowj} failed: {e}") from e
 
-            stand.tree_strata = TreeStrata().vectorize(stratum_attr)
+                stand.tree_strata = TreeStrata().vectorize(stratum_attr)
 
-            stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
-            stands.append(stand)
+                stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
+                stands.append(stand)
+            except Exception as e:
+                raise MetsiException(f"Parsing stand {i}: {rowi} failed: {e}") from e
+
         return stands
