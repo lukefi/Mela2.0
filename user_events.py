@@ -18,6 +18,7 @@ from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
+from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -526,6 +527,48 @@ class EarlyCareMotti(Event[ForestStand]):
         )
 
 
+class FillinPlantingMotti(Event[ForestStand]):
+    """
+    Example event that uses Motti4FillinPlanting.
+
+    Parameters
+    ----------
+    species : int
+        Internal TreeSpecies code for the planted species.
+    stems_per_ha : float
+        Number of planted saplings per hectare.
+    osite_id : int, optional
+        Sapling id. If omitted, the treatment allocates a new one.
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {
+            "species": 1,
+            "stems_per_ha": 400.0,
+        }
+
+        merged_params = default_params | (parameters or {})
+
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(5, regeneration),
+        ]
+
+        super().__init__(
+            treatment=fillinplanting,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_fillinplanting", "fillinplanting"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -535,4 +578,5 @@ __all__ = [
     "Harvest20percent",
     "SaplingTreatmentMotti",
     "EarlyCareMotti",
+    "FillinPlantingMotti",
 ]

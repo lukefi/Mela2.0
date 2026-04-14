@@ -31,6 +31,7 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          config: SimConfiguration[T],
                                          db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
     retval = []
+
     ensure_motti_initialized(payload.computational_unit, config)
     if not config.end_condition(payload):
         offset = 0

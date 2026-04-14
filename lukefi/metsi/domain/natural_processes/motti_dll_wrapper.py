@@ -220,6 +220,10 @@ class Motti4DLL:
                              Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                              int *numtrees, float *info, int *imode, int *rv);
 
+        void Motti4FillinPlanting(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+                                  Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+                                  int *numtrees, int *rspe, float *num, int *ositeID, int *rv);
+
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
         float  Convert_Site(int Mela_site);
@@ -799,6 +803,57 @@ class Motti4DLL:
             raise RuntimeError(f"Motti4EarlyCare failed (rv={rv[0]})")
 
         return [float(info_p[i]) for i in range(10)]
+
+    def fillin_planting_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        *,
+        rspe: int,
+        num: float,
+        osite_id: int,
+    ) -> int:
+        """
+        Call Motti4FillinPlanting against persistent state buffers.
+
+        Parameters
+        ----------
+        rspe : int
+            Motti species slot for planted species.
+        num : float
+            Number of planted saplings per hectare.
+        osite_id : int
+            Identifier for the planted sapling cohort / stratum.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        rspe_p = ffi.new("int *", int(rspe))
+        num_p = ffi.new("float *", float(num))
+        osite_id_p = ffi.new("int *", int(osite_id))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4FillinPlanting(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                rspe_p,
+                num_p,
+                osite_id_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4FillinPlanting failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])
 
     def pct_with_state(
         self,

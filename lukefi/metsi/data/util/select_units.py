@@ -239,7 +239,10 @@ def select_units[T, V: VectorData](context: T,
             y: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
 
             # lm: slopes and constants in vectors
-            b: npt.NDArray[np.float64] = np.diff(prof_y) / np.diff(prof_x)
+            if np.allclose(prof_x, prof_x[0]):
+                b = np.zeros(len(prof_x) - 1, dtype=np.float64)
+            else:
+                b = np.diff(prof_y) / np.diff(prof_x)
 
             # if only one order_var value and relative x, all points in prof_x are the same
             # in that case scale only constant part a (set slopes b to zero)

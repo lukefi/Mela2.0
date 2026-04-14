@@ -528,8 +528,6 @@ class MottiDLLPredictor:
             return self.stand.motti_state
 
         rt = self.stand.reference_trees
-        if not rt:
-            return None
 
         n = rt.size
 
@@ -811,18 +809,18 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
     n = rt.size
     for idx in range(n):
-        sid = parse_int_id(rt.stratum[idx])
+        sid2 = parse_int_id(rt.stratum[idx])
 
         try:
             tid = int(rt.tree_number[idx])
         except (TypeError, ValueError):
             tid = -1
 
-        if sid is None or tid <= 0:
+        if sid2 is None or tid <= 0:
             f_new[idx] = 0.0
             continue
 
-        key = (sid, tid)
+        key = (sid2, tid)
 
         if key in key_to_delta_d:
             d_new[idx] = base_d[idx] + key_to_delta_d[key]
@@ -844,17 +842,17 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         bh_age = rt.breast_height_age.copy()
 
         for idx in range(rt.size):
-            sid = parse_int_id(rt.stratum[idx])
+            sid3: int | None = parse_int_id(rt.stratum[idx])
 
             try:
                 tid = int(rt.tree_number[idx])
             except (TypeError, ValueError):
                 tid = -1
 
-            if sid is None or tid <= 0:
+            if sid3 is None or tid <= 0:
                 continue
 
-            key = (sid, tid)
+            key = (sid3, tid)
 
             if key in key_to_age:
                 bio_age[idx] = key_to_age[key]
@@ -995,6 +993,7 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
         if sid is None:
             continue
 
+        key: tuple[str, int, int | None]
         if bool(rt.sapling[i]):
             key = ("ut", sid, None)
         else:

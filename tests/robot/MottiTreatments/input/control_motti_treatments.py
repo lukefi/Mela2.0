@@ -17,8 +17,8 @@ from user_events import (
     PlantingPines,
     SaplingTreatmentMotti,
     EarlyCareMotti,
+    FillinPlantingMotti,
 )
-from lukefi.metsi.domain.natural_processes.motti_bootstrap import ensure_motti_initialized
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",
@@ -74,9 +74,18 @@ control_structure = {
                     ]),
                     Sequence[ForestStand]([
                         PlantingPines(),
-                        SaplingTreatmentMotti(parameters={"remaining_n": 1800}),
                         EarlyCareMotti(parameters={"imode": 0}),
+
                     ]),
+                    EarlyCareMotti(parameters={"imode": 0}),
+                    Harvest20percent(),
+                    SaplingTreatmentMotti(parameters={"remaining_n": {1: 1800,
+                                                                      2: 1800,
+                                                                      3: 1800,
+                                                                      4: 1800,
+                                                                      5: 1800,
+                                                                      6: 1800, }}),
+                    FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
                 ])
             ]
         )
