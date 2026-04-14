@@ -328,14 +328,19 @@ def determine_forest_management_category(land_use_category: int,
     # Metsähallituksen rajoitukset;
     mh_pt = 5
 
-    if (test_area_handling_class == '1' and mh_pt == 5):
-        mh_pt = 3
+    try:
+        test_area_handling_class_numeric = float(test_area_handling_class)
+        if (test_area_handling_class_numeric == 1 and mh_pt == 5):
+            mh_pt = 3
 
-    if (test_area_handling_class == '2' and mh_pt == 5):
-        mh_pt = 2
+        if (test_area_handling_class_numeric == 2 and mh_pt == 5):
+            mh_pt = 2
 
-    if (test_area_handling_class in ('3.1', '3.2') and mh_pt == 5):
-        mh_pt = 1
+        if (test_area_handling_class_numeric in (3.1, 3.2) and mh_pt == 5):
+            mh_pt = 1
+
+    except ValueError:
+        pass
 
     if mh_pt < vmi_pt:
         decimals = 0.8
