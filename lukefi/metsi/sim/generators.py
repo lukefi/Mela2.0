@@ -51,7 +51,7 @@ class EventGenerator(EventGeneratorBase[T], ABC):
         """
         root: EventTree[T] = EventTree()
         self.unwrap([root])
-        return root.branches  # TODO: this is a dirty hack
+        return root.branches
 
     @override
     def get_types_of_collected_data(self) -> CollectableDataTypes:
