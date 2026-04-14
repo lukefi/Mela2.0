@@ -19,6 +19,7 @@ ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T]
 
 class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
+
     @abstractmethod
     def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
         pass
@@ -37,6 +38,7 @@ class EventGeneratorBase(ABC, Generic[T]):
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
+
     children: Sequence_[EventGeneratorBase]
 
     def __init__(self, children: Sequence_[EventGeneratorBase]):
@@ -65,18 +67,49 @@ class Sequence(EventGenerator[T]):
     """Generator for sequential events."""
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
         current = parents
         for child in self.children:
             current = child.unwrap(current)
         return current
 
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: Optional[sqlite3.Connection] = None
+                 ) -> Generator[SimulationPayload[T]]:
+        current = payload
+        for child in self.children:
+            for child_ in child.evaluate(current, db):
+                current = child_
+                yield current
+
 
 class Alternatives(EventGenerator[T]):
-    """Generator for branching events"""
+    """Generator for branching events."""
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
+    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
+        retval = []
+        for child in self.children:
+            retval.extend(child.unwrap(parents))
+        return retval
+
+    @override
+    def evaluate(self, payload: SimulationPayload[T], db: sqlite3.Connection |
+                 None = None) -> Generator[SimulationPayload[T], None, None]:
+        for child in self.children:
+            yield from child.evaluate(copy(payload), db)
+
+
+class First(EventGenerator[T]):
+    """Generator for non-branching alternatives where only the first possible path is executed."""
+
+    def __init__(self, children: Sequence_[EventGeneratorBase]):
+        super().__init__(children)
+
+    @override
+    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
         retval = []
         for child in self.children:
             retval.extend(child.unwrap(parents))
@@ -86,6 +119,7 @@ class Alternatives(EventGenerator[T]):
 class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
+
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
     dynamic_parameters: Mapping[str, Callable[[T], Any]]
