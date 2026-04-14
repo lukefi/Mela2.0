@@ -326,21 +326,18 @@ def determine_forest_management_category(land_use_category: int,
         decimals = 0.7
 
     # Metsähallituksen rajoitukset;
-    mh_pt = 5
-
     try:
         test_area_handling_class_numeric = float(test_area_handling_class)
-        if (test_area_handling_class_numeric == 1 and mh_pt == 5):
+        if test_area_handling_class_numeric == 1:
             mh_pt = 3
-
-        if (test_area_handling_class_numeric == 2 and mh_pt == 5):
+        elif test_area_handling_class_numeric == 2:
             mh_pt = 2
-
-        if (test_area_handling_class_numeric in (3.1, 3.2) and mh_pt == 5):
+        elif test_area_handling_class_numeric in (3.1, 3.2):
             mh_pt = 1
-
+        else:
+            mh_pt = 5
     except ValueError:
-        pass
+        mh_pt = 5
 
     if mh_pt < vmi_pt:
         decimals = 0.8
