@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
+from copy import copy, deepcopy
 import os
+import sqlite3
 from typing import Any, Generic, Mapping, Optional, TypeVar, override
 from typing import Sequence as Sequence_
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
@@ -149,6 +151,7 @@ class Event(EventGeneratorBase[T]):
 
         if file_parameters is not None:
             self.file_parameters = file_parameters
+            self._check_file_params()
         else:
             self.file_parameters = {}
 
@@ -180,6 +183,40 @@ class Event(EventGeneratorBase[T]):
             parent.add_branch(branch)
             retval.append(branch)
         return retval
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        for condition in self.preconditions:
+            if not condition(payload):
+                return
+
+        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit)
+        new_state.update_aggregates()
+
+        new_payload = SimulationPayload(
+            computational_unit=new_state,
+            operation_history=payload.operation_history,
+            node_id=deepcopy(payload.node_id)
+        )
+
+        for condition in self.postconditions:
+            if not condition(new_payload):
+                return
+
+        new_payload.operation_history.append(
+            (
+                payload.computational_unit.time,
+                self.treatment.name,
+                self.static_parameters,
+                self.treatment.default_tags
+            )
+        )
+
+        new_payload.node_id.append(node)
+        yield new_payload
 
     @override
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
