@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.8] - 2026-04-14
+
+### Fixed
+
+- Fixed `test_area_handling_class` checks in `determine_forest_management_category`
+
 ## [0.6.7] - 2026-04-14
 
 ### Fixed
