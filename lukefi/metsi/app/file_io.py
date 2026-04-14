@@ -84,7 +84,7 @@ def csv_reader() -> StandReader:
 def csv_exp_reader() -> StandReader:
     """Reads FDM data from exp_csv directory to SOA vectors"""
 
-    return lambda path: csv_exp_content_to_stands(path)
+    return csv_exp_content_to_stands
 
 
 def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
