@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.9] - 2026-04-15
+
+### Fixed
+
+- Changed RST C-variable total length field to integer type
+
 ## [0.6.8] - 2026-04-14
 
 ### Fixed
