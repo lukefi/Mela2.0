@@ -196,6 +196,10 @@ class Motti4DLL:
                         Motti4VcrArray *vcr, Motti4KorArray *apv, Motti4Trees *yp, Motti4Ctrl *o,
                         int *numtrees, int *err, int *rv);
 
+        void Motti4InitVer2(Motti4Strata *yo, Motti4Site *yy, Motti4Saplings *ut, Motti4KorArray *kor,
+                        Motti4VcrArray *vcr, Motti4KorArray *apv, Motti4Trees *yp, Motti4Ctrl *o,
+                        int *numtrees, int *err, int *rv);
+
         void Motti4UpdateAfterImport(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
                                      Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                                      int *numtrees, int *rv);
@@ -223,6 +227,8 @@ class Motti4DLL:
         void Motti4FillinPlanting(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
                                   Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                                   int *numtrees, int *rspe, float *num, int *ositeID, int *rv);
+
+        void Motti4SeedingAgeShift(Motti4Site *yy, Motti4Saplings *ut, int *istep, int *rv);
 
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
@@ -613,7 +619,7 @@ class Motti4DLL:
         buffers: MottiStateBuffers,
     ) -> int:
         """
-        Called after Motti4Init
+        Called after Motti4InitVer2
         """
         ffi, lib = self.ffi, self.lib
         ntrees_p = ffi.new("int *", int(numtrees))
@@ -855,6 +861,36 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    def seedling_delay_with_state(
+        self,
+        yy: Any,
+        buffers: MottiStateBuffers,
+        *,
+        istep: int,
+    ) -> None:
+        """
+        Call Motti4SeedingAgeShift against persistent state buffers.
+
+        Only the last sapling layer is affected by Motti, and only saplings with
+        age 0 or 1 years are adjusted. Positive istep increases age, negative
+        istep decreases age.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        rv = ffi.new("int *")
+        istep_p = ffi.new("int *", int(istep))
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4SeedingAgeShift(
+                yy,
+                buffers.saplings,
+                istep_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4SeedingAgeShift failed (rv={rv[0]})")
+
     def pct_with_state(
         self,
         yy: Any,
@@ -917,7 +953,7 @@ class Motti4DLL:
         rv = ffi.new("int *")
 
         with _maybe_chdir(self.data_dir):
-            lib.Motti4Init(
+            lib.Motti4InitVer2(
                 yo,
                 yy,
                 buffers.saplings,
@@ -931,6 +967,6 @@ class Motti4DLL:
                 rv,
             )
         if rv[0] != 0 or err[0] != 0:
-            raise RuntimeError(f"Motti4Init failed (rv={rv[0]}, err={err[0]})")
+            raise RuntimeError(f"Motti4InitVer2 failed (rv={rv[0]}, err={err[0]})")
 
         return self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)

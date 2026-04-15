@@ -223,7 +223,13 @@ def select_units[T, V: VectorData](context: T,
 
                 # always use absolute x scale internally
                 d_profile_x = sets[i_set].profile_x[-1] - sets[i_set].profile_x[0]
-                prof_x = ord_x_min + (sets[i_set].profile_x - sets[i_set].profile_x[0]) * d_ord / d_profile_x
+
+                if np.isclose(d_profile_x, 0.0):
+                    prof_x = np.full_like(sets[i_set].profile_x, ord_x_min, dtype=np.float64)
+                else:
+                    prof_x = ord_x_min + (
+                        (sets[i_set].profile_x - sets[i_set].profile_x[0]) * d_ord / d_profile_x
+                    )
             else:
                 # absolute#
                 prof_x = sets[i_set].profile_x
@@ -239,10 +245,15 @@ def select_units[T, V: VectorData](context: T,
             y: npt.NDArray[np.float64] = np.repeat(0.0, data.size)
 
             # lm: slopes and constants in vectors
-            if np.allclose(prof_x, prof_x[0]):
-                b = np.zeros(len(prof_x) - 1, dtype=np.float64)
+            dx = np.diff(prof_x)
+            dy = np.diff(prof_y)
+
+            if np.any(np.isclose(dx, 0.0)):
+                b = np.zeros_like(dx, dtype=np.float64)
+                nonzero = ~np.isclose(dx, 0.0)
+                b[nonzero] = dy[nonzero] / dx[nonzero]
             else:
-                b = np.diff(prof_y) / np.diff(prof_x)
+                b = dy / dx
 
             # if only one order_var value and relative x, all points in prof_x are the same
             # in that case scale only constant part a (set slopes b to zero)

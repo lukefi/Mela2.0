@@ -18,6 +18,7 @@ from user_events import (
     SaplingTreatmentMotti,
     EarlyCareMotti,
     FillinPlantingMotti,
+    SeedlingDelayMotti,
 )
 control_structure = {
     "app_configuration": {
@@ -74,6 +75,7 @@ control_structure = {
                     ]),
                     Sequence[ForestStand]([
                         PlantingPines(),
+                        SeedlingDelayMotti(parameters={"istep": 1}),
                         EarlyCareMotti(parameters={"imode": 0}),
 
                     ]),

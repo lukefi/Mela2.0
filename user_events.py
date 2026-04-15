@@ -19,6 +19,7 @@ from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
+from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -569,6 +570,44 @@ class FillinPlantingMotti(Event[ForestStand]):
         )
 
 
+class SeedlingDelayMotti(Event[ForestStand]):
+    """
+    Example event that uses Motti4SeedingAgeShift.
+
+    Thin wrapper around the Motti-backed seedling age adjustment treatment.
+    istep:
+      positive = increase sapling age in years
+      negative = decrease sapling age in years
+
+    Motti applies the change only to the last sapling layer and only to
+    sapling cohorts whose age is 0 or 1 years.
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {"istep": 1}
+
+        merged_params = default_params | (parameters or {})
+
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(0, regeneration),
+        ]
+
+        super().__init__(
+            treatment=seedlingdelay,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_seedlingdelay", "seedlingdelay"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -579,4 +618,5 @@ __all__ = [
     "SaplingTreatmentMotti",
     "EarlyCareMotti",
     "FillinPlantingMotti",
+    "SeedlingDelayMotti",
 ]
