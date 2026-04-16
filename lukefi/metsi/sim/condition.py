@@ -12,13 +12,23 @@ Predicate = Callable[[T], bool]
 class Condition[T: ComputationalUnit]:
     predicate: Predicate[SimulationPayload[T]]
     name: str
+    time_points: set[int]
 
-    def __init__(self, predicate: Predicate[SimulationPayload[T]], name: Optional[str] = None) -> None:
+    def __init__(self,
+                 predicate: Predicate[SimulationPayload[T]],
+                 name: Optional[str] = None,
+                 time_points: Optional[set[int]] = None) -> None:
         self.predicate = predicate
+
         if name is None:
             self.name = predicate.__name__
         else:
             self.name = name
+
+        if time_points is not None:
+            self.time_points = time_points
+        else:
+            self.time_points = set()
 
     def __repr__(self) -> str:
         return self.name

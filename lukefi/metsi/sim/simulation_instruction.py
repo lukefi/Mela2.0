@@ -28,3 +28,6 @@ class SimulationInstruction[T: ComputationalUnit]:
 
     def unwrap(self) -> list[EventTree[T]]:
         return self.event_generator.compose_nested()
+
+    def time_points(self) -> set[int]:
+        return set().union(*[condition.time_points for condition in self.conditions])
