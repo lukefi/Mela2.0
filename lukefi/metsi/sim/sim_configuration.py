@@ -21,12 +21,12 @@ class Transition[T: ComputationalUnit]:
     db_output: bool
     db_output_state: bool
     db_output_cd: bool
-    max_step: Optional[int]
+    max_step: int
 
     def __init__(
         self,
         transition_fn: TransitionFn[T],
-        max_step: Optional[int],
+        max_step: int = 5,
         collected_data: Optional[CollectableDataTypes] = None,
         name: Optional[str] = None,
         db_output: bool = True,
