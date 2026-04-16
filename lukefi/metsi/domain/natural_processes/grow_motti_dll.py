@@ -289,7 +289,6 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
     if strata is None or strata.size == 0:
         return []
 
-    sid = float(stand.stand_id or 0)
     out: list[dict] = []
 
     for i in range(min(strata.size, 10)):
@@ -305,6 +304,10 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         origin = safe_storey_value(strata.origin[i])
         storey = safe_storey_value(strata.storey[i])
 
+        stratum_sid = parse_int_id(strata.stratum_number[i])
+        if stratum_sid is None:
+            stratum_sid = i + 1
+
         out.append({
             "spe": float(species_to_motti(spe_raw)),
             "age": biological_age,
@@ -316,7 +319,7 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
             "dg": mean_diameter,    # ppa-weighted keskiläpimitta
             "storey": storey,
             "st": origin,
-            "sid": sid,
+            "sid": float(stratum_sid),
         })
 
     return out
@@ -586,9 +589,15 @@ class MottiDLLPredictor:
         origin = np.nan_to_num(getattr(rt, "origin", np.zeros(n, dtype=float)), nan=0.0)
         spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
 
+        stratum_ids = [
+            parse_int_id(v) or (self.stand.stand_id or (idx + 1))
+            for idx, v in enumerate(rt.stratum.tolist())
+        ]
+
         trees_py = [
             {
                 "id": int(i),
+                "sid": int(sid),
                 "f": float(f),
                 "d13": float(d),
                 "h": float(hh),
@@ -598,8 +607,9 @@ class MottiDLLPredictor:
                 "cr": float(c),
                 "snt": int(o + 1),
             }
-            for i, f, d, hh, sp, a, a13, c, o in zip(
+            for i, sid, f, d, hh, sp, a, a13, c, o in zip(
                 ids.tolist(),
+                stratum_ids,
                 stems.tolist(),
                 d13.tolist(),
                 h.tolist(),

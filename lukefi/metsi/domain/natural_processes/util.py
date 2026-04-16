@@ -1,4 +1,5 @@
 from typing import Any
+import re
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
@@ -159,10 +160,38 @@ def next_reference_tree_number(rt: ReferenceTrees) -> int:
     return (max(vals) + 1) if vals else 1
 
 
+def next_reference_tree_identifier_suffix(stand: ForestStand) -> int:
+    rt = stand.reference_trees
+    used = set()
+
+    prefix = f"{stand.identifier}-"
+    suffix_re = re.compile(rf"^{re.escape(stand.identifier)}-(\d+)-tree$")
+
+    for ident in rt.identifier.tolist():
+        s = str(ident)
+        m = suffix_re.match(s)
+        if m:
+            try:
+                used.add(int(m.group(1)))
+            except ValueError:
+                pass
+
+    n = 1
+    while n in used:
+        n += 1
+    return n
+
+
 def new_reference_tree_identity(stand: ForestStand) -> tuple[str, int]:
     rt = stand.reference_trees
+
+    # keep tree_number allocation logic for Motti bookkeeping
     tree_number = next_reference_tree_number(rt)
-    identifier = f"{stand.identifier}-{tree_number}-tree"
+
+    # allocate identifier independently so it is always unique in the stand
+    ident_suffix = next_reference_tree_identifier_suffix(stand)
+    identifier = f"{stand.identifier}-{ident_suffix}-tree"
+
     return identifier, tree_number
 
 
