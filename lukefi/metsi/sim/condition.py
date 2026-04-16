@@ -13,11 +13,13 @@ class Condition[T: ComputationalUnit]:
     predicate: Predicate[SimulationPayload[T]]
     name: str
     time_points: set[int]
+    relative_time_points: set[int]
 
     def __init__(self,
                  predicate: Predicate[SimulationPayload[T]],
                  name: Optional[str] = None,
-                 time_points: Optional[set[int]] = None) -> None:
+                 time_points: Optional[set[int]] = None,
+                 relative_time_points: Optional[set[int]] = None) -> None:
         self.predicate = predicate
 
         if name is None:
@@ -29,6 +31,11 @@ class Condition[T: ComputationalUnit]:
             self.time_points = time_points
         else:
             self.time_points = set()
+
+        if relative_time_points is not None:
+            self.relative_time_points = relative_time_points
+        else:
+            self.relative_time_points = set()
 
     def __repr__(self) -> str:
         return self.name
