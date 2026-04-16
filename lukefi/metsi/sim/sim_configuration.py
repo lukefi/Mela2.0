@@ -1,31 +1,37 @@
 from collections.abc import Callable
-from functools import partial
 from typing import Any
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
+type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
 
 
 class Transition[T: ComputationalUnit]:
-    base_fn: TransitionFn[T]
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
+    init_fn: TransitionInitFn[T] | None
 
-    def __init__(self, transition_fn: TransitionFn[T], **parameters):
+    def __init__(
+        self,
+        transition_fn: TransitionFn[T],
+        *,
+        init_fn: TransitionInitFn[T] | None = None,
+        **parameters,
+    ):
+        self.transition_fn = transition_fn
         self.parameters = parameters
-        self.base_fn = transition_fn
-        self.transition_fn = partial(transition_fn, **parameters)
+        self.init_fn = init_fn
 
-    @property
-    def uses_motti(self) -> bool:
-        return self.base_fn is grow_motti_dll_fn
+    def initialize(self, unit: T) -> None:
+        if self.init_fn is not None:
+            self.init_fn(unit, self.parameters)
 
     def __call__(self, state: T) -> OpTuple[T]:
-        return self.transition_fn(state)
+        return self.transition_fn(state, **self.parameters)
 
 
 class SimConfiguration[T: ComputationalUnit]:

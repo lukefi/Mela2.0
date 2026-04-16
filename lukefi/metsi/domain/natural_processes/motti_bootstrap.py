@@ -3,7 +3,6 @@ from lukefi.metsi.data.model import ForestStand
 
 # We reuse the predictor's ensure_state() so logic stays in one place
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import MottiDLLPredictor
-from lukefi.metsi.sim.sim_configuration import SimConfiguration
 
 
 def _iter_stands(unit: Any):
@@ -28,14 +27,8 @@ def _iter_stands(unit: Any):
                 pass
 
 
-def ensure_motti_initialized(unit: Any, config: SimConfiguration) -> None:
-    """
-    Initialize Motti state for all stands under this computational unit.
-    """
-    if not config.transition.uses_motti:
-        return
-
-    data_dir = config.transition.parameters.get("data_dir")
+def initialize_motti(unit: Any, parameters: dict[str, Any]) -> None:
+    data_dir = parameters.get("data_dir")  # may be None
 
     for stand in _iter_stands(unit):
         if getattr(stand, "motti_state", None) is not None:

@@ -1,4 +1,3 @@
-from typing import Any
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.app.utils import MetsiException
@@ -31,9 +30,3 @@ def update_stand_growth(stand: ForestStand,
         trees.sapling)
 
     stand.year = (stand.year or 0) + step
-
-
-def safe_storey_value(v: Any) -> float:
-    if v is None:
-        return 0.0
-    return float(getattr(v, "value", v))
