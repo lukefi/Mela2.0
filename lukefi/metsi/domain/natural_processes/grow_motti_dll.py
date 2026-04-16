@@ -456,7 +456,7 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 @natural_process_transition
-def grow_motti_dll_fn(input_: ForestStand, step: int, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees

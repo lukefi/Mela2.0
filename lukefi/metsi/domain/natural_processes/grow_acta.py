@@ -4,7 +4,7 @@ from lukefi.metsi.forestry.naturalprocess.grow_acta import grow_diameter_and_hei
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
-def grow_acta_fn(input_: ForestStand, step: int, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_acta_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     _ = operation_parameters
     stand = input_
     if stand.reference_trees.size == 0:
