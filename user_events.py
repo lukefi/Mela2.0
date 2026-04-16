@@ -20,6 +20,7 @@ from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
 from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
+from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -608,6 +609,45 @@ class SeedlingDelayMotti(Event[ForestStand]):
         )
 
 
+class MineralSoilsFertilizationMotti(Event[ForestStand]):
+    """
+    Example event that uses Motti4MineralSoilsFertilization.
+
+    Thin wrapper around the Motti-backed fertilization treatment for mineral soils.
+    Parameters are passed through to the DLL wrapper:
+      ftype = fertilization type code
+      amount_n = nitrogen amount
+      bool_phosphorus = 0/1 phosphorus flag
+
+    Aliases amountN and boolPhosporus are also accepted for easier mapping
+    from the Motti documentation.
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {"ftype": 1, "amount_n": 150.0, "bool_phosphorus": 0}
+
+        merged_params = default_params | (parameters or {})
+
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(10, cutting),
+        ]
+
+        super().__init__(
+            treatment=mineral_soils_fertilization,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_fertilization", "fertilization", "mineral_soils"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -619,4 +659,5 @@ __all__ = [
     "EarlyCareMotti",
     "FillinPlantingMotti",
     "SeedlingDelayMotti",
+    "MineralSoilsFertilizationMotti",
 ]

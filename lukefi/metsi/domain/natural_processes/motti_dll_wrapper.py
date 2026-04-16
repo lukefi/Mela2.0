@@ -230,6 +230,21 @@ class Motti4DLL:
 
         void Motti4SeedingAgeShift(Motti4Site *yy, Motti4Saplings *ut, int *istep, int *rv);
 
+        void Motti4MineralSoilsFertilization(
+            int *ftype,
+            float *amountN,
+            int *boolPhosporus,
+            Motti4Site *yy,
+            Motti4Trees *yp,
+            Motti4Saplings *ut,
+            Motti4KorArray *kor,
+            Motti4VcrArray *vcr,
+            Motti4KorArray *apv,
+            int *numtrees,
+            Motti4FerArray *fer,
+            int *numfer,
+            int *rv
+        );
         /* Optional helpers (best-effort) */
         double Convert_Tree_Spec(double Mela_tree_spec_in);
         float  Convert_Site(int Mela_site);
@@ -890,6 +905,61 @@ class Motti4DLL:
 
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SeedingAgeShift failed (rv={rv[0]})")
+
+    def mineral_soils_fertilization_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+        *,
+        ftype: int,
+        amount_n: float,
+        bool_phosphorus: int = 0,
+    ) -> list[float]:
+        """
+        Call Motti4MineralSoilsFertilization against persistent state buffers.
+
+        Parameters
+        ----------
+        ftype
+            Fertilization type code passed through to Motti.
+        amount_n
+            Nitrogen amount.
+        bool_phosphorus
+            0/1 flag for phosphorus fertilization.
+
+        Returns
+        -------
+        list[float]
+            Raw 10-slot response vector returned by Motti.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        ftype_p = ffi.new("float *", float(ftype))
+        amount_n_p = ffi.new("float *", float(amount_n))
+        bool_phosphorus_p = ffi.new("int *", int(bool(bool_phosphorus)))
+        response_p = ffi.new("float[10]", [0.0] * 10)
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4MineralSoilsFertilization(
+                ftype_p,
+                amount_n_p,
+                bool_phosphorus_p,
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                buffers.fert_array,
+                buffers.numfer,
+                response_p,
+            )
+
+        return [float(response_p[i]) for i in range(10)]
 
     def pct_with_state(
         self,
