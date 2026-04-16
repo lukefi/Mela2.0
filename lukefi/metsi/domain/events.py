@@ -1,8 +1,11 @@
 from typing import Any, Optional
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
+from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
+from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.sim.treatment import Treatment, do_nothing
 
 
 class DoNothing(Event[ForestStand]):
@@ -15,6 +18,64 @@ class DoNothing(Event[ForestStand]):
                          preconditions=preconditions,
                          postconditions=postconditions,
                          file_parameters=file_parameters)
+
+
+class GrowActa(Event[ForestStand]):
+    def __init__(self,
+                 max_step: int = 5,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+        super().__init__(
+            treatment=Treatment(
+                lambda state: grow_acta_fn(
+                    state,
+                    max_step),
+                "grow_acta"),
+            static_parameters=parameters,
+            preconditions=preconditions,
+            postconditions=postconditions,
+            file_parameters=file_parameters)
+
+
+class GrowMetsi(Event[ForestStand]):
+    def __init__(self,
+                 max_step: int = 5,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+        super().__init__(
+            treatment=Treatment(
+                lambda state: grow_metsi_fn(
+                    state,
+                    max_step),
+                "grow_metsi"),
+            static_parameters=parameters,
+            preconditions=preconditions,
+            postconditions=postconditions,
+            file_parameters=file_parameters)
+
+
+class GrowMotti(Event[ForestStand]):
+    def __init__(self,
+                 max_step: int = 5,
+                 parameters: Optional[dict[str, Any]] = None,
+                 preconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestCondition]] = None,
+                 file_parameters: Optional[dict[str, str]] = None) -> None:
+        super().__init__(
+            treatment=Treatment(
+                lambda state, **params: grow_motti_dll_fn(
+                    state,
+                    max_step,
+                    **params),
+                "grow_motti_dll"),
+            static_parameters=parameters,
+            preconditions=preconditions,
+            postconditions=postconditions,
+            file_parameters=file_parameters)
 
 
 __all__ = [
