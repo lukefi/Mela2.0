@@ -12,13 +12,22 @@ def ajantasaistus_fn(stand: ForestStand,
     transition: Transition[ForestStand] = params["transition"]
     target_year: int = params["target_year"]
     current_year = stand.year
-    if current_year < target_year:
+    step = target_year - current_year
+
+    if step > transition.max_step:
+        raise MetsiException(f"Requested transition step size ({step}) is "
+                             f"larger than the maximum step size ({transition.max_step})")
+
+    if step > 0:
         # update
         return transition(stand, target_year - current_year)
-    elif current_year == target_year:
-        return stand, []
-    else:
-        # Stand is already ahead of requested year
-        raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}: already at {stand.year}.")
 
-ajantasaistus = Treatment(ajantasaistus_fn, "ajantasaistus")
+    if step == 0:
+        return stand, []
+
+    # Stand is already ahead of requested year
+    raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}:"
+                         f" already at {stand.year}.")
+
+
+ajantasaistus = Treatment(ajantasaistus_fn, "ajantasaistus", default_tags={"initial", "ajantasaistus"})
