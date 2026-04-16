@@ -33,7 +33,6 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
-from lukefi.metsi.sim.treatment import Treatment
 
 
 # ---------- helpers ----------
