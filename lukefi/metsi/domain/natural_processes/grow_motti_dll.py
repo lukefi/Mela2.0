@@ -82,52 +82,6 @@ def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
     return p.resolve()
 
 
-def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
-    """
-    Convert stand.tree_strata into Python dicts for Motti4Strata.
-
-    Uncertain fields:
-      hw -> temporary fallback to mean_height
-      dg -> temporary fallback to mean_diameter
-      st -> temporary dummy 0.0
-    """
-    strata = getattr(stand, "tree_strata", None)
-    if strata is None or strata.size == 0:
-        return []
-
-    sid = float(stand.stand_id or 0)
-    out: list[dict] = []
-
-    for i in range(min(strata.size, 10)):
-        spe_raw = int(strata.species[i])
-        if spe_raw < 0:
-            continue
-
-        biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
-        basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
-        stems_per_ha = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
-        mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
-        mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
-        origin = safe_storey_value(strata.origin[i])
-        storey = safe_storey_value(strata.storey[i])
-
-        out.append({
-            "spe": float(species_to_motti(spe_raw)),
-            "age": biological_age,
-            "ba": basal_area,
-            "f": stems_per_ha,
-            "h": mean_height,
-            "hw": mean_height,      # ppa-weighted height
-            "d": mean_diameter,
-            "dg": mean_diameter,    # ppa-weighted keskiläpimitta
-            "storey": storey,
-            "st": origin,
-            "sid": sid,
-        })
-
-    return out
-
-
 def _spedom(rt: ReferenceTrees | Any | None) -> int:
     """
     Returns dominant species from Motti species.
@@ -413,24 +367,14 @@ class MottiDLLPredictor:
 
         _strip_tree_strata(self.stand)
 
-        if MottiState is not None:
-            self.stand.motti_state = MottiState(
-                dll=self.dll,
-                yy=yy,
-                yp=yp,
-                ntrees=int(ntrees),
-                buffers=buffers,
-                signature=tuple(ids.tolist()),
-            )
-        else:
-            ms = MottiState()
-            ms.dll = self.dll
-            ms.yy = yy
-            ms.yp = yp
-            ms.ntrees = int(ntrees)
-            ms.buffers = buffers
-            ms.signature = tuple(ids.tolist())
-            self.stand.motti_state = ms
+        self.stand.motti_state = MottiState(
+            dll=self.dll,
+            yy=yy,
+            yp=yp,
+            ntrees=int(ntrees),
+            buffers=buffers,
+            signature=tuple(ids.tolist()),
+        )
 
         return self.stand.motti_state
 
