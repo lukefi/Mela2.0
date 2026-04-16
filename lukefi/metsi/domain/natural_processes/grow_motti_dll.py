@@ -14,7 +14,7 @@ from lukefi.metsi.data.enums.internal import (
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth, safe_storey_value
+from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 
@@ -121,23 +121,22 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-def _strip_tree_strata(stand):
+def _strip_tree_strata(stand: ForestStand):
     """
     Clear tree information from  strata
     """
-    strata = getattr(stand, "tree_strata", None)
-    if strata is None or strata.size == 0:
+    if stand.tree_strata is None or stand.tree_strata.size == 0:
         return
 
-    n = strata.size
+    n = stand.tree_strata.size
 
     # Create same-length strata object with default values in every column
     stripped = TreeStrata(size=n)
 
     # Keeping only fields that should survive
-    stripped.identifier = strata.identifier.copy()
-    stripped.origin = strata.origin.copy()
-    stripped.storey = strata.storey.copy()
+    stripped.identifier = stand.tree_strata.identifier.copy()
+    stripped.origin = stand.tree_strata.origin.copy()
+    stripped.storey = stand.tree_strata.storey.copy()
 
     stand.tree_strata = stripped
 

@@ -12,7 +12,7 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
-
+from lukefi.metsi.data.vector_model import TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     resolve_shared_object,
@@ -53,6 +53,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         tax_class=1,
         tax_class_reduction=0,
         reference_trees=rt,
+        tree_strata=TreeStrata(),
         sapling=sap,
         saplings=sap,
         start_time=2025,
