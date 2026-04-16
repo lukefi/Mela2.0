@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.9] - 2026-04-15
+
+### Fixed
+
+- Changed RST C-variable total length field to integer type
+
+## [0.6.8] - 2026-04-14
+
+### Fixed
+
+- Fixed `test_area_handling_class` checks in `determine_forest_management_category`
+
+## [0.6.7] - 2026-04-14
+
+### Fixed
+
+- Fixed tree origin conversion for Mela RST output
+
+## [0.6.6] - 2026-04-09
+
+### Fixed
+
+- Fixed issues with peatland forest type conversion
+
+## [0.6.5] - 2026-04-09
+
+### Fixed
+
+- Added missing cutting methods for upper layer thinning variants
+
+## [0.6.4] - 2026-04-07
+
+### Added
+
+- Added missing more generic damage types from NFI9 and NFI10
+
+## [0.6.3] - 2026-04-07
+
+### Fixed
+
+- Ahvenanmaa logic bug fixed
+
 ## [0.6.2] - 2026-04-01
 
 ### Fixed
