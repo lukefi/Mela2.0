@@ -41,14 +41,20 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                 all_instructions_failed = False
                 for i, root in enumerate(instruction.unwrap()):
                     for new_branch in root.evaluate(copy(payload), db, i + offset):
-                        time_step = _find_next_time_step(new_branch, config.instructions)
+                        time_step = _find_next_time_step(
+                            new_branch,
+                            config.instructions,
+                            config.transition.max_step)
                         new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
                         new_branch.computational_unit.update_aggregates()
                         retval.extend(_simulate_unit(new_branch, config, db))
                 offset += 1
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
-            time_step = _find_next_time_step(payload, config.instructions)
+            time_step = _find_next_time_step(
+                payload,
+                config.instructions,
+                config.transition.max_step)
             payload.computational_unit, _ = config.transition(payload, db, time_step)
             payload.computational_unit.update_aggregates()
             retval.extend(_simulate_unit(payload, config, db))
@@ -60,13 +66,20 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
 
     return retval
 
+
 def _find_next_time_step[T: ComputationalUnit](payload: SimulationPayload[T],
-                                               instructions: list[SimulationInstruction[T]]):
+                                               instructions: list[SimulationInstruction[T]],
+                                               maximum_step: int):
     current_time = payload.computational_unit.time
     time_points: set[int] = set()
     for instruction in instructions:
-        time_points.update(filter(lambda t: t > current_time, instruction.time_points()))
+        time_points.update(
+            filter(
+                lambda t: t > current_time,
+                instruction.time_points(
+                    payload.computational_unit.start_time)))
 
-    next_time_point = min(time_points)
-
-    return next_time_point - current_time
+    if time_points:
+        next_time_point = min(time_points)
+        return next_time_point - current_time
+    return maximum_step
