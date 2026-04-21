@@ -47,7 +47,9 @@ class Condition[T: ComputationalUnit]:
         return self.predicate(subject)
 
     def __and__(self, other: "Condition[T]") -> "Condition[T]":
-        return Condition(lambda x: self.predicate(x) and other.predicate(x))
+        return Condition(lambda x: self.predicate(x) and other.predicate(x),
+                         time_points=self.time_points | other.time_points)
 
     def __or__(self, other: "Condition[T]") -> "Condition[T]":
-        return Condition(lambda x: self.predicate(x) or other.predicate(x))
+        return Condition(lambda x: self.predicate(x) or other.predicate(x),
+                         time_points=self.time_points | other.time_points)
