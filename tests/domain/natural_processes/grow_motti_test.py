@@ -11,7 +11,8 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
-
+from lukefi.metsi.data.enums.internal import DrainageCategory
+from lukefi.metsi.data.vector_model import TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     resolve_shared_object,
@@ -40,7 +41,6 @@ def make_empty_sapling() -> SimpleNamespace:
 
 
 def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
-    # NOTE: this version guarantees both `sapling` and `saplings` exist.
     sap = make_empty_sapling()
     return SimpleNamespace(
         year=2000,
@@ -53,8 +53,19 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         tax_class=1,
         tax_class_reduction=0,
         reference_trees=rt,
+        tree_strata=TreeStrata(),
         sapling=sap,
         saplings=sap,
+        start_time=2025,
+        artificial_regeneration_year=1,
+        soil_surface_preparation_year=2,
+        regeneration_area_cleaning_year=3,
+        stand_id=12345,
+        method_of_last_cutting=5,
+        fertilization_year=100,
+        young_stand_tending_year=200,
+        drainage_category=DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
+        drainage_year=3,
     )
 
 
@@ -101,7 +112,7 @@ def make_rt(
 
 class FakeDLL:
     """
-    Minimal DLL stub implementing the methods used by MottiDLLPredictorVec.
+    Minimal DLL stub implementing the methods used by MottiDLLPredictor.
     Kept as its own concrete type so tests can access .captured_trees_py.
     """
 
@@ -111,23 +122,40 @@ class FakeDLL:
 
     def new_site(self, **kwargs: Any) -> SimpleNamespace:
         self.captured_site = dict(kwargs)
-        return SimpleNamespace(site="ok")
+        return SimpleNamespace(site="ok", year=kwargs.get("year", 0), step=kwargs.get("step", 0))
 
     def new_trees(self, trees_py: List[Dict[str, Any]]) -> tuple[SimpleNamespace, int]:
         self.captured_trees_py = list(trees_py)
         return SimpleNamespace(buf="ok"), len(trees_py)
 
-    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
-        # Default: zero deltas for every tree ID in order 1..n (infer n from last new_trees)
+    def alloc_state_buffers(self, ctrl: Any = None) -> Any:
+        return SimpleNamespace(buffers="ok", ctrl=ctrl)
+
+    def grow_with_state(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
         if not self.captured_trees_py:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
+            return GrowthDeltas(
+                tree_ids=[],
+                trees_id=[],
+                trees_ih=[],
+                trees_if=[],
+                trees_age=[],
+                trees_age13=[],
+            )
+
         n = len(self.captured_trees_py)
         ids = list(range(1, n + 1))
         zeros = [0.0] * n
-        return GrowthDeltas(tree_ids=ids, trees_id=zeros, trees_ih=zeros, trees_if=zeros,
-                            trees_age=zeros, trees_age13=zeros)
+        return GrowthDeltas(
+            tree_ids=ids,
+            trees_id=zeros,
+            trees_ih=zeros,
+            trees_if=zeros,
+            trees_age=zeros,
+            trees_age13=zeros,
+        )
+
+    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
+        return self.grow_with_state(*_args, **_kwargs)
 
 
 # ---------- Tests ----------
@@ -306,7 +334,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         stand = make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
-            def grow(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
+            def grow_with_state(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
                 # Only tree id=1 grows / survives
                 return GrowthDeltas(
                     tree_ids=[1],
@@ -340,7 +368,3 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertAlmostEqual(rt_out.breast_height_diameter[1], 12.0, places=6)
         self.assertAlmostEqual(rt_out.height[1], 14.0, places=6)
         self.assertEqual(float(rt_out.stems_per_ha[1]), 0.0)
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=2)

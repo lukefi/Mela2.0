@@ -2,7 +2,7 @@ from copy import copy
 from enum import Enum
 import dataclasses
 import sqlite3
-from typing import Optional, override
+from typing import Optional, override, Any, cast
 from dataclasses import dataclass
 
 import numpy as np
@@ -47,6 +47,7 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
+    motti_state: Optional["MottiState"] = None
 
     time: int = 0
     start_time: int = 0
@@ -356,6 +357,50 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         return (numerator_1 + numerator_2) / denominator
 
+    def __copy__(self):
+        """Make branch-safe copies: clone Motti CFFI buffers so branches don't share state."""
+        new_obj = self.__class__(**{k: copy(v) for k, v in self.__dict__.items() if k != "motti_state"})
+
+        ms = self.motti_state
+        if ms is None:
+            new_obj.motti_state = None
+            return new_obj
+
+        dll = getattr(ms, "dll", None)
+        yy = getattr(ms, "yy", None)
+        yp = getattr(ms, "yp", None)
+        buffers = getattr(ms, "buffers", None)
+        ntrees = getattr(ms, "ntrees", None)
+        signature = getattr(ms, "signature", None)
+
+        if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
+            new_obj.motti_state = None
+            return new_obj
+        if signature is None:
+            new_obj.motti_state = None
+            return new_obj
+        try:
+            yy2 = dll.clone_site(yy)
+            yp2 = dll.clone_trees(yp)
+            buffers2 = dll.clone_state_buffers(buffers)
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # cloning failed -> drop state rather than share pointers
+            new_obj.motti_state = None
+            return new_obj
+
+        new_obj.motti_state = MottiState(
+            dll=dll,
+            yy=yy2,
+            yp=yp2,
+            ntrees=int(ntrees),
+            buffers=buffers2,
+            signature=cast(tuple[int, ...], signature),
+        )
+        return new_obj
+
+    def __deepcopy__(self, memo):
+        return self.__copy__()
+
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
     result = ["stand", stand.identifier]
@@ -448,3 +493,13 @@ def stand_as_internal_row(stand: ForestStand):
         stand.under_storey,
         stand.over_storey,
     ]
+
+
+@dataclass(eq=False, repr=False)
+class MottiState:
+    dll: Any
+    yy: Any                     # "Motti4Site *"
+    yp: Any                     # "Motti4Trees *"
+    ntrees: int                 # current number of “active” trees in yp
+    buffers: Any                # MottiStateBuffers
+    signature: tuple[int, ...]

@@ -116,7 +116,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
 
 def c_var_metadata(uid: float | None, cvars_len: int) -> list[str]:
     total_length = 2 + cvars_len
-    cvars_meta = map(rst_float, [uid or 0, total_length, 2, cvars_len])
+    cvars_meta = [rst_float(uid or 0), str(total_length), "2.000000", rst_float(cvars_len)]
     return list(cvars_meta)
 
 

@@ -134,8 +134,8 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
     stratum_association_diameter_threshold = operation_params.get('stratum_association_diameter_threshold', 3)
 
-    for j, stand in enumerate(stands):
-        print(f"\rGenerating trees for stand {stand.identifier}    {j}/{len(stands)}", end="")
+    for j, stand in enumerate(stands, 1):
+        print(f"Generating trees for stand {stand.identifier}    {j}/{len(stands)}")
 
         tree_ordering = np.argsort(stand.reference_trees.identifier)
 

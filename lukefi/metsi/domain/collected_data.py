@@ -13,10 +13,19 @@ class RemovedTrees(CollectedData):
     @override
     def init_db_table(cls, db: sqlite3.Connection):
         cur = db.cursor()
-        cur.execute("""
+        cur.execute("""--sql
             CREATE TABLE removed_trees(
-                node, stand, identifier, tree_number, species, breast_height_diameter, height,
-                stems_per_ha, origin,
+                node TEXT,
+                stand TEXT,
+                identifier TEXT,
+                tree_number INTEGER,
+                species INTEGER,
+                breast_height_diameter REAL,
+                height REAL,
+                stems_per_ha REAL,
+                origin INTEGER,
+                breast_height_age REAL,
+                volume REAL,
                 PRIMARY KEY (node, identifier),
                 FOREIGN KEY (node, stand) REFERENCES nodes(identifier, stand)
             )
@@ -27,10 +36,10 @@ class RemovedTrees(CollectedData):
         cur = db.cursor()
         for i in range(self.removed_trees.size):
             cur.execute(
-                """
+                """--sql
                 INSERT INTO removed_trees
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     node_str,
@@ -41,6 +50,8 @@ class RemovedTrees(CollectedData):
                     self.removed_trees.breast_height_diameter[i],
                     self.removed_trees.height[i],
                     self.removed_trees.stems_per_ha[i],
-                    int(self.removed_trees.origin[i])
+                    int(self.removed_trees.origin[i]),
+                    self.removed_trees.breast_height_age[i],
+                    self.removed_trees.volume[i]
                 )
             )

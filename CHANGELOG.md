@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.13] - 2026-04-21
+
+### Added
+
+- Added progress logging to `simulate_alternatives`
+
+## [0.6.12] - 2026-04-21
+
+### Added
+
+- Added better console logging for ForestBuilder errors
+
+## [0.6.11] - 2026-04-21
+
+### Fixed
+
+- Motti init called only once, state is held in stand.
+
+## [0.6.10] - 2026-04-16
+
+### Added
+
+- Added `breast_height_age` and `volume` columns to `removed_trees` table in output database
+
+### Fixed
+
+- Added proper type information for `removed_trees` table columns in output database
+
+## [0.6.9] - 2026-04-15
+
+### Fixed
+
+- Changed RST C-variable total length field to integer type
+
+## [0.6.8] - 2026-04-14
+
+### Fixed
+
+- Fixed `test_area_handling_class` checks in `determine_forest_management_category`
+
+## [0.6.7] - 2026-04-14
+
+### Fixed
+
+- Fixed tree origin conversion for Mela RST output
+
 ## [0.6.6] - 2026-04-09
 
 ### Fixed
