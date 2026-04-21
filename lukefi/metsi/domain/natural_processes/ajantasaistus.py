@@ -1,7 +1,7 @@
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.sim_configuration import TransitionFn
 from lukefi.metsi.sim.treatment import Treatment
 
 
@@ -9,14 +9,10 @@ def ajantasaistus_fn(stand: ForestStand,
                      /,
                      **params
                      ) -> OpTuple[ForestStand]:
-    transition: Transition[ForestStand] = params["transition"]
+    transition: TransitionFn[ForestStand] = params["transition"]
     target_year: int = params["target_year"]
     current_year = stand.year
     step = target_year - current_year
-
-    if step > transition.max_step:
-        raise MetsiException(f"Requested transition step size ({step}) is "
-                             f"larger than the maximum step size ({transition.max_step})")
 
     if step > 0:
         # update

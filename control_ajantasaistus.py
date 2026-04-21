@@ -1,3 +1,4 @@
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.ajantasaistus import ajantasaistus
@@ -50,7 +51,7 @@ control_structure = {
                 RelativeTimePoints([0])
             ],
             events=[
-                Event(treatment=ajantasaistus, static_parameters={"transition": Transition(grow_acta_fn, 100),
+                Event(treatment=ajantasaistus, static_parameters={"transition": grow_acta_fn,
                                                                   "target_year": 2020})
             ]
         ),
@@ -69,7 +70,7 @@ control_structure = {
             ]
         )
     ],
-    "transition": Transition(grow_acta_fn, 5),
+    "transition": Transition(grow_acta_fn, 5, collected_data={NaturalProcessInfo}, name="grow_acta"),
     "end_condition": ForestCondition(lambda x: x.computational_unit.year >= 2050),
     "post_processing": {
         "operation_params": {
