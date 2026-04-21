@@ -1,7 +1,7 @@
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.domain.natural_processes.ajantasaistus import ajantasaistus
+from lukefi.metsi.domain.natural_processes.updating import update_to_year
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
@@ -51,8 +51,8 @@ control_structure = {
                 RelativeTimePoints([0])
             ],
             events=[
-                Event(treatment=ajantasaistus, static_parameters={"transition": grow_acta_fn,
-                                                                  "target_year": 2020})
+                Event(treatment=update_to_year, static_parameters={"transition": grow_acta_fn,
+                                                                   "target_year": 2020})
             ]
         ),
         SimulationInstruction(

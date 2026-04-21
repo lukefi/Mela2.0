@@ -5,7 +5,7 @@ from lukefi.metsi.sim.sim_configuration import TransitionFn
 from lukefi.metsi.sim.treatment import Treatment
 
 
-def ajantasaistus_fn(stand: ForestStand,
+def update_to_year_fn(stand: ForestStand,
                      /,
                      **params
                      ) -> OpTuple[ForestStand]:
@@ -26,4 +26,4 @@ def ajantasaistus_fn(stand: ForestStand,
                          f" already at {stand.year}.")
 
 
-ajantasaistus = Treatment(ajantasaistus_fn, "ajantasaistus", default_tags={"initial", "ajantasaistus"})
+update_to_year = Treatment(update_to_year_fn, "update_to_year", default_tags={"initial", "update_to_year"})
