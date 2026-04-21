@@ -2,7 +2,6 @@ import os
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -560,6 +559,3 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
         rt.breast_height_age = bh_age
 
     return stand, []
-
-
-grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll", collected_data={NaturalProcessInfo})
