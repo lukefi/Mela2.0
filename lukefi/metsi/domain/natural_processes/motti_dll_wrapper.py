@@ -580,6 +580,7 @@ class Motti4DLL:
                     step_p,
                     rv
                 )
+
             if rv[0] != 0:
                 raise RuntimeError(f"Motti4Growth failed (rv={rv[0]})")
 

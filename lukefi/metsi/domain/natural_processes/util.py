@@ -199,7 +199,8 @@ def update_stand_growth(stand: ForestStand,
                         diameters: npt.NDArray[np.float64],
                         heights: npt.NDArray[np.float64],
                         stems: npt.NDArray[np.float64],
-                        step: int):
+                        step: int,
+                        update_sapling: bool = True):
     """In-place update stand's reference trees with given diameters, heights and stem count.
     Increase ages for trees and stand. Remove sapling flag from trees that have grown beyond 1.3m. """
     if stand.reference_trees is None:
@@ -215,10 +216,12 @@ def update_stand_growth(stand: ForestStand,
     trees.breast_height_diameter = diameters
     trees.height = heights
     trees.stems_per_ha = stems
-    trees.sapling = np.where(
-        trees.height >= 1.3,
-        False,
-        trees.sapling)
+
+    if update_sapling:
+        trees.sapling = np.where(
+            trees.height >= 1.3,
+            False,
+            trees.sapling)
 
     stand.year = (stand.year or 0) + step
 
