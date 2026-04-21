@@ -61,9 +61,9 @@ control_structure = {
     ],
     "transition": Transition(
         grow_motti_dll_fn,
+        max_step=5,
         db_output=False,
-        init_fn=initialize_motti,
-        step=5
+        init_fn=initialize_motti
     ),
     "end_condition": Condition[ForestStand](lambda x: x.computational_unit.year > 2030)
 }

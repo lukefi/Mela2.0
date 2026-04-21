@@ -164,7 +164,7 @@ class TestGrowMetsiVecWrapper(unittest.TestCase):
             patch.object(gm, "update_stand_growth", side_effect=fake_update_stand_growth_vec) as mock_update,
             patch.object(gm, "to_mg_species", side_effect=lambda s: gm.Species.PINE),  # keep species simple
         ):
-            out_stand, _ = gm.grow_metsi_fn(stand, step=5)
+            out_stand, _ = gm.grow_metsi_fn(stand, 5)
 
             # evolve called with step=5
             mock_evolve.assert_called_once_with(step=5)
