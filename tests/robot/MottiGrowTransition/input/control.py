@@ -57,7 +57,7 @@ control_structure = {
         )
     ],
     "transition": Transition[ForestStand](grow_motti_dll_fn,
-                                          {NaturalProcessInfo},
+                                          collected_data={NaturalProcessInfo},
                                           name="grow_motti",
                                           db_output=True,
                                           db_output_state=True,

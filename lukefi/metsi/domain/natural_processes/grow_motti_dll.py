@@ -2,7 +2,6 @@ import os
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -18,7 +17,6 @@ from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
@@ -457,19 +455,17 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 @natural_process_transition
-def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees
       - Builds DLL input from SoA, runs growth, applies deltas vectorized
       - Prunes trees with stems_per_ha < 1.0 after update
     operation_parameters:
-      - step: int (years), default 5
       - data_dir: path to folder/file for the Motti DLL (required unless a predictor is injected)
       - predictor: optional injected Motti4DLL wrapper (testing)
     """
 
-    step = int(operation_parameters.get("step", 5))
     data_dir = operation_parameters.get("data_dir", None)
     predictor = operation_parameters.get("predictor", None)
 
@@ -563,6 +559,3 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         rt.breast_height_age = bh_age
 
     return stand, []
-
-
-grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll", collected_data={NaturalProcessInfo})

@@ -33,7 +33,6 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
-from lukefi.metsi.sim.treatment import Treatment
 
 
 # ---------- helpers ----------
@@ -248,12 +247,12 @@ class MetsiGrowPredictor(Predict):
 
 # ---------- public API  ----------
 
-def grow_metsi_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_metsi_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.
     Assumes input is vectorized
     """
-    step = operation_parameters.get("step", 5)
+    _ = operation_parameters
     stand = input_
 
     if stand.reference_trees.size == 0:
@@ -285,6 +284,3 @@ def grow_metsi_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
         stand.reference_trees.delete(to_delete.tolist())
 
     return stand, []
-
-
-grow_metsi = Treatment(grow_metsi_fn, "grow_metsi")

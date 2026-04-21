@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -7,8 +7,9 @@ if TYPE_CHECKING:
     from lukefi.metsi.sim.collected_data import CollectedData
 
 
-def do_nothing[T: ComputationalUnit](data: T, **kwargs) -> tuple[T, list["CollectedData"]]:
+def do_nothing[T: ComputationalUnit](data: T, step: Optional[int] = None, **kwargs) -> tuple[T, list["CollectedData"]]:
     _ = kwargs
+    _ = step
     return data, []
 
 

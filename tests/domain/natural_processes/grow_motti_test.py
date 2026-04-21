@@ -351,8 +351,8 @@ class TestGrowMottiDLLVec(unittest.TestCase):
 
         out_stand, _ = grow_motti.grow_motti_dll_fn(
             stand,  # type: ignore[arg-type]
+            5,
             predictor=pred,
-            step=5,
         )
 
         # Make linters happy: ensure we got a vector trees container back

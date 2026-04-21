@@ -8,7 +8,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
 
-type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
+type TransitionFn[T: ComputationalUnit] = Callable[[T, int], OpTuple[T]]
 type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
 
 
@@ -21,10 +21,12 @@ class Transition[T: ComputationalUnit]:
     db_output: bool
     db_output_state: bool
     db_output_cd: bool
+    max_step: int
 
     def __init__(
         self,
         transition_fn: TransitionFn[T],
+        max_step: int = 5,
         collected_data: Optional[CollectableDataTypes] = None,
         name: Optional[str] = None,
         db_output: bool = True,
@@ -35,6 +37,7 @@ class Transition[T: ComputationalUnit]:
         **parameters,
     ):
         self.transition_fn = transition_fn
+        self.max_step = max_step
         self.parameters = parameters
         self.init_fn = init_fn
         self.db_output = db_output
@@ -55,8 +58,10 @@ class Transition[T: ComputationalUnit]:
         if self.init_fn is not None:
             self.init_fn(unit, self.parameters)
 
-    def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]) -> OpTuple[T]:
-        new_state, collected_data = self.transition_fn(payload.computational_unit, **self.parameters)
+    def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection], time_step: int) -> OpTuple[T]:
+        if self.max_step is not None:
+            time_step = min(time_step, self.max_step)
+        new_state, collected_data = self.transition_fn(payload.computational_unit, time_step, **self.parameters)
 
         if db is not None and self.db_output:
             temp_history: OperationHistory = [

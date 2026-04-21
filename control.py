@@ -1,3 +1,4 @@
+from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
@@ -44,6 +45,9 @@ control_structure = {
     },
     "simulation_instructions": [
         SimulationInstruction(
+            conditions=[
+                RelativeTimePoints([1, 2, 3, 4, 5, 10, 15, 20, 25, 30])
+            ],
             events=[
                 Alternatives([
                     Event(treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
@@ -55,7 +59,7 @@ control_structure = {
             ]
         )
     ],
-    "transition": Transition(grow_acta_fn),
+    "transition": Transition(grow_acta_fn, 5),
     "end_condition": ForestCondition(lambda x: x.computational_unit.year >= 2050),
     "post_processing": {
         "operation_params": {

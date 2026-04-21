@@ -52,7 +52,7 @@ control_structure = {
             ]
         )
     ],
-    "transition": Transition(do_nothing, db_output=False),
+    "transition": Transition(do_nothing, 5, db_output=False),
     "end_condition": Condition[ForestStand](lambda x: x.computational_unit.time > 2028)
 }
 
