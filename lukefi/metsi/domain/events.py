@@ -1,5 +1,6 @@
 from typing import Any, Optional
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
@@ -32,7 +33,8 @@ class GrowActa(Event[ForestStand]):
                 lambda state: grow_acta_fn(
                     state,
                     max_step),
-                "grow_acta"),
+                "grow_acta",
+                collected_data={NaturalProcessInfo}),
             static_parameters=parameters,
             preconditions=preconditions,
             postconditions=postconditions,
@@ -51,7 +53,8 @@ class GrowMetsi(Event[ForestStand]):
                 lambda state: grow_metsi_fn(
                     state,
                     max_step),
-                "grow_metsi"),
+                "grow_metsi",
+                collected_data={NaturalProcessInfo}),
             static_parameters=parameters,
             preconditions=preconditions,
             postconditions=postconditions,
