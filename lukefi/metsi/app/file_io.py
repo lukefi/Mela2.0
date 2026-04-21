@@ -12,6 +12,7 @@ from lukefi.metsi.data.formats.forest_builder import (
 from lukefi.metsi.data.formats.io_utils import (
     stands_to_csv_content,
     csv_content_to_stands,
+    csv_exp_content_to_stands,
     stands_to_rst_content,
     mela_par_file_content)
 from lukefi.metsi.app.app_io import MetsiConfiguration
@@ -80,6 +81,12 @@ def csv_reader() -> StandReader:
     return lambda path: csv_content_to_stands(csv_file_reader(path))
 
 
+def csv_exp_reader() -> StandReader:
+    """Reads FDM data from exp_csv directory to SOA vectors"""
+
+    return csv_exp_content_to_stands
+
+
 def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
     if state_format == "vmi13":
@@ -109,6 +116,8 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     """
     if app_config.state_format == "csv":
         return csv_reader()(app_config.input_path)
+    if app_config.state_format == "csv_exp":
+        return csv_exp_reader()(app_config.input_path)
     if app_config.state_format in ("vmi13", "vmi12", "vmi11", "vmi10", "vmi9", "xml", "gpkg"):
         return source_data_reader(
             app_config.state_format.value,
