@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.10] - 2026-04-16
+
+### Added
+
+- Added `breast_height_age` and `volume` columns to `removed_trees` table in output database
+
+### Fixed
+
+- Added proper type information for `removed_trees` table columns in output database
+
 ## [0.6.9] - 2026-04-15
 
 ### Fixed
