@@ -1,10 +1,12 @@
 from collections.abc import Callable
-from typing import Any
+import sqlite3
+from typing import Any, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-
+from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T], OpTuple[T]]
 type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
@@ -14,10 +16,20 @@ class Transition[T: ComputationalUnit]:
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
     init_fn: TransitionInitFn[T] | None
+    name: str
+    collected_data: CollectableDataTypes
+    db_output: bool
+    db_output_state: bool
+    db_output_cd: bool
 
     def __init__(
         self,
         transition_fn: TransitionFn[T],
+        collected_data: Optional[CollectableDataTypes] = None,
+        name: Optional[str] = None,
+        db_output: bool = True,
+        db_output_state: bool = False,
+        db_output_cd: bool = True,
         *,
         init_fn: TransitionInitFn[T] | None = None,
         **parameters,
@@ -25,13 +37,36 @@ class Transition[T: ComputationalUnit]:
         self.transition_fn = transition_fn
         self.parameters = parameters
         self.init_fn = init_fn
+        self.db_output = db_output
+        self.db_output_state = db_output_state
+        self.db_output_cd = db_output_cd
+
+        if name is not None:
+            self.name = name
+        else:
+            self.name = transition_fn.__name__
+
+        if collected_data is not None:
+            self.collected_data = collected_data
+        else:
+            self.collected_data = set()
 
     def initialize(self, unit: T) -> None:
         if self.init_fn is not None:
             self.init_fn(unit, self.parameters)
 
-    def __call__(self, state: T) -> OpTuple[T]:
-        return self.transition_fn(state, **self.parameters)
+    def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection]) -> OpTuple[T]:
+        new_state, collected_data = self.transition_fn(payload.computational_unit, **self.parameters)
+
+        if db is not None and self.db_output:
+            temp_history: OperationHistory = [
+                (payload.computational_unit.time, self.name, self.parameters, set())
+            ]
+            transition_payload = SimulationPayload(new_state, temp_history, payload.node_id)
+            output_node_to_db(db, transition_payload, collected_data, output_state=self.db_output_state,
+                              output_collected_data=self.db_output_cd, is_transition=True)
+
+        return new_state, collected_data
 
 
 class SimConfiguration[T: ComputationalUnit]:
@@ -70,10 +105,10 @@ class SimConfiguration[T: ComputationalUnit]:
         self.transition = transition
         self.instructions = simulation_instructions
         self.end_condition = end_condition
-        self._get_collected_data_types(self.instructions)
+        self._get_collected_data_types()
 
-    def _get_collected_data_types(self, instructions: list["SimulationInstruction[T]"]):
-        collected_data = set()
-        for instruction in instructions:
+    def _get_collected_data_types(self):
+        collected_data = self.transition.collected_data
+        for instruction in self.instructions:
             collected_data.update(instruction.event_generator.get_types_of_collected_data())
         self.collected_data = collected_data

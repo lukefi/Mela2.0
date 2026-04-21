@@ -61,6 +61,7 @@ control_structure = {
     ],
     "transition": Transition(
         grow_motti_dll_fn,
+        db_output=False,
         init_fn=initialize_motti,
         step=5
     ),

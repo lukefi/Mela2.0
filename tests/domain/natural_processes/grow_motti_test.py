@@ -43,6 +43,7 @@ def make_empty_sapling() -> SimpleNamespace:
 def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
+        time=2000,
         year=2000,
         geo_location=(6900000.0, 3400000.0, 150.0),
         lake_effect=0.0,

@@ -1,22 +1,28 @@
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.domain.events import GrowActa, GrowMetsi
-from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+from lukefi.metsi.domain.pre_ops import (
+    compute_location_metadata,
+    filter_stands,
+    filter_trees,
+    generate_reference_trees,
+    scale_area_weight)
+from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives
-from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 
 
 control_structure = {
     "app_configuration": {
-        "state_format": "vmi13",
-        "run_modes": ["preprocess", "simulate"]
+        "state_format": "xml",
+        "run_modes": ["preprocess", "simulate"],
     },
     "preprocessing_operations": [
         scale_area_weight,
         generate_reference_trees,
+        compute_location_metadata,
         filter_stands,
         filter_trees
     ],
@@ -42,18 +48,22 @@ control_structure = {
         ]
     },
     "simulation_instructions": [
+
         SimulationInstruction(
-            conditions=[TimePoints([2018, 2023, 2028])],
+            conditions=[TimePoints([2025, 2030, 2035])],
             events=[
-                Alternatives([
-                    GrowActa(),
-                    GrowMetsi(),
-                ])
+                DoNothing()
             ]
         )
     ],
-    "transition": Transition(do_nothing, db_output=False),
-    "end_condition": Condition[ForestStand](lambda x: x.computational_unit.time > 2028)
+    "transition": Transition[ForestStand](grow_motti_dll_fn,
+                                          {NaturalProcessInfo},
+                                          name="grow_motti",
+                                          db_output=True,
+                                          db_output_state=True,
+                                          db_output_cd=True,
+                                          step=5),
+    "end_condition": Condition[ForestStand](lambda x: x.computational_unit.year > 2030)
 }
 
 __all__ = ['control_structure']

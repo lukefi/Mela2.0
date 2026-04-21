@@ -2,6 +2,7 @@ import os
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -14,6 +15,7 @@ from lukefi.metsi.data.enums.internal import (
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
@@ -454,7 +456,7 @@ def species_to_motti(spe: int) -> int:
 
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
-
+@natural_process_transition
 def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
@@ -563,4 +565,4 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     return stand, []
 
 
-grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")
+grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll", collected_data={NaturalProcessInfo})
