@@ -12,8 +12,8 @@ from lukefi.metsi.data.enums.internal import (
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES,
 )
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.data.model import ForestStand, MottiState
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
@@ -26,7 +26,7 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     - Raise if values look like lat/long.
     """
     if not y1 or not x1:
-        return (0.0, 0.0)
+        raise ValueError("Stand is missing coordinates required by Motti")
     abs_y, abs_x = abs(y1), abs(x1)
 
     # Clear lat/long guard
@@ -121,8 +121,27 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-# -------- vectorized predictor --------
+def _strip_tree_strata(stand: ForestStand):
+    """
+    Clear tree information from  strata
+    """
+    if stand.tree_strata is None or stand.tree_strata.size == 0:
+        return
 
+    n = stand.tree_strata.size
+
+    # Create same-length strata object with default values in every column
+    stripped = TreeStrata(size=n)
+
+    # Keeping only fields that should survive
+    stripped.identifier = stand.tree_strata.identifier.copy()
+    stripped.origin = stand.tree_strata.origin.copy()
+    stripped.storey = stand.tree_strata.storey.copy()
+
+    stand.tree_strata = stripped
+
+
+# -------- vectorized predictor --------
 class MottiDLLPredictor:
     """
     SoA-based predictor feeding the Motti DLL. Builds C tree buffers from vector arrays.
@@ -151,7 +170,7 @@ class MottiDLLPredictor:
     # ---- stand/site properties ----
     @property
     def year(self) -> float:
-        y = getattr(self.stand, "year", None)
+        y = getattr(self.stand, "start_year", None)
         return float(y) if y is not None else 2010.0
 
     @property
@@ -210,28 +229,74 @@ class MottiDLLPredictor:
         v = getattr(self.stand, "tax_class_reduction", None)
         return int(v) if v is not None else 0
 
-    # ---- evolve ----
+    @property
+    def xt_regen(self) -> int:
+        art = self.stand.artificial_regeneration_year
+        return (self.stand.start_time - art) if art \
+            is not None else self.stand.start_time
 
-    def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
+    @property
+    def xt_muok(self) -> int:
+        soil = self.stand.soil_surface_preparation_year
+        return (self.stand.start_time - soil) if soil \
+            is not None else self.stand.start_time
+
+    @property
+    def xt_raiv(self) -> int:
+        reg = self.stand.regeneration_area_cleaning_year
+        return (self.stand.start_time - reg) if reg \
+            is not None else self.stand.start_time
+
+    @property
+    def sid(self) -> int:
+        return self.stand.stand_id or 0
+
+    @property
+    def fthin(self) -> bool:
+        return bool(self.stand.method_of_last_cutting)
+
+    @property
+    def xt_thin(self) -> int:
+        return (self.stand.method_of_last_cutting or self.stand.cutting_year or 0)
+
+    @property
+    def xt_fert(self) -> int:
+        return (self.stand.start_time - self.stand.fertilization_year) if self.stand.fertilization_year \
+            is not None else self.stand.start_time
+
+    @property
+    def xt_thoit(self) -> int:
+        return (self.stand.start_time - self.stand.young_stand_tending_year) if self.stand.young_stand_tending_year \
+            is not None else self.stand.start_time
+
+    @property
+    def drain(self) -> int:
+
+        if not self.stand.drainage_category:
+            return 0
+        return self.stand.drainage_category.value
+
+    @property
+    def xt_ndrain(self) -> int:
+        return (self.stand.start_time - self.stand.drainage_year) if self.stand.drainage_year \
+            is not None else self.stand.start_time
+
+    def ensure_state(self, step: int, sim_year: int):
+        """Initialize and attach persistent MottiState to stand if missing."""
+        if getattr(self.stand, "motti_state", None) is not None:
+            return self.stand.motti_state
+
         rt = self.stand.reference_trees
-        if not rt:
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
-        n = rt.size
-        if n == 0:
-            # nothing to do; fake zeros in the same shape the caller expects
-            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
+        if not rt or rt.size == 0:
+            return None
 
+        n = rt.size
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
 
         spedom = _spedom(self.stand.reference_trees)
 
-        # site (DLL converts site index if asked)
         y_km, x_km = auto_euref_km(self.get_y, self.get_x)
-        site = self.dll.new_site(
+        yy = self.dll.new_site(
             Y=y_km,
             X=x_km,
             Z=self.get_z,
@@ -241,6 +306,16 @@ class MottiDLLPredictor:
             mty=self.mty,
             verl=self.verl,
             verlt=self.verlt,
+            xt_regen=self.xt_regen,
+            xt_muok=self.xt_muok,
+            xt_raiv=self.xt_raiv,
+            sid=self.sid,
+            fthin=self.fthin,
+            xt_thin=self.xt_thin,
+            xt_fert=self.xt_fert,
+            xt_thoit=self.xt_thoit,
+            drain=self.drain,
+            xt_ndrain=self.xt_ndrain,
             alr=self.alr,
             year=sim_year,
             step=step,
@@ -251,11 +326,7 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        # Build trees buffer from SoA
-        # ids are stable 1..n in current order
         ids = np.arange(1, n + 1, dtype=int)
-
-        # Prepare vectors (with NaN -> 0 for DLL)
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         h = np.nan_to_num(rt.height, nan=0.0)
@@ -263,11 +334,8 @@ class MottiDLLPredictor:
         age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
         cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
         origin = np.nan_to_num(getattr(rt, "origin", np.zeros(n, dtype=float)), nan=0.0)
-
-        # Species conversion (raises on invalid)
         spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
 
-        # Build list[dict] for the DLL (fields used by wrapper)
         trees_py = [
             {
                 "id": int(i),
@@ -292,9 +360,44 @@ class MottiDLLPredictor:
                 origin.astype(int).tolist(),
             )
         ]
+        yp, ntrees = self.dll.new_trees(trees_py)
 
-        yp, _n = self.dll.new_trees(trees_py)
-        return self.dll.grow(site, yp, _n, step=step, ctrl=None, skip_init=True)
+        buffers = self.dll.alloc_state_buffers(ctrl=None)
+
+        _strip_tree_strata(self.stand)
+
+        self.stand.motti_state = MottiState(
+            dll=self.dll,
+            yy=yy,
+            yp=yp,
+            ntrees=int(ntrees),
+            buffers=buffers,
+            signature=tuple(ids.tolist()),
+        )
+
+        return self.stand.motti_state
+
+    def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
+        state = self.ensure_state(step=step, sim_year=sim_year)
+        if state is None:
+            return GrowthDeltas(tree_ids=[], trees_id=[], trees_ih=[], trees_if=[],
+                                trees_age=[], trees_age13=[]
+                                )
+
+        state.yy.year = sim_year
+        state.yy.step = step
+
+        growth = self.dll.grow_with_state(
+            state.yy,
+            state.yp,
+            int(state.ntrees),
+            state.buffers,
+            step=step,
+        )
+
+        state.ntrees = len(growth.tree_ids)
+
+        return growth
 
 
 # -------- DLL path resolver (same behavior as AoS helper) --------

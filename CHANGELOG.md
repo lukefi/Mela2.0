@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.11] - 2026-04-21
+
+### Fixed
+
+- Motti init called only once, state is held in stand.
+
 ## [0.6.10] - 2026-04-16
 
 ### Added
