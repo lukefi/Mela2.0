@@ -9,6 +9,12 @@ ${OUT_DIR}          ${CURDIR}/output/test
 ${EXAMPLES_DIR}     ${CURDIR}/../../../examples
 
 *** Test Cases ***
+Default control should run
+    Run Simulation
+    ...    ${INPUT_DIR}/VMI13_source_mini.dat
+    ...    ${OUT_DIR}/default_control
+    ...    ${CURDIR}/../../../control.py
+
 Conditions example should run
     Run Simulation
     ...    ${INPUT_DIR}/VMI13_source_mini.dat
