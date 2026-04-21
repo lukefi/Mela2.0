@@ -1,8 +1,11 @@
 from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta
+from lukefi.metsi.domain.events import DoNothing
+from lukefi.metsi.domain.forestry_types import ForestCondition
+from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees
+from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.generators import Sequence, Event
+from lukefi.metsi.sim.generators import Sequence
 from examples.declarations.sqlite import sqlite_decl
 
 
@@ -43,10 +46,12 @@ control_structure = {
                 TimePoints([2020])
             ],
             events=Sequence([
-                Event(grow_acta)
+                DoNothing()
             ])
         )
     ],
+    "transition": Transition(grow_acta_fn, db_output=False),
+    "end_condition": ForestCondition(lambda payload: payload.computational_unit.time > 2020),
     'export_prepro': {
         "csv": {},
     }
