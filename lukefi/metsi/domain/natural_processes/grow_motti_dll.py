@@ -33,31 +33,6 @@ from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 
 
-def _snapshot_ut_positive_rows(
-        ms: MottiState | None) -> dict[tuple[int, str, str, int], tuple[float, float, float, float, float]]:
-    rows: dict[tuple[int, str, str, int], tuple[float, float, float, float, float]] = {}
-    if ms is None or ms.buffers is None:
-        return rows
-
-    ut = ms.buffers.saplings
-    for layer in range(10):
-        for spe_name, _ in UT_SPECIES_FIELDS:
-            s = getattr(ut[0][layer], spe_name)
-            for cat_code, _cat_label in UT_CATEGORIES:
-                stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
-                if stems <= 0.0:
-                    continue
-                osid = parse_int_id(getattr(s, f"osid_{cat_code}", 0)) or -1
-                rows[(layer, spe_name, cat_code, osid)] = (
-                    stems,
-                    float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
-                    float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
-                    float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
-                    float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
-                )
-    return rows
-
-
 def debug_dump_reference_trees(stand: ForestStand, label: str) -> None:
     rt = getattr(stand, "reference_trees", None)
     print(f"\n=== {label} / reference_trees ===")
@@ -203,13 +178,13 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
     for layer in range(10):
         for spe_name, internal_species in UT_SPECIES_FIELDS:
             s = getattr(ut[0][layer], spe_name)
-
+            '''
             try:
                 if float(s.year) == -1.0:
                     continue
             except TypeError:
                 continue
-
+            '''
             for cat_code, _cat_label in UT_CATEGORIES:
                 stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
                 if stems <= 0.0:
@@ -465,20 +440,23 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
         origin = safe_storey_value(strata.origin[i])
         storey = safe_storey_value(strata.storey[i])
-
+        '''
         if mean_height <= 1.3 and stems_sap > 0.0:
             stems_for_motti = stems_sap
         else:
             stems_for_motti = stems_main if stems_main > 0.0 else stems_sap
+        '''
+
         stratum_sid = parse_int_id(strata.stratum_number[i])
         if stratum_sid is None:
             stratum_sid = i + 1
 
+        spe = float(species_to_motti(spe_raw))
         out.append({
-            "spe": float(species_to_motti(spe_raw)),
+            "spe": spe,
             "age": biological_age,
             "ba": basal_area,
-            "f": stems_for_motti,
+            "f": stems_main,
             "h": mean_height,
             "hw": mean_height,      # ppa-weighted height
             "d": mean_diameter,
@@ -743,7 +721,10 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        ids = rt.tree_number.astype(int).copy()
+        # ids = rt.tree_number.astype(int).copy()
+        ids = np.arange(1, n + 1, dtype=int)
+        for i in range(n):
+            rt.update({"tree_number": int(ids[i])}, i)
         for i in range(n):
             if ids[i] <= 0:
                 identifier, new_id = new_reference_tree_identity(self.stand)
@@ -828,8 +809,8 @@ class MottiDLLPredictor:
         )
 
         debug_dump_motti_state_raw(temp_ms, "after initialize_with_state")
-
-        _strip_tree_strata(self.stand)
+        debug_dump_yy_sapling_storey(temp_ms, "after initialize_with_state")
+        # _strip_tree_strata(self.stand)
 
         if MottiState is not None:
             self.stand.motti_state = MottiState(
@@ -864,9 +845,6 @@ class MottiDLLPredictor:
         state.yy.year = sim_year
         state.yy.step = step
 
-        ut_before = _snapshot_ut_positive_rows(state)
-        print("CALLING Motti4Growth", "sim_year=", sim_year, "step=", step, "ntrees_before=", int(state.ntrees))
-
         growth = self.dll.grow_with_state(
             state.yy,
             state.yp,
@@ -874,19 +852,6 @@ class MottiDLLPredictor:
             state.buffers,
             step=step,
         )
-
-        print("RETURNED FROM Motti4Growth", "ntrees_after=", len(growth.tree_ids))
-        ut_after = _snapshot_ut_positive_rows(state)
-        changed_ut = []
-        for key in sorted(set(ut_before) | set(ut_after)):
-            if ut_before.get(key) != ut_after.get(key):
-                changed_ut.append((key, ut_before.get(key), ut_after.get(key)))
-        if changed_ut:
-            print("UT CHANGED DURING EVOLVE", "n_rows=", len(changed_ut))
-            for key, before, after in changed_ut[:20]:
-                print("  UT DIFF", key, "before=", before, "after=", after)
-        else:
-            print("UT UNCHANGED DURING EVOLVE")
 
         state.ntrees = len(growth.tree_ids)
 
@@ -950,15 +915,8 @@ def species_to_motti(spe: int) -> int:
 
 def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
-    Vector-only Motti grow:
-      - Requires stand.reference_trees
-      - Treats Motti state as the source of truth after each growth call
-      - Rebuilds ReferenceTrees from current yp + ut state after growth
-      - Keeps GrowthDeltas only for debug visibility / YP-only analysis
-    operation_parameters:
-      - step: int (years), default 5
-      - data_dir: path to folder/file for the Motti DLL (required unless a predictor is injected)
-      - predictor: optional injected Motti4DLL wrapper (testing)
+    Grow stand with Motti and then rebuild ReferenceTrees from the current Motti state.
+    Motti is treated as the source of truth; growth deltas are kept only for debug output.
     """
 
     step = int(operation_parameters.get("step", 5))
@@ -977,35 +935,40 @@ def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
         update_stand_growth(stand, base_d, base_h, base_f, step, False)
         return stand, []
 
-    # Construct predictor
     if predictor is None:
         resolved_dir = resolve_dir_or_file(data_dir)
         pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
 
-    # debug_dump_reference_trees(stand, "before evolve")
+    debug_dump_reference_trees(stand, "before evolve")
     ms_before = getattr(stand, "motti_state", None)
     if ms_before is not None:
         debug_dump_motti_state_raw(ms_before, "before evolve")
+        debug_dump_yy_sapling_storey(ms_before, "before evolve")
 
     growth = pred.evolve(step=step, sim_year=sim_year)
 
     ms_after = getattr(stand, "motti_state", None)
     if ms_after is not None:
         debug_dump_motti_state_raw(ms_after, "after evolve before sync")
+        debug_dump_yy_sapling_storey(ms_after, "after evolve before sync")
 
     print(
-        "GROWTH DELTAS SUMMARY", "returned_keys=", sorted(
-            (int(sid), int(tid)) for sid, tid in zip(
-                growth.tree_sids, growth.tree_ids) if sid is not None), "n_growth_rows=", len(
-            growth.tree_ids), )
+        "GROWTH DELTAS SUMMARY",
+        "returned_keys=", sorted(
+            (int(sid), int(tid))
+            for sid, tid in zip(growth.tree_sids, growth.tree_ids)
+            if sid is not None
+        ),
+        "n_growth_rows=", len(growth.tree_ids),
+    )
 
-    # Motti is the source of truth after growth. Do not apply Python-side
-    # RF updates from deltas here; rebuild RFs from current Motti state.
-    stand.year = sim_year + step
+    # Advance simulation year, but do not mutate tree measurements from Python-side deltas.
+    stand.year = (stand.year or 0) + step
+
     reconcile_reference_trees_from_motti(stand)
-    # debug_dump_reference_trees(stand, "after full motti sync")
+    debug_dump_reference_trees(stand, "after full motti sync")
 
     return stand, []
 
@@ -1056,6 +1019,7 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
     if ms is None or ms.yp is None or ms.buffers is None:
         return
 
+    debug_dump_yy_sapling_storey(ms, "before grow_with_state")
     growth = ms.dll.grow_with_state(
         ms.yy,
         ms.yp,
@@ -1064,6 +1028,8 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
         step=0,
     )
     ms.ntrees = len(growth.tree_ids)
+
+    debug_dump_yy_sapling_storey(ms, "after grow_with_state")
 
     reconcile_reference_trees_from_motti(stand)
 
@@ -1148,6 +1114,27 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
+
+
+def debug_dump_yy_sapling_storey(ms: MottiState, label: str) -> None:
+    print(f"\n=== {label} / yy ===")
+    if ms is None or ms.yy is None:
+        print("yy = None")
+        return
+
+    yy = ms.yy
+
+    print("yy.year =", float(yy.year))      # index 50
+    print("yy.step =", float(yy.step))
+    print("yy.nstorey =", float(yy.nstorey))
+    print("yy.gstorey =", float(yy.gstorey))
+
+    print("yy.st2.age100 =", float(yy.st2.age100))  # index 86
+    print("yy.st2.h100   =", float(yy.st2.h100))    # 87
+    print("yy.st2.g      =", float(yy.st2.g))       # 88
+    print("yy.st2.f      =", float(yy.st2.f))       # 89
+    print("yy.st2.dg     =", float(yy.st2.dg))      # 90
+    print("yy.st2.spe    =", float(yy.st2.spe))     # 91
 
 
 grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")
