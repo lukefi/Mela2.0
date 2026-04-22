@@ -457,7 +457,7 @@ class ReferenceTrees(VectorData):
     """
     measured_height: npt.NDArray[np.float64]
     """
-    Height of a measured tree [m].
+    Measured height of the tree [m].
     """
     breast_height_age: npt.NDArray[np.float64]
     """
