@@ -73,6 +73,14 @@ class Transition[T: ComputationalUnit]:
 
         return new_state, collected_data
 
+    def __str__(self) -> str:
+        return f"{{transition_fn: {self.transition_fn.__name__}, " \
+               f"max_step: {self.max_step}, parameters: {self.parameters}}}"
+
+    def __repr__(self) -> str:
+        return f"{{transition_fn: {self.transition_fn.__name__}, " \
+               f"max_step: {self.max_step}, parameters: {self.parameters}}}"
+
 
 class SimConfiguration[T: ComputationalUnit]:
     """

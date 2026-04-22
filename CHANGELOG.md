@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.5] - 2026-04-22
+
+### Added
+
+- Added `update_to_year` treatment ("ajantasaistus")
+
 ## [0.7.4] - 2026-04-22
 
 ### Fixed
