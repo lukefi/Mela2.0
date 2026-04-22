@@ -2,9 +2,11 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional
 
+from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.formats import util, vmi_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
+from lukefi.metsi.data.formats.vmi_const import VMI13_STAND_INDICES, VMI13_STRATUM_INDICES, VMI13_TREE_INDICES
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 
@@ -55,7 +57,7 @@ class VMIBuilder(ForestBuilder):
         pass
 
     @classmethod
-    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int]=None) -> ForestStand:
+    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
         result = ForestStand()
 
         result.identifier = cls._generate_stand_identifier(source_data)
@@ -85,17 +87,22 @@ class VMIBuilder(ForestBuilder):
             source_data["test_area_number"] + "-" + \
             source_data["stand_number"]
 
+
 class VMI9Builder(VMIBuilder):
     pass
+
 
 class VMI10Builder(VMIBuilder):
     pass
 
+
 class VMI11Builder(VMIBuilder):
     pass
 
+
 class VMI12Builder(VMIBuilder):
     pass
+
 
 class VMI13Builder(VMIBuilder):
 
@@ -105,6 +112,25 @@ class VMI13Builder(VMIBuilder):
     @staticmethod
     def _classify_row(row: str) -> RowKind:
         return RowKind(row[0])
+
+    def build(self) -> StandList:
+        result: dict[str, ForestStand] = {}
+
+        stand_sources = ({key: row.split()[value]
+                         for key, value in VMI13_STAND_INDICES.items()} for row in self.stand_rows)
+        stratum_sources = ({key: row.split()[value] for key,
+                            value in VMI13_STRATUM_INDICES.items()} for row in self.stratum_rows)
+        tree_sources = ({key: row.split()[value]
+                        for key, value in VMI13_TREE_INDICES.items()} for row in self.tree_rows)
+
+        for i, row in enumerate(stand_sources):
+            try:
+                stand = self._convert_stand_entry(row, i + 1)
+                result[stand.identifier] = stand
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {self.stand_rows[i]} failed: {e}") from e
+
+        return list(result.values())
 
     @classmethod
     def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
