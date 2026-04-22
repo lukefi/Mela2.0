@@ -378,6 +378,7 @@ def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]
 
 @check_empty_vmi
 def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
+    code = code.strip()
     if code == '0':
         return None
 
