@@ -721,21 +721,8 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
-        # ids = rt.tree_number.astype(int).copy()
-        ids = np.arange(1, n + 1, dtype=int)
-        for i in range(n):
-            rt.update({"tree_number": int(ids[i])}, i)
-        for i in range(n):
-            if ids[i] <= 0:
-                identifier, new_id = new_reference_tree_identity(self.stand)
-                ids[i] = new_id
-                rt.update(
-                    {
-                        "tree_number": new_id,
-                        "identifier": identifier,
-                    },
-                    i,
-                )
+        rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
+        ids = rt.tree_number.astype(int).copy()
 
         stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
         d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
