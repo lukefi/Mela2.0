@@ -12,7 +12,7 @@ from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
-from lukefi.metsi.data.vector_model import TreeStrata
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     resolve_shared_object,
@@ -40,7 +40,7 @@ def make_empty_sapling() -> SimpleNamespace:
     )
 
 
-def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
+def make_stand_vec(rt: ReferenceTrees | SimpleNamespace) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
         time=2000,
@@ -133,6 +133,9 @@ class FakeDLL:
         return SimpleNamespace(buffers="ok", ctrl=ctrl)
 
     def grow_with_state(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
+        _ = _args
+        _ = _kwargs
+        
         if not self.captured_trees_py:
             return GrowthDeltas(
                 tree_ids=[],
@@ -272,7 +275,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             # Try data/motti marker
             for p in (base / ".git",):
                 if p.exists() and p.is_dir():
-                    for _child in p.iterdir():
+                    for _ in p.iterdir():
                         pass
                 # clean .git directory
             # Safer: use a fresh temp directory for clarity
@@ -326,16 +329,22 @@ class TestGrowMottiDLLVec(unittest.TestCase):
 
     def test_vector_grow_applies_deltas_and_handles_deaths(self) -> None:
         # Two trees; DLL returns growth only for tree 1; tree 2 "dies" (missing -> stems=0)
-        rt = make_rt(
-            stems=(100.0, 80.0),
-            d=(10.0, 12.0),
-            h=(12.0, 14.0),
-            species=(2, 3),
-        )
+        rt = ReferenceTrees(2)
+        rt.stems_per_ha[0] = 100.0
+        rt.stems_per_ha[1] = 80.0
+        rt.breast_height_diameter[0] = 10.0
+        rt.breast_height_diameter[1] = 12.0
+        rt.height[0] = 12.0
+        rt.height[1] = 14.0
+        rt.species[0] = 2
+        rt.species[1] = 3
         stand = make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
             def grow_with_state(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
+                _ = args
+                _ = kwargs
+
                 # Only tree id=1 grows / survives
                 return GrowthDeltas(
                     tree_ids=[1],
@@ -359,13 +368,13 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertIsNotNone(out_stand.reference_trees)
         rt_out = out_stand.reference_trees
         assert rt_out is not None
-
+        assert len(rt_out) == 1
         # tree 1 updated by deltas
         self.assertAlmostEqual(rt_out.breast_height_diameter[0], 10.0 + 0.7, places=6)
         self.assertAlmostEqual(rt_out.height[0], 12.0 + 1.2, places=6)
         self.assertAlmostEqual(rt_out.stems_per_ha[0], 100.0 - 5.0, places=6)
 
-        # tree 2 missing from DLL result → stems set to 0 (d, h unchanged)
-        self.assertAlmostEqual(rt_out.breast_height_diameter[1], 12.0, places=6)
-        self.assertAlmostEqual(rt_out.height[1], 14.0, places=6)
-        self.assertEqual(float(rt_out.stems_per_ha[1]), 0.0)
+        # tree 2 missing from DLL result → stems set to 0 (d, h unchanged) → tree deleted by prune_zero_stems
+        # self.assertAlmostEqual(rt_out.breast_height_diameter[1], 12.0, places=6)
+        # self.assertAlmostEqual(rt_out.height[1], 14.0, places=6)
+        # self.assertEqual(float(rt_out.stems_per_ha[1]), 0.0)
