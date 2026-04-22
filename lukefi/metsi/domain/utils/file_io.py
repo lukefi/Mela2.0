@@ -200,11 +200,23 @@ def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: Si
         UPDATE nodes
         SET leaf = 1
         WHERE
-            (identifier = ? OR identifier = ?)
+            identifier = ?
             AND stand = ?;
         """,
         (
             node_id,
+            leaf_node.computational_unit.identifier
+        )
+    )
+    cur.execute(
+        """--sql
+        UPDATE nodes
+        SET leaf = 2
+        WHERE
+            identifier = ?
+            AND stand = ?;
+        """,
+        (
             node_id + "-T",
             leaf_node.computational_unit.identifier
         )
