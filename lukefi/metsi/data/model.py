@@ -46,69 +46,212 @@ class ForestStand(Finalizable, ComputationalUnit):
     # SMK data type Stand
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
+    """
+    Reference trees in the stand.
+    """
     tree_strata: TreeStrata = dataclasses.field(default_factory=TreeStrata)
+    """
+    Tree strata in the stand.
+    """
     motti_state: Optional["MottiState"] = None
 
     time: int = 0
+    """
+    Current time for the simulation unit [a].
+    """
     start_time: int = 0
+    """
+    Starting time for the simulation unit [a].
+    """
 
-    # unique identifier for entity within its domain
     identifier: str = ""
-
+    """
+    Unique free-form identifier for the forest stand.
+    """
     stand_id: Optional[int] = None
-
+    """
+    Running unique identifier number for forest stands.
+    """
     area: float = 0.0
-
+    """
+    Area of the stand [ha].
+    """
     area_weight: float = area
-    # lat, lon, height above sea level (m), CRS
+    """
+    Area weight for growing stock [ha].
+    """
+
     geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[str]]] = None
-
+    """
+    Latitude, longitude, height above sea level [m] and coordinate reference system (CRS).
+    """
     degree_days: Optional[float] = None
+    """
+    Temperature sum: sum of daily average temperatures over 4 °C, starting from 1 Jan. [°Cd].
+    """
     owner_category: Optional[OwnerCategory] = None
+    """
+    Category of stand land owner.
+    """
     land_use_category: Optional[LandUseCategory] = None
+    """
+    Land use category.
+    """
     soil_peatland_category: Optional[SoilPeatlandCategory] = None
+    """
+    Soil peatland category.
+    """
     site_type_category: Optional[SiteType] = None
+    """
+    Site type category.
+    """
     tax_class_reduction: Optional[int] = None
+    """
+    Tax class reduction.
+    """
     tax_class: Optional[int] = None
+    """
+    Tax class.
+    """
     drainage_category: Optional[DrainageCategory] = None
+    """
+    Drainage category.
+    """
     drainage_year: Optional[int] = None
+    """
+    Year of last drainage.
+    """
     fertilization_year: Optional[int] = None
+    """
+    Year of last fertilization.
+    """
     soil_surface_preparation_year: Optional[int] = None
+    """
+    Year of last soil surface preparation.
+    """
     regeneration_area_cleaning_year: Optional[int] = None
+    """
+    Year of last regeneration area cleaning.
+    """
     development_class: Optional[DevelopmentClass] = None
+    """
+    Development class of the forest stand.
+    """
     main_tree_species_dominant_storey: Optional[TreeSpecies] = None
+    """
+    Main tree species in the dominant storey.
+    """
     artificial_regeneration_year: Optional[int] = None
+    """
+    Year of the last artificial regeneration.
+    """
     young_stand_tending_year: Optional[int] = None
+    """
+    Year of the last tending for a young stand.
+    """
     cutting_year: Optional[int] = None
+    """
+    Year of the last performed cutting.
+    """
     forestry_centre_id: Optional[int] = None
+    """
+    ID of the stand's forestry centre.
+    """
     forest_management_category: Optional[int | float] = None
+    """
+    Forest management category.
+    """
     method_of_last_cutting: Optional[CuttingMethod] = None
+    """
+    Method of the last performed cutting.
+    """
     municipality_id: Optional[int] = None
+    """
+    ID of the municipality the stand is located in.
+    """
     ds_main_tree_species_biological_age: Optional[float] = None
+    """
+    Current biological age of the main tree species in the dominant storey.
+    """
     ds_dominant_height: Optional[float] = None
+    """
+    Dominant height in the dominant storey.
+    """
 
-    # stand specific factors for scaling estimated ReferenceTree count per hectare
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
+    """
+    Proportions of the areas of the smaller and larger sample plot covered by the stand.
+    """
+    fra_category: Optional[FraLandUseClass] = None
+    """
+    NFI FRA class.
+    """
 
-    fra_category: Optional[FraLandUseClass] = None  # VMI fra category
-    # VMI stand number > 1 (meaning sivukoeala, auxiliary stand)
     auxiliary_stand: bool = False
+    """
+    NFI stand number > 1 (meaning sivukoeala, auxiliary stand).
+    """
+
+    # TODO: Are these needed?
     sea_effect: Optional[float] = None
+    """
+    Sea effect.
+    """
     lake_effect: Optional[float] = None
+    """
+    Lake effect.
+    """
 
     basal_area: Optional[float] = None
+    """
+    Basal area of the stand [m^2/ha].
+    """
     stems_per_ha: Optional[float] = None
+    """
+    Number of stems per hectare in the stand [1/ha].
+    """
     ds_ba_weighted_mean_diameter: Optional[float] = None
+    """
+    Mean diameter of dominant storey trees weighted by basal area.
+    """
     ds_ba_weighted_mean_height: Optional[float] = None
+    """
+    Mean height of dominant storey trees weighted by basal area.
+    """
     region: Optional[int] = None
+    """
+    Region where the stand is located.
+    """
     ahvkeilaus: Optional[str] = None  # only used in VMI11
+    """
+    Scanning type for Ahvenanmaa.
+    """
 
     peatland_type: Optional[PeatlandForestType] = None
+    """
+    Peatland type.
+    """
     drained_peatland_type: Optional[DrainedPeatlandForestType] = None
+    """
+    Drained peatland type.
+    """
     under_storey: bool = False
+    """
+    Whether the stand contains an under storey.
+    """
     over_storey: bool = False
+    """
+    Whether the stand contains an over storey.
+    """
     ds_main_tree_species: Optional[TreeSpecies] = None
+    """
+    Main tree species in the dominant storey.
+    """
+
     sqlite_decl: Optional[dict] = None
+    """
+    Declarations for SQLite output database columns.
+    """
 
     def __eq__(self, other):
         return id(self) == id(other)

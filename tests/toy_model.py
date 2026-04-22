@@ -25,12 +25,12 @@ class ToyModel(ComputationalUnit):
 
 
 class ToyTransition(Transition[ToyModel]):
-    def __init__(self, **parameters):
-        super().__init__(toy_transition, **parameters)
+    def __init__(self, max_step: int = 1, **parameters):
+        super().__init__(toy_transition, max_step, **parameters)
 
 
-def toy_transition(state: ToyModel) -> OpTuple[ToyModel]:
-    state.time += 1
+def toy_transition(state: ToyModel, step: int = 1) -> OpTuple[ToyModel]:
+    state.time += step
     return state, []
 
 

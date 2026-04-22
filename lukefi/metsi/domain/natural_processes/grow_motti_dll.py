@@ -29,8 +29,9 @@ from lukefi.metsi.domain.natural_processes.util import (
 
 
 )
+from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
+from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
 
 
 def debug_dump_reference_trees(stand: ForestStand, label: str) -> None:
@@ -508,23 +509,22 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
     return max(per.items(), key=lambda kv: kv[1])[0]
 
 
-def _strip_tree_strata(stand):
+def _strip_tree_strata(stand: ForestStand):
     """
     Clear tree information from  strata
     """
-    strata = getattr(stand, "tree_strata", None)
-    if strata is None or strata.size == 0:
+    if stand.tree_strata is None or stand.tree_strata.size == 0:
         return
 
-    n = strata.size
+    n = stand.tree_strata.size
 
     # Create same-length strata object with default values in every column
     stripped = TreeStrata(size=n)
 
     # Keeping only fields that should survive
-    stripped.identifier = strata.identifier.copy()
-    stripped.origin = strata.origin.copy()
-    stripped.storey = strata.storey.copy()
+    stripped.identifier = stand.tree_strata.identifier.copy()
+    stripped.origin = stand.tree_strata.origin.copy()
+    stripped.storey = stand.tree_strata.storey.copy()
 
     stand.tree_strata = stripped
 
@@ -672,11 +672,6 @@ class MottiDLLPredictor:
     def ensure_state(self, step: int, sim_year: int):
         """Initialize and attach persistent MottiState to stand if missing."""
         if getattr(self.stand, "motti_state", None) is not None:
-            if getattr(self.stand, "motti_state", None) is not None:
-                ms = self.stand.motti_state
-                print("ENSURE_STATE REUSE",
-                      "ms.ntrees=", ms.ntrees)
-                return self.stand.motti_state
             return self.stand.motti_state
 
         rt = self.stand.reference_trees
@@ -764,6 +759,7 @@ class MottiDLLPredictor:
                 origin.astype(int).tolist(),
             )
         ]
+        yp, ntrees = self.dll.new_trees(trees_py)
 
         print("\nINIT INPUT TREES_PY:")
         for row in trees_py:
@@ -900,13 +896,18 @@ def species_to_motti(spe: int) -> int:
     raise ValueError(f"Unsupported tree species code: {int(spe)}")
 
 
-def grow_motti_dll_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+@natural_process_transition
+def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
-    Grow stand with Motti and then rebuild ReferenceTrees from the current Motti state.
-    Motti is treated as the source of truth; growth deltas are kept only for debug output.
+    Vector-only Motti grow:
+      - Requires stand.reference_trees
+      - Builds DLL input from SoA, runs growth, applies deltas vectorized
+      - Prunes trees with stems_per_ha < 1.0 after update
+    operation_parameters:
+      - data_dir: path to folder/file for the Motti DLL (required unless a predictor is injected)
+      - predictor: optional injected Motti4DLL wrapper (testing)
     """
 
-    step = int(operation_parameters.get("step", 5))
     data_dir = operation_parameters.get("data_dir", None)
     predictor = operation_parameters.get("predictor", None)
 
@@ -1122,6 +1123,3 @@ def debug_dump_yy_sapling_storey(ms: MottiState, label: str) -> None:
     print("yy.st2.f      =", float(yy.st2.f))       # 89
     print("yy.st2.dg     =", float(yy.st2.dg))      # 90
     print("yy.st2.spe    =", float(yy.st2.spe))     # 91
-
-
-grow_motti_dll = Treatment(grow_motti_dll_fn, "grow_motti_dll")

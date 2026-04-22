@@ -28,7 +28,7 @@ class GrowActaTest(unittest.TestCase):
         # Keep a pre-growth snapshot for monotonicity checks.
         before = deepcopy(stand)
 
-        stand, _ = grow_acta_fn(stand)
+        stand, _ = grow_acta_fn(stand, 5)
         self.assert_domain_sensibility(stand, before)
         self.assertFalse(stand.reference_trees.sapling[2])
         self.assertEqual(stand.reference_trees.biological_age[0], 60)

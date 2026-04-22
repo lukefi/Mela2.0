@@ -18,6 +18,7 @@ from lukefi.metsi.data.enums.internal import (
     DECIDUOUS_SPECIES,
 )
 from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 
@@ -33,7 +34,6 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
-from lukefi.metsi.sim.treatment import Treatment
 
 
 # ---------- helpers ----------
@@ -247,13 +247,13 @@ class MetsiGrowPredictor(Predict):
 
 
 # ---------- public API  ----------
-
-def grow_metsi_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+@natural_process_transition
+def grow_metsi_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.
     Assumes input is vectorized
     """
-    step = operation_parameters.get("step", 5)
+    _ = operation_parameters
     stand = input_
 
     if stand.reference_trees.size == 0:
@@ -285,6 +285,3 @@ def grow_metsi_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
         stand.reference_trees.delete(to_delete.tolist())
 
     return stand, []
-
-
-grow_metsi = Treatment(grow_metsi_fn, "grow_metsi")

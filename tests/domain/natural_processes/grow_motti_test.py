@@ -12,6 +12,7 @@ import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
 
+from lukefi.metsi.data.vector_model import TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     resolve_shared_object,
@@ -63,6 +64,7 @@ def make_empty_sapling() -> SimpleNamespace:
 def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
+        time=2000,
         year=2000,
         geo_location=(6900000.0, 3400000.0, 150.0),
         lake_effect=0.0,
@@ -73,6 +75,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         tax_class=1,
         tax_class_reduction=0,
         reference_trees=rt,
+        tree_strata=TreeStrata(),
         sapling=sap,
         saplings=sap,
         start_time=2025,
@@ -226,6 +229,10 @@ class FakeDLL:
             trees_age=zeros,
             trees_age13=zeros,
         )
+
+    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
+        return self.grow_with_state(*_args, **_kwargs)
+
 
 # ---------- Tests ----------
 

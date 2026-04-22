@@ -353,47 +353,168 @@ class VectorData():
 @dataclass
 class ReferenceTree:
     identifier: str = ""
+    """
+    Free-form tree identifier. Each tree must have a unique identifier,
+    even between different forest stands.
+    """
     tree_number: int = -1
+    """
+    Running number for generated trees. The combined `tree_number`
+    and `stratum` must be unique within a single forest stand.
+    """
     species: TreeSpecies = TreeSpecies.UNSET
+    """
+    Species of the tree.
+    """
     breast_height_diameter: float = 0.0
+    """
+    Diameter of the tree at 1.3 m height [cm].
+    """
     height: Optional[float] = None
+    """
+    Height of the tree [m].
+    """
     measured_height: Optional[float] = None
+    """
+    Measured height of the tree [m].
+    """
     breast_height_age: Optional[float] = None
+    """
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
+    """
     biological_age: Optional[float] = None
+    """
+    Biological age of the tree [a]. (Years since the tree was born)
+    """
     stems_per_ha: float = 0.0
+    """
+    Number of stems per hectare that the tree represents [1/ha].
+    """
     origin: Origin = Origin.UNSET
+    """
+    Origin of the tree.
+    """
     management_category: TreeManagementCategory = TreeManagementCategory.UNSET
+    """
+    Management category of the tree.
+    """
     tree_category: TreeCategory = TreeCategory.UNSET
+    """
+    NFI tree category for living/dead/otherwise unusable tree.
+    """
     storey: Storey = Storey.UNSET
+    """
+    Storey of the tree.
+    """
     sapling: bool = False
+    """
+    Whether the tree is considered a sapling or adult.
+    """
     tree_type: TreeType = TreeType.UNSET
+    """
+    Type of the tree (old, new, remeasured, etc.).
+    """
     damage_type: DamageType = DamageType.UNSET
+    """
+    Type of damage affecting the tree.
+    """
     crown_class: CrownClass = CrownClass.UNSET
+    """
+    Tree crown class.
+    """
     basal_area: float = 0.0
+    """
+    Basal area of singe tree of this type [m^2].
+    """
     volume: float = 0.0
+    """
+    Volume of single tree of this type [m^3].
+    """
 
 
 class ReferenceTrees(VectorData):
     identifier: npt.NDArray[np.str_]
+    """
+    Free-form tree identifier. Each tree must have a unique identifier,
+    even between different forest stands.
+    """
     tree_number: npt.NDArray[np.int32]
+    """
+    Running number for generated trees. The combined `tree_number`
+    and `stratum` must be unique within a single forest stand.
+    """
     species: npt.NDArray[np.int32]
+    """
+    Species of the tree.
+    """
     breast_height_diameter: npt.NDArray[np.float64]
+    """
+    Diameter of the tree at 1.3 m height [cm].
+    """
     height: npt.NDArray[np.float64]
+    """
+    Height of the tree [m].
+    """
     measured_height: npt.NDArray[np.float64]
+    """
+    Measured height of the tree [m].
+    """
     breast_height_age: npt.NDArray[np.float64]
+    """
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
+    """
     biological_age: npt.NDArray[np.float64]
+    """
+    Biological age of the tree [a]. (Years since the tree was born)
+    """
     stems_per_ha: npt.NDArray[np.float64]
+    """
+    Number of stems per hectare that the tree represents [1/ha].
+    """
     origin: npt.NDArray[np.int32]
+    """
+    Origin of the tree.
+    """
     management_category: npt.NDArray[np.int32]
+    """
+    Management category of the tree.
+    """
     tree_category: npt.NDArray[np.str_]
+    """
+    NFI tree category for living/dead/otherwise unusable tree.
+    """
     storey: npt.NDArray[np.int32]
+    """
+    Storey of the tree.
+    """
     sapling: npt.NDArray[np.bool_]
+    """
+    Whether the tree is considered a sapling or adult.
+    """
     tree_type: npt.NDArray[np.str_]
+    """
+    Type of the tree (old, new, remeasured, etc.).
+    """
     damage_type: npt.NDArray[np.str_]
+    """
+    Type of damage affecting the tree.
+    """
     crown_class: npt.NDArray[np.str_]
+    """
+    Tree crown class.
+    """
     basal_area: npt.NDArray[np.float64]
+    """
+    Basal area of singe tree of this type [m^2].
+    """
     volume: npt.NDArray[np.float64]
+    """
+    Volume of single tree of this type [m^3].
+    """
     stratum: npt.NDArray[np.int32]
+    """
+    `stratum_number` of the stratum this tree is related to.
+    """
 
     def __init__(self, size: int = 0):
         super().__init__(DTYPES_TREE, size)
@@ -478,19 +599,62 @@ class ReferenceTrees(VectorData):
 @dataclass
 class TreeStratum:
     identifier: str = ""
+    """
+    Free-form stratum identifier. Each stratum must have a unique identifier,
+    even between different forest stands.
+    """
     species: TreeSpecies = TreeSpecies.UNSET
+    """
+    Main tree species of the stratum.
+    """
     mean_diameter: float = -1
+    """
+    Mean diameter of trees in the stratum [cm].
+    """
     mean_height: float = 0.0
+    """
+    Mean height of trees in the stratum [m].
+    """
     breast_height_age: Optional[float] = None
+    """
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
+    """
     biological_age: Optional[float] = None
+    """
+    Biological age of the tree [a]. (Years since the tree was born)
+    """
     stems_per_ha: float = 0.0
+    """
+    Number of stems in area of one hectare [1/ha].
+    """
     basal_area: Optional[float] = None
+    """
+    Basal area of the stratum [m^2].
+    """
     origin: Origin = Origin.UNSET
+    """
+    Origin of the stratum.
+    """
     stratum_number: int = 0
+    """
+    Running stratum number within the forest stand.
+    """
     storey: Storey = Storey.UNSET
+    """
+    Storey of the stratum.
+    """
     sapling_stems_per_ha: float = 0.0
+    """
+    Number of sapling stems in area of one hectare [1/ha].
+    """
     number_of_generated_trees: int = 0
+    """
+    Number of reference trees generated from this stratum.
+    """
     stratum_rank: StratumRank = StratumRank.UNSET
+    """
+    Rank of the stratum.
+    """
 
     def get_breast_height_age(self, subtrahend: float = 12.0) -> float:
         if self.breast_height_age is not None and self.breast_height_age > 0.0:
@@ -503,19 +667,62 @@ class TreeStratum:
 
 class TreeStrata(VectorData):
     identifier: npt.NDArray[np.str_]
+    """
+    Free-form stratum identifier. Each stratum must have a unique identifier,
+    even between different forest stands.
+    """
     species: npt.NDArray[np.int32]
+    """
+    Main tree species of the stratum.
+    """
     mean_diameter: npt.NDArray[np.float64]
+    """
+    Mean diameter of trees in the stratum [cm].
+    """
     mean_height: npt.NDArray[np.float64]
+    """
+    Mean height of trees in the stratum [m].
+    """
     breast_height_age: npt.NDArray[np.float64]
+    """
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
+    """
     biological_age: npt.NDArray[np.float64]
+    """
+    Biological age of the tree [a]. (Years since the tree was born)
+    """
     stems_per_ha: npt.NDArray[np.float64]
+    """
+    Number of stems in area of one hectare [1/ha].
+    """
     basal_area: npt.NDArray[np.float64]
+    """
+    Basal area of the stratum [m^2].
+    """
     origin: npt.NDArray[np.int32]
+    """
+    Origin of the stratum.
+    """
     stratum_number: npt.NDArray[np.int32]
+    """
+    Running stratum number within the forest stand.
+    """
     storey: npt.NDArray[np.int32]
+    """
+    Storey of the stratum.
+    """
     sapling_stems_per_ha: npt.NDArray[np.float64]
+    """
+    Number of sapling stems in area of one hectare [1/ha].
+    """
     number_of_generated_trees: npt.NDArray[np.int32]
+    """
+    Number of reference trees generated from this stratum.
+    """
     stratum_rank: npt.NDArray[np.int16]
+    """
+    Rank of the stratum.
+    """
 
     def __init__(self, size: int = 0):
         super().__init__(DTYPES_STRATA, size)

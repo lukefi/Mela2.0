@@ -221,7 +221,7 @@ def determine_tax_class(sourcevalue: str) -> int:
 
 
 def determine_forest_management_category(land_use_category: int,
-                                         county: int,
+                                         is_ahvenanmaa: bool,
                                          owner_group: int,
                                          production_limitation: str,
                                          production_limitation_detail: str,
@@ -321,21 +321,23 @@ def determine_forest_management_category(land_use_category: int,
         decimals = 0.7
 
     # Ahvenanmaa;
-    if (county == 21 and (aland_area_code != '1' or other_values == '2') and vmi_pt > 1):
+    if (is_ahvenanmaa and (aland_area_code != '1' or other_values == '2') and vmi_pt > 1):
         vmi_pt = 1
         decimals = 0.7
 
     # Metsähallituksen rajoitukset;
-    mh_pt = 5
-
-    if (test_area_handling_class == '1' and mh_pt == 5):
-        mh_pt = 3
-
-    if (test_area_handling_class == '2' and mh_pt == 5):
-        mh_pt = 2
-
-    if (test_area_handling_class in ('3.1', '3.2') and mh_pt == 5):
-        mh_pt = 1
+    try:
+        test_area_handling_class_numeric = float(test_area_handling_class)
+        if test_area_handling_class_numeric == 1:
+            mh_pt = 3
+        elif test_area_handling_class_numeric == 2:
+            mh_pt = 2
+        elif test_area_handling_class_numeric in (3.1, 3.2):
+            mh_pt = 1
+        else:
+            mh_pt = 5
+    except ValueError:
+        mh_pt = 5
 
     if mh_pt < vmi_pt:
         decimals = 0.8

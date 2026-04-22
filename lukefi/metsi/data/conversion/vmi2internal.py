@@ -60,19 +60,26 @@ _PEATLAND_FOREST_TYPE_MAP = {
     VmiPeatlandForestType.VARSINAINEN_LEHTORAME: PeatlandForestType.VARSINAINEN_LEHTORAME,
     VmiPeatlandForestType.RUOHOINEN_SARARAME: PeatlandForestType.RUOHOINEN_SARARAME,
     VmiPeatlandForestType.VARSINAINEN_SARARAME: PeatlandForestType.VARSINAINEN_SARARAME,
-    VmiPeatlandForestType.TUPAVILLASARARAME: PeatlandForestType.TUPAVILLASARARAME,
+    VmiPeatlandForestType.TUPASVILLASARARAME: PeatlandForestType.TUPASVILLASARARAME,
     VmiPeatlandForestType.LYHYTKORSIRAME: PeatlandForestType.LYHYTKORSIRAME,
-    VmiPeatlandForestType.TUPAVILLARAME: PeatlandForestType.TUPAVILLARAME,
+    VmiPeatlandForestType.TUPASVILLARAME: PeatlandForestType.TUPASVILLARAME,
     VmiPeatlandForestType.KEIDASRAME: PeatlandForestType.KEIDASRAME,
-    VmiPeatlandForestType.VARSINAINENLETTO: PeatlandForestType.VARSINAINENLETTO,
+    VmiPeatlandForestType.VARSINAINEN_LETTO: PeatlandForestType.VARSINAINEN_LETTO,
     VmiPeatlandForestType.RIMPILETTO: PeatlandForestType.RIMPILETTO,
-    VmiPeatlandForestType.RUOHOINENSARANEVA: PeatlandForestType.RUOHOINENSARANEVA,
-    VmiPeatlandForestType.RUOHOINENRIMPINEVA: PeatlandForestType.RUOHOINENRIMPINEVA,
-    VmiPeatlandForestType.VARSINAINENSARANEVA: PeatlandForestType.VARSINAINENSARANEVA,
-    VmiPeatlandForestType.VARSINAINENRIMPINEVA: PeatlandForestType.VARSINAINENRIMPINEVA,
+    VmiPeatlandForestType.RUOHOINEN_SARANEVA: PeatlandForestType.RUOHOINEN_SARANEVA,
+    VmiPeatlandForestType.RUOHOINEN_RIMPINEVA: PeatlandForestType.RUOHOINEN_RIMPINEVA,
+    VmiPeatlandForestType.VARSINAINEN_SARANEVA: PeatlandForestType.VARSINAINEN_SARANEVA,
+    VmiPeatlandForestType.VARSINAINEN_RIMPINEVA: PeatlandForestType.VARSINAINEN_RIMPINEVA,
     VmiPeatlandForestType.LYHYTKORSIKALVAKKANEVA: PeatlandForestType.LYHYTKORSIKALVAKKANEVA,
     VmiPeatlandForestType.LYHYTKORSINEVA: PeatlandForestType.LYHYTKORSINEVA,
     VmiPeatlandForestType.RAHKANEVA: PeatlandForestType.RAHKANEVA,
+    VmiPeatlandForestType.RAHKAINEN_LETTORAME: PeatlandForestType.RAHKAINEN_LETTORAME,
+    VmiPeatlandForestType.RUOHOKANGASKORPI: PeatlandForestType.RUOHOKANGASKORPI,
+    VmiPeatlandForestType.METSAKORTEKORPI: PeatlandForestType.METSAKORTEKORPI,
+    VmiPeatlandForestType.MUURAINKORPI: PeatlandForestType.MUURAINKORPI,
+    VmiPeatlandForestType.TUPASVILLAKORPI: PeatlandForestType.TUPASVILLAKORPI,
+    VmiPeatlandForestType.VAIVAISKOIVURAME: PeatlandForestType.VAIVAISKOIVURAME,
+    VmiPeatlandForestType.SARARIMPINEVA: PeatlandForestType.SARARIMPINEVA,
 }
 
 _DRAINED_PEATLAND_FOREST_TYPE_MAP = {
@@ -279,12 +286,15 @@ _DAMAGE_TYPE_MAP = {
     VmiDamageType.DECAYED_STANDING_LIVING_TREES: DamageType.DECAYED_STANDING_LIVING_TREES,
     VmiDamageType.DAMAGES_ON_THE_STEMS: DamageType.DAMAGES_ON_THE_STEMS,
     VmiDamageType.FLOWS_OF_RESIN: DamageType.FLOWS_OF_RESIN,
+    VmiDamageType.BROKEN_OR_DEAD_LEADER: DamageType.BROKEN_OR_DEAD_LEADER,
     VmiDamageType.BROKEN_TOP: DamageType.BROKEN_TOP,
     VmiDamageType.DEAD_LEADER_BRANCH: DamageType.DEAD_LEADER_BRANCH,
+    VmiDamageType.DEFORMED_LEADER: DamageType.DEFORMED_LEADER,
     VmiDamageType.LEADER_CHANGE_BY_LEADER_DAMAGE: DamageType.LEADER_CHANGE_BY_LEADER_DAMAGE,
     VmiDamageType.MULTIPLE_LEADERS: DamageType.MULTIPLE_LEADERS,
     VmiDamageType.BENT_TOP: DamageType.BENT_TOP,
     VmiDamageType.DEFORMED_STEM: DamageType.DEFORMED_STEM,
+    VmiDamageType.BRANCH_DAMAGE: DamageType.BRANCH_DAMAGE,
     VmiDamageType.DEAD_BRANCHES_IN_LIVING_CROWN: DamageType.DEAD_BRANCHES_IN_LIVING_CROWN,
     VmiDamageType.BROKEN_BRANCHES_IN_LIVING_CROWN: DamageType.BROKEN_BRANCHES_IN_LIVING_CROWN,
     VmiDamageType.DEFORMED_OR_BENT_BRANCHES_IN_LIVING_CROWN: DamageType.DEFORMED_OR_BENT_BRANCHES_IN_LIVING_CROWN,
@@ -330,6 +340,9 @@ _CUTTING_METHOD_MAP = {
     VmiCuttingMethod.NURSE_CROP_CUTTING: CuttingMethod.SHELTERWOOD_CUTTING,
     VmiCuttingMethod.SPECIAL_CUTTING: CuttingMethod.SPECIAL_CUTTING,
     VmiCuttingMethod.SELECTIVE_LOGGING: CuttingMethod.CCF_CUTTING,
+    VmiCuttingMethod.UPPER_LAYER_FIRST_THINNING: CuttingMethod.FIRST_THINNING,
+    VmiCuttingMethod.UPPER_LAYER_OTHER_THINNING: CuttingMethod.THINNING,
+    VmiCuttingMethod.HIGH_GRADING_SELECTIVE_CUTTING: CuttingMethod.HIGH_GRADING_SELECTIVE_CUTTING,
     VmiCuttingMethod.GAP_FELLING: CuttingMethod.CCF_CUTTING,
     VmiCuttingMethod.GROWING_STOCK_REMOVAL_ON_DRAINED_BOG: CuttingMethod.SPECIAL_CUTTING
 }
@@ -368,7 +381,7 @@ def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
     if code == '0':
         return None
 
-    vmi_code = VmiPeatlandForestType(code)
+    vmi_code = VmiPeatlandForestType(code.strip())
     return _PEATLAND_FOREST_TYPE_MAP[vmi_code]
 
 

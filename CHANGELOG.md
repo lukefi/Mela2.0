@@ -4,6 +4,120 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.5] - 2026-04-22
+
+### Added
+
+- Added `update_to_year` treatment ("ajantasaistus")
+
+## [0.7.4] - 2026-04-22
+
+### Fixed
+
+- Added missing `natural_process_transition` decorators to `grow_metsi_fn` and `grow_acta_fn`
+
+## [0.7.3] - 2026-04-22
+
+### Added
+
+- Added proper docstrings for FDM attributes
+
+## [0.7.2] - 2026-04-22
+
+### Changed
+
+- Transition leaf nodes now get the value `2` in the `leaf` column
+
+## [0.7.1] - 2026-04-21
+
+### Added
+
+- Added support for variable-length time steps
+
+## [0.7.0] - 2026-04-21
+
+### Added
+
+- Database output nodes from transitions
+- `NaturalProcessInfo` collected data type
+- `natural_process_transition` decorator for collecting `NaturalProcessInfo` from natural process transitions
+
+## [0.6.14] - 2026-04-21
+
+### Added
+
+- Added option to read csv_exp data as input
+
+## [0.6.13] - 2026-04-21
+
+### Added
+
+- Added progress logging to `simulate_alternatives`
+
+## [0.6.12] - 2026-04-21
+
+### Added
+
+- Added better console logging for ForestBuilder errors
+
+## [0.6.11] - 2026-04-21
+
+### Fixed
+
+- Motti init called only once, state is held in stand.
+
+## [0.6.10] - 2026-04-16
+
+### Added
+
+- Added `breast_height_age` and `volume` columns to `removed_trees` table in output database
+
+### Fixed
+
+- Added proper type information for `removed_trees` table columns in output database
+
+## [0.6.9] - 2026-04-15
+
+### Fixed
+
+- Changed RST C-variable total length field to integer type
+
+## [0.6.8] - 2026-04-14
+
+### Fixed
+
+- Fixed `test_area_handling_class` checks in `determine_forest_management_category`
+
+## [0.6.7] - 2026-04-14
+
+### Fixed
+
+- Fixed tree origin conversion for Mela RST output
+
+## [0.6.6] - 2026-04-09
+
+### Fixed
+
+- Fixed issues with peatland forest type conversion
+
+## [0.6.5] - 2026-04-09
+
+### Fixed
+
+- Added missing cutting methods for upper layer thinning variants
+
+## [0.6.4] - 2026-04-07
+
+### Added
+
+- Added missing more generic damage types from NFI9 and NFI10
+
+## [0.6.3] - 2026-04-07
+
+### Fixed
+
+- Ahvenanmaa logic bug fixed
+
 ## [0.6.2] - 2026-04-01
 
 ### Fixed

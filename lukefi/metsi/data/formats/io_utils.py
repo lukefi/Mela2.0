@@ -1,8 +1,11 @@
 from itertools import chain
+import csv
+from pathlib import Path
 
 from typing import Any, Optional
 from collections.abc import Callable
 import numpy as np
+from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.data.formats.util import parse_float
 from lukefi.metsi.data.model import (
@@ -14,13 +17,52 @@ from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.vector_model import (
     ReferenceTrees,
     TreeStrata,
-    attrs_from_internal_tree_csv_row, attrs_from_internal_stratum_csv_row
+    attrs_from_internal_tree_csv_row,
+    attrs_from_internal_stratum_csv_row,
+    DTYPES_TREE,
+    DTYPES_STRATA,
 )
 
 
 def _append_attrs(target: dict[str, list[Any]], attrs: dict[str, Any]) -> None:
     for k, v in attrs.items():
         target.setdefault(k, []).append(v)
+
+
+def _parse_exp_stand_cell(raw: str):
+    """
+    Stand rows are fed into ForestStand.from_csv_row(), which expects
+    legacy CSV semantics: missing values must be the literal string "None".
+    """
+    if raw in ("", "None", "nan"):
+        return "None"
+    return raw
+
+
+def _parse_exp_vector_cell(raw: str):
+    """
+    Tree/strata rows are vectorized later, so real Python None is fine here.
+    """
+    if raw in ("", "None", "nan"):
+        return None
+    return raw
+
+
+def _parse_vector_value(field_name: str, raw: str, dtypes: dict[str, tuple]):
+    raw = _parse_exp_vector_cell(raw)
+    if raw is None:
+        return None
+
+    dtype = dtypes[field_name][0]
+
+    if dtype in (np.int16, np.int32):
+        return int(raw)
+    if dtype == np.float64:
+        return float(raw)
+    if dtype == np.bool_:
+        return raw == "True"
+
+    return str(raw)
 
 
 def rst_float(source: str | int | float) -> str:
@@ -74,7 +116,7 @@ def msb_metadata(stand: ForestStand) -> tuple[list[str], list[str], list[str]]:
 
 def c_var_metadata(uid: float | None, cvars_len: int) -> list[str]:
     total_length = 2 + cvars_len
-    cvars_meta = map(rst_float, [uid or 0, total_length, 2, cvars_len])
+    cvars_meta = [rst_float(uid or 0), str(total_length), "2.000000", rst_float(cvars_len)]
     return list(cvars_meta)
 
 
@@ -172,6 +214,138 @@ def csv_content_to_stands(csv_content: list[list[str]]) -> StandList:
 
     # finalize last stand
     _finalize_current()
+
+    return stands
+
+
+def csv_exp_content_to_stands(input_path: str | Path) -> StandList:
+    """
+    Read split exp_csv export from a directory containing:
+      - stands.csv
+      - trees.csv
+      - strata.csv
+      - metadata.json (optional, ignored here)
+
+    Returns:
+        StandList
+    """
+    base_path = Path(input_path)
+
+    if base_path.is_file():
+        # Allow accidentally passing e.g. ".../stands.csv"
+        base_path = base_path.parent
+
+    stands_path = base_path / "stands.csv"
+    trees_path = base_path / "trees.csv"
+    strata_path = base_path / "strata.csv"
+
+    if not stands_path.exists():
+        raise MetsiException(f"stands.csv not found in '{base_path}'")
+    if not trees_path.exists():
+        raise MetsiException(f"trees.csv not found in '{base_path}'")
+    if not strata_path.exists():
+        raise MetsiException(f"strata.csv not found in '{base_path}'")
+
+    stands: list[ForestStand] = []
+    stands_by_id: dict[str, ForestStand] = {}
+
+    # ---------- stands.csv ----------
+    with open(stands_path, "r", encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter=";")
+        header = next(reader, None)
+
+        if not header or header[0] != "stand_identifier":
+            raise MetsiException(f"Invalid stands.csv header in '{stands_path}'")
+
+        for row in reader:
+            if not row:
+                continue
+
+            stand_identifier = row[0]
+
+            # ForestStand.from_csv_row expects:
+            # ["stand", identifier, <legacy stand columns...>]
+            legacy_payload = [_parse_exp_stand_cell(x) for x in row[1:1 + 40]]
+            legacy_row = ["stand", stand_identifier] + legacy_payload
+            stand = ForestStand.from_csv_row(legacy_row)
+
+            # initialize empty vectors explicitly
+            stand.reference_trees = ReferenceTrees()
+            stand.tree_strata = TreeStrata()
+
+            stands.append(stand)
+            stands_by_id[stand_identifier] = stand
+
+    # ---------- trees.csv ----------
+    tree_attrs_by_stand: dict[str, dict[str, list[Any]]] = {}
+
+    with open(trees_path, "r", encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter=";")
+        header = next(reader, None)
+
+        expected_tree_cols = ["stand_identifier"] + list(DTYPES_TREE.keys())
+        if not header or header[:len(expected_tree_cols)] != expected_tree_cols:
+            raise MetsiException(f"Invalid trees.csv header in '{trees_path}'")
+
+        tree_columns = header[1:]
+
+        for row in reader:
+            if not row:
+                continue
+
+            stand_identifier = row[0]
+            if stand_identifier not in stands_by_id:
+                raise MetsiException(
+                    f"trees.csv references unknown stand_identifier '{stand_identifier}'"
+                )
+
+            attrs = {
+                field_name: _parse_vector_value(field_name, raw, DTYPES_TREE)
+                for field_name, raw in zip(tree_columns, row[1:])
+            }
+
+            bucket = tree_attrs_by_stand.setdefault(stand_identifier, {})
+            _append_attrs(bucket, attrs)
+
+    # ---------- strata.csv ----------
+    stratum_attrs_by_stand: dict[str, dict[str, list[Any]]] = {}
+
+    with open(strata_path, "r", encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter=";")
+        header = next(reader, None)
+
+        expected_strata_cols = ["stand_identifier"] + list(DTYPES_STRATA.keys())
+        if not header or header[:len(expected_strata_cols)] != expected_strata_cols:
+            raise MetsiException(f"Invalid strata.csv header in '{strata_path}'")
+
+        strata_columns = header[1:]
+
+        for row in reader:
+            if not row:
+                continue
+
+            stand_identifier = row[0]
+            if stand_identifier not in stands_by_id:
+                raise MetsiException(
+                    f"strata.csv references unknown stand_identifier '{stand_identifier}'"
+                )
+
+            attrs = {
+                field_name: _parse_vector_value(field_name, raw, DTYPES_STRATA)
+                for field_name, raw in zip(strata_columns, row[1:])
+            }
+
+            bucket = stratum_attrs_by_stand.setdefault(stand_identifier, {})
+            _append_attrs(bucket, attrs)
+
+    # ---------- finalize ----------
+    for stand in stands:
+        stand.reference_trees = ReferenceTrees().vectorize(
+            tree_attrs_by_stand.get(stand.identifier, {})
+        )
+        stand.tree_strata = TreeStrata().vectorize(
+            stratum_attrs_by_stand.get(stand.identifier, {})
+        )
 
     return stands
 

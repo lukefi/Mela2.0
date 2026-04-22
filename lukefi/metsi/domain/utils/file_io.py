@@ -157,7 +157,10 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
 def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                             current: SimulationPayload[T],
                                             collected_data: list[CollectedData],
-                                            tags: Optional[set[str]] = None):
+                                            tags: Optional[set[str]] = None,
+                                            output_state: bool = True,
+                                            output_collected_data: bool = True,
+                                            is_transition: bool = False):
     """
     Writes current simulation state and collected data to database.
 
@@ -168,6 +171,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     if tags is None:
         tags = set()
     node_str = "-".join(map(str, current.node_id))
+    if is_transition:
+        node_str += "-T"
     cur = db.cursor()
     cur.execute(
         """--sql
@@ -179,22 +184,40 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
          current.computational_unit.identifier,
          current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing",
          str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}",
-         str(tags)))
-    current.computational_unit.output_to_db(db, node_str)
-    for datum in collected_data:
-        datum.output_to_db(db, node_str, current.computational_unit.identifier)
+         str(tags) if len(tags) > 0 else "{}"))
+    if output_state:
+        current.computational_unit.output_to_db(db, node_str)
+    if output_collected_data:
+        for datum in collected_data:
+            datum.output_to_db(db, node_str, current.computational_unit.identifier)
 
 
 def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
     cur = db.cursor()
+    node_id = "-".join(map(str, leaf_node.node_id))
     cur.execute(
         """--sql
         UPDATE nodes
         SET leaf = 1
         WHERE
-            identifier = ? AND
-            stand = ?;
+            identifier = ?
+            AND stand = ?;
         """,
-        ("-".join(map(str, leaf_node.node_id)),
-            leaf_node.computational_unit.identifier)
+        (
+            node_id,
+            leaf_node.computational_unit.identifier
+        )
+    )
+    cur.execute(
+        """--sql
+        UPDATE nodes
+        SET leaf = 2
+        WHERE
+            identifier = ?
+            AND stand = ?;
+        """,
+        (
+            node_id + "-T",
+            leaf_node.computational_unit.identifier
+        )
     )

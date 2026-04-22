@@ -5,8 +5,8 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
+from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.domain.natural_processes.motti_bootstrap import ensure_motti_initialized
 
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
@@ -17,9 +17,11 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     if db is not None:
         init_collected_data_tables(db, simconfig.collected_data)
 
-    for unit in units:
+    for i, unit in enumerate(units, 1):
+        print(f"Simulating stand {unit.identifier} ({i} of {len(units)})...")
         payload = SimulationPayload(unit)
         payload.computational_unit.update_aggregates()
+        simconfig.transition.initialize(payload.computational_unit)
 
         if db is not None:
             # Write initial state to database
@@ -32,7 +34,6 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          db: Optional[sqlite3.Connection] = None) -> list[SimulationPayload[T]]:
     retval = []
 
-    ensure_motti_initialized(payload.computational_unit, config)
     if not config.end_condition(payload):
         offset = 0
         all_instructions_failed = True
@@ -41,13 +42,21 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                 all_instructions_failed = False
                 for i, root in enumerate(instruction.unwrap()):
                     for new_branch in root.evaluate(copy(payload), db, i + offset):
-                        new_branch.computational_unit, _ = config.transition(new_branch.computational_unit)
+                        time_step = _find_next_time_step(
+                            new_branch,
+                            config.instructions,
+                            config.transition.max_step)
+                        new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
                         new_branch.computational_unit.update_aggregates()
                         retval.extend(_simulate_unit(new_branch, config, db))
                 offset += 1
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
-            payload.computational_unit, _ = config.transition(payload.computational_unit)
+            time_step = _find_next_time_step(
+                payload,
+                config.instructions,
+                config.transition.max_step)
+            payload.computational_unit, _ = config.transition(payload, db, time_step)
             payload.computational_unit.update_aggregates()
             retval.extend(_simulate_unit(payload, config, db))
     else:
@@ -57,3 +66,21 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
         retval = [payload]
 
     return retval
+
+
+def _find_next_time_step[T: ComputationalUnit](payload: SimulationPayload[T],
+                                               instructions: list[SimulationInstruction[T]],
+                                               maximum_step: int):
+    current_time = payload.computational_unit.time
+    time_points: set[int] = set()
+    for instruction in instructions:
+        time_points.update(
+            filter(
+                lambda t: t > current_time,
+                instruction.time_points(
+                    payload.computational_unit.start_time)))
+
+    if time_points:
+        next_time_point = min(time_points)
+        return next_time_point - current_time
+    return maximum_step

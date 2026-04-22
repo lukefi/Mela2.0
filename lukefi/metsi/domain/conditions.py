@@ -7,12 +7,16 @@ from lukefi.metsi.sim.treatment import Treatment
 
 class TimePoints[T: ComputationalUnit](Condition[T]):
     def __init__(self, time_points: list[int]) -> None:
-        super().__init__(lambda x: x.computational_unit.time in time_points, "time_points")
+        super().__init__(lambda x: x.computational_unit.time in time_points,
+                         "time_points",
+                         time_points=set(time_points))
 
 
 class RelativeTimePoints[T: ComputationalUnit](Condition[T]):
     def __init__(self, relative_time_points: list[int]) -> None:
-        super().__init__(lambda x: x.computational_unit.relative_time in relative_time_points, "relative_time_points")
+        super().__init__(lambda x: x.computational_unit.relative_time in relative_time_points,
+                         "relative_time_points",
+                         relative_time_points=set(relative_time_points))
 
 
 class TimeSinceTreatment[T: ComputationalUnit](Condition[T]):
