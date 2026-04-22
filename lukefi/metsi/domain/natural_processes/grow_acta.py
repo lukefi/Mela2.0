@@ -1,9 +1,11 @@
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.forestry.naturalprocess.grow_acta import grow_diameter_and_height
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
+@natural_process_transition
 def grow_acta_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     _ = operation_parameters
     stand = input_
