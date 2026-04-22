@@ -5,12 +5,7 @@ Library           Collections
 Library           String
 Library           ${CURDIR}/../DatabaseCompareLibrary.py
 Resource          ${CURDIR}/../simulation.resource
-Suite Setup       Multi Suite Setup
-
-*** Keywords ***
-Multi Suite Setup
-    Set Environment Variable    CFFI_FORCE_ABI    1
-    Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
+Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/data.dat
