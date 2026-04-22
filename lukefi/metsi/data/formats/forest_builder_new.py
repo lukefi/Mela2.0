@@ -50,13 +50,15 @@ class VMIBuilder(ForestBuilder):
                 self.tree_rows.append(row)
 
     @abstractmethod
-    def _classify_row(self, row: str) -> RowKind:
+    @staticmethod
+    def _classify_row(row: str) -> RowKind:
         pass
 
-    def _convert_stand_entry(self, source_data: dict[str, str], stand_id: Optional[int]=None) -> ForestStand:
+    @classmethod
+    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int]=None) -> ForestStand:
         result = ForestStand()
 
-        result.identifier = self._generate_stand_identifier(source_data)
+        result.identifier = cls._generate_stand_identifier(source_data)
         result.stand_id = stand_id
 
         result.degree_days = vmi_util.transform_vmi_degree_days(source_data["degree_days"])
@@ -75,7 +77,8 @@ class VMIBuilder(ForestBuilder):
 
         return result
 
-    def _generate_stand_identifier(self, source_data: dict[str, str]) -> str:
+    @staticmethod
+    def _generate_stand_identifier(source_data: dict[str, str]) -> str:
         return source_data["lohkomuoto"] + "-" + \
             source_data["section_y"] + "-" + \
             source_data["section_x"] + "-" + \
@@ -99,10 +102,12 @@ class VMI13Builder(VMIBuilder):
     def __init__(self, builder_flags: dict[str, bool], data_rows: list[str]) -> None:
         super().__init__(builder_flags, data_rows)
 
-    def _classify_row(self, row: str) -> RowKind:
+    @staticmethod
+    def _classify_row(row: str) -> RowKind:
         return RowKind(row[0])
 
-    def _convert_stand_entry(self, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
+    @classmethod
+    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
         result = super()._convert_stand_entry(source_data, stand_id)
 
         result.year = vmi_util.parse_vmi13_date(source_data["date"]).year
