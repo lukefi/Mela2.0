@@ -364,7 +364,7 @@ class ReferenceTree:
     """
     species: TreeSpecies = TreeSpecies.UNSET
     """
-    Species of the tree. 
+    Species of the tree.
     """
     breast_height_diameter: float = 0.0
     """
@@ -376,19 +376,19 @@ class ReferenceTree:
     """
     measured_height: Optional[float] = None
     """
-    Height of a measured tree [m].
+    Measured height of the tree [m].
     """
     breast_height_age: Optional[float] = None
     """
-    Age of the tree when it reached the height of 1.3 m [a].    
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
     """
     biological_age: Optional[float] = None
     """
-    Current age of the tree [a].
+    Biological age of the tree [a]. (Years since the tree was born)
     """
     stems_per_ha: float = 0.0
     """
-    Number of trees of this type in an area of one hectare [1/(ha)].
+    Number of stems per hectare that the tree represents [1/ha].
     """
     origin: Origin = Origin.UNSET
     """
@@ -420,15 +420,15 @@ class ReferenceTree:
     """
     crown_class: CrownClass = CrownClass.UNSET
     """
-    Tree crown class. 
+    Tree crown class.
     """
     basal_area: float = 0.0
     """
-    Area covered by the trees of this type [m^2].
+    Basal area of singe tree of this type [m^2].
     """
     volume: float = 0.0
     """
-    Combined volume of the trees of this type [m^3].
+    Volume of single tree of this type [m^3].
     """
 
 
@@ -445,7 +445,7 @@ class ReferenceTrees(VectorData):
     """
     species: npt.NDArray[np.int32]
     """
-    Species of the tree. 
+    Species of the tree.
     """
     breast_height_diameter: npt.NDArray[np.float64]
     """
@@ -461,11 +461,11 @@ class ReferenceTrees(VectorData):
     """
     breast_height_age: npt.NDArray[np.float64]
     """
-    Age of the tree when it reached the height of 1.3 m [a].    
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
     """
     biological_age: npt.NDArray[np.float64]
     """
-    Current age of the tree [a].
+    Biological age of the tree [a]. (Years since the tree was born)
     """
     stems_per_ha: npt.NDArray[np.float64]
     """
@@ -501,15 +501,15 @@ class ReferenceTrees(VectorData):
     """
     crown_class: npt.NDArray[np.str_]
     """
-    Tree crown class. 
+    Tree crown class.
     """
     basal_area: npt.NDArray[np.float64]
     """
-    Area covered by the trees of this type [m^2].
+    Basal area of singe tree of this type [m^2].
     """
     volume: npt.NDArray[np.float64]
     """
-    Combined volume of the trees of this type [m^3].
+    Volume of single tree of this type [m^3].
     """
     stratum: npt.NDArray[np.int32]
     """
@@ -617,11 +617,11 @@ class TreeStratum:
     """
     breast_height_age: Optional[float] = None
     """
-    Age when reached breast height (1.3 m) [a].
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
     """
     biological_age: Optional[float] = None
     """
-    Current age of the stratum [a].
+    Biological age of the tree [a]. (Years since the tree was born)
     """
     stems_per_ha: float = 0.0
     """
@@ -629,7 +629,7 @@ class TreeStratum:
     """
     basal_area: Optional[float] = None
     """
-    Area covered by the stems in this stratum [m^2].
+    Basal area of the stratum [m^2].
     """
     origin: Origin = Origin.UNSET
     """
@@ -685,11 +685,11 @@ class TreeStrata(VectorData):
     """
     breast_height_age: npt.NDArray[np.float64]
     """
-    Age when reached breast height (1.3 m) [a].
+    Age of the tree at breast height [a]. (Years since the tree reached breast height)
     """
     biological_age: npt.NDArray[np.float64]
     """
-    Current age of the stratum [a].
+    Biological age of the tree [a]. (Years since the tree was born)
     """
     stems_per_ha: npt.NDArray[np.float64]
     """
@@ -697,7 +697,7 @@ class TreeStrata(VectorData):
     """
     basal_area: npt.NDArray[np.float64]
     """
-    Area covered by the stems in this stratum [m^2].
+    Basal area of the stratum [m^2].
     """
     origin: npt.NDArray[np.int32]
     """

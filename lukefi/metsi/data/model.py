@@ -78,7 +78,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     area_weight: float = area
     """
-    Weighted area [ha].
+    Area weight for growing stock [ha].
     """
 
     geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[str]]] = None
@@ -180,7 +180,7 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
     """
-    Stand specific factors for scaling estimated ReferenceTree count per hectare.
+    Proportions of the areas of the smaller and larger sample plot covered by the stand.
     """
     fra_category: Optional[FraLandUseClass] = None
     """
@@ -204,11 +204,11 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     basal_area: Optional[float] = None
     """
-    Combined basal areas of the reference trees and tree strata within this stand.
+    Basal area of the stand [m^2/ha].
     """
     stems_per_ha: Optional[float] = None
     """
-    Combined stems per hectare of the reference trees and tree strata within this stand.    
+    Number of stems per hectare in the stand [1/ha].
     """
     ds_ba_weighted_mean_diameter: Optional[float] = None
     """
