@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.6] - 2026-04-22
+
+### Fixed
+
+- Added removal of extra whitespace in peatland forest type conversion
+
 ## [0.7.5] - 2026-04-22
 
 ### Added
