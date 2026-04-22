@@ -33,6 +33,12 @@ New tree generation example should run
     ...    ${OUT_DIR}/new_tree_generation
     ...    ${EXAMPLES_DIR}/control_new_tree_generation.py
 
+Updating example should run
+    Run Simulation
+    ...    ${INPUT_DIR}/VMI13_source_mini.dat
+    ...    ${OUT_DIR}/updating
+    ...    ${EXAMPLES_DIR}/control_updating.py
+
 Vector example should run
     Run Simulation
     ...    ${INPUT_DIR}/VMI13_source_mini.dat
