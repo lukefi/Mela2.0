@@ -469,7 +469,7 @@ class ReferenceTrees(VectorData):
     """
     stems_per_ha: npt.NDArray[np.float64]
     """
-    Number of trees of this type in an area of one hectare [1/(ha)].
+    Number of stems per hectare that the tree represents [1/ha].
     """
     origin: npt.NDArray[np.int32]
     """
