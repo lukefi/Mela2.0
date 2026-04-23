@@ -704,31 +704,31 @@ def vmi_codevalue(source: str) -> Optional[str]:
     return value
 
 
-def generate_stand_identifier(row: Sequence, indices: dict) -> str:
-    return row[indices["lohkomuoto"]] + "-" + \
-        row[indices["section_y"]] + "-" + \
-        row[indices["section_x"]] + "-" + \
-        row[indices["test_area_number"]] + "-" + \
-        row[indices["stand_number"]]
+def generate_stand_identifier(source_data: dict[str, str]) -> str:
+    return source_data["lohkomuoto"] + "-" + \
+        source_data["section_y"] + "-" + \
+        source_data["section_x"] + "-" + \
+        source_data["test_area_number"] + "-" + \
+        source_data["stand_number"]
 
 
-def generate_tree_identifier(row: Sequence, indices: dict) -> str:
-    return row[indices["lohkomuoto"]] + "-" + \
-        row[indices["section_y"]] + "-" + \
-        row[indices["section_x"]] + "-" + \
-        row[indices["test_area_number"]] + "-" + \
-        row[indices["stand_number"]] + "-" + \
-        row[indices["tree_number"]] + "-" + \
+def generate_tree_identifier(source_data: dict[str, str]) -> str:
+    return source_data["lohkomuoto"] + "-" + \
+        source_data["section_y"] + "-" + \
+        source_data["section_x"] + "-" + \
+        source_data["test_area_number"] + "-" + \
+        source_data["stand_number"] + "-" + \
+        source_data["tree_number"] + "-" + \
         "tree"
 
 
-def generate_stratum_identifier(row: Sequence, indices: dict) -> str:
-    return row[indices["lohkomuoto"]] + "-" + \
-        row[indices["section_y"]] + "-" + \
-        row[indices["section_x"]] + "-" + \
-        row[indices["test_area_number"]] + "-" + \
-        row[indices["stand_number"]] + "-" + \
-        row[indices["stratum_number"]] + "-" + \
+def generate_stratum_identifier(source_data: dict[str, str]) -> str:
+    return source_data["lohkomuoto"] + "-" + \
+        source_data["section_y"] + "-" + \
+        source_data["section_x"] + "-" + \
+        source_data["test_area_number"] + "-" + \
+        source_data["stand_number"] + "-" + \
+        source_data["stratum_number"] + "-" + \
         "stratum"
 
 
