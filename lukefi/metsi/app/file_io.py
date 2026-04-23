@@ -5,7 +5,8 @@ from collections.abc import Callable
 from pathlib import Path
 import sqlite3
 from typing import Any, Optional
-from lukefi.metsi.data.formats.forest_builder_base import GeoPackageBuilder, VMI10Builder, VMI11Builder, VMI9Builder, XMLBuilder
+from lukefi.metsi.data.formats.forest_builder_base import VMI10Builder, VMI11Builder, VMI9Builder
+from lukefi.metsi.data.formats.forest_centre_builder import GeoPackageBuilder, XMLBuilder
 from lukefi.metsi.data.formats.vmi12_builder import VMI12Builder
 from lukefi.metsi.data.formats.vmi13_builder import VMI13Builder
 
@@ -90,7 +91,7 @@ def csv_exp_reader() -> StandReader:
 def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
     if state_format == "vmi13":
-        return lambda path: VMI13Builder(builder_flags, vmi_file_reader(path)).build()
+        return lambda path: VMI13Builder(builder_flags, conversions.get('vmi13', {}), vmi_file_reader(path)).build()
     if state_format == "vmi12":
         return lambda path: VMI12Builder(builder_flags, conversions.get('vmi12', {}), vmi_file_reader(path)).build()
     if state_format == "vmi11":

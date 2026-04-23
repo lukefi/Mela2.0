@@ -4,7 +4,7 @@ from typing import Optional
 
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.formats import util, vmi_util
-from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
+from lukefi.metsi.data.formats.declarative_conversion import Conversion, ConversionMapper
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 
@@ -31,12 +31,13 @@ class VMIBuilder(ForestBuilder):
     builder_flags: dict[str, bool]
     conversion_reader: ConversionMapper
 
-    def __init__(self, builder_flags: dict[str, bool]) -> None:
+    def __init__(self, builder_flags: dict[str, bool], declared_conversions: dict[str, Conversion]) -> None:
         self.stand_rows = []
         self.stratum_rows = {}
         self.tree_rows = {}
 
         self.builder_flags = builder_flags
+        self.conversion_reader = ConversionMapper(declared_conversions)
 
 
 class VMI9Builder(VMIBuilder):
@@ -48,28 +49,4 @@ class VMI10Builder(VMIBuilder):
 
 
 class VMI11Builder(VMIBuilder):
-    pass
-
-
-class VMI12Builder(VMIBuilder):
-    pass
-
-
-class ForestCentreBuilder(ForestBuilder):
-    ''' Base class for building a forest data model from Forest Centre (Suomen Metsakeskus) source '''
-
-    @abstractmethod
-    def build(self) -> StandList:
-        ...
-
-    @abstractmethod
-    def convert_stand_entry(self, entry) -> ForestStand:
-        ...
-
-
-class XMLBuilder(ForestCentreBuilder):
-    pass
-
-
-class GeoPackageBuilder(ForestCentreBuilder):
     pass

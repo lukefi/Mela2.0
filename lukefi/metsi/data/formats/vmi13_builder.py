@@ -3,6 +3,7 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util, vmi_util
+from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
 from lukefi.metsi.data.formats.vmi_const import VMI13_STAND_INDICES, VMI13_STRATUM_INDICES, VMI13_TREE_INDICES
 from lukefi.metsi.data.model import ForestStand
@@ -12,8 +13,9 @@ from lukefi.metsi.domain.forestry_types import StandList
 
 class VMI13Builder(VMIBuilder):
 
-    def __init__(self, builder_flags: dict[str, bool], data_rows: list[str]) -> None:
-        super().__init__(builder_flags)
+    def __init__(self, builder_flags: dict[str, bool],
+                 conversions: dict[str, Conversion], data_rows: list[str]) -> None:
+        super().__init__(builder_flags, conversions)
         for row in data_rows:
             kind = self._classify_row(row)
             split_row = row.split()

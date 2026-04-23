@@ -2,6 +2,7 @@ from typing import override
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.formats import util, vmi_util
+from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
 from lukefi.metsi.data.formats.vmi_const import VMI12_STAND_INDICES, VMI12_STRATUM_INDICES, VMI12_TREE_INDICES
 from lukefi.metsi.data.model import ForestStand
@@ -11,8 +12,9 @@ from lukefi.metsi.domain.forestry_types import StandList
 
 class VMI12Builder(VMIBuilder):
 
-    def __init__(self, builder_flags: dict[str, bool], data_rows: list[str]) -> None:
-        super().__init__(builder_flags)
+    def __init__(self, builder_flags: dict[str, bool],
+                 conversions: dict[str, Conversion], data_rows: list[str]) -> None:
+        super().__init__(builder_flags, conversions)
         for row in data_rows:
             kind = self._classify_row(row)
 
@@ -148,8 +150,7 @@ class VMI12Builder(VMIBuilder):
             result.forest_management_category = 1
 
         return result
-    
+
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):
         pass
-    
