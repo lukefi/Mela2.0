@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Optional
 import math
 from dataclasses import dataclass
 from datetime import datetime as dt
