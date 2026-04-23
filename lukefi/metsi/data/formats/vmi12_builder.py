@@ -220,7 +220,6 @@ class VMI12Builder(VMIBuilder):
         if stratum_rank is not None:
             strata.stratum_rank[i] = stratum_rank
 
-
     @staticmethod
     def _convert_tree_entry(trees: ReferenceTrees,
                             row: dict[str, str],
