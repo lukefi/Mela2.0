@@ -35,7 +35,7 @@ class VMI13Builder(VMIBuilder):
 
     @staticmethod
     def _classify_row(row: str) -> RowKind:
-        return RowKind(row[0])
+        return RowKind(row[VMI13_STAND_INDICES["row_type"]])
 
     @override
     def build(self) -> StandList:

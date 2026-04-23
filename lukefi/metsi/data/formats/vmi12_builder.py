@@ -33,8 +33,8 @@ class VMI12Builder(VMIBuilder):
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
     @staticmethod
-    def _classify_row(row: str):
-        return RowKind(row[13])
+    def _classify_row(row: str) -> RowKind:
+        return RowKind(row[VMI12_STAND_INDICES["row_type"]])
 
     @override
     def build(self) -> StandList:

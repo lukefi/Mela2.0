@@ -34,9 +34,9 @@ class VMI11Builder(VMIBuilder):
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
     @staticmethod
-    def _classify_row(row: str):
+    def _classify_row(row: str) -> RowKind:
         try:
-            return RowKind(row[13])
+            return RowKind(row[VMI11_STAND_INDICES["row_type"]])
         except ValueError:
             return RowKind.UNKNOWN
 
