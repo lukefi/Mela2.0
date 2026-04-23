@@ -116,6 +116,26 @@ def debug_dump_motti_state_raw(ms: MottiState, label: str) -> None:
             print("ut positive rows: none")
 
 
+def _normalize_ut_years_for_fdm(stand: ForestStand) -> None:
+
+    if stand.motti_state is None or stand.motti_state.buffers is None:
+        return
+
+    ut = stand.motti_state.buffers.saplings
+    for layer in range(10):
+        for spe_name, _internal_species in UT_SPECIES_FIELDS:
+            s = getattr(ut[0][layer], spe_name)
+            try:
+                raw_year = float(s.year)
+            except (TypeError, ValueError):
+                continue
+
+            if raw_year == -1.0:
+                continue
+
+            s.year = stand.start_year + raw_year
+
+
 def _build_reference_tree_update(
     *,
     identifier: str,
@@ -178,13 +198,13 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
     for layer in range(10):
         for spe_name, internal_species in UT_SPECIES_FIELDS:
             s = getattr(ut[0][layer], spe_name)
-            '''
+
             try:
                 if float(s.year) == -1.0:
                     continue
             except TypeError:
                 continue
-            '''
+
             for cat_code, _cat_label in UT_CATEGORIES:
                 stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
                 if stems <= 0.0:
@@ -700,7 +720,7 @@ class MottiDLLPredictor:
             drain=self.drain,
             xt_ndrain=self.xt_ndrain,
             alr=self.alr,
-            year=sim_year,
+            year=sim_year - self.stand.start_year,
             step=step,
             convert_mela_site=self.use_dll_site_convert,
             spedom=spedom,
@@ -807,6 +827,7 @@ class MottiDLLPredictor:
             ms.signature = tuple(ids.tolist())
             self.stand.motti_state = ms
 
+        _normalize_ut_years_for_fdm(self.stand)
         reconcile_reference_trees_from_motti(self.stand)
 
         return self.stand.motti_state
@@ -818,7 +839,7 @@ class MottiDLLPredictor:
                                 trees_age=[], trees_age13=[]
                                 )
 
-        state.yy.year = sim_year
+        state.yy.year = sim_year - self.stand.start_year
         state.yy.step = step
 
         growth = self.dll.grow_with_state(
