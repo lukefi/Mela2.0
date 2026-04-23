@@ -116,26 +116,6 @@ def debug_dump_motti_state_raw(ms: MottiState, label: str) -> None:
             print("ut positive rows: none")
 
 
-def _normalize_ut_years_for_fdm(stand: ForestStand) -> None:
-
-    if stand.motti_state is None or stand.motti_state.buffers is None:
-        return
-
-    ut = stand.motti_state.buffers.saplings
-    for layer in range(10):
-        for spe_name, _internal_species in UT_SPECIES_FIELDS:
-            s = getattr(ut[0][layer], spe_name)
-            try:
-                raw_year = float(s.year)
-            except (TypeError, ValueError):
-                continue
-
-            if raw_year == -1.0:
-                continue
-
-            s.year = stand.start_year + raw_year
-
-
 def _build_reference_tree_update(
     *,
     identifier: str,
@@ -361,10 +341,12 @@ def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
-    """Rebuild RFs from Motti in the intended order: YP first, then UT."""
+def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
     sync_yp_to_reference_trees(stand)
-    prune_reference_trees_not_in_yp(stand)
+
+    if init_mode:
+        prune_reference_trees_not_in_yp(stand)
+
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
@@ -827,8 +809,7 @@ class MottiDLLPredictor:
             ms.signature = tuple(ids.tolist())
             self.stand.motti_state = ms
 
-        _normalize_ut_years_for_fdm(self.stand)
-        reconcile_reference_trees_from_motti(self.stand)
+        reconcile_reference_trees_from_motti(self.stand, init_mode=True)
 
         return self.stand.motti_state
 
@@ -839,7 +820,7 @@ class MottiDLLPredictor:
                                 trees_age=[], trees_age13=[]
                                 )
 
-        state.yy.year = sim_year - self.stand.start_year
+        state.yy.year = sim_year
         state.yy.step = step
 
         growth = self.dll.grow_with_state(
@@ -926,7 +907,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     predictor = operation_parameters.get("predictor", None)
 
     stand = input_
-    sim_year: int = stand.year or 0
+    sim_year: int = (stand.year - stand.start_year) or 0
 
     rt = stand.reference_trees
 
@@ -969,8 +950,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     # Advance simulation year, but do not mutate tree measurements from Python-side deltas.
     stand.year = (stand.year or 0) + step
 
-    _normalize_ut_years_for_fdm(stand)
-    reconcile_reference_trees_from_motti(stand)
+    reconcile_reference_trees_from_motti(stand, init_mode=False)
     debug_dump_reference_trees(stand, "after full motti sync")
 
     return stand, []
@@ -1034,7 +1014,6 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
 
     debug_dump_yy_sapling_storey(ms, "after grow_with_state")
 
-    _normalize_ut_years_for_fdm(stand)
     reconcile_reference_trees_from_motti(stand)
 
 
