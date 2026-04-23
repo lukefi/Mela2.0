@@ -16,6 +16,8 @@ authors = [
     { name = "Juho-Petteri Yliuntinen" },
     { name = "Laura Jaakkola" },
     { name = "Urho Niemelä" },
+    { name = "Ari-Antti Tervonen" },
+    { name = "Tapani Stylman" }
 ]
 dependencies = [
     "jsonpickle==4.1.1",
