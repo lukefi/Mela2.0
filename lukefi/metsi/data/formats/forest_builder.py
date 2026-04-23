@@ -167,7 +167,7 @@ class VMI13Builder(VMIBuilder):
 
         result.area_weight_factors = vmi_util.determine_area_factors(
             source_data["osuus4m"],
-            source_data["lohkomuoto"]
+            source_data["osuus9m"]
         )
         result.set_area(area_ha)
 
