@@ -9,6 +9,7 @@ class RowKind(Enum):
     STAND = "1"
     STRATUM = "2"
     TREE = "3"
+    UNKNOWN = "unknown"
 
 
 class ForestBuilder(ABC):
