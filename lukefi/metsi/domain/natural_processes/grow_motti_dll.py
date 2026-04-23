@@ -30,7 +30,6 @@ from lukefi.metsi.domain.natural_processes.util import (
 
 )
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
-from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
@@ -436,17 +435,11 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
         basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
-        stems_sap = float(np.nan_to_num(strata.sapling_stems_per_ha[i], nan=0.0))
+        # stems_sap = float(np.nan_to_num(strata.sapling_stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
         origin = safe_storey_value(strata.origin[i])
         storey = safe_storey_value(strata.storey[i])
-        '''
-        if mean_height <= 1.3 and stems_sap > 0.0:
-            stems_for_motti = stems_sap
-        else:
-            stems_for_motti = stems_main if stems_main > 0.0 else stems_sap
-        '''
 
         stratum_sid = parse_int_id(strata.stratum_number[i])
         if stratum_sid is None:

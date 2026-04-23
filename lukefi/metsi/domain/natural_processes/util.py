@@ -164,7 +164,6 @@ def next_reference_tree_identifier_suffix(stand: ForestStand) -> int:
     rt = stand.reference_trees
     used = set()
 
-    prefix = f"{stand.identifier}-"
     suffix_re = re.compile(rf"^{re.escape(stand.identifier)}-(\d+)-tree$")
 
     for ident in rt.identifier.tolist():
