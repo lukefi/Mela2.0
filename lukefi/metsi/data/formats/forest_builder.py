@@ -1,1060 +1,230 @@
-from collections.abc import Sequence, Iterable
 from abc import ABC, abstractmethod
-from typing import overload, Any
-import xml.etree.ElementTree as ET
-from pandas import DataFrame, Series
-import numpy as np
+from enum import Enum
+from typing import Optional
 
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.data.enums.internal import CuttingMethod, OwnerCategory, Origin
+from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.vmi import VmiIteration
-from lukefi.metsi.data.formats.vmi_const import (
-    VMI9_STAND_INDICES_ESUOMI,
-    VMI9_STAND_INDICES_PSUOMI,
-    VMI9_TREE_INDICES,
-    VMI9_STAND_COMMON,
-    VMI10_STAND_INDICES,
-    VMI10_TREE_INDICES,
-    VMI11_STAND_INDICES,
-    VMI11_STRATUM_INDICES,
-    VMI11_TREE_INDICES,
-    VMI12_STAND_INDICES,
-    VMI12_STRATUM_INDICES,
-    VMI12_TREE_INDICES,
-    VMI13_STAND_INDICES,
-    VMI13_STRATUM_INDICES,
-    VMI13_TREE_INDICES
-)
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.conversion import vmi2internal, fc2internal
-from lukefi.metsi.data.formats import smk_util, util, vmi_util, gpkg_util
+from lukefi.metsi.data.formats import util, vmi_util
 from lukefi.metsi.data.formats.declarative_conversion import ConversionMapper
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata, DTYPES_TREE, DTYPES_STRATA
+from lukefi.metsi.data.formats.vmi_const import VMI13_STAND_INDICES, VMI13_STRATUM_INDICES, VMI13_TREE_INDICES
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
 
 
-def _append_stratum_row(
-    attr: dict[str, list],
-    indices,
-    row,
-):
-    """Append one VMI stratum row into an SoA attribute dict compatible with DTYPES_STRATA.
-
-    No ConversionMapper / declared conversions are applied here.
-    """
-
-    identifier = vmi_util.generate_stratum_identifier(row, indices)
-    species = vmi2internal.convert_species(row[indices["species"]])
-    origin = vmi2internal.convert_origin(row[indices["origin"]])
-
-    stems_per_ha = util.get_or_default(util.parse_type(row[indices["stems_per_ha"]], float), 0.0)
-    sapling_stems_per_ha = util.get_or_default(
-        util.parse_type(row[indices["sapling_stems_per_ha"]], float), 0.0
-    )
-
-    mean_diameter = util.parse_type(row[indices["avg_diameter"]], float)
-    mean_height = vmi_util.determine_stratum_tree_height(row[indices["avg_height"]])
-
-    biological_age, breast_height_age = vmi_util.determine_stratum_age_values(
-        row[indices["biological_age"]],
-        row[indices["d13_age"]],
-        mean_height,
-    )
-
-    basal_area = util.parse_type(row[indices["basal_area"]], float)
-    stratum_number = util.parse_int(row[indices["stratum_number"]])
-    storey = vmi_util.determine_storey_for_stratum(row[indices["stratum_rank"]])
-    stratum_rank = vmi2internal.convert_stratum_rank(row[indices["stratum_rank"]])
-
-    # Defaults / placeholders (match DTYPES_STRATA fields)
-    number_of_generated_trees = None
-
-    values = {
-        "identifier": identifier,
-        "species": species,
-        "mean_diameter": mean_diameter,
-        "mean_height": mean_height,
-        "breast_height_age": breast_height_age,
-        "biological_age": biological_age,
-        "stems_per_ha": stems_per_ha,
-        "basal_area": basal_area,
-        "origin": origin,
-        "stratum_number": stratum_number,
-        "storey": storey,
-        "sapling_stems_per_ha": sapling_stems_per_ha,
-        "number_of_generated_trees": number_of_generated_trees,
-        "stratum_rank": stratum_rank
-    }
-
-    # Always append in DTYPES_STRATA order
-    for key in DTYPES_STRATA:
-        attr.setdefault(key, []).append(values.get(key, None))
-
-
-def _append_tree_row(
-    attr: dict[str, list],
-    indices,
-    row,
-    vmi_version: VmiIteration,
-    forestry_centre_id: int | None,
-    ahvkeilaus: str | None = None,
-    height_conversion_factor: float = 100.0,
-    measured_height_conversion_factor: float = 10.0,
-
-):
-    """Append one VMI tree row into an SoA attribute dict compatible with DTYPES_TREE.
-
-    No ConversionMapper / declared conversions are applied here.
-    """
-
-    identifier = vmi_util.generate_tree_identifier(row, indices)
-    tree_number = util.parse_type(row[indices["tree_number"]], int)
-
-    species = vmi2internal.convert_species(row[indices["species"]])
-    tree_category = vmi2internal.convert_tree_category(row[indices["tree_category"]])
-
-    if vmi_version == VmiIteration.VMI11:
-        breast_height_diameter = util.get_or_default(util.parse_float(row[indices["diameter"]]), 0.0)
-    else:
-        breast_height_diameter = vmi_util.transform_tree_diameter(row[indices["diameter"]])
-
-    breast_height_age, biological_age = vmi_util.determine_tree_age_values(
-        row[indices["d13_age"]],
-        row[indices["age_increase"]],
-        row[indices["total_age"]],
-    )
-
-    height = vmi_util.determine_tree_height(
-        row[indices["height"]],
-        conversion_factor=height_conversion_factor,
-    )
-    measured_height = vmi_util.determine_tree_height(
-        row[indices["measured_height"]],
-        conversion_factor=measured_height_conversion_factor,
-    )
-
-    stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter,
-                                                   vmi_version=vmi_version,
-                                                   forestry_centre_id=forestry_centre_id,
-                                                   ahvkeilaus=ahvkeilaus)
-
-    if vmi_version in (VmiIteration.VMI12, VmiIteration.VMI13):
-        origin = vmi2internal.convert_origin(row[indices["origin"]])
-    else:
-        origin = Origin.NATURAL
-    management_category = vmi_util.determine_tree_management_category(row[indices["latvuskerros"]])
-    storey = vmi_util.determine_storey_for_tree(row[indices["latvuskerros"]])
-
-    sapling = False
-    tree_type = vmi2internal.convert_tree_type(row[indices["tree_type"]])
-
-    damage_raw = row[indices["tuhon_ilmiasu"]]
-    damage_type = None if damage_raw in ("  ", " ", ".", "") else damage_raw.strip()
-    crown_class = vmi2internal.convert_crown_class(row[indices["latvuskerros"]])
-
-    basal_area = None
-    volume = None
-
-    values = {
-        "identifier": identifier,
-        "tree_number": tree_number,
-        "species": species,
-        "breast_height_diameter": breast_height_diameter,
-        "height": height,
-        "measured_height": measured_height,
-        "breast_height_age": breast_height_age,
-        "biological_age": biological_age,
-        "stems_per_ha": stems_per_ha,
-        "origin": origin,
-        "management_category": management_category,
-        "tree_category": tree_category,
-        "storey": storey,
-        "sapling": sapling,
-        "tree_type": tree_type,
-        "damage_type": damage_type,
-        "basal_area": basal_area,
-        "volume": volume,
-        "crown_class": crown_class
-    }
-
-    for key in DTYPES_TREE:
-        attr.setdefault(key, []).append(values.get(key, None))
-
-
-def _append_fc_stratum_row(attr: dict[str, list], stand_identifier: str, estratum: ET.Element):
-    """
-    Append one Forest Centre (XML) stratum row into an SoA attribute dict.
-    """
-
-    sd = smk_util.parse_stratum_data(estratum)
-
-    stratum_number = util.parse_type(sd.StratumNumber, int)
-    raw_id = util.parse_type(sd.id, str)
-    identifier = f"{stand_identifier}.{stratum_number or raw_id}-stratum"
-
-    basal_area = util.parse_type(sd.BasalArea, float)
-
-    values = {
-        "identifier": identifier,
-        "species": fc2internal.convert_species(sd.TreeSpecies),
-        "stems_per_ha": util.parse_type(sd.StemCount, float),
-        "mean_diameter": util.parse_type(sd.MeanDiameter, float),
-        "mean_height": util.parse_type(sd.MeanHeight, float),
-        "breast_height_age": None,
-        "biological_age": util.parse_type(sd.Age, float),
-        "basal_area": basal_area,
-        "origin": 0,
-        "stratum_number": stratum_number,
-        "storey": fc2internal.convert_storey(sd.Storey),
-        "sapling_stems_per_ha": 0.0,
-        "number_of_generated_trees": None,
-    }
-
-    for key in DTYPES_STRATA:
-        attr.setdefault(key, []).append(values.get(key, None))
-
-
-def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj: Series):
-    """Append one GeoPackage stratum row into an SoA attribute dict.
-    """
-
-    stratum_number = util.parse_type(rowj.stratumnumber, int)
-    raw_id = util.parse_type(rowj.treestratumid, str)
-    identifier = f"{stand_identifier}.{stratum_number or raw_id}-stratum"
-
-    basal_area = util.parse_type(rowj.basalarea, float)
-
-    values = {
-        "identifier": identifier,
-        "species": fc2internal.convert_species(util.parse_type(rowj.treespecies, int, str)),
-        "stems_per_ha": util.parse_type(rowj.stemcount, float),
-        "mean_diameter": util.parse_type(rowj.meandiameter, float),
-        "mean_height": util.parse_type(rowj.meanheight, float),
-        "breast_height_age": None,
-        "biological_age": util.parse_type(rowj.age, float),
-        "basal_area": basal_area,
-        "origin": None,
-        "stratum_number": stratum_number,
-        "storey": util.parse_type(rowj.storey, int),
-        "sapling_stems_per_ha": 0.0,
-        "number_of_generated_trees": None,
-    }
-
-    for key in DTYPES_STRATA:
-        attr.setdefault(key, []).append(values.get(key, None))
+class RowKind(Enum):
+    STAND = "1"
+    STRATUM = "2"
+    TREE = "3"
 
 
 class ForestBuilder(ABC):
-    """Abstract base class of forest builders"""
 
     @abstractmethod
     def build(self) -> StandList:
-        ...
+        pass
 
 
 class VMIBuilder(ForestBuilder):
-    """Shared functionality of VMI* builders"""
 
-    def __init__(self, builder_flags: dict, declared_conversions: dict, data_rows: Iterable):
-        """
-        Initialize instance variable lists for forest stands, reference trees and tree strata.
-        Given source data is pre-parsed for data types 1, 2 and 3.
+    stand_rows: list[dict[str, str]]
+    stratum_rows: dict[str, list[dict[str, str]]]
+    tree_rows: dict[str, list[dict[str, str]]]
 
-        :param builder_flags: building process spesific flags
-        :param declared_conversions: callable data extractor
-        :param data_rows: Iterable raw data rows from a VMI source file
-        """
-        self.forest_stands: list[str] = []
-        self.reference_trees: list[str] = []
-        self.tree_strata: list[str] = []
+    builder_flags: dict[str, bool]
+    conversion_reader: ConversionMapper
+
+    def __init__(self, builder_flags: dict[str, bool]) -> None:
+        self.stand_rows = []
+        self.stratum_rows = {}
+        self.tree_rows = {}
+
         self.builder_flags = builder_flags
-        self.conversion_reader = ConversionMapper(declared_conversions)
-        self._read_rows(data_rows)
 
-    def _read_rows(self, data_rows: Iterable) -> None:
-        """Generic row iteration + error handling. Subclasses control classification."""
-        for row in data_rows:
-            try:
-                kind = self.classify_row(row)
-                if kind == "stand":
-                    self.forest_stands.append(row)
-                elif kind == "stratum":
-                    self.tree_strata.append(row)
-                elif kind == "tree":
-                    self.reference_trees.append(row)
-            except (IndexError, TypeError, ValueError) as e:
-                print(e)
-                print("warning: VMI row not addressable: ")
-                print("    " + str(row))
+    @staticmethod
+    @abstractmethod
+    def _classify_row(row: str) -> RowKind:
+        pass
 
-    def _classify_row(self, row: Any) -> str | None:
-        """
-        Helper for the default mapping:
-          1 = stand, 2 = stratum, 3 = tree.
-        Used by VMI12/VMI13 (and maybe others).
-        """
-        row_type = self.find_row_type(row)
-        if row_type == 1:
-            return "stand"
-        if row_type == 2:
-            return "stratum"
-        if row_type == 3:
-            return "tree"
-        return None
-
-    @overload
-    def convert_stand_entry(self, indices: dict[str, int],
-                            data_row: Sequence[str], stand_id: int | None = None) -> ForestStand:
-        ...
-
-    @overload
-    def convert_stand_entry(self, indices: dict[str, slice],
-                            data_row: str, stand_id: int | None = None) -> ForestStand:
-        ...
-
-    def convert_stand_entry(self, indices, data_row, stand_id=None) -> ForestStand:
-        """Create a ForestStand out of given VMI type 1 data row using given data indices and order number"""
+    @classmethod
+    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
         result = ForestStand()
 
-        result.identifier = vmi_util.generate_stand_identifier(data_row, indices)
-        result.set_identifiers(stand_id)
+        result.identifier = cls._generate_stand_identifier(source_data)
+        result.stand_id = stand_id
 
-        result.degree_days = vmi_util.transform_vmi_degree_days(data_row[indices["degree_days"]])
-        result.owner_category = vmi2internal.convert_owner(data_row[indices["owner_group"]])
-        result.fra_category = vmi2internal.convert_fra_land_use_class(data_row[indices["fra_class"]])
-        result.land_use_category = vmi2internal.convert_land_use_category(data_row[indices["land_category"]])
-        result.site_type_category = vmi2internal.convert_site_type_category(data_row[indices["kasvupaikkatunnus"]])
-        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(data_row[indices["paatyyppi"]])
-        result.tax_class_reduction = vmi_util.determine_tax_class_reduction(data_row[indices["tax_class_reduction"]])
-        result.tax_class = vmi_util.determine_tax_class(data_row[indices["tax_class"]])
-        result.drainage_category = vmi2internal.convert_drainage_category(data_row[indices["ojitus_tilanne"]])
-        result.forestry_centre_id = vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]])
-        result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(data_row[indices["municipality"]]))
+        result.degree_days = vmi_util.transform_vmi_degree_days(source_data["degree_days"])
+        result.owner_category = vmi2internal.convert_owner(source_data["owner_group"])
+        result.fra_category = vmi2internal.convert_fra_land_use_class(source_data["fra_class"])
+        result.land_use_category = vmi2internal.convert_land_use_category(source_data["land_category"])
+        result.site_type_category = vmi2internal.convert_site_type_category(source_data["kasvupaikkatunnus"])
+        result.soil_peatland_category = vmi2internal.convert_soil_peatland_category(source_data["paatyyppi"])
+        result.tax_class_reduction = vmi_util.determine_tax_class_reduction(source_data["tax_class_reduction"])
+        result.tax_class = vmi_util.determine_tax_class(source_data["tax_class"])
+        result.drainage_category = vmi2internal.convert_drainage_category(source_data["ojitus_tilanne"])
+        result.forestry_centre_id = vmi_util.parse_forestry_centre(source_data["forestry_centre"])
+        result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(source_data["municipality"]))
 
-        result.auxiliary_stand = data_row[indices["stand_number"]] != '1'
+        result.auxiliary_stand = source_data["stand_number"] != '1'
 
         return result
 
-    @abstractmethod
-    def find_row_type(self, row: str) -> int:
-        ...
-
-    @abstractmethod
-    def build(self) -> StandList:
-        ...
-
-    @abstractmethod
-    def classify_row(self, row: Any) -> str | None:
-        ...
+    @staticmethod
+    def _generate_stand_identifier(source_data: dict[str, str]) -> str:
+        return source_data["lohkomuoto"] + "-" + \
+            source_data["section_y"] + "-" + \
+            source_data["section_x"] + "-" + \
+            source_data["test_area_number"] + "-" + \
+            source_data["stand_number"]
 
 
 class VMI9Builder(VMIBuilder):
-    """VMI9 specific builder implementation"""
-
-    def __init__(self,
-                 builder_flags: dict,
-                 declared_conversions: dict,
-                 data_rows: list[str] | None = None):
-        if data_rows is None:
-            data_rows = []
-        super().__init__(builder_flags, declared_conversions, data_rows)
-
-    def find_row_type(self, row: str) -> int:
-        return int(row[13])
-
-    def classify_row(self, row: str) -> str | None:
-        row_type = self.find_row_type(row)
-        if row_type == 1:
-            return "stand"
-        if row_type == 2:
-            return "tree"
-        return None
-
-    def _select_stand_indices(self, row: str) -> dict[str, slice]:
-        """
-        VMI9 has two fixed-width layouts (Etelä-Suomi and Pohjois-Suomi).
-        metsäkeskusjako (metkes):
-        0..10 => Etelä-Suomi
-        11..13 => Pohjois-Suomi
-        """
-
-        forestry_centre = util.parse_int(row[VMI9_STAND_COMMON["forestry_centre"]].strip())
-        if forestry_centre is None:
-            raise MetsiException("Forestry_centre information is missing")
-
-        return VMI9_STAND_INDICES_PSUOMI if 11 <= forestry_centre <= 13 else VMI9_STAND_INDICES_ESUOMI
-
-    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-
-        result = super().convert_stand_entry(indices, data_row, stand_id)
-
-        parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
-        if parsed is None:
-            raise MetsiException("Year is None in VMI9 data")
-
-        result.year = parsed.year
-        result.start_year = parsed.year
-        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
-
-        area_ha = vmi_util.parse_vmi_area_ha(data_row[indices["area_ha"]])
-        result.set_area(area_ha)
-
-        result.area_weight_factors = vmi_util.determine_area_factors(
-            data_row[indices["osuus7m"]],
-            data_row[indices["osuusrel"]],
-        )
-
-        result.drainage_year = vmi_util.determine_drainage_year(
-            data_row[indices["ojitus_aika"]],
-            result.year
-        )
-        result.region = None
-        result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
-        lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
-        lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
-        if not lat:
-            lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
-        if not lon:
-            lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
-        height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
-        result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
-
-        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
-            result.year
-        )
-
-        result.forest_management_category = vmi_util.determine_forest_management_category_vmi9(data_row, indices)
-
-        result = self.conversion_reader.apply_conversions(result, data_row)
-        return result
-
-    def build(self) -> StandList:
-        result: dict[str, ForestStand] = {}
-        tree_attrs: dict[str, dict[str, list]] = {}
-        stratum_attrs: dict[str, dict[str, list]] = {}
-
-        for i, row in enumerate(self.forest_stands):
-            try:
-                idx = self._select_stand_indices(row)
-                stand = self.convert_stand_entry(idx, row, i + 1)
-                result[stand.identifier] = stand
-
-                sattr = stratum_attrs.setdefault(stand.identifier, {})
-                vmi_util.append_vmi9_strata_from_stand_row(
-                    sattr,
-                    idx,
-                    row,
-                    stand.identifier,
-                    stand_basal_area=stand.basal_area or 0.0,
-                )
-            except Exception as e:
-                raise MetsiException(f"Parsing stand row {row} failed: {e}") from e
-
-        if self.builder_flags.get("measured_trees", False):
-            for row in self.reference_trees:
-                try:
-                    stand_id = vmi_util.generate_stand_identifier(row, VMI9_STAND_INDICES_ESUOMI)
-
-                    stand2 = result.get(stand_id)
-                    if stand2 is None:
-                        continue
-
-                    attr_dict = tree_attrs.setdefault(stand_id, {})
-                    vmi_util.append_tree_row_vmi9(
-                        attr_dict,
-                        VMI9_TREE_INDICES,
-                        row,
-                        forestry_centre_id=stand2.forestry_centre_id,
-                    )
-                except Exception as e:
-                    raise MetsiException(f"Parsing tree row {row} failed: {e}") from e
-
-        out = StandList()
-        for sid, stand in result.items():
-            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(sid, {}))
-            stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(sid, {}))
-            out.append(stand)
-
-        return out
+    pass
 
 
 class VMI10Builder(VMIBuilder):
-    """VMI10 specific builder implementation with no strata support."""
-
-    def __init__(self,
-                 builder_flags: dict,
-                 declared_conversions: dict,
-                 data_rows: list[str] | None = None):
-        if data_rows is None:
-            data_rows = []
-        super().__init__(builder_flags, declared_conversions, data_rows)
-
-    def find_row_type(self, row: str) -> int:
-        return int(row[13])
-
-    def classify_row(self, row: str) -> str | None:
-        row_type = self.find_row_type(row)
-        if row_type == 1:
-            return "stand"
-        if row_type == 2:
-            return "tree"
-        if row_type == 3:
-            return "tree"
-        return None
-
-    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-        """
-        VMI10 stand conversion.
-        """
-        result = super().convert_stand_entry(indices, data_row, stand_id)
-
-        parsed = vmi_util.parse_vmi12_date(data_row[indices["date"]])
-        if parsed is None:
-            raise MetsiException("Year is None in VMI10 data")
-
-        result.year = parsed.year
-        result.start_year = parsed.year
-        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
-
-        area_ha = vmi_util.get_vmi10_area_ha(
-            vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
-            int(data_row[indices["lohkomuoto"]]),
-        )
-        result.set_area(area_ha)
-
-        result.area_weight_factors = vmi_util.determine_area_factors(
-            data_row[indices["osuus7m"]],
-            data_row[indices["osuusrel"]],
-        )
-
-        result.basal_area = util.parse_type(data_row[indices["basal_area"]], float)
-        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
-        result.fertilization_year = None
-
-        result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
-            data_row[indices["muu_toimenpide"]],
-            data_row[indices["muu_toimenpide_aika"]],
-            result.year,
-        )
-
-        result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
-            data_row[indices["viljely"]],
-            data_row[indices["viljely_aika"]],
-            result.year,
-        )
-
-        maintenance_details = vmi2internal.convert_forest_maintenance_details(
-            data_row[indices["hakkuu_tapa"]],
-            data_row[indices["hakkuu_aika"]],
-            result.year)
-        result.young_stand_tending_year = maintenance_details[0]
-        result.cutting_year = maintenance_details[1]
-        result.method_of_last_cutting = maintenance_details[2]
-
-        lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
-        lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
-        if not lat:
-            lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
-        if not lon:
-            lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
-        height_dm = util.get_or_default(util.parse_type(data_row[indices["height_above_sea_level"]], float), 0.0)
-        result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
-
-        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
-            result.year
-        )
-        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
-        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
-
-        result.region = None
-        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
-
-            is_ahvenanmaa = result.forestry_centre_id == 0
-
-            result.forest_management_category = vmi_util.determine_forest_management_category(
-                result.land_use_category,
-                is_ahvenanmaa,
-                result.owner_category,
-                data_row[indices["puuntuotannon_rajoitus"]],
-                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
-                data_row[indices["muut_arvot"]],
-                data_row[indices["suojametsakoodi"]],
-                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
-                ""
-            )
-        else:
-            result.forest_management_category = 1
-
-        result = self.conversion_reader.apply_conversions(result, data_row)
-        return result
-
-    def build(self) -> StandList:
-        """
-        Populate a list of ForestStand with associated ReferenceTrees.
-        """
-        result: dict[str, ForestStand] = {}
-        tree_attrs: dict[str, dict[str, list]] = {}
-        stratum_attrs: dict[str, dict[str, list]] = {}
-
-        for i, row in enumerate(self.forest_stands):
-            try:
-                stand = self.convert_stand_entry(VMI10_STAND_INDICES, row, i + 1)
-                result[stand.identifier] = stand
-
-                sattr = stratum_attrs.setdefault(stand.identifier, {})
-                vmi_util.append_vmi10_strata_from_stand_row(
-                    sattr,
-                    VMI10_STAND_INDICES,
-                    row,
-                    stand.identifier,
-                    stand_basal_area=stand.basal_area or 0.0,
-                )
-            except Exception as e:
-                raise MetsiException(f"Parsing stand row {row} failed: {e}") from e
-
-
-        if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                try:
-                    stand_id = vmi_util.generate_stand_identifier(row, VMI10_STAND_INDICES)
-                    if stand_id not in result:
-                        continue
-                    attr_dict = tree_attrs.setdefault(stand_id, {})
-                    stand2 = result.get(stand_id)
-                    if stand2 is None:
-                        continue
-
-                    vmi_util.append_tree_row_vmi10(attr_dict, VMI10_TREE_INDICES, row,
-                                                forestry_centre_id=stand2.forestry_centre_id)
-                except Exception as e:
-                    raise MetsiException(f"Parsing tree row {row} failed: {e}") from e
-
-
-        for stand_id, stand in result.items():
-            stand.tree_strata = TreeStrata().vectorize(stratum_attrs.get(stand_id, {}))
-            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
-
-        return list(result.values())
+    pass
 
 
 class VMI11Builder(VMIBuilder):
-    """VMI11 specific builder implementation."""
-
-    def __init__(
-        self,
-        builder_flags: dict,
-        declared_conversions: dict,
-        data_rows: list[str] | None = None,
-    ):
-        if data_rows is None:
-            data_rows = []
-        super().__init__(builder_flags, declared_conversions, data_rows)
-
-    def find_row_type(self, row: str) -> int:
-        return int(row[13])
-
-    def classify_row(self, row: str) -> str | None:
-        row_type = self.find_row_type(row)
-        if row_type == 1:
-            return "stand"
-        if row_type == 2:
-            return "stratum"
-        if row_type == 3:
-            return "tree"
-        return None
-
-    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-        """Create a ForestStand out of given VMI11 data"""
-        result = super().convert_stand_entry(indices, data_row, stand_id)
-
-        result.municipality_id = data_row[indices["municipality"]]
-
-        result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
-        result.start_year = result.year
-        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            data_row[indices["main_tree_species_dominant_storey"]],
-            result.site_type_category,
-        )
-
-        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
-        result.region = None
-
-        area_ha = vmi_util.determine_vmi11_area_ha(
-            vmi_util.parse_forestry_centre(data_row[indices["forestry_centre"]]),
-            int(data_row[indices["lohkomuoto"]]),
-            data_row[indices["area_ha"]],
-            inventointitunnus=data_row[indices["inventointitunnus"]],
-            lohy_raw=data_row[indices["section_y"]],
-            ahvkeilaus=data_row[indices["ahvkeilaus"]],
-        )
-        result.set_area(area_ha)
-        result.ahvkeilaus = data_row[indices["ahvkeilaus"]]
-
-        result.area_weight_factors = vmi_util.determine_area_factors(
-            data_row[indices["osuus7m"]],
-            data_row[indices["osuusrel"]],
-        )
-
-        lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
-        lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
-        if not lat:
-            lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
-        if not lon:
-            lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
-
-        height = vmi_util.transform_vmi12_height_above_sea_level(data_row[indices["height_above_sea_level"]])
-        result.set_geo_location(lat, lon, height, "EPSG:2393")
-
-        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
-        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
-            result.year,
-        )
-        result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
-            data_row[indices["muu_toimenpide"]],
-            data_row[indices["muu_toimenpide_aika"]],
-            result.year,
-        )
-        result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
-            data_row[indices["viljely"]],
-            data_row[indices["viljely_aika"]],
-            result.year,
-        )
-
-        maintenance_details = vmi2internal.convert_forest_maintenance_details(
-            data_row[indices["hakkuu_tapa"]],
-            data_row[indices["hakkuu_aika"]],
-            result.year)
-        result.young_stand_tending_year = maintenance_details[0]
-        result.cutting_year = maintenance_details[1]
-        result.method_of_last_cutting = maintenance_details[2]
-
-        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
-            data_row[indices["vallitsevanjakson_d13ika"]],
-            data_row[indices["vallitsevanjakson_ikalisays"]],
-        )
-
-        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
-        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
-        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
-        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
-
-        if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
-            is_ahvenanmaa = result.forestry_centre_id == 0
-            result.forest_management_category = vmi_util.determine_forest_management_category(
-                result.land_use_category,
-                is_ahvenanmaa,
-                result.owner_category,
-                data_row[indices["puuntuotannon_rajoitus"]],
-                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
-                data_row[indices["muut_arvot"]],
-                data_row[indices["suojametsakoodi"]],
-                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
-                data_row[indices["koealan_kasittelyluokka"]]
-            )
-        else:
-            result.forest_management_category = 1
-
-        result = self.conversion_reader.apply_conversions(result, data_row)
-        return result
-
-    def build(self) -> StandList:
-        """Populate ForestStand objects with associated ReferenceTrees and TreeStrata (SoA)."""
-        result: dict[str, ForestStand] = {}
-        strata_attrs: dict[str, dict[str, list]] = {}
-        tree_attrs: dict[str, dict[str, list]] = {}
-
-        # Build stands
-        for i, row in enumerate(self.forest_stands):
-            try:
-                stand = self.convert_stand_entry(VMI11_STAND_INDICES, row, i + 1)
-                result[stand.identifier] = stand
-            except Exception as e:
-                raise MetsiException(f"Parsing stand row {row} failed: {e}") from e
-
-        # Strata
-        if self.builder_flags.get('strata', False):
-            for row in self.tree_strata:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_STRATUM_INDICES)
-                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                    _append_stratum_row(attr_dict, VMI11_STRATUM_INDICES, row)
-                except Exception as e:
-                    raise MetsiException(f"Parsing stratum row {row} failed: {e}") from e
-
-        # Trees
-        if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI11_TREE_INDICES)
-                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                    stand2 = result.get(stand_identifier)
-                    if stand2 is None:
-                        continue
-                    _append_tree_row(
-                        attr_dict,
-                        VMI11_TREE_INDICES,
-                        row,
-                        vmi_version=VmiIteration.VMI11,
-                        forestry_centre_id=stand2.forestry_centre_id,
-                        ahvkeilaus=stand2.ahvkeilaus,
-                        height_conversion_factor=10.0,            # VMI11 pituus is in dm
-                        measured_height_conversion_factor=10.0,   # keep consistent (dm → m)
-                    )
-                except Exception as e:
-                    raise MetsiException(f"Parsing tree row {row} failed: {e}") from e
-
-        # Attach SoA containers to stands
-        for stand_id, stand in result.items():
-            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
-            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
-
-        return list(result.values())
+    pass
 
 
 class VMI12Builder(VMIBuilder):
-    """VMI12 specific builder implementation"""
-
-    def __init__(self,
-                 builder_flags: dict,
-                 declared_conversions: dict,
-                 data_rows: list[str] | None = None):
-        if data_rows is None:
-            data_rows = []
-        super().__init__(builder_flags, declared_conversions, data_rows)
-
-    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-        """
-        Create a ForestStand out of given VMI12 type 1 data row using given data indices and order number.
-        Conversion variables are based fixed source indices.
-        """
-        # Fixed conversions
-        result = super().convert_stand_entry(indices, data_row, stand_id)
-        result.year = vmi_util.parse_vmi12_date(data_row[indices["date"]]).year
-        result.start_year = result.year
-        area_ha = vmi_util.determine_vmi12_area_ha(
-            int(data_row[indices["lohkomuoto"]]),
-            int(data_row[indices["county"]]))
-        result.area_weight_factors = vmi_util.determine_area_factors(
-            data_row[indices["osuus5m"]],
-            data_row[indices["osuus9m"]]
-        )
-        result.set_area(area_ha)
-
-        lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
-        lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
-        if not lat:
-            lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
-        if not lon:
-            lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
-
-        height = vmi_util.transform_vmi12_height_above_sea_level(data_row[indices["height_above_sea_level"]])
-        result.set_geo_location(lat, lon, height, "EPSG:2393")
-        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
-        result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
-            result.year)
-        result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
-            data_row[indices["muu_toimenpide"]],
-            data_row[indices["muu_toimenpide_aika"]],
-            result.year)
-        result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
-            data_row[indices["viljely"]],
-            data_row[indices["viljely_aika"]],
-            result.year)
-        maintenance_details = vmi2internal.convert_forest_maintenance_details(
-            data_row[indices["hakkuu_tapa"]],
-            data_row[indices["hakkuu_aika"]],
-            result.year
-        )
-        result.young_stand_tending_year = maintenance_details[0]
-        result.cutting_year = maintenance_details[1]
-        result.method_of_last_cutting = maintenance_details[2]
-        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
-            data_row[indices["vallitsevanjakson_d13ika"]],
-            data_row[indices["vallitsevanjakson_ikalisays"]]
-        )
-
-        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
-        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
-        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
-        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
-
-        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            data_row[indices["main_tree_species_dominant_storey"]],
-            result.site_type_category,
-        )
-        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
-        result.region = util.parse_int(data_row[indices["county"]])
-
-        result.municipality_id = vmi_util.determine_municipality(
-            data_row[indices["municipality"]],
-            data_row[indices["kitukunta"]],
-        )
-
-        if result.land_use_category and result.region is not None and result.owner_category is not None:
-
-            is_ahvenanmaa = result.region == 21
-            result.forest_management_category = vmi_util.determine_forest_management_category(
-                result.land_use_category,
-                is_ahvenanmaa,
-                result.owner_category,
-                data_row[indices["puuntuotannon_rajoitus"]],
-                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
-                data_row[indices["muut_arvot"]],
-                data_row[indices["suojametsakoodi"]],
-                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
-                data_row[indices["koealan_kasittelyluokka"]]
-            )
-        else:
-            result.forest_management_category = 1
-
-        result = self.conversion_reader.apply_conversions(result, data_row)
-        return result
-
-    def find_row_type(self, row: str) -> int:
-        """Return VMI12 data type of the row"""
-        return int(row[13])
-
-    def classify_row(self, row: str) -> str | None:
-        return self._classify_row(row)
-
-    def build(self) -> StandList:
-        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
-        """
-        result: dict[str, ForestStand] = {}
-        strata_attrs: dict[str, dict[str, list]] = {}
-        tree_attrs: dict[str, dict[str, list]] = {}
-
-        for i, row in enumerate(self.forest_stands):
-            try:
-                stand = self.convert_stand_entry(VMI12_STAND_INDICES, row, i + 1)
-                result[stand.identifier] = stand
-            except Exception as e:
-                raise MetsiException(f"Parsing stand row {row} failed: {e}") from e
-
-        if self.builder_flags.get('strata', False):
-
-            for row in self.tree_strata:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_STRATUM_INDICES)
-                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                    _append_stratum_row(attr_dict, VMI12_STRATUM_INDICES, row)
-                except Exception as e:
-                    raise MetsiException(f"Parsing stratum row {row} failed: {e}") from e
-
-        if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI12_TREE_INDICES)
-                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                    stand2 = result.get(stand_identifier)
-                    if stand2 is None:
-                        continue
-                    _append_tree_row(attr_dict, VMI12_TREE_INDICES, row,
-                                    vmi_version=VmiIteration.VMI12, forestry_centre_id=stand2.forestry_centre_id)
-                except Exception as e:
-                    raise MetsiException(f"Parsing tree row {row} failed: {e}") from e
-
-
-        for stand_id, stand in result.items():
-            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
-            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
-
-        return list(result.values())
+    pass
 
 
 class VMI13Builder(VMIBuilder):
-    """VMI13 specific builder implementation"""
 
-    def __init__(self,
-                 builder_flags: dict,
-                 declared_conversions: dict,
-                 data_rows: list[str] | None = None):
-        if data_rows is None:
-            data_rows = []
-        pre_parsed_rows = map(lambda raw: raw.split(), data_rows)
-        super().__init__(builder_flags, declared_conversions, pre_parsed_rows)
+    def __init__(self, builder_flags: dict[str, bool], data_rows: list[str]) -> None:
+        super().__init__(builder_flags)
+        for row in data_rows:
+            kind = self._classify_row(row)
+            split_row = row.split()
+            if kind == RowKind.STAND:
+                self.stand_rows.append({key: split_row[index] for key, index in VMI13_STAND_INDICES.items()})
+            elif kind == RowKind.STRATUM and self.builder_flags.get("strata", False):
+                stratum_row = {key: split_row[index] for key, index in VMI13_STRATUM_INDICES.items()}
+                stand_identifier = vmi_util.generate_stand_identifier(stratum_row)
+                self.stratum_rows.setdefault(stand_identifier, []).append(stratum_row)
+            elif kind == RowKind.TREE and self.builder_flags.get("measured_trees", False):
+                tree_row = {key: split_row[index] for key, index in VMI13_TREE_INDICES.items()}
+                stand_identifier = vmi_util.generate_stand_identifier(tree_row)
+                self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
-    def find_row_type(self, row: str) -> int:
-        """Return VMI13 data type of the row"""
-        return int(row[0])
+    @staticmethod
+    def _classify_row(row: str) -> RowKind:
+        return RowKind(row[0])
 
-    def convert_stand_entry(self, indices, data_row, stand_id: int | None = None) -> ForestStand:
-        """Create a ForestStand out of given VMI13 type 1 data row using given data indices and order number"""
+    def build(self) -> StandList:
+        result: dict[str, ForestStand] = {}
 
-        result = super().convert_stand_entry(indices, data_row, stand_id)
-        result.year = vmi_util.parse_vmi13_date(data_row[indices["date"]]).year
+        for i, row in enumerate(self.stand_rows):
+            try:
+                stand = self._convert_stand_entry(row, i + 1)
+                result[stand.identifier] = stand
+            except Exception as e:
+                raise MetsiException(f"Parsing stand row {self.stand_rows[i]} failed: {e}") from e
+
+        if self.builder_flags.get('strata', False):
+            for stand_identifier, stand_stratum_rows in self.stratum_rows.items():
+                strata = TreeStrata(len(stand_stratum_rows))
+                for j, stand_stratum_row in enumerate(stand_stratum_rows):
+                    self._convert_stratum_entry(strata, stand_stratum_row, j)
+
+                result[stand_identifier].tree_strata = strata
+
+        if self.builder_flags.get('measured_trees', False):
+            for stand_identifier, stand_tree_rows in self.tree_rows.items():
+                stand = result.get(stand_identifier)
+                if stand is None:
+                    continue
+
+                trees = ReferenceTrees(len(stand_tree_rows))
+                for j, stand_tree_row in enumerate(stand_tree_rows):
+                    self._convert_tree_entry(trees, stand_tree_row, j, stand.forestry_centre_id)
+
+                result[stand_identifier].reference_trees = trees
+
+        return list(result.values())
+
+    @classmethod
+    def _convert_stand_entry(cls, source_data: dict[str, str], stand_id: Optional[int] = None) -> ForestStand:
+        result = super()._convert_stand_entry(source_data, stand_id)
+
+        result.year = vmi_util.parse_vmi13_date(source_data["date"]).year
         result.start_year = result.year
+
         area_ha = vmi_util.determine_vmi13_area_ha(
-            int(data_row[indices["county"]]),
-            int(data_row[indices["lohkomuoto"]]),
+            int(source_data["county"]),
+            int(source_data["lohkomuoto"]),
             util.get_or_default(
-                util.parse_int(data_row[indices["lohkotarkenne"]]),
-                0)
+                util.parse_int(source_data["lohkotarkenne"]),
+                0
+            )
         )
 
         result.area_weight_factors = vmi_util.determine_area_factors(
-            data_row[indices["osuus4m"]],
-            data_row[indices["osuus9m"]]
+            source_data["osuus4m"],
+            source_data["lohkomuoto"]
         )
         result.set_area(area_ha)
 
-        lat = util.get_or_default(util.parse_type(data_row[indices["lat_measured"]], float), 0.0)
-        lon = util.get_or_default(util.parse_type(data_row[indices["lon_measured"]], float), 0.0)
+        lat = util.get_or_default(util.parse_type(source_data["lat_measured"], float), 0.0)
+        lon = util.get_or_default(util.parse_type(source_data["lon_measured"], float), 0.0)
         if not lat:
-            lat = util.get_or_default(util.parse_type(data_row[indices["lat"]], float), 0.0)
+            lat = util.get_or_default(util.parse_type(source_data["lat"], float), 0.0)
         if not lon:
-            lon = util.get_or_default(util.parse_type(data_row[indices["lon"]], float), 0.0)
+            lon = util.get_or_default(util.parse_type(source_data["lon"], float), 0.0)
 
-        height = vmi_util.transform_vmi13_height_above_sea_level(data_row[indices["height_above_sea_level"]])
+        height = vmi_util.transform_vmi13_height_above_sea_level(source_data["height_above_sea_level"])
         result.set_geo_location(lat, lon, height)
-        result.drainage_year = vmi_util.determine_drainage_year(data_row[indices["ojitus_aika"]], result.year)
-        result.fertilization_year = None  # value missing in VMI12 source
+
+        result.drainage_year = vmi_util.determine_drainage_year(source_data["ojitus_aika"], result.year)
+        result.fertilization_year = None
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
-            data_row[indices["maanmuokkaus_aika"]],
+            source_data["maanmuokkaus_aika"],
             result.year
         )
         result.regeneration_area_cleaning_year = vmi_util.determine_clearing_of_reform_sector_year(
-            data_row[indices["muu_toimenpide"]],
-            data_row[indices["muu_toimenpide_aika"]],
-            result.year)
+            source_data["muu_toimenpide"],
+            source_data["muu_toimenpide_aika"],
+            result.year
+        )
         result.artificial_regeneration_year = vmi_util.determine_artificial_regeneration_year(
-            data_row[indices["viljely"]],
-            data_row[indices["viljely_aika"]],
-            result.year)
+            source_data["viljely"],
+            source_data["viljely_aika"],
+            result.year
+        )
         maintenance_details = vmi2internal.convert_forest_maintenance_details(
-            data_row[indices["hakkuu_tapa"]],
-            data_row[indices["hakkuu_aika"]],
-            result.year)
+            source_data["hakkuu_tapa"],
+            source_data["hakkuu_aika"],
+            result.year
+        )
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
         result.ds_main_tree_species_biological_age = vmi_util.determine_vmi13_dominant_storey_age(
-            data_row[indices["vallitsevanjaksonika"]]
+            source_data["vallitsevanjaksonika"]
         )
 
-        result.peatland_type = vmi2internal.convert_peatland_forest_type(data_row[indices["suotyy"]])
-        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(data_row[indices["tkgtyy"]])
-        result.under_storey = bool(util.parse_type(data_row[indices["alikehl"]], int))
-        result.over_storey = bool(util.parse_type(data_row[indices["ylikehl"]], int))
+        result.peatland_type = vmi2internal.convert_peatland_forest_type(source_data["suotyy"])
+        result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(source_data["tkgtyy"])
+        result.under_storey = bool(util.parse_type(source_data["alikehl"], int))
+        result.over_storey = bool(util.parse_type(source_data["ylikehl"], int))
 
-        result.development_class = vmi2internal.convert_development_class(data_row[indices["kehitysluokka"]])
+        result.development_class = vmi2internal.convert_development_class(source_data["kehitysluokka"])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            data_row[indices["main_tree_species_dominant_storey"]],
-            result.site_type_category,
+            source_data["main_tree_species_dominant_storey"],
+            result.site_type_category
         )
-        result.basal_area = util.parse_type(data_row[indices["pohjapintaala"]], float)
-        result.region = util.parse_int(data_row[indices["county"]])
+        result.basal_area = util.parse_type(source_data["pohjapintaala"], float)
+        result.region = util.parse_int(source_data["county"])
 
         result.municipality_id = vmi_util.determine_municipality(
-            data_row[indices["municipality"]],
-            data_row[indices["kitukunta"]],
+            source_data["municipality"],
+            source_data["kitukunta"]
         )
 
         if result.land_use_category and result.region is not None and result.owner_category is not None:
@@ -1063,69 +233,125 @@ class VMI13Builder(VMIBuilder):
                 result.land_use_category,
                 is_ahvenanmaa,
                 result.owner_category,
-                data_row[indices["puuntuotannon_rajoitus"]],
-                data_row[indices["puuntuotannon_rajoitus_tarkenne"]],
-                data_row[indices["muut_arvot"]],
-                data_row[indices["suojametsakoodi"]],
-                data_row[indices["ahvenanmaan_markkinahakkuualue"]],
-                data_row[indices["koealan_kasittelyluokka"]]
+                source_data["puuntuotannon_rajoitus"],
+                source_data["puuntuotannon_rajoitus_tarkenne"],
+                source_data["muut_arvot"],
+                source_data["suojametsakoodi"],
+                source_data["ahvenanmaan_markkinahakkuualue"],
+                source_data["koealan_kasittelyluokka"]
             )
         else:
             result.forest_management_category = 1
 
-        result = self.conversion_reader.apply_conversions(result, data_row)
         return result
 
-    def classify_row(self, row: str) -> str | None:
-        return self._classify_row(row)
+    @staticmethod
+    def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):
+        identifier = vmi_util.generate_stratum_identifier(row)
 
-    def build(self) -> StandList:
-        """ Populate a list of ForestStand with associated ReferenceTrees and TreeStrata in SoA form
-        """
-        result: dict[str, ForestStand] = {}
-        # Per-stand attribute dicts
-        strata_attrs: dict[str, dict[str, list]] = {}
-        tree_attrs: dict[str, dict[str, list]] = {}
+        species = vmi2internal.convert_species(row["species"])
+        origin = vmi2internal.convert_origin(row["origin"])
 
-        # Build stands
-        for i, row in enumerate(self.forest_stands):
-            try:
-                stand = self.convert_stand_entry(VMI13_STAND_INDICES, row, i + 1)
-                result[stand.identifier] = stand
-            except Exception as e:
-                raise MetsiException(f"Parsing stand row {row} failed: {e}") from e
+        stems_per_ha = util.get_or_default(util.parse_type(row["stems_per_ha"], float), 0.0)
+        sapling_stems_per_ha = util.get_or_default(util.parse_type(row["sapling_stems_per_ha"], float), 0.0)
 
-        # Strata → TreeStrata SoA
-        if self.builder_flags.get('strata', False):
-            for row in self.tree_strata:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_STRATUM_INDICES)
-                    attr_dict = strata_attrs.setdefault(stand_identifier, {})
-                    _append_stratum_row(attr_dict, VMI13_STRATUM_INDICES, row)
-                except Exception as e:
-                    raise MetsiException(f"Parsing stratum row {row} failed: {e}") from e
+        mean_diameter = util.parse_type(row["avg_diameter"], float)
+        mean_height = vmi_util.determine_stratum_tree_height(row["avg_height"])
 
-        # Trees → ReferenceTrees SoA
-        if self.builder_flags.get('measured_trees', False):
-            for row in self.reference_trees:
-                try:
-                    stand_identifier = vmi_util.generate_stand_identifier(row, VMI13_TREE_INDICES)
-                    attr_dict = tree_attrs.setdefault(stand_identifier, {})
-                    stand2 = result.get(stand_identifier)
-                    if stand2 is None:
-                        continue
+        biological_age, breast_height_age = vmi_util.determine_stratum_age_values(
+            row["biological_age"],
+            row["d13_age"],
+            mean_height
+        )
 
-                    _append_tree_row(attr_dict, VMI13_TREE_INDICES, row,
-                                     vmi_version=VmiIteration.VMI13, forestry_centre_id=stand2.forestry_centre_id)
-                except Exception as e:
-                    raise MetsiException(f"Parsing tree row {row} failed: {e}") from e
+        basal_area = util.parse_type(row["basal_area"], float)
+        stratum_number = util.parse_int(row["stratum_number"])
+        storey = vmi_util.determine_storey_for_stratum(row["stratum_rank"])
+        stratum_rank = vmi2internal.convert_stratum_rank(row["stratum_rank"])
 
-        # Attach SoA containers to stands
-        for stand_id, stand in result.items():
-            stand.tree_strata = TreeStrata().vectorize(strata_attrs.get(stand_id, {}))
-            stand.reference_trees = ReferenceTrees().vectorize(tree_attrs.get(stand_id, {}))
+        strata.identifier[i] = identifier
+        strata.species[i] = species
+        strata.mean_diameter[i] = mean_diameter
+        strata.mean_height[i] = mean_height
+        strata.breast_height_age[i] = breast_height_age
+        strata.biological_age[i] = biological_age
+        strata.stems_per_ha[i] = stems_per_ha
+        strata.basal_area[i] = basal_area
+        if origin is not None:
+            strata.origin[i] = origin
+        if stratum_number is not None:
+            strata.stratum_number[i] = stratum_number
+        if storey is not None:
+            strata.storey[i] = storey
+        strata.sapling_stems_per_ha[i] = sapling_stems_per_ha
+        if stratum_rank is not None:
+            strata.stratum_rank[i] = stratum_rank
 
-        return list(result.values())
+    @staticmethod
+    def _convert_tree_entry(trees: ReferenceTrees,
+                            row: dict[str, str],
+                            i: int,
+                            forestry_centre_id: int | None,
+                            ahvkeilaus: str | None = None,
+                            height_conversion_factor: float = 100.0,
+                            measured_height_conversion_factor: float = 10.0):
+        identifier = vmi_util.generate_tree_identifier(row)
+        tree_number = util.parse_type(row["tree_number"], int)
+        species = vmi2internal.convert_species(row["species"])
+        tree_category = vmi2internal.convert_tree_category(row["tree_category"])
+
+        breast_height_diameter = vmi_util.transform_tree_diameter(row["diameter"])
+        breast_height_age, biological_age = vmi_util.determine_tree_age_values(
+            row["d13_age"],
+            row["age_increase"],
+            row["total_age"],
+        )
+
+        height = vmi_util.determine_tree_height(
+            row["height"],
+            conversion_factor=height_conversion_factor,
+        )
+        measured_height = vmi_util.determine_tree_height(
+            row["measured_height"],
+            conversion_factor=measured_height_conversion_factor,
+        )
+
+        stems_per_ha = vmi_util.determine_stems_per_ha(breast_height_diameter,
+                                                       vmi_version=VmiIteration.VMI13,
+                                                       forestry_centre_id=forestry_centre_id,
+                                                       ahvkeilaus=ahvkeilaus)
+        origin = vmi2internal.convert_origin(row["origin"])
+
+        management_category = vmi_util.determine_tree_management_category(row["latvuskerros"])
+        storey = vmi_util.determine_storey_for_tree(row["latvuskerros"])
+
+        sapling = False
+        tree_type = vmi2internal.convert_tree_type(row["tree_type"])
+
+        damage_raw = row["tuhon_ilmiasu"]
+        damage_type = None if damage_raw in ("  ", " ", ".", "") else damage_raw.strip()
+        crown_class = vmi2internal.convert_crown_class(row["latvuskerros"])
+
+        trees.identifier[i] = identifier
+        if tree_number is not None:
+            trees.tree_number[i] = tree_number
+        trees.species[i] = species
+        trees.breast_height_diameter[i] = breast_height_diameter
+        trees.height[i] = height
+        trees.measured_height[i] = measured_height
+        trees.breast_height_age[i] = breast_height_age
+        trees.biological_age[i] = biological_age
+        trees.stems_per_ha[i] = stems_per_ha
+        if origin is not None:
+            trees.origin[i] = origin
+        trees.management_category[i] = management_category
+        trees.tree_category[i] = tree_category
+        if storey is not None:
+            trees.storey[i] = storey
+        trees.sapling[i] = sapling
+        trees.tree_type[i] = tree_type
+        trees.damage_type[i] = damage_type
+        trees.crown_class[i] = crown_class
 
 
 class ForestCentreBuilder(ForestBuilder):
@@ -1139,197 +365,8 @@ class ForestCentreBuilder(ForestBuilder):
     def convert_stand_entry(self, entry) -> ForestStand:
         ...
 
-
 class XMLBuilder(ForestCentreBuilder):
-
-    xpath_strata = './ts:TreeStandData/ts:TreeStandDataDate[@type="{}"]/tst:TreeStrata/tst:TreeStratum'
-    xpath_stand = "st:Stands/st:Stand"
-
-    def __init__(self, builder_flags: dict, declared_conversions: dict, data: str):
-        self.root: ET.Element = ET.fromstring(data)
-        self.builder_flags = builder_flags
-        self.xpath_strata = self.xpath_strata.format(builder_flags['strata_origin'].value)
-        self.declared_conversions = declared_conversions  # NOTE: not in use
-
-    def set_stand_operations(self, stand: ForestStand, operations: dict[int, tuple[int, int]]) -> ForestStand:
-        for oper in operations.values():
-            (oper_type, oper_year) = oper
-            if oper_type in (1,):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.OVER_STORY_REMOVAL  # RST record 31
-            elif oper_type in (2, 13, 20):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.FIRST_THINNING  # RST record 31
-            elif oper_type in (3, 11, 12, 14, 91, 94):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.THINNING  # RST record 31
-            elif oper_type in (4, 15, 100):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING if stand.soil_peatland_category in (
-                    1, 2, 3) else CuttingMethod.SEED_TREE_CUTTING
-            elif oper_type in (6, 7, 102, 116, 123, 124):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.SHELTERWOOD_CUTTING  # RST record 31
-            elif oper_type in (8, 101, 103, 104, 105, 106, 107, 108, 109,
-                               110, 111, 112, 113, 114, 115, 117, 118,
-                               119, 120, 121, 122, 125, 126, 127, 128):
-                stand.cutting_year = oper_year  # RST record 28
-                stand.method_of_last_cutting = CuttingMethod.SEED_TREE_CUTTING  # RST record 31
-            elif oper_type in (200, 201, 202, 203, 204, 205, 206, 207, 208,
-                               209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-                               221, 222, 223, 224, 225, 226, 227, 228, 300, 301, 302, 303,
-                               304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315,
-                               316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327,
-                               328, 601, 602, 603, 604, 605, 606, 607, 608, 609, 610, 611,
-                               612, 613, 614, 615, 616, 617, 618, 619, 620, 621, 622, 623,
-                               624, 625, 626, 627, 628, 629, 630):
-                stand.artificial_regeneration_year = oper_year  # RST record 25
-            elif oper_type in (401, 410, 420, 450):
-                stand.regeneration_area_cleaning_year = oper_year  # RST record 23
-            elif oper_type in (501, 510, 511, 520, 521, 522, 523, 530, 531, 540, 550, 560, 960):
-                stand.soil_surface_preparation_year = oper_year  # RST record 21
-            elif oper_type in (660, 670, 680, 690, 701, 730, 740, 745, 750, 760, 860, 870, 880, 890):
-                stand.young_stand_tending_year = oper_year  # RST record 26
-            elif oper_type in (911, 912):
-                stand.fertilization_year = oper_year  # RST record 20
-            elif oper_type in (930, 940):
-                stand.drainage_year = oper_year  # RST record 19
-
-            else:
-                print_logline(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
-                # raise UserWarning(f'Unable to spesify operation type {oper_type} for stand \'{stand.identifier}\'')
-        return stand
-
-    def convert_stand_entry(self, entry: ET.Element) -> ForestStand:
-        stand_basic_data = smk_util.parse_stand_basic_data(entry)
-        stand = ForestStand()
-        stand.year = smk_util.parse_year(stand_basic_data.StandBasicDataDate)  # RST record 2
-        stand.start_year = stand.year
-        stand.set_area(util.parse_type(stand_basic_data.Area, float))  # RST record 3 and 4
-        (latitude, longitude, crs) = smk_util.parse_coordinates(entry)
-        stand.geo_location = (latitude, longitude, None, crs)  # RST record 5,6,8
-        stand.identifier = stand_basic_data.id  # RST record 7
-        stand.degree_days = None  # RST record 9
-        stand.owner_category = OwnerCategory.PRIVATE  # RST record 10
-        stand.land_use_category = fc2internal.convert_land_use_category(stand_basic_data.MainGroup)  # RST record 11
-        stand.soil_peatland_category = fc2internal.convert_soil_peatland_category(
-            stand_basic_data.SubGroup)  # RST record 12
-        stand.site_type_category = fc2internal.convert_site_type_category(
-            stand_basic_data.FertilityClass)  # RST record 13
-        stand.tax_class_reduction = 0  # RST record 14
-        stand.tax_class = 0  # RST record 15
-        stand.drainage_category = fc2internal.convert_drainage_category(stand_basic_data.DrainageState)  # RST record 16
-        # RST record 18 is '0' by default
-        operations = smk_util.parse_stand_operations(entry, target_operations='past')
-        stand = self.set_stand_operations(stand, operations)  # RST records 19, 20, 21, 23, 25, 26, 27, 28 and 31
-        stand.development_class = None  # RST record 24
-        stand.forestry_centre_id = None  # RST record 29
-        stand.forest_management_category = smk_util.parse_forest_management_category(
-            stand_basic_data.CuttingRestriction) or 1  # 30
-        stand.municipality_id = None  # RST record 32
-        # RST record 33 and 34 unused
-        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
-            stand.site_type_category)
-        return stand
-
-    def build(self) -> StandList:
-        stands = []
-        estands = self.root.findall(self.xpath_stand, smk_util.NS)
-        for estand in estands:
-            try:
-                stand = self.convert_stand_entry(estand)
-                stratum_attr: dict[str, list] = {}
-
-                estrata = estand.findall(self.xpath_strata, smk_util.NS)
-                for estratum in estrata:
-                    try:
-                        _append_fc_stratum_row(stratum_attr, stand.identifier, estratum)
-                    except Exception as e:
-                        raise MetsiException(f"Parsing stratum {estratum} failed: {e}") from e
-
-                stand.tree_strata = TreeStrata().vectorize(stratum_attr)
-                stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
-                stands.append(stand)
-            except Exception as e:
-                raise MetsiException(f"Parsing stand {estand} failed: {e}") from e
-
-        return stands
-
+    pass
 
 class GeoPackageBuilder(ForestCentreBuilder):
-    """ ForestBuilder for geopackage format spesification """
-    stands: DataFrame
-    strata: DataFrame
-    type_value = None
-
-    def __init__(self, builder_flags: dict, declared_conversions: dict, db_path: str):
-        """ Reads Geopackage format into pandas dataframe representing stands and strata """
-        self.type_value = builder_flags['strata_origin'].value
-        (self.stands,
-         self.strata) = gpkg_util.read_geopackage(db_path, self.type_value)
-        self.declared_conversions = declared_conversions  # NOTE: not in use
-
-    def convert_stand_entry(self, entry: Series) -> ForestStand:
-        """ Converts a single pandas Series object into a ForestStand object
-        :return: ForestStand object
-        """
-        stand = ForestStand()
-        stand.year = smk_util.parse_year(entry.date)  # RST record 2
-        stand.start_year = stand.year
-        stand.set_area(entry.area - entry.areadecrease)  # RST record 3 and 4
-        # RST records 5, 6 and 8
-        (latitude, longitude) = entry.centroid.get('centroid')
-        stand.geo_location = (latitude,
-                              longitude,
-                              None,
-                              entry.centroid.get('crs'))
-        stand.identifier = entry.standid  # RST record 7
-        stand.degree_days = None  # RST record 9
-        stand.owner_category = OwnerCategory.PRIVATE  # RST record 10
-        stand.land_use_category = fc2internal.convert_land_use_category(
-            util.parse_type(entry.maingroup, str))  # RST record 11
-        stand.soil_peatland_category = fc2internal.convert_soil_peatland_category(
-            util.parse_type(entry.subgroup, str))  # RST record 12
-        stand.site_type_category = fc2internal.convert_site_type_category(
-            util.parse_type(entry.fertilityclass, str))  # RST record 13
-        # RST record 14
-        # RST record 15
-        stand.drainage_category = fc2internal.convert_to_internal(
-            util.parse_type(entry.drainagestate, int, str),
-            fc2internal.convert_drainage_category)  # RST record 16
-
-        stand.development_class = None  # RST record 24
-        stand.forestry_centre_id = None  # RST record 29
-        restrictioncode = entry.restrictioncode if entry.restrictiontype == 1 else 1
-        stand.forest_management_category = smk_util.parse_forest_management_category(
-            str(util.parse_type(restrictioncode, int, str)))  # 30
-        stand.municipality_id = None  # RST record 32
-        # RST record 33 and 34 unused
-        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
-            stand.site_type_category)
-        return stand
-
-    def build(self) -> StandList:
-        """ Converts geopackage into list of ForestStand objects.
-        :return: List of ForestStand objects
-        """
-        stands = []
-        for _, rowi in self.stands.iterrows():
-            try:
-                stand = self.convert_stand_entry(rowi)
-                stratum_attr: dict[str, list] = {}
-                i_strata = self.strata[self.strata['standid'] == stand.identifier]
-                for _, rowj in i_strata.iterrows():
-                    try:
-                        _append_gpkg_stratum_row(stratum_attr, stand.identifier, rowj)
-                    except Exception as e:
-                        raise MetsiException(f"Parsing stratum {rowj} failed: {e}") from e
-
-                stand.tree_strata = TreeStrata().vectorize(stratum_attr)
-
-                stand.basal_area = float(np.nansum(stand.tree_strata.basal_area))
-                stands.append(stand)
-            except Exception as e:
-                raise MetsiException(f"Parsing stand {rowi} failed: {e}") from e
-
-        return stands
+    pass

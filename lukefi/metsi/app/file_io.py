@@ -90,7 +90,7 @@ def csv_exp_reader() -> StandReader:
 def source_data_reader(state_format: str, conversions, **builder_flags) -> StandReader:
     """Resolve and prepare a reader function for non-FDM data formats"""
     if state_format == "vmi13":
-        return lambda path: VMI13Builder(builder_flags, conversions.get('vmi13', {}), vmi_file_reader(path)).build()
+        return lambda path: VMI13Builder(builder_flags, vmi_file_reader(path)).build()
     if state_format == "vmi12":
         return lambda path: VMI12Builder(builder_flags, conversions.get('vmi12', {}), vmi_file_reader(path)).build()
     if state_format == "vmi11":
