@@ -5,7 +5,12 @@ from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
-from lukefi.metsi.data.formats.nfi.vmi_const import VMI12_COUNTY_AREAS, VMI12_STAND_INDICES, VMI12_STRATUM_INDICES, VMI12_TREE_INDICES
+from lukefi.metsi.data.formats.nfi.vmi_const import (
+    VMI12_COUNTY_AREAS,
+    VMI12_STAND_INDICES,
+    VMI12_STRATUM_INDICES,
+    VMI12_TREE_INDICES
+)
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
