@@ -615,17 +615,6 @@ def parse_vmi_area_ha(raw: str) -> float:
         return get_or_default(parse_type(s, float), 0.0)
 
 
-def get_vmi10_area_ha(forestry_centre: int, lohkomuoto: int) -> float:
-    """
-    VMI10 area lookup.
-    Returns area_ha for given forestry_centre and lohkomuoto.
-    """
-    try:
-        return VMI10_COUNTY_AREAS[forestry_centre][lohkomuoto]
-    except KeyError as exc:
-        raise KeyError(f'No VMI10 area_ha for keskus={forestry_centre}, lohkomuoto={lohkomuoto}') from exc
-
-
 def get_vmi11_area_ha(forestry_centre: int, osite: int) -> float:
     """
     VMI11 area lookup.
@@ -799,71 +788,6 @@ def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_cent
         attr.setdefault(k, []).append(v)
 
 
-def append_tree_row_vmi10(attr: dict[str, list], indices, row: str, forestry_centre_id: int | None):
-    """
-    Append one VMI10 tree row into SoA dict compatible with DTYPES_TREE.
-    """
-    identifier = generate_tree_identifier(row, indices)
-    tree_number = get_or_default(parse_type(row[indices["tree_number"]], int), 0)
-
-    species = vmi2internal.convert_species(row[indices["species"]])
-
-    raw_tc = row[indices["tree_category"]].strip()
-    tc_enum = vmi2internal.convert_tree_category(raw_tc)
-
-    tree_category = tc_enum.value if tc_enum else None
-    breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
-
-    # Heights are in dm -> meters via /10
-    height = determine_tree_height(row[indices["height"]], conversion_factor=10.0)
-    measured_height = None
-
-    lowest_living_branch_height = (
-        get_or_default(parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
-    )
-
-    breast_height_age = parse_type(row[indices["d13_age"]], float)
-    biological_age = parse_type(row[indices["total_age"]], float)
-
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI10,
-                                          forestry_centre_id=forestry_centre_id)
-
-    management_category = determine_tree_management_category(row[indices["latvuskerros"]])
-    storey = determine_storey_for_tree(row[indices["latvuskerros"]])
-    tree_type = determine_tree_type(row[indices["tree_type"]])
-
-    tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
-
-    values = {
-        "identifier": identifier,
-        "tree_number": tree_number,
-        "species": species,
-        "tree_category": tree_category,
-        "breast_height_diameter": breast_height_diameter,
-        "height": height,
-        "measured_height": measured_height,
-        "breast_height_age": breast_height_age,
-        "biological_age": biological_age,
-        "stems_per_ha": stems_per_ha,
-        "origin": 0,
-        "management_category": management_category,
-        "storey": storey,
-        "saw_log_volume_reduction_factor": None,
-        "pruning_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": lowest_living_branch_height,
-        "sapling": False,
-        "tree_type": tree_type,
-        "damage_type": damage_type,
-        "basal_area": None,
-    }
-
-    for k, v in values.items():
-        attr.setdefault(k, []).append(v)
-
-
 def determine_storey_for_segment(asema_raw: str) -> Storey:
     """
     VMI10 jakson asema:
@@ -907,115 +831,6 @@ def parse_int0(raw: str) -> int:
 
 def parse_float0(raw: str) -> float:
     return get_or_default(parse_float((raw or "").strip()), 0.0)
-
-
-def _vmi10_segment_age_years(d13_age_raw: str, age_inc_raw: str, fallback_age: float) -> float:
-    a = parse_float0(d13_age_raw)
-    b = parse_float0(age_inc_raw)
-    age = a + b
-
-    return fallback_age if age <= 0.0 else age
-
-
-def append_vmi10_strata_from_stand_row(
-    attr: dict[str, list],
-    indices: dict[str, slice],
-    stand_row: str,
-    stand_identifier: str,
-    stand_basal_area: float,
-):
-    """
-    Build up to 8 strata (2 segments x (main + up to 3 side species)) into TreeStrata
-    """
-
-    fallback_age = parse_float0(stand_row[indices["metsikon_ika"]])
-
-    jakso2_ppa = parse_float0(stand_row[indices["jakso2_ppa"]])
-    jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
-
-    running_numb = 0
-
-    def emit_stratum_vmi10(
-        species_code_raw: str,
-        share_raw: str,
-        seg_stems1000_raw: str,
-        seg_d_cm_raw: str,
-        seg_h_dm_raw: str,
-        seg_d13_age_raw: str,
-        seg_age_inc_raw: str,
-        seg_syntytapa_raw: str,
-        seg_asema_raw: str,
-        seg_ppa_total: float,
-    ):
-        nonlocal running_numb
-        species_code = (species_code_raw or "").strip()
-        if not species_code or species_code in (".", "0"):
-            return
-        share = parse_share_tenths(share_raw)
-        if share <= 0.0:
-            return
-
-        species = vmi2internal.convert_species(species_code)
-
-        basal_area = seg_ppa_total * share
-        stems_per_ha = parse_float0(seg_stems1000_raw) * 1000.0 * share
-        mean_diameter = parse_float0(seg_d_cm_raw)
-        mean_height = parse_float0(seg_h_dm_raw) / 10.0
-        age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
-
-        syntytapa = determine_stratum_origin_vmi10(seg_syntytapa_raw)
-        storey = determine_storey_for_segment(seg_asema_raw)
-
-        running_numb += 1
-        identifier = f"{stand_identifier}-{running_numb}-stratum"
-
-        values = {
-            "identifier": identifier,
-            "species": int(species),
-            "mean_diameter": mean_diameter,
-            "mean_height": mean_height,
-            "breast_height_age": parse_int0(seg_d13_age_raw),
-            "biological_age": age,
-            "stems_per_ha": stems_per_ha,
-            "basal_area": basal_area,
-            "origin": syntytapa,
-            "management_category": 0,
-            "saw_log_volume_reduction_factor": None,
-            "cutting_year": 0,
-            "age_when_10cm_diameter_at_breast_height": 0,
-            "stratum_number": running_numb,
-            "stand_origin_relative_position": (0.0, 0.0, 0.0),
-            "lowest_living_branch_height": 0.0,
-            "storey": int(storey),
-            "sapling_stems_per_ha": 0.0,
-            "sapling_stratum": False,
-            "number_of_generated_trees": 0,
-        }
-
-        for k, v in values.items():
-            attr.setdefault(k, []).append(v)
-
-    for seg_no in (1, 2):
-        ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
-
-        asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
-        stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
-        d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
-        h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
-        d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
-        ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
-
-        emit_stratum_vmi10(stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
-                           stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]],
-                           stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-                           )
-        for j in (1, 2, 3):
-            emit_stratum_vmi10(stand_row[indices[f"jakso{seg_no}_sivulaji{j}"]],
-                               stand_row[indices[f"jakso{seg_no}_sivulaji{j}_osuus"]],
-                               stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-                               )
-
 
 def append_vmi9_strata_from_stand_row(
     attr: dict[str, list],

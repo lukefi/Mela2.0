@@ -4,11 +4,12 @@ import numpy as np
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
+from lukefi.metsi.data.enums.internal import Origin, Storey
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util, vmi_util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
-from lukefi.metsi.data.formats.vmi_const import VMI10_STAND_INDICES, VMI10_TREE_INDICES
+from lukefi.metsi.data.formats.vmi_const import VMI10_COUNTY_AREAS, VMI10_STAND_INDICES, VMI10_TREE_INDICES
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
@@ -99,7 +100,7 @@ class VMI10Builder(VMIBuilder):
         result.start_year = parsed.year
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
 
-        area_ha = vmi_util.get_vmi10_area_ha(
+        area_ha = VMI10Builder._get_vmi10_area_ha(
             vmi_util.parse_forestry_centre(row["forestry_centre"]),
             int(row["lohkomuoto"]),
         )
@@ -170,6 +171,17 @@ class VMI10Builder(VMIBuilder):
             result.forest_management_category = 1
 
         return result
+
+    @staticmethod
+    def _get_vmi10_area_ha(forestry_centre: int, lohkomuoto: int) -> float:
+        """
+        VMI10 area lookup.
+        Returns area_ha for given forestry_centre and lohkomuoto.
+        """
+        try:
+            return VMI10_COUNTY_AREAS[forestry_centre][lohkomuoto]
+        except KeyError as exc:
+            raise KeyError(f'No VMI10 area_ha for keskus={forestry_centre}, lohkomuoto={lohkomuoto}') from exc
 
     @staticmethod
     def _convert_strata_from_stand_entry(strata: TreeStrata,
@@ -247,10 +259,10 @@ class VMI10Builder(VMIBuilder):
         stems_per_ha = vmi_util.parse_float0(seg_stems1000_raw) * 1000.0 * share
         mean_diameter = vmi_util.parse_float0(seg_d_cm_raw)
         mean_height = vmi_util.parse_float0(seg_h_dm_raw) / 10.0
-        age = vmi_util._vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
+        age = VMI10Builder._segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
-        syntytapa = vmi_util.determine_stratum_origin_vmi10(seg_syntytapa_raw)
-        storey = vmi_util.determine_storey_for_segment(seg_asema_raw)
+        syntytapa = VMI10Builder._determine_stratum_origin(seg_syntytapa_raw)
+        storey = VMI10Builder._determine_storey_for_segment(seg_asema_raw)
 
         identifier = f"{stand_identifier}-{i + 1}-stratum"
 
@@ -267,6 +279,54 @@ class VMI10Builder(VMIBuilder):
         strata.storey[i] = int(storey)
         strata.sapling_stems_per_ha[i] = 0.0
         strata.number_of_generated_trees[i] = 0
+
+    @staticmethod
+    def _segment_age_years(d13_age_raw: str, age_inc_raw: str, fallback_age: float) -> float:
+        a = vmi_util.parse_float0(d13_age_raw)
+        b = vmi_util.parse_float0(age_inc_raw)
+        age = a + b
+        return fallback_age if age <= 0.0 else age
+
+    @staticmethod
+    def _determine_stratum_origin(source_origin: str) -> Origin:
+        if source_origin in ("0", "1", "2"):
+            return Origin.NATURAL
+        if source_origin == "3":
+            return Origin.PLANTED
+        if source_origin == "4":
+            return Origin.SEEDED
+        return Origin.NATURAL
+
+    @staticmethod
+    def _determine_storey_for_segment(asema_raw: str) -> Storey:
+        """
+        VMI10 jakson asema:
+        1 Vallitseva jakso
+        2 Ylispuusto
+        3 Jättöylispuusto
+        4 Verhopuusto
+        5 Kehityskelpoinen alikasvos
+        6 Kehityskelvoton alikasvos
+        7 Vaihtuva taimiaines
+        """
+        v = (asema_raw or "").strip()
+        if not v or v == ".":
+            return Storey.INDETERMINATE
+        if v == "1":
+            return Storey.DOMINANT
+        if v == "2":
+            return Storey.OVER
+        if v == "3":
+            return Storey.REMOVAL
+        if v == "4":
+            return Storey.SPARE
+        if v == "5":
+            return Storey.UNDER
+        if v == "6":
+            return Storey.REMOTE
+        if v == "7":
+            return Storey.INDETERMINATE
+        return Storey.INDETERMINATE
 
     @staticmethod
     def _convert_tree_entry(trees: ReferenceTrees,
