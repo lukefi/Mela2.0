@@ -52,7 +52,10 @@ class VMI13Builder(VMIBuilder):
             for stand_identifier, stand_stratum_rows in self.stratum_rows.items():
                 strata = TreeStrata(len(stand_stratum_rows))
                 for j, stand_stratum_row in enumerate(stand_stratum_rows):
-                    self._convert_stratum_entry(strata, stand_stratum_row, j)
+                    try:
+                        self._convert_stratum_entry(strata, stand_stratum_row, j)
+                    except Exception as e:
+                        raise MetsiException(f"Parsing stratum row {stand_stratum_row} failed: {e}") from e
 
                 result[stand_identifier].tree_strata = strata
 
@@ -64,7 +67,10 @@ class VMI13Builder(VMIBuilder):
 
                 trees = ReferenceTrees(len(stand_tree_rows))
                 for j, stand_tree_row in enumerate(stand_tree_rows):
-                    self._convert_tree_entry(trees, stand_tree_row, j, stand_.forestry_centre_id)
+                    try:
+                        self._convert_tree_entry(trees, stand_tree_row, j, stand_.forestry_centre_id)
+                    except Exception as e:
+                        raise MetsiException(f"Parsing tree row {stand_tree_row} failed: {e}") from e
 
                 result[stand_identifier].reference_trees = trees
 
@@ -274,18 +280,26 @@ class VMI13Builder(VMIBuilder):
             trees.tree_number[i] = tree_number
         trees.species[i] = species
         trees.breast_height_diameter[i] = breast_height_diameter
-        trees.height[i] = height
-        trees.measured_height[i] = measured_height
-        trees.breast_height_age[i] = breast_height_age
-        trees.biological_age[i] = biological_age
+        if height is not None:
+            trees.height[i] = height
+        if measured_height is not None:
+            trees.measured_height[i] = measured_height
+        if breast_height_age is not None:
+            trees.breast_height_age[i] = breast_height_age
+        if biological_age is not None:
+            trees.biological_age[i] = biological_age
         trees.stems_per_ha[i] = stems_per_ha
         if origin is not None:
             trees.origin[i] = origin
         trees.management_category[i] = management_category
-        trees.tree_category[i] = tree_category
+        if tree_category is not None:
+            trees.tree_category[i] = tree_category
         if storey is not None:
             trees.storey[i] = storey
         trees.sapling[i] = sapling
-        trees.tree_type[i] = tree_type
-        trees.damage_type[i] = damage_type
-        trees.crown_class[i] = crown_class
+        if tree_type is not None:
+            trees.tree_type[i] = tree_type
+        if damage_type is not None:
+            trees.damage_type[i] = damage_type
+        if crown_class is not None:
+            trees.crown_class[i] = crown_class
