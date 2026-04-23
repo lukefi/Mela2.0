@@ -428,6 +428,7 @@ VMI12_STRATUM_INDICES: dict[str, slice] = {
 
 
 VMI13_STAND_INDICES: dict[str, int] = {
+    "row_type": 0,
     "lohkomuoto": 2,
     "section_y": 3,
     "section_x": 4,

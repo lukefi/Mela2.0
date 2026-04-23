@@ -39,7 +39,3 @@ class VMIBuilder(ForestBuilder):
 
 class VMI9Builder(VMIBuilder):
     pass
-
-
-class VMI10Builder(VMIBuilder):
-    pass

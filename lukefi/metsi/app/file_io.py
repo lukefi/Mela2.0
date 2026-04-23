@@ -5,8 +5,9 @@ from collections.abc import Callable
 from pathlib import Path
 import sqlite3
 from typing import Any, Optional
-from lukefi.metsi.data.formats.forest_builder_base import VMI10Builder, VMI9Builder
+from lukefi.metsi.data.formats.forest_builder_base import VMI9Builder
 from lukefi.metsi.data.formats.forest_centre_builder import GeoPackageBuilder, XMLBuilder
+from lukefi.metsi.data.formats.vmi10_builder import VMI10Builder
 from lukefi.metsi.data.formats.vmi11_builder import VMI11Builder
 from lukefi.metsi.data.formats.vmi12_builder import VMI12Builder
 from lukefi.metsi.data.formats.vmi13_builder import VMI13Builder

@@ -895,23 +895,23 @@ def determine_storey_for_segment(asema_raw: str) -> Storey:
     return Storey.INDETERMINATE
 
 
-def _parse_share_tenths(raw: str) -> float:
+def parse_share_tenths(raw: str) -> float:
     """Share is coded 0..10 meaning 0.0..1.0"""
     s = get_or_default(parse_float((raw or "").strip()), 0.0)
     return max(0.0, min(1.0, s / 10.0))
 
 
-def _parse_int0(raw: str) -> int:
+def parse_int0(raw: str) -> int:
     return get_or_default(parse_int((raw or "").strip()), 0)
 
 
-def _parse_float0(raw: str) -> float:
+def parse_float0(raw: str) -> float:
     return get_or_default(parse_float((raw or "").strip()), 0.0)
 
 
 def _vmi10_segment_age_years(d13_age_raw: str, age_inc_raw: str, fallback_age: float) -> float:
-    a = _parse_float0(d13_age_raw)
-    b = _parse_float0(age_inc_raw)
+    a = parse_float0(d13_age_raw)
+    b = parse_float0(age_inc_raw)
     age = a + b
 
     return fallback_age if age <= 0.0 else age
@@ -928,9 +928,9 @@ def append_vmi10_strata_from_stand_row(
     Build up to 8 strata (2 segments x (main + up to 3 side species)) into TreeStrata
     """
 
-    fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
+    fallback_age = parse_float0(stand_row[indices["metsikon_ika"]])
 
-    jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
+    jakso2_ppa = parse_float0(stand_row[indices["jakso2_ppa"]])
     jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
 
     running_numb = 0
@@ -951,16 +951,16 @@ def append_vmi10_strata_from_stand_row(
         species_code = (species_code_raw or "").strip()
         if not species_code or species_code in (".", "0"):
             return
-        share = _parse_share_tenths(share_raw)
+        share = parse_share_tenths(share_raw)
         if share <= 0.0:
             return
 
         species = vmi2internal.convert_species(species_code)
 
         basal_area = seg_ppa_total * share
-        stems_per_ha = _parse_float0(seg_stems1000_raw) * 1000.0 * share
-        mean_diameter = _parse_float0(seg_d_cm_raw)
-        mean_height = _parse_float0(seg_h_dm_raw) / 10.0
+        stems_per_ha = parse_float0(seg_stems1000_raw) * 1000.0 * share
+        mean_diameter = parse_float0(seg_d_cm_raw)
+        mean_height = parse_float0(seg_h_dm_raw) / 10.0
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
         syntytapa = determine_stratum_origin_vmi10(seg_syntytapa_raw)
@@ -974,7 +974,7 @@ def append_vmi10_strata_from_stand_row(
             "species": int(species),
             "mean_diameter": mean_diameter,
             "mean_height": mean_height,
-            "breast_height_age": _parse_int0(seg_d13_age_raw),
+            "breast_height_age": parse_int0(seg_d13_age_raw),
             "biological_age": age,
             "stems_per_ha": stems_per_ha,
             "basal_area": basal_area,
@@ -1028,9 +1028,9 @@ def append_vmi9_strata_from_stand_row(
     Build up to 6 strata (2 segments x (main + up to 2 side species)) into TreeStrata
     """
 
-    fallback_age = _parse_float0(stand_row[indices["metsikon_ika"]])
+    fallback_age = parse_float0(stand_row[indices["metsikon_ika"]])
 
-    jakso2_ppa = _parse_float0(stand_row[indices["jakso2_ppa"]])
+    jakso2_ppa = parse_float0(stand_row[indices["jakso2_ppa"]])
     jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
 
     running_numb = 0
@@ -1052,16 +1052,16 @@ def append_vmi9_strata_from_stand_row(
         if not species_code or species_code in (".", "0"):
             return
 
-        share = _parse_share_tenths(share_raw)
+        share = parse_share_tenths(share_raw)
         if share <= 0.0:
             return
 
         species = vmi2internal.convert_species(species_code)
 
         basal_area = seg_ppa_total * share
-        stems_per_ha = _parse_float0(seg_stems1000_raw) * 1000.0 * share
-        mean_diameter = _parse_float0(seg_d_cm_raw)
-        mean_height = _parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
+        stems_per_ha = parse_float0(seg_stems1000_raw) * 1000.0 * share
+        mean_diameter = parse_float0(seg_d_cm_raw)
+        mean_height = parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
         age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
         syntytapa = determine_stratum_origin_vmi9(seg_syntytapa_raw)
@@ -1075,7 +1075,7 @@ def append_vmi9_strata_from_stand_row(
             "species": int(species),
             "mean_diameter": mean_diameter,
             "mean_height": mean_height,
-            "breast_height_age": _parse_int0(seg_d13_age_raw),
+            "breast_height_age": parse_int0(seg_d13_age_raw),
             "biological_age": age,
             "stems_per_ha": stems_per_ha,
             "basal_area": basal_area,
@@ -1111,8 +1111,8 @@ def append_vmi9_strata_from_stand_row(
         main_share_raw = stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]]
         siv1_share_raw = stand_row[indices[f"jakso{seg_no}_sivulaji1_osuus"]]
 
-        main_t = _parse_int0(main_share_raw)
-        siv1_t = _parse_int0(siv1_share_raw)
+        main_t = parse_int0(main_share_raw)
+        siv1_t = parse_int0(siv1_share_raw)
 
         siv2_t = max(0, 10 - main_t - siv1_t)
 
@@ -1247,24 +1247,24 @@ def determine_forest_management_category_vmi9(
     VMI9 käsittelyluokka (forest_management_category) calculation.
     """
 
-    owner = _parse_int0(stand_row[indices["owner_group"]])
-    ptraj = _parse_int0(stand_row[indices["ptraj"]])
-    pttark = _parse_int0(stand_row[indices["pttark"]])
-    land_category = _parse_int0(stand_row[indices["land_category"]])
+    owner = parse_int0(stand_row[indices["owner_group"]])
+    ptraj = parse_int0(stand_row[indices["ptraj"]])
+    pttark = parse_int0(stand_row[indices["pttark"]])
+    land_category = parse_int0(stand_row[indices["land_category"]])
 
-    ml123_ala = _parse_float0(stand_row[indices["ml123ala"]])
+    ml123_ala = parse_float0(stand_row[indices["ml123ala"]])
 
-    abt1 = _parse_int0(stand_row[indices["abi1kasehd"]])
-    abt1_ala = _parse_float0(stand_row[indices["abi1ala"]])
+    abt1 = parse_int0(stand_row[indices["abi1kasehd"]])
+    abt1_ala = parse_float0(stand_row[indices["abi1ala"]])
 
-    abt2 = _parse_int0(stand_row[indices["abi2kasehd"]])
-    abt2_ala = _parse_float0(stand_row[indices["abi2ala"]])
+    abt2 = parse_int0(stand_row[indices["abi2kasehd"]])
+    abt2_ala = parse_float0(stand_row[indices["abi2ala"]])
 
-    abt3 = _parse_int0(stand_row[indices["abi3kasehd"]])
-    abt3_ala = _parse_float0(stand_row[indices["abi3ala"]])
+    abt3 = parse_int0(stand_row[indices["abi3kasehd"]])
+    abt3_ala = parse_float0(stand_row[indices["abi3ala"]])
 
     # mhptrajtar is only meaningful in North Finland; in South your indices are slice(0,0) or value is blank.
-    mhtark = _parse_int0(stand_row[indices["mhptrajtar"]]) if "mhptrajtar" in indices else 0
+    mhtark = parse_int0(stand_row[indices["mhptrajtar"]]) if "mhptrajtar" in indices else 0
 
     # ------------------------------------------------------------
     # Start
