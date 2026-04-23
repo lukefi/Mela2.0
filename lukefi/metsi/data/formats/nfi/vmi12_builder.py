@@ -5,7 +5,7 @@ from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
-from lukefi.metsi.data.formats.nfi.vmi_const import VMI12_STAND_INDICES, VMI12_STRATUM_INDICES, VMI12_TREE_INDICES
+from lukefi.metsi.data.formats.nfi.vmi_const import VMI12_COUNTY_AREAS, VMI12_STAND_INDICES, VMI12_STRATUM_INDICES, VMI12_TREE_INDICES
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
@@ -96,9 +96,9 @@ class VMI12Builder(VMIBuilder):
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(row["municipality"]))
         result.auxiliary_stand = row["stand_number"] != '1'
 
-        result.year = vmi_util.parse_vmi12_date(row["date"]).year
+        result.year = vmi_util.parse_date(row["date"]).year
         result.start_year = result.year
-        area_ha = vmi_util.determine_vmi12_area_ha(
+        area_ha = VMI12Builder._determine_area_ha(
             int(row["lohkomuoto"]),
             int(row["county"])
         )
@@ -115,7 +115,7 @@ class VMI12Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
-        height = vmi_util.transform_vmi12_height_above_sea_level(row["height_above_sea_level"])
+        height = VMI12Builder._transform_height_above_sea_level(row["height_above_sea_level"])
         result.set_geo_location(lat, lon, height, "EPSG:2393")
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
@@ -137,7 +137,7 @@ class VMI12Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = VMI12Builder._determine_dominant_storey_age(
             row["vallitsevanjakson_d13ika"],
             row["vallitsevanjakson_ikalisays"]
         )
@@ -178,6 +178,45 @@ class VMI12Builder(VMIBuilder):
             result.forest_management_category = 1
 
         return result
+
+    @staticmethod
+    def _determine_area_ha(lohkomuoto: int, county: int) -> float:
+        area_ha = 0.0
+        if county < 1 or county >= len(VMI12_COUNTY_AREAS):
+            raise IndexError
+        if county < 17:
+            area_ha = VMI12_COUNTY_AREAS[(county - 1)]
+        elif county == 17 and lohkomuoto == 3:
+            area_ha = VMI12_COUNTY_AREAS[(county - 1)]
+        elif county == 17 and lohkomuoto == 4:
+            area_ha = VMI12_COUNTY_AREAS[county]
+        elif county == 18:
+            area_ha = VMI12_COUNTY_AREAS[18]
+        elif county == 19 and lohkomuoto == 4:
+            area_ha = VMI12_COUNTY_AREAS[19]
+        elif county == 19 and lohkomuoto == 5:
+            area_ha = VMI12_COUNTY_AREAS[20]
+        elif county == 21:
+            area_ha = VMI12_COUNTY_AREAS[21]
+        return round(area_ha, 4)
+
+    @staticmethod
+    def _transform_height_above_sea_level(sourcevalue: str) -> float | None:
+        """
+        Transform given VMI12 number value string from desimeters to meters.
+        Returning float, or None on error.
+        """
+        try:
+            return float(sourcevalue) / 10.0
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
+        """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
+        a = util.get_or_default(vmi_util.parse_float(ds_bh_age), 0.0)
+        b = util.get_or_default(vmi_util.parse_float(ds_age_increase), 0.0)
+        return a + b
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):

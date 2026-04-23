@@ -2,90 +2,12 @@ from typing import Optional
 import math
 from dataclasses import dataclass
 from datetime import datetime as dt
-from shapely.geometry import Point
-from geopandas import GeoSeries
 
-from lukefi.metsi.data.enums.internal import Origin, SiteType, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
-from lukefi.metsi.data.conversion import vmi2internal
 
-from lukefi.metsi.data.formats.nfi.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS, VMI11_COUNTY_AREAS
 from lukefi.metsi.app.utils import MetsiException
-
-
-def _solve_vmi13_county_areas(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
-    if county == 1 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 345.73918
-    if county == 2 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 338.0386443
-    if county == 4 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 342.975010960105
-    if county == 5 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 342.747528
-    if county == 6 and lohkotarkenne == 0:
-        if lohkomuoto == 1:
-            return 413.08125
-        if lohkomuoto == 2:
-            return 347.828958275767
-    if county == 7 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 342.438585979628
-    if county == 8 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 349.917881811205
-    if county == 9 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 350.8972332
-    if county == 10 and lohkomuoto == 2 and lohkotarkenne == 0:
-        return 340.4779333
-    if county == 11:
-        if lohkomuoto == 1:
-            return 436.521343
-        if lohkomuoto == 2:
-            return 330.3735632
-    if county == 12 and lohkotarkenne == 0:
-        if lohkomuoto == 1:
-            return 433.4836506
-        if lohkomuoto == 2:
-            return 351.5358362
-    if county == 13 and lohkomuoto == 1 and lohkotarkenne == 0:
-        return 435.9383152
-    if county == 14 and lohkotarkenne == 0:
-        if lohkomuoto == 1:
-            return 429.5909091
-        if lohkomuoto == 2:
-            return 351.5358362
-    if county == 15 and lohkomuoto == 1 and lohkotarkenne == 0:
-        return 434.9541716
-    if county == 16 and lohkomuoto == 1 and lohkotarkenne == 0:
-        return 435.0433276
-    if county == 17 and lohkotarkenne == 0:
-        if lohkomuoto == 1:
-            return 435.0433276
-        if lohkomuoto == 3:
-            return 457.7258227
-        if lohkomuoto == 4:
-            return 747.6246246
-    if county == 18 and lohkomuoto == 3 and lohkotarkenne == 0:
-        return 455.8440533
-    if county == 19:
-        if lohkomuoto == 4:
-            if lohkotarkenne == 0:
-                return 786.978534
-        if lohkomuoto == 5:
-            if lohkotarkenne == 0:
-                return 1357.608776
-            if lohkotarkenne == 1:
-                return 1176.023409
-            if lohkotarkenne == 2:
-                return 1355.455959
-            if lohkotarkenne == 3:
-                return 1999.800742
-            if lohkotarkenne == 4:
-                return 10756.11645
-    if county == 21 and lohkomuoto == 0 and lohkotarkenne == 0:
-        return 164.2650475
-
-    raise MetsiException(f"Unable to solve vmi13 country area weight for values: \
-                        county {county}, lohkomuoto {lohkomuoto} and lohkotarkenne {lohkotarkenne}")
 
 
 def determine_area_factors(small_tree_sourcevalue: str, big_tree_sourcevalue: str) -> tuple[float, float]:
@@ -128,10 +50,6 @@ def determine_main_tree_species_dominant_storey(species_source: str,
     return TreeSpecies(parsed_int)
 
 
-def determine_natural_renewal(natural_renewal: str) -> bool:
-    return natural_renewal.strip() in {'8', '9'}
-
-
 def determine_clearing_of_reform_sector_year(other_method: str, year_adjustment_class: str, year: int) -> Optional[int]:
     """Determine the year of reform sector clearing when "other method" matches with the correct class in VMI terms"""
     if other_method == '4':
@@ -154,10 +72,6 @@ def determine_drainage_year(sourcevalue: str, year: int) -> Optional[int]:
         return None
 
 
-def determine_drainage_feasibility(ojitus_tarve: str) -> bool:
-    return ojitus_tarve in ('1', '2', '3')
-
-
 def determine_soil_surface_preparation_year(sourcevalue: str, year: int) -> Optional[int]:
     """Determine the year of soil surface preparation from given VMI source classes and the year of data set."""
     if sourcevalue == '0':
@@ -171,18 +85,6 @@ def determine_soil_surface_preparation_year(sourcevalue: str, year: int) -> Opti
     if sourcevalue in {'A', 'a'}:
         return year - 20
     return None
-
-
-def determine_vmi12_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
-    """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
-    a = get_or_default(parse_float(ds_bh_age), 0.0)
-    b = get_or_default(parse_float(ds_age_increase), 0.0)
-    return a + b
-
-
-def determine_vmi13_dominant_storey_age(ds_age) -> float:
-    """ Dominant storey mean age for vmi13 """
-    return get_or_default(parse_float(ds_age), 0.0)
 
 
 def determine_tax_class_reduction(sourcevalue: str) -> int:
@@ -511,12 +413,6 @@ def determine_storey_for_tree(source: str) -> Optional[Storey]:
     return None
 
 
-def determine_tree_type(source: str) -> Optional[str]:
-    if source in (' ', '.', ''):
-        return None
-    return source
-
-
 def determine_municipality(municipality_code: str, kitukunta: str) -> Optional[int]:
     """
     Return by order of precedence: valid municipality code, valid kitukunta code, or None.
@@ -527,46 +423,13 @@ def determine_municipality(municipality_code: str, kitukunta: str) -> Optional[i
     return retval
 
 
-def convert_vmi12_geolocation(lat_source: str, lon_source: str) -> tuple[float, float]:
-    """
-    Convert VMI12 coordinates in EPSG:2393 to EPSG:3067. Source values are in meter precision, return values are
-    likewise rounded to meter precision.
-    :param lat_source: EPSG:2393 latitude
-    :param lon_source: EPSG:2393 longitude
-    :return: lat, lon tuple in EPSG:3067
-    """
-    point = GeoSeries([Point(float(lon_source), float(lat_source))], crs='EPSG:2393')
-    point = point.to_crs(3067)
-    return round(point.centroid.y[0]), round(point.centroid.x[0])
-
-
-def convert_vmi12_approximate_geolocation(lat_source: str, lon_source: str) -> tuple[float, float]:
-    """
-    Convert VMI12 coordinates in EPSG:2393 to YKJ/KKJ3 with band 3 prefix removed.
-
-    :param lat_source: source string of the latitude value
-    :param lon_source: source string of the llongitude value
-
-    :return (lat,lon): latitude,longitude pair
-    """
-    lat = float(lat_source)
-    lon = float(lon_source) - 3000000
-    return lat, lon
-
-
-def parse_vmi12_date(date_string: str) -> dt:
+def parse_date(date_string: str) -> dt:
     """Generate a datetime entry out of VMI12 date source format ddmmyy"""
     parsed = dt.strptime(date_string, '%d%m%y')
-    return _apply_growth_inc_logic(parsed)
+    return apply_growth_inc_logic(parsed)
 
 
-def parse_vmi13_date(date_string: str) -> dt:
-    """Generate a datetime entry out of VMI13 date source format yyyymmdd"""
-    parsed = dt.strptime(date_string, '%Y%m%d')
-    return _apply_growth_inc_logic(parsed)
-
-
-def _apply_growth_inc_logic(date_obj: dt) -> dt:
+def apply_growth_inc_logic(date_obj: dt) -> dt:
     """If month >= 7, increment year by 1. (yearly growth is over)"""
     if date_obj.month >= 7:
         return date_obj.replace(year=date_obj.year + 1)
@@ -591,65 +454,6 @@ def parse_vmi_area_ha(raw: str) -> float:
         return int(s) / 100000.0
     except ValueError:
         return get_or_default(parse_type(s, float), 0.0)
-
-
-def get_vmi11_area_ha(forestry_centre: int, osite: int) -> float:
-    """
-    VMI11 area lookup.
-    Returns area_ha for given metkes (forestry_centre) and osite (lohkomuoto / 300 / 400).
-    """
-    try:
-        return VMI11_COUNTY_AREAS[forestry_centre][osite]
-    except KeyError as exc:
-        raise KeyError(
-            f"No VMI11 area_ha for metkes={forestry_centre}, osite={osite}"
-        ) from exc
-
-
-def determine_vmi12_area_ha(lohkomuoto: int, county: int) -> float:
-    area_ha = 0.0
-    if county < 1 or county >= len(VMI12_COUNTY_AREAS):
-        raise IndexError
-    if county < 17:
-        area_ha = VMI12_COUNTY_AREAS[(county - 1)]
-    elif county == 17 and lohkomuoto == 3:
-        area_ha = VMI12_COUNTY_AREAS[(county - 1)]
-    elif county == 17 and lohkomuoto == 4:
-        area_ha = VMI12_COUNTY_AREAS[county]
-    elif county == 18:
-        area_ha = VMI12_COUNTY_AREAS[18]
-    elif county == 19 and lohkomuoto == 4:
-        area_ha = VMI12_COUNTY_AREAS[19]
-    elif county == 19 and lohkomuoto == 5:
-        area_ha = VMI12_COUNTY_AREAS[20]
-    elif county == 21:
-        area_ha = VMI12_COUNTY_AREAS[21]
-    return round(area_ha, 4)
-
-
-def determine_vmi13_area_ha(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
-    if county < 0 and lohkomuoto < 0 or lohkotarkenne < 0:
-        raise IndexError
-    return _solve_vmi13_county_areas(county, lohkomuoto, lohkotarkenne)
-
-
-def transform_vmi12_height_above_sea_level(sourcevalue: str) -> float | None:
-    """
-    Transform given VMI12 number value string from desimeters to meters.
-    Returning float, or None on error.
-    """
-    try:
-        return float(sourcevalue) / 10.0
-    except ValueError:
-        return None
-
-
-def transform_vmi13_height_above_sea_level(sourcevalue: str) -> float | None:
-    """Return given number value string as float, or None on error"""
-    try:
-        return float(sourcevalue)
-    except ValueError:
-        return None
 
 
 def transform_vmi_degree_days(sourcevalue: str) -> float | None:
@@ -711,59 +515,6 @@ def parse_int0(raw: str) -> int:
 
 def parse_float0(raw: str) -> float:
     return get_or_default(parse_float((raw or "").strip()), 0.0)
-
-
-def determine_vmi11_area_ha(
-    forestry_centre: int,
-    lohkomuoto: int,
-    eduala_raw: str,
-    inventointitunnus: str | None = None,
-    lohy_raw: str | None = None,
-    ahvkeilaus: str | None = None,
-) -> float:
-    """
-    Determine stand area_ha for VMI11.
-
-    Default:
-      - area_ha = eduala with 5 decimals
-
-    Lookup:
-      - Normal lohkomuoto osite in {1,2,3,4} -> lookup from VMI11_COUNTY_AREAS
-      - Ahvenanmaa special osite in {300,400} -> lookup from VMI11_COUNTY_AREAS (metkes=0 row)
-
-    Ahvenanmaa rules:
-      - inventointitunnus = P and ahvkeilaus = A => osite 300 => area 100.39
-      - inventointitunnus = P and ahvkeilaus = B => osite 400 => area 148.78
-      - inventointitunnus = K and lohy(1:1) = 3 => osite 300 => area 100.39
-      - inventointitunnus = K and lohy(1:1) = 4 => osite 400 => area 148.78
-    """
-    default_area_ha = parse_vmi_area_ha(eduala_raw)
-
-    inv = (inventointitunnus or "").strip().upper()
-    ak = (ahvkeilaus or "").strip().upper()
-    lohy_first = ((lohy_raw or "").strip()[:1] or "")
-
-    if inv == "P" and ak in ("A", "B"):
-        osite = 300 if ak == "A" else 400
-        return round(get_vmi11_area_ha(0, osite), 4)
-
-    if inv == "K" and lohy_first in ("3", "4"):
-        osite = 300 if lohy_first == "3" else 400
-        return round(get_vmi11_area_ha(0, osite), 4)
-
-    osite = lohkomuoto
-    use_lookup = (1 <= osite <= 4) or (forestry_centre == 0)
-
-    if not use_lookup:
-        return round(default_area_ha, 4)
-
-    try:
-        return round(get_vmi11_area_ha(forestry_centre, osite), 4)
-    except KeyError as exc:
-        raise MetsiException(
-            f"No area_ha lookup value for VMI11: metkes={forestry_centre}, osite={osite}. "
-            f"inventointitunnus={inv!r}, lohy={lohy_raw!r}, ahvkeilaus={ak!r}, lohkomuoto={lohkomuoto}."
-        ) from exc
 
 
 @dataclass(frozen=True)

@@ -7,7 +7,7 @@ from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
-from lukefi.metsi.data.formats.nfi.vmi_const import VMI11_STAND_INDICES, VMI11_STRATUM_INDICES, VMI11_TREE_INDICES
+from lukefi.metsi.data.formats.nfi.vmi_const import VMI11_COUNTY_AREAS, VMI11_STAND_INDICES, VMI11_STRATUM_INDICES, VMI11_TREE_INDICES
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
@@ -102,7 +102,7 @@ class VMI11Builder(VMIBuilder):
 
         result.municipality_id = int(row["municipality"])
 
-        result.year = vmi_util.parse_vmi12_date(row["date"]).year
+        result.year = vmi_util.parse_date(row["date"]).year
         result.start_year = result.year
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
         result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
@@ -113,7 +113,7 @@ class VMI11Builder(VMIBuilder):
         result.basal_area = util.parse_type(row["pohjapintaala"], float)
         result.region = None
 
-        area_ha = vmi_util.determine_vmi11_area_ha(
+        area_ha = VMI11Builder._determine_area_ha(
             vmi_util.parse_forestry_centre(row["forestry_centre"]),
             int(row["lohkomuoto"]),
             row["area_ha"],
@@ -136,7 +136,7 @@ class VMI11Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
-        height = vmi_util.transform_vmi12_height_above_sea_level(row["height_above_sea_level"])
+        height = VMI11Builder._transform_height_above_sea_level(row["height_above_sea_level"])
         result.set_geo_location(lat, lon, height, "EPSG:2393")
 
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
@@ -163,7 +163,7 @@ class VMI11Builder(VMIBuilder):
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
 
-        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi12_dominant_storey_age(
+        result.ds_main_tree_species_biological_age = VMI11Builder._determine_dominant_storey_age(
             row["vallitsevanjakson_d13ika"],
             row["vallitsevanjakson_ikalisays"],
         )
@@ -190,6 +190,90 @@ class VMI11Builder(VMIBuilder):
             result.forest_management_category = 1
 
         return result
+
+    @staticmethod
+    def _determine_area_ha(
+        forestry_centre: int,
+        lohkomuoto: int,
+        eduala_raw: str,
+        inventointitunnus: str | None = None,
+        lohy_raw: str | None = None,
+        ahvkeilaus: str | None = None,
+    ) -> float:
+        """
+        Determine stand area_ha for VMI11.
+
+        Default:
+        - area_ha = eduala with 5 decimals
+
+        Lookup:
+        - Normal lohkomuoto osite in {1,2,3,4} -> lookup from VMI11_COUNTY_AREAS
+        - Ahvenanmaa special osite in {300,400} -> lookup from VMI11_COUNTY_AREAS (metkes=0 row)
+
+        Ahvenanmaa rules:
+        - inventointitunnus = P and ahvkeilaus = A => osite 300 => area 100.39
+        - inventointitunnus = P and ahvkeilaus = B => osite 400 => area 148.78
+        - inventointitunnus = K and lohy(1:1) = 3 => osite 300 => area 100.39
+        - inventointitunnus = K and lohy(1:1) = 4 => osite 400 => area 148.78
+        """
+        default_area_ha = vmi_util.parse_vmi_area_ha(eduala_raw)
+
+        inv = (inventointitunnus or "").strip().upper()
+        ak = (ahvkeilaus or "").strip().upper()
+        lohy_first = ((lohy_raw or "").strip()[:1] or "")
+
+        if inv == "P" and ak in ("A", "B"):
+            osite = 300 if ak == "A" else 400
+            return round(VMI11Builder._get_area_ha(0, osite), 4)
+
+        if inv == "K" and lohy_first in ("3", "4"):
+            osite = 300 if lohy_first == "3" else 400
+            return round(VMI11Builder._get_area_ha(0, osite), 4)
+
+        osite = lohkomuoto
+        use_lookup = (1 <= osite <= 4) or (forestry_centre == 0)
+
+        if not use_lookup:
+            return round(default_area_ha, 4)
+
+        try:
+            return round(VMI11Builder._get_area_ha(forestry_centre, osite), 4)
+        except KeyError as exc:
+            raise MetsiException(
+                f"No area_ha lookup value for VMI11: metkes={forestry_centre}, osite={osite}. "
+                f"inventointitunnus={inv!r}, lohy={lohy_raw!r}, ahvkeilaus={ak!r}, lohkomuoto={lohkomuoto}."
+            ) from exc
+
+    @staticmethod
+    def _get_area_ha(forestry_centre: int, osite: int) -> float:
+        """
+        VMI11 area lookup.
+        Returns area_ha for given metkes (forestry_centre) and osite (lohkomuoto / 300 / 400).
+        """
+        try:
+            return VMI11_COUNTY_AREAS[forestry_centre][osite]
+        except KeyError as exc:
+            raise KeyError(
+                f"No VMI11 area_ha for metkes={forestry_centre}, osite={osite}"
+            ) from exc
+
+    @staticmethod
+    def _transform_height_above_sea_level(sourcevalue: str) -> float | None:
+        """
+        Transform given number value string from desimeters to meters.
+        Returning float, or None on error.
+        """
+        try:
+            return float(sourcevalue) / 10.0
+        except ValueError:
+            return None
+
+    @staticmethod
+    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
+        """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
+        a = util.get_or_default(vmi_util.parse_float(ds_bh_age), 0.0)
+        b = util.get_or_default(vmi_util.parse_float(ds_age_increase), 0.0)
+        return a + b
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):
@@ -306,4 +390,3 @@ class VMI11Builder(VMIBuilder):
             trees.damage_type[i] = damage_type
         if crown_class is not None:
             trees.crown_class[i] = crown_class
-

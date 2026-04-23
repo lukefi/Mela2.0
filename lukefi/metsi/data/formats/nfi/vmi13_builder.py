@@ -1,3 +1,4 @@
+from datetime import datetime as dt
 from typing import override
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
@@ -97,10 +98,10 @@ class VMI13Builder(VMIBuilder):
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(row["municipality"]))
         result.auxiliary_stand = row["stand_number"] != '1'
 
-        result.year = vmi_util.parse_vmi13_date(row["date"]).year
+        result.year = VMI13Builder._parse_date(row["date"]).year
         result.start_year = result.year
 
-        area_ha = vmi_util.determine_vmi13_area_ha(
+        area_ha = VMI13Builder._determine_area_ha(
             int(row["county"]),
             int(row["lohkomuoto"]),
             util.get_or_default(
@@ -122,7 +123,7 @@ class VMI13Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
-        height = vmi_util.transform_vmi13_height_above_sea_level(row["height_above_sea_level"])
+        height = VMI13Builder.transform_height_above_sea_level(row["height_above_sea_level"])
         result.set_geo_location(lat, lon, height)
 
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
@@ -149,9 +150,8 @@ class VMI13Builder(VMIBuilder):
         result.young_stand_tending_year = maintenance_details[0]
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
-        result.ds_main_tree_species_biological_age = vmi_util.determine_vmi13_dominant_storey_age(
-            row["vallitsevanjaksonika"]
-        )
+        result.ds_main_tree_species_biological_age = util.get_or_default(
+            vmi_util.parse_float(row["vallitsevanjaksonika"]), 0.0)
 
         result.peatland_type = vmi2internal.convert_peatland_forest_type(row["suotyy"])
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(row["tkgtyy"])
@@ -188,6 +188,100 @@ class VMI13Builder(VMIBuilder):
             result.forest_management_category = 1
 
         return result
+
+    @staticmethod
+    def _parse_date(date_string: str) -> dt:
+        """Generate a datetime entry out of VMI13 date source format yyyymmdd"""
+        parsed = dt.strptime(date_string, '%Y%m%d')
+        return vmi_util.apply_growth_inc_logic(parsed)
+
+    @staticmethod
+    def _determine_area_ha(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
+        if county < 0 and lohkomuoto < 0 or lohkotarkenne < 0:
+            raise IndexError
+        return VMI13Builder._solve_vmi13_county_areas(county, lohkomuoto, lohkotarkenne)
+
+    @staticmethod
+    def _solve_vmi13_county_areas(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
+        if county == 1 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 345.73918
+        if county == 2 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 338.0386443
+        if county == 4 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 342.975010960105
+        if county == 5 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 342.747528
+        if county == 6 and lohkotarkenne == 0:
+            if lohkomuoto == 1:
+                return 413.08125
+            if lohkomuoto == 2:
+                return 347.828958275767
+        if county == 7 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 342.438585979628
+        if county == 8 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 349.917881811205
+        if county == 9 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 350.8972332
+        if county == 10 and lohkomuoto == 2 and lohkotarkenne == 0:
+            return 340.4779333
+        if county == 11:
+            if lohkomuoto == 1:
+                return 436.521343
+            if lohkomuoto == 2:
+                return 330.3735632
+        if county == 12 and lohkotarkenne == 0:
+            if lohkomuoto == 1:
+                return 433.4836506
+            if lohkomuoto == 2:
+                return 351.5358362
+        if county == 13 and lohkomuoto == 1 and lohkotarkenne == 0:
+            return 435.9383152
+        if county == 14 and lohkotarkenne == 0:
+            if lohkomuoto == 1:
+                return 429.5909091
+            if lohkomuoto == 2:
+                return 351.5358362
+        if county == 15 and lohkomuoto == 1 and lohkotarkenne == 0:
+            return 434.9541716
+        if county == 16 and lohkomuoto == 1 and lohkotarkenne == 0:
+            return 435.0433276
+        if county == 17 and lohkotarkenne == 0:
+            if lohkomuoto == 1:
+                return 435.0433276
+            if lohkomuoto == 3:
+                return 457.7258227
+            if lohkomuoto == 4:
+                return 747.6246246
+        if county == 18 and lohkomuoto == 3 and lohkotarkenne == 0:
+            return 455.8440533
+        if county == 19:
+            if lohkomuoto == 4:
+                if lohkotarkenne == 0:
+                    return 786.978534
+            if lohkomuoto == 5:
+                if lohkotarkenne == 0:
+                    return 1357.608776
+                if lohkotarkenne == 1:
+                    return 1176.023409
+                if lohkotarkenne == 2:
+                    return 1355.455959
+                if lohkotarkenne == 3:
+                    return 1999.800742
+                if lohkotarkenne == 4:
+                    return 10756.11645
+        if county == 21 and lohkomuoto == 0 and lohkotarkenne == 0:
+            return 164.2650475
+
+        raise MetsiException(f"Unable to solve vmi13 country area weight for values: \
+                            county {county}, lohkomuoto {lohkomuoto} and lohkotarkenne {lohkotarkenne}")
+
+    @staticmethod
+    def transform_height_above_sea_level(sourcevalue: str) -> float | None:
+        """Return given number value string as float, or None on error"""
+        try:
+            return float(sourcevalue)
+        except ValueError:
+            return None
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):

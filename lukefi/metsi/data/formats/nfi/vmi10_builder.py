@@ -93,7 +93,7 @@ class VMI10Builder(VMIBuilder):
         result.municipality_id = util.parse_int(vmi_util.vmi_codevalue(row["municipality"]))
         result.auxiliary_stand = row["stand_number"] != '1'
 
-        parsed = vmi_util.parse_vmi12_date(row["date"])
+        parsed = vmi_util.parse_date(row["date"])
         if parsed is None:
             raise MetsiException("Year is None in VMI10 data")
 
@@ -101,7 +101,7 @@ class VMI10Builder(VMIBuilder):
         result.start_year = parsed.year
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
 
-        area_ha = VMI10Builder._get_vmi10_area_ha(
+        area_ha = VMI10Builder._get_area_ha(
             vmi_util.parse_forestry_centre(row["forestry_centre"]),
             int(row["lohkomuoto"]),
         )
@@ -174,7 +174,7 @@ class VMI10Builder(VMIBuilder):
         return result
 
     @staticmethod
-    def _get_vmi10_area_ha(forestry_centre: int, lohkomuoto: int) -> float:
+    def _get_area_ha(forestry_centre: int, lohkomuoto: int) -> float:
         """
         VMI10 area lookup.
         Returns area_ha for given forestry_centre and lohkomuoto.
@@ -268,16 +268,16 @@ class VMI10Builder(VMIBuilder):
         identifier = f"{stand_identifier}-{i + 1}-stratum"
 
         strata.identifier[i] = identifier
-        strata.species[i] = int(species)
+        strata.species[i] = species
         strata.mean_diameter[i] = mean_diameter
         strata.mean_height[i] = mean_height
         strata.breast_height_age[i] = vmi_util.parse_int0(seg_d13_age_raw)
         strata.biological_age[i] = age
         strata.stems_per_ha[i] = stems_per_ha
         strata.basal_area[i] = basal_area
-        strata.origin[i] = int(syntytapa)
+        strata.origin[i] = syntytapa
         strata.stratum_number[i] = i + 1
-        strata.storey[i] = int(storey)
+        strata.storey[i] = storey
         strata.sapling_stems_per_ha[i] = 0.0
         strata.number_of_generated_trees[i] = 0
 
@@ -356,7 +356,7 @@ class VMI10Builder(VMIBuilder):
 
         management_category = vmi_util.determine_tree_management_category(row["latvuskerros"])
         storey = vmi_util.determine_storey_for_tree(row["latvuskerros"])
-        tree_type = vmi_util.determine_tree_type(row["tree_type"])
+        tree_type = vmi2internal.convert_tree_type(row["tree_type"])
 
         tuhon_raw = row["tuhon_ilmiasu"]
         damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
