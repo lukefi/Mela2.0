@@ -145,9 +145,150 @@ class VMI9Builder(VMIBuilder):
             result.year
         )
 
-        result.forest_management_category = vmi_util.determine_forest_management_category_vmi9(row)
+        result.forest_management_category = VMI9Builder.determine_forest_management_category(row)
 
         return result
+
+    @staticmethod
+    def determine_forest_management_category(
+        row: dict[str, str],
+    ) -> float:
+        """
+        VMI9 käsittelyluokka (forest_management_category) calculation.
+        """
+
+        owner = vmi_util.parse_int0(row["owner_group"])
+        ptraj = vmi_util.parse_int0(row["ptraj"])
+        pttark = vmi_util.parse_int0(row["pttark"])
+        land_category = vmi_util.parse_int0(row["land_category"])
+
+        ml123_ala = vmi_util.parse_float0(row["ml123ala"])
+
+        abt1 = vmi_util.parse_int0(row["abi1kasehd"])
+        abt1_ala = vmi_util.parse_float0(row["abi1ala"])
+
+        abt2 = vmi_util.parse_int0(row["abi2kasehd"])
+        abt2_ala = vmi_util.parse_float0(row["abi2ala"])
+
+        abt3 = vmi_util.parse_int0(row["abi3kasehd"])
+        abt3_ala = vmi_util.parse_float0(row["abi3ala"])
+
+        # mhptrajtar is only meaningful in North Finland; in South your indices are slice(0,0) or value is blank.
+        mhtark = vmi_util.parse_int0(row["mhptrajtar"]) if "mhptrajtar" in row else 0
+
+        # ------------------------------------------------------------
+        # Start
+        k = 1.0
+
+        # --- avainbiotoopit ---
+        avainbt = max(abt1, abt2, abt3)
+
+        avainbt_pinta_ala = 0.0
+        avainbt_ala = 0.0
+
+        if avainbt == 2:
+            avainbt_pinta_ala = abt1_ala + abt2_ala + abt3_ala
+
+        if ml123_ala > 0.0:
+            avainbt_ala = avainbt_pinta_ala / ml123_ala
+
+        # --- metsähallituksen rajoituksen tarkennus ---
+        if owner == 4:
+            ptraj = 0
+
+        if owner == 4 and mhtark in (2, 3, 4, 5, 6, 9):
+            ptraj = mhtark
+
+        # --- käsittelyluokka ---
+        if ptraj in (101, 102):
+            k = 7.1
+
+        if ptraj in (401, 402, 403, 404, 408, 409, 410):
+            k = 7.2
+
+        if ptraj == 105 and owner not in (4, 5):
+            k = 7.3
+
+        if ptraj == 105 and owner in (4, 5):
+            k = 7.5
+
+        if ptraj in (104, 106):
+            k = 7.5
+
+        if ptraj == 103:
+            k = 7.4
+
+        if ptraj in (201, 205, 301):
+            k = 7.5
+
+        if ptraj == 405:
+            k = 2.1
+
+        if ptraj in (202, 203, 307):
+            k = 2.4
+
+        if ptraj == 304:
+            k = 2.2
+
+        if ptraj == 303:
+            k = 2.3
+
+        if ptraj == 501 and pttark in (1, 2, 3, 4, 5) and owner in (4, 5):
+            k = 2.4
+
+        if ptraj in (309, 306, 302):
+            k = 2.4
+
+        if ptraj == 107 and pttark == 1:
+            k = 7.5
+
+        if ptraj == 107 and pttark != 1:
+            k = 2.4
+
+        if ptraj == 606 and pttark == 1 and avainbt == 2:
+            k = 7.5
+
+        if ptraj == 606 and pttark != 1 and avainbt == 2:
+            k = 2.4
+
+        if ptraj == 608 and pttark == 1 and avainbt == 2 and avainbt_ala >= 0.5:
+            k = 7.5
+
+        if ptraj == 608 and pttark != 1 and avainbt == 2 and avainbt_ala >= 0.5:
+            k = 2.4
+
+        if ptraj == 601 and owner == 4:
+            k = 2.4
+
+        if ptraj == 305:
+            k = 2.4
+
+        if owner == 4 and ptraj == 0:
+            k = 1.0
+
+        if owner == 4 and ptraj in (2, 3, 4, 5):
+            k = 2.4
+
+        if owner == 4 and ptraj in (6, 9):
+            k = 7.5
+
+        # --- maaluokka adjustments ---
+        if land_category == 2 and k == 1.0:
+            k = 3.5
+
+        if land_category == 2 and 2.0 <= k < 3.0:
+            k = k + 1.0
+
+        if land_category == 3 and k == 1.0:
+            k = 6.5
+
+        if land_category == 3 and 2.0 <= k < 3.0:
+            k = k + 4.0
+
+        if land_category == 3 and k > 7.0:
+            k = 7.6
+
+        return float(k)
 
     @staticmethod
     def _convert_strata_from_stand_entry(strata: TreeStrata,
@@ -213,7 +354,7 @@ class VMI9Builder(VMIBuilder):
                 running_numb
             )
             running_numb += 1
-        
+
         missing_indices = np.nonzero(strata.identifier == "")[0]
         strata.delete(missing_indices)
 
