@@ -1,8 +1,8 @@
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.enums.vmi import VmiIteration
-from lukefi.metsi.data.formats import vmi_util
-from lukefi.metsi.data.formats.vmi_const import *
+from lukefi.metsi.data.formats.nfi import vmi_util
+from lukefi.metsi.data.formats.nfi.vmi_const import *
 from tests.data import test_util
 from lukefi.metsi.app.utils import MetsiException
 

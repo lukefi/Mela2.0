@@ -10,7 +10,7 @@ from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.data.conversion import vmi2internal
 
-from lukefi.metsi.data.formats.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS, VMI11_COUNTY_AREAS
+from lukefi.metsi.data.formats.nfi.vmi_const import VMI12_COUNTY_AREAS, VMI10_COUNTY_AREAS, VMI11_COUNTY_AREAS
 from lukefi.metsi.app.utils import MetsiException
 
 

@@ -6,8 +6,9 @@ from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import fc2internal
 from lukefi.metsi.data.enums.internal import CuttingMethod, OwnerCategory
-from lukefi.metsi.data.formats import gpkg_util, smk_util, util
+from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.forest_builder_base import ForestBuilder
+from lukefi.metsi.data.formats.forest_centre import gpkg_util, smk_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import DTYPES_STRATA, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList

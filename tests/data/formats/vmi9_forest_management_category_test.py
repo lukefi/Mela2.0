@@ -1,12 +1,12 @@
 import math
 import pathlib
 
-from lukefi.metsi.data.formats.vmi_const import (
+from lukefi.metsi.data.formats.nfi.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
     VMI9_STAND_COMMON,
 )
-from lukefi.metsi.data.formats import vmi_util
+from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.formats.util import parse_int
 
 
