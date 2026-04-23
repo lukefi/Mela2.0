@@ -137,13 +137,13 @@ class VMI13Builder(VMIBuilder):
 
         if self.builder_flags.get('measured_trees', False):
             for stand_identifier, stand_tree_rows in self.tree_rows.items():
-                stand = result.get(stand_identifier)
-                if stand is None:
+                stand_ = result.get(stand_identifier)
+                if stand_ is None:
                     continue
 
                 trees = ReferenceTrees(len(stand_tree_rows))
                 for j, stand_tree_row in enumerate(stand_tree_rows):
-                    self._convert_tree_entry(trees, stand_tree_row, j, stand.forestry_centre_id)
+                    self._convert_tree_entry(trees, stand_tree_row, j, stand_.forestry_centre_id)
 
                 result[stand_identifier].reference_trees = trees
 
