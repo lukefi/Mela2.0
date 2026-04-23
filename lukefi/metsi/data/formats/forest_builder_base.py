@@ -1,11 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Optional
 
-from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.formats import util, vmi_util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion, ConversionMapper
-from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 
 
