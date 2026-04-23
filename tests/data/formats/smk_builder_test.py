@@ -4,7 +4,6 @@ import os
 from functools import reduce
 import numpy as np
 
-from lukefi.metsi.data.formats.forest_builder import XMLBuilder, GeoPackageBuilder
 from lukefi.metsi.data.enums.internal import (
     Origin,
     OwnerCategory,
@@ -15,6 +14,7 @@ from lukefi.metsi.data.enums.internal import (
     Storey
 )
 from lukefi.metsi.app.metsi_enum import StrataOrigin
+from lukefi.metsi.data.formats.forest_centre.forest_centre_builder import GeoPackageBuilder, XMLBuilder
 
 builder_flags = {
     'strata_origin': StrataOrigin.INVENTORY
