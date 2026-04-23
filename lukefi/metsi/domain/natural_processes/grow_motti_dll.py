@@ -969,6 +969,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     # Advance simulation year, but do not mutate tree measurements from Python-side deltas.
     stand.year = (stand.year or 0) + step
 
+    _normalize_ut_years_for_fdm(stand)
     reconcile_reference_trees_from_motti(stand)
     debug_dump_reference_trees(stand, "after full motti sync")
 
@@ -1033,6 +1034,7 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
 
     debug_dump_yy_sapling_storey(ms, "after grow_with_state")
 
+    _normalize_ut_years_for_fdm(stand)
     reconcile_reference_trees_from_motti(stand)
 
 
