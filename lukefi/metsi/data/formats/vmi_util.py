@@ -444,28 +444,6 @@ def determine_stratum_tree_height(source_height: str) -> Optional[float]:
     return None
 
 
-def determine_stratum_origin_vmi9(source_origin: str) -> Origin:
-
-    if source_origin in ("1", "2"):
-        return Origin.NATURAL
-    if source_origin in ("3", "5", "7", "8"):
-        return Origin.PLANTED
-    if source_origin in ("4", "6"):
-        return Origin.SEEDED
-    return Origin.NATURAL
-
-
-def determine_stratum_origin_vmi10(source_origin: str) -> Origin:
-
-    if source_origin in ("0", "1", "2"):
-        return Origin.NATURAL
-    if source_origin == "3":
-        return Origin.PLANTED
-    if source_origin == "4":
-        return Origin.SEEDED
-    return Origin.NATURAL
-
-
 def determine_stratum_age_values(biological_age_source: str,
                                  breast_height_age_source: str,
                                  height: Optional[float]) -> tuple[float, float]:
@@ -721,104 +699,6 @@ def generate_stratum_identifier(source_data: dict[str, str]) -> str:
         "stratum"
 
 
-def append_tree_row_vmi9(attr: dict[str, list], indices, row: str, forestry_centre_id: int | None):
-    """
-    Append one VMI9 tree row into SoA dict compatible with DTYPES_TREE.
-    """
-    identifier = generate_tree_identifier(row, indices)
-    tree_number = get_or_default(parse_type(row[indices["tree_number"]], int), 0)
-
-    species = vmi2internal.convert_species(row[indices["species"]])
-
-    raw_tc = row[indices["tree_category"]].strip()
-    tc_enum = vmi2internal.convert_tree_category(raw_tc)
-
-    tree_category = tc_enum.value if tc_enum else None
-    breast_height_diameter = transform_tree_diameter(row[indices["diameter"]])
-
-    # dm -> m
-    height = determine_tree_height(row[indices["height"]], conversion_factor=10.0)
-    measured_height = None
-
-    lowest_living_branch_height = (
-        get_or_default(parse_type(row[indices["living_branches_height"]], float), 0.0) / 10.0
-    )
-
-    breast_height_age, biological_age = determine_tree_age_values(
-        row[indices["d13_age"]],
-        row[indices["age_increase"]],
-        row[indices["total_age"]],
-    )
-
-    stems_per_ha = determine_stems_per_ha(breast_height_diameter, vmi_version=VmiIteration.VMI9,
-                                          forestry_centre_id=forestry_centre_id)
-
-    management_category = determine_tree_management_category(row[indices["latvuskerros"]])
-    storey = determine_storey_for_tree(row[indices["latvuskerros"]])
-
-    tuhon_raw = row[indices["tuhon_ilmiasu"]]
-    damage_type = None if tuhon_raw in (" ", ".", "") else tuhon_raw.strip()
-
-    values = {
-        "identifier": identifier,
-        "tree_number": tree_number,
-        "species": species,
-        "tree_category": tree_category,
-        "breast_height_diameter": breast_height_diameter,
-        "height": height,
-        "measured_height": measured_height,
-        "breast_height_age": breast_height_age,
-        "biological_age": biological_age,
-        "stems_per_ha": stems_per_ha,
-        "origin": 0,
-        "management_category": management_category,
-        "storey": storey,
-        "saw_log_volume_reduction_factor": None,
-        "pruning_year": 0,
-        "age_when_10cm_diameter_at_breast_height": 0,
-        "stand_origin_relative_position": (0.0, 0.0, 0.0),
-        "lowest_living_branch_height": lowest_living_branch_height,
-        "sapling": False,
-        "tree_type": None,
-        "damage_type": damage_type,
-        "basal_area": None,
-    }
-
-    for k, v in values.items():
-        attr.setdefault(k, []).append(v)
-
-
-def determine_storey_for_segment(asema_raw: str) -> Storey:
-    """
-    VMI10 jakson asema:
-      1 Vallitseva jakso
-      2 Ylispuusto
-      3 Jättöylispuusto
-      4 Verhopuusto
-      5 Kehityskelpoinen alikasvos
-      6 Kehityskelvoton alikasvos
-      7 Vaihtuva taimiaines
-    """
-    v = (asema_raw or "").strip()
-    if not v or v == ".":
-        return Storey.INDETERMINATE
-    if v == "1":
-        return Storey.DOMINANT
-    if v == "2":
-        return Storey.OVER
-    if v == "3":
-        return Storey.REMOVAL
-    if v == "4":
-        return Storey.SPARE
-    if v == "5":
-        return Storey.UNDER
-    if v == "6":
-        return Storey.REMOTE
-    if v == "7":
-        return Storey.INDETERMINATE
-    return Storey.INDETERMINATE
-
-
 def parse_share_tenths(raw: str) -> float:
     """Share is coded 0..10 meaning 0.0..1.0"""
     s = get_or_default(parse_float((raw or "").strip()), 0.0)
@@ -831,123 +711,6 @@ def parse_int0(raw: str) -> int:
 
 def parse_float0(raw: str) -> float:
     return get_or_default(parse_float((raw or "").strip()), 0.0)
-
-def append_vmi9_strata_from_stand_row(
-    attr: dict[str, list],
-    indices: dict[str, slice],
-    stand_row: str,
-    stand_identifier: str,
-    stand_basal_area: float,
-):
-    """
-    Build up to 6 strata (2 segments x (main + up to 2 side species)) into TreeStrata
-    """
-
-    fallback_age = parse_float0(stand_row[indices["metsikon_ika"]])
-
-    jakso2_ppa = parse_float0(stand_row[indices["jakso2_ppa"]])
-    jakso1_ppa = max(0.0, stand_basal_area - jakso2_ppa)
-
-    running_numb = 0
-
-    def emit_stratum_vmi9(
-        species_code_raw: str,
-        share_raw: str,
-        seg_stems1000_raw: str,
-        seg_d_cm_raw: str,
-        seg_h_dm_raw: str,
-        seg_d13_age_raw: str,
-        seg_age_inc_raw: str,
-        seg_syntytapa_raw: str,
-        seg_asema_raw: str,
-        seg_ppa_total: float,
-    ):
-        nonlocal running_numb
-        species_code = (species_code_raw or "").strip()
-        if not species_code or species_code in (".", "0"):
-            return
-
-        share = parse_share_tenths(share_raw)
-        if share <= 0.0:
-            return
-
-        species = vmi2internal.convert_species(species_code)
-
-        basal_area = seg_ppa_total * share
-        stems_per_ha = parse_float0(seg_stems1000_raw) * 1000.0 * share
-        mean_diameter = parse_float0(seg_d_cm_raw)
-        mean_height = parse_float0(seg_h_dm_raw) / 10.0  # dm -> m
-        age = _vmi10_segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
-
-        syntytapa = determine_stratum_origin_vmi9(seg_syntytapa_raw)
-        storey = determine_storey_for_segment(seg_asema_raw)
-
-        running_numb += 1
-        identifier = f"{stand_identifier}-{running_numb}-stratum"
-
-        values = {
-            "identifier": identifier,
-            "species": int(species),
-            "mean_diameter": mean_diameter,
-            "mean_height": mean_height,
-            "breast_height_age": parse_int0(seg_d13_age_raw),
-            "biological_age": age,
-            "stems_per_ha": stems_per_ha,
-            "basal_area": basal_area,
-            "origin": syntytapa,
-            "management_category": 0,
-            "saw_log_volume_reduction_factor": None,
-            "cutting_year": 0,
-            "age_when_10cm_diameter_at_breast_height": 0,
-            "stratum_number": running_numb,
-            "stand_origin_relative_position": (0.0, 0.0, 0.0),
-            "lowest_living_branch_height": 0.0,
-            "storey": int(storey),
-            "sapling_stems_per_ha": 0.0,
-            "sapling_stratum": False,
-            "number_of_generated_trees": 0,
-        }
-
-        for k, v in values.items():
-            attr.setdefault(k, []).append(v)
-
-    for seg_no in (1, 2):
-        ppa_total = jakso1_ppa if seg_no == 1 else jakso2_ppa
-
-        asema = stand_row[indices[f"jakso{seg_no}_asema"]]
-        synty = stand_row[indices[f"jakso{seg_no}_syntytapa"]]
-
-        stems1000 = stand_row[indices[f"jakso{seg_no}_kokonaisrunkoluku1000"]]
-        d_cm = stand_row[indices[f"jakso{seg_no}_keskilapimitta_cm"]]
-        h_dm = stand_row[indices[f"jakso{seg_no}_keskipituus_dm"]]
-        d13ika = stand_row[indices[f"jakso{seg_no}_d13ika"]]
-        ikalis = stand_row[indices[f"jakso{seg_no}_ikalisays"]]
-
-        main_share_raw = stand_row[indices[f"jakso{seg_no}_paapuulaji_osuus"]]
-        siv1_share_raw = stand_row[indices[f"jakso{seg_no}_sivulaji1_osuus"]]
-
-        main_t = parse_int0(main_share_raw)
-        siv1_t = parse_int0(siv1_share_raw)
-
-        siv2_t = max(0, 10 - main_t - siv1_t)
-
-        emit_stratum_vmi9(
-            stand_row[indices[f"jakso{seg_no}_paapuulaji"]],
-            str(main_t),
-            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-        )
-
-        emit_stratum_vmi9(
-            stand_row[indices[f"jakso{seg_no}_sivulaji1"]],
-            str(siv1_t),
-            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-        )
-
-        emit_stratum_vmi9(
-            stand_row[indices[f"jakso{seg_no}_sivulaji2"]],
-            str(siv2_t),
-            stems1000, d_cm, h_dm, d13ika, ikalis, synty, asema, ppa_total
-        )
 
 
 def determine_vmi11_area_ha(
@@ -1055,31 +818,30 @@ def get_stems_params(
 
 
 def determine_forest_management_category_vmi9(
-    stand_row: str,
-    indices: dict[str, slice],
+    row: dict[str, str],
 ) -> float:
     """
     VMI9 käsittelyluokka (forest_management_category) calculation.
     """
 
-    owner = parse_int0(stand_row[indices["owner_group"]])
-    ptraj = parse_int0(stand_row[indices["ptraj"]])
-    pttark = parse_int0(stand_row[indices["pttark"]])
-    land_category = parse_int0(stand_row[indices["land_category"]])
+    owner = parse_int0(row["owner_group"])
+    ptraj = parse_int0(row["ptraj"])
+    pttark = parse_int0(row["pttark"])
+    land_category = parse_int0(row["land_category"])
 
-    ml123_ala = parse_float0(stand_row[indices["ml123ala"]])
+    ml123_ala = parse_float0(row["ml123ala"])
 
-    abt1 = parse_int0(stand_row[indices["abi1kasehd"]])
-    abt1_ala = parse_float0(stand_row[indices["abi1ala"]])
+    abt1 = parse_int0(row["abi1kasehd"])
+    abt1_ala = parse_float0(row["abi1ala"])
 
-    abt2 = parse_int0(stand_row[indices["abi2kasehd"]])
-    abt2_ala = parse_float0(stand_row[indices["abi2ala"]])
+    abt2 = parse_int0(row["abi2kasehd"])
+    abt2_ala = parse_float0(row["abi2ala"])
 
-    abt3 = parse_int0(stand_row[indices["abi3kasehd"]])
-    abt3_ala = parse_float0(stand_row[indices["abi3ala"]])
+    abt3 = parse_int0(row["abi3kasehd"])
+    abt3_ala = parse_float0(row["abi3ala"])
 
     # mhptrajtar is only meaningful in North Finland; in South your indices are slice(0,0) or value is blank.
-    mhtark = parse_int0(stand_row[indices["mhptrajtar"]]) if "mhptrajtar" in indices else 0
+    mhtark = parse_int0(row["mhptrajtar"]) if "mhptrajtar" in row else 0
 
     # ------------------------------------------------------------
     # Start

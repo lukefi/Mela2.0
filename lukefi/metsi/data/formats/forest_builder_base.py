@@ -35,7 +35,3 @@ class VMIBuilder(ForestBuilder):
 
         self.builder_flags = builder_flags
         self.conversion_reader = ConversionMapper(declared_conversions)
-
-
-class VMI9Builder(VMIBuilder):
-    pass
