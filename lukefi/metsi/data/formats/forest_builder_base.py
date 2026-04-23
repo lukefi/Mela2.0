@@ -43,7 +43,3 @@ class VMI9Builder(VMIBuilder):
 
 class VMI10Builder(VMIBuilder):
     pass
-
-
-class VMI11Builder(VMIBuilder):
-    pass
