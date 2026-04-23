@@ -343,6 +343,7 @@ def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
 
 def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
     sync_yp_to_reference_trees(stand)
+    prune_promoted_sapling_reference_trees(stand)
 
     if init_mode:
         prune_reference_trees_not_in_yp(stand)
@@ -1093,6 +1094,39 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
             key = ("yp", sid, tree_number)
 
         if key not in live:
+            delete_idx.append(i)
+
+    if delete_idx:
+        rt.delete(np.array(delete_idx, dtype=int))
+
+
+def prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
+    """
+    Delete old sapling RF if SID exists in YP vector.
+    """
+    ms = stand.motti_state
+    rt = stand.reference_trees
+
+    if ms is None or ms.yp is None or rt is None or rt.size == 0:
+        return
+
+    yp_strata: set[int] = set()
+    for i in range(int(ms.ntrees)):
+        t = ms.yp[0][i]
+        sid = parse_int_id(getattr(t, "sid", 0))
+        if sid is not None:
+            yp_strata.add(sid)
+
+    if not yp_strata:
+        return
+
+    delete_idx: list[int] = []
+    for i in range(rt.size):
+        if not bool(rt.sapling[i]):
+            continue
+
+        sid = parse_int_id(rt.stratum[i])
+        if sid is not None and sid in yp_strata:
             delete_idx.append(i)
 
     if delete_idx:
