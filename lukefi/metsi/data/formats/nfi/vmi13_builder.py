@@ -125,7 +125,7 @@ class VMI13Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
-        height = VMI13Builder._transform_height_above_sea_level(row["height_above_sea_level"])
+        height = util.parse_type(row["height_above_sea_level"], float)
         result.set_geo_location(lat, lon, height)
 
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
@@ -201,10 +201,7 @@ class VMI13Builder(VMIBuilder):
     def _determine_area_ha(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
         if county < 0 and lohkomuoto < 0 or lohkotarkenne < 0:
             raise IndexError
-        return VMI13Builder._solve_vmi13_county_areas(county, lohkomuoto, lohkotarkenne)
 
-    @staticmethod
-    def _solve_vmi13_county_areas(county: int, lohkomuoto: int, lohkotarkenne: int) -> float:
         if county == 1 and lohkomuoto == 2 and lohkotarkenne == 0:
             return 345.73918
         if county == 2 and lohkomuoto == 2 and lohkotarkenne == 0:
@@ -276,14 +273,6 @@ class VMI13Builder(VMIBuilder):
 
         raise MetsiException(f"Unable to solve vmi13 country area weight for values: \
                             county {county}, lohkomuoto {lohkomuoto} and lohkotarkenne {lohkotarkenne}")
-
-    @staticmethod
-    def _transform_height_above_sea_level(sourcevalue: str) -> float | None:
-        """Return given number value string as float, or None on error"""
-        try:
-            return float(sourcevalue)
-        except ValueError:
-            return None
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):
