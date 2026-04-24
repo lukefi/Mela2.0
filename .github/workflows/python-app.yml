@@ -98,7 +98,7 @@ jobs:
       if: steps.ghcr_access.outputs.can_pull == 'true'
       run: |
         set -euxo pipefail
-        docker pull ghcr.io/lukefi/mottisc-for-robot:latest || {
+        docker pull ghcr.io/lukefi/mottisc-for-robot2:latest || {
           echo "Pull failed. Printing debug info..."
           docker logout ghcr.io || true
           exit 1
@@ -107,7 +107,7 @@ jobs:
     - name: Extract binaries from image
       if: steps.ghcr_access.outputs.can_pull == 'true'
       env:
-        IMAGE: ghcr.io/lukefi/mottisc-for-robot:latest
+        IMAGE: ghcr.io/lukefi/mottisc-for-robot2:latest
         DEST: ${{ github.workspace }}/data/motti
       run: |
         set -euo pipefail
