@@ -1,6 +1,7 @@
 import math
 import pathlib
 
+from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
 from lukefi.metsi.data.formats.nfi.vmi_const import (
     VMI9_STAND_INDICES_ESUOMI,
     VMI9_STAND_INDICES_PSUOMI,
@@ -35,5 +36,6 @@ def test_vmi9_kasittelyluokka():
 
     for row, exp in zip(stand_rows, expected):
         idx = _select_vmi9_indices(row)
-        got = vmi_util.determine_forest_management_category_vmi9(row, idx)
+        src = vmi_util.generate_source_data(idx, row)
+        got = VMI9Builder._determine_forest_management_category(src)
         assert math.isclose(got, exp, rel_tol=0.0, abs_tol=1e-9), (got, exp)

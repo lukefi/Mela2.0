@@ -2,9 +2,11 @@ from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.nfi import vmi_util
+from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
+from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
 from lukefi.metsi.data.formats.nfi.vmi_const import *
-from tests.data import test_util
 from lukefi.metsi.app.utils import MetsiException
+from tests.data import test_util
 
 
 class TestConversion(test_util.ConverterTestSuite):
@@ -39,17 +41,6 @@ class TestConversion(test_util.ConverterTestSuite):
         ]
         self.run_with_test_assertions(assertions, vmi_util.determine_artificial_regeneration_year)
 
-    def test_determine_natural_renewal(self):
-        assertions = [
-            (['0'], False),
-            (['8'], True),
-            (['9'], True),
-            (['kissa123'], False),
-            (['0.001'], False),
-            ([''], False)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_natural_renewal)
-
     def test_determinate_clearing_of_reform_sector(self):
         assertions = [
             (['4', '-', 2020], None),
@@ -74,12 +65,12 @@ class TestConversion(test_util.ConverterTestSuite):
         self.run_with_test_assertions(assertions, vmi_util.determine_drainage_year)
 
     def test_determine_vmi12_area_ha(self):
-        self.assertRaises(IndexError, vmi_util.determine_vmi12_area_ha, -1, -1)
+        self.assertRaises(IndexError, VMI12Builder._determine_area_ha, -1, -1)
 
         for county in range(1, 17):
             self.assertEqual(
                 round(VMI12_COUNTY_AREAS[county - 1], 4),
-                vmi_util.determine_vmi12_area_ha(0, county))
+                VMI12Builder._determine_area_ha(0, county))
 
         assertions = [
             ([2, 17], 0.0),
@@ -92,21 +83,21 @@ class TestConversion(test_util.ConverterTestSuite):
             ([5, 20], 0.0),
             ([5, 21], round(VMI12_COUNTY_AREAS[21], 4)),
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_vmi12_area_ha)
+        self.run_with_test_assertions(assertions, VMI12Builder._determine_area_ha)
 
     def test_determine_vmi13_area_ha(self):
-        self.assertRaises(IndexError, vmi_util.determine_vmi13_area_ha, -1, -1, -1)
-        self.assertRaises(Exception, vmi_util.determine_vmi13_area_ha, 0, 0, 0)
-        self.assertRaises(Exception, vmi_util.determine_vmi13_area_ha, 3, 0, 0)
-        self.assertRaises(Exception, vmi_util.determine_vmi13_area_ha, 5, 2, 1)
-        self.assertRaises(Exception, vmi_util.determine_vmi13_area_ha, 5, 2, None)
+        self.assertRaises(IndexError, VMI13Builder._determine_area_ha, -1, -1, -1)
+        self.assertRaises(Exception, VMI13Builder._determine_area_ha, 0, 0, 0)
+        self.assertRaises(Exception, VMI13Builder._determine_area_ha, 3, 0, 0)
+        self.assertRaises(Exception, VMI13Builder._determine_area_ha, 5, 2, 1)
+        self.assertRaises(Exception, VMI13Builder._determine_area_ha, 5, 2, None)
 
         assertions = [
             ([1, 2, 0], 345.73918),
             ([2, 2, 0], 338.0386443),
             ([4, 2, 0], 342.975010960105),
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_vmi13_area_ha)
+        self.run_with_test_assertions(assertions, VMI13Builder._determine_area_ha)
 
     def test_tax_class_reduction(self):
         assertions = [
@@ -135,14 +126,7 @@ class TestConversion(test_util.ConverterTestSuite):
             (['1233'], 123.3),
             ([' '], None)
         ]
-        self.run_with_test_assertions(assertions, vmi_util.transform_vmi12_height_above_sea_level)
-
-    def test_vmi13_height_above_sea_level(self):
-        assertions = [
-            (['123.3'], 123.3),
-            ([' '], None)
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.transform_vmi13_height_above_sea_level)
+        self.run_with_test_assertions(assertions, VMI12Builder._transform_height_above_sea_level)
 
     def test_vmi_degree_days(self):
         assertions = [
@@ -210,28 +194,16 @@ class TestConversion(test_util.ConverterTestSuite):
 
         self.run_with_test_assertions(assertions, vmi2internal._convert_cutting_method)
 
-    def test_convert_vmi12_geolocation(self):
-        assertions = [
-            (['6656996', '3102608'], (6654200, 102598))
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.convert_vmi12_geolocation)
-
-    def test_vmi12_coords(self):
-        assertions = [
-            (['6656996', '3102608'], (6656996.0, 102608.0))
-        ]
-        self.run_with_test_assertions(assertions, vmi_util.convert_vmi12_approximate_geolocation)
-
     def test_vmi12_date(self):
         source = '010219'
-        result = vmi_util.parse_vmi12_date(source)
+        result = vmi_util.parse_date(source)
         self.assertEqual(result.year, 2019)
         self.assertEqual(result.month, 2)
         self.assertEqual(result.day, 1)
 
     def test_vmi13_date(self):
         source = '20190201'
-        result = vmi_util.parse_vmi13_date(source)
+        result = VMI13Builder._parse_date(source)
         self.assertEqual(result.year, 2019)
         self.assertEqual(result.month, 2)
         self.assertEqual(result.day, 1)
@@ -240,7 +212,7 @@ class TestConversion(test_util.ConverterTestSuite):
         assertions = [
             (("10.0", "2.0"), (12.0))
         ]
-        self.run_with_test_assertions(assertions, vmi_util.determine_vmi12_dominant_storey_age)
+        self.run_with_test_assertions(assertions, VMI12Builder._determine_dominant_storey_age)
 
     def test_parse_forestry_centre(self):
         assertions = [
@@ -393,8 +365,8 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 001
         # test_area_number is 01
         # stand_number is 1
-        stand = 'K0001012 01 11    66569963102608    1010   0041721         000059500417      1   0         40020618 B0          0   0 0   0              0  0                   6654199.85 C 102600.11 66569963102608                                                                                          0      0'
-        stand_id = vmi_util.generate_stand_identifier(stand, VMI12_STAND_INDICES)
+        stand = vmi_util.generate_source_data(VMI12_STAND_INDICES, 'K0001012 01 11    66569963102608    1010   0041721         000059500417      1   0         40020618 B0          0   0 0   0              0  0                   6654199.85 C 102600.11 66569963102608                                                                                          0      0')
+        stand_id = vmi_util.generate_stand_identifier(stand)
         self.assertEqual('0-001-012-01-1', stand_id)
 
     def test_generating_vmi12_stratum_identifier(self):
@@ -402,8 +374,8 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 002
         # test_area_number is 02
         # stand_number is 1
-        stratum = 'K0002023 02 12 01  1 11             24 190  04606N17 1  84A1 0'
-        stratum_id = vmi_util.generate_stratum_identifier(stratum, VMI12_STRATUM_INDICES)
+        stratum = vmi_util.generate_source_data(VMI12_STRATUM_INDICES, 'K0002023 02 12 01  1 11             24 190  04606N17 1  84A1 0')
+        stratum_id = vmi_util.generate_stratum_identifier(stratum)
         self.assertEqual('0-002-023-02-1-01-stratum', stratum_id)
 
     def test_generating_vmi12_tree_identifier(self):
@@ -411,8 +383,8 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 002
         # test_area_number is 02
         # stand_number is 1
-        tree = 'K0002023 02 13001 1207217 2  01 15521741  020081711 00                                                              7725 3999  342                                                                                                                                           259959  134571   11515 39185 101864  4303 11769  8489 24696 4196'
-        tree_id = vmi_util.generate_tree_identifier(tree, VMI12_TREE_INDICES)
+        tree = vmi_util.generate_source_data(VMI12_TREE_INDICES, 'K0002023 02 13001 1207217 2  01 15521741  020081711 00                                                              7725 3999  342                                                                                                                                           259959  134571   11515 39185 101864  4303 11769  8489 24696 4196')
+        tree_id = vmi_util.generate_tree_identifier(tree)
         self.assertEqual('0-002-023-02-1-001-tree', tree_id)
 
     def test_generating_vmi13_stand_identifier(self):
@@ -420,8 +392,8 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 58
         # test_area_number is 10
         # stand_number is 1
-        vmi13_row = '1 U 1  58  75 10 1   . 0 20200522 2020 258 3 1 10 10  . 12 10 176 176 893    1    5 4 S 7025056.83 589991.91 7025054.56 589991.44  179.70 1019    . T  1 3   33 220  0   . 0  . 1 0  0  . . 0 1  0  . . 0 0 2 3 0  . 2 3 1 35 2 3 2 0 4  75 0 0 3 1 5  2 .  . .  . 15 4 10 0 15 2 10 8 15 6 26 .  .  .    . 22 187  63 19 . U     . E 1 . . 0 A . . . . 0 . 0 .  . 0 . 7 3 . . 4 1 . 2 2 2   0 . . 0 . .   1  0 0 .   . 0 0 . . .         . 1 7025054.56 589991.44 .    .'
-        vmi13_id = vmi_util.generate_stand_identifier(vmi13_row.split(), VMI13_STAND_INDICES)
+        vmi13_row = VMI13Builder._generate_source_data(VMI13_STAND_INDICES, '1 U 1  58  75 10 1   . 0 20200522 2020 258 3 1 10 10  . 12 10 176 176 893    1    5 4 S 7025056.83 589991.91 7025054.56 589991.44  179.70 1019    . T  1 3   33 220  0   . 0  . 1 0  0  . . 0 1  0  . . 0 0 2 3 0  . 2 3 1 35 2 3 2 0 4  75 0 0 3 1 5  2 .  . .  . 15 4 10 0 15 2 10 8 15 6 26 .  .  .    . 22 187  63 19 . U     . E 1 . . 0 A . . . . 0 . 0 .  . 0 . 7 3 . . 4 1 . 2 2 2   0 . . 0 . .   1  0 0 .   . 0 0 . . .         . 1 7025054.56 589991.44 .    .')
+        vmi13_id = vmi_util.generate_stand_identifier(vmi13_row)
         self.assertEqual('1-58-75-10-1', vmi13_id)
 
     def test_generating_vmi13_stratum_identifier(self):
@@ -429,8 +401,8 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 59
         # test_area_number is 2
         # stand_number is 1
-        stratum = '2 U 1  59  68  2 1   1 0 20200503 258 1  2 3 1350  1400  4  38 E   7  8 F  2 .  0 .  .  . .  . .    .'
-        stratum_id = vmi_util.generate_stratum_identifier(stratum.split(), VMI13_STRATUM_INDICES)
+        stratum = VMI13Builder._generate_source_data(VMI13_STRATUM_INDICES, '2 U 1  59  68  2 1   1 0 20200503 258 1  2 3 1350  1400  4  38 E   7  8 F  2 .  0 .  .  . .  . .    .')
+        stratum_id = vmi_util.generate_stratum_identifier(stratum)
         self.assertEqual('1-59-68-2-1-1-stratum', stratum_id)
 
     def test_generating_vmi13_tree_identifier(self):
@@ -438,6 +410,6 @@ class TestConversion(test_util.ConverterTestSuite):
         # section_y is 58
         # test_area_number is 10
         # stand_number is 1
-        tree = '3 U 1  58  75 10 1  10 0 20200522 258  11 V  1  250 7 2    .    . 306  863 1  0 0 .   .   .   .   .  . . .  .  .  .  . .  . .  . . . . . .   .   . .  .   .   .   .   . .   . . .   . . .   . . .   . . .   . . .   . . .   . . .   . . . .  . .  . .  . .  . .  . .  . .  . .  .     .     .     .     .     .     .     .     .     .        .        .        .     .       .      .      .      .      .     . .    .'
-        tree_id = vmi_util.generate_tree_identifier(tree.split(), VMI13_TREE_INDICES)
+        tree = VMI13Builder._generate_source_data(VMI13_TREE_INDICES, '3 U 1  58  75 10 1  10 0 20200522 258  11 V  1  250 7 2    .    . 306  863 1  0 0 .   .   .   .   .  . . .  .  .  .  . .  . .  . . . . . .   .   . .  .   .   .   .   . .   . . .   . . .   . . .   . . .   . . .   . . .   . . .   . . . .  . .  . .  . .  . .  . .  . .  . .  .     .     .     .     .     .     .     .     .     .        .        .        .     .       .      .      .      .      .     . .    .')
+        tree_id = vmi_util.generate_tree_identifier(tree)
         self.assertEqual('1-58-75-10-1-10-tree', tree_id)
