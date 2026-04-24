@@ -92,8 +92,7 @@ class VMI9Builder(VMIBuilder):
 
         return list(result.values())
 
-    @staticmethod
-    def _convert_stand_entry(row: dict[str, str], stand_id: int | None = None) -> ForestStand:
+    def _convert_stand_entry(self, row: dict[str, str], stand_id: int | None = None) -> ForestStand:
         result = ForestStand()
 
         result.identifier = vmi_util.generate_stand_identifier(row)
@@ -149,6 +148,8 @@ class VMI9Builder(VMIBuilder):
         )
 
         result.forest_management_category = VMI9Builder._determine_forest_management_category(row)
+
+        result = self.conversion_reader.apply_conversions(result, row)
 
         return result
 
