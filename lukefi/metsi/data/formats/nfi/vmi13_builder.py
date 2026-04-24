@@ -15,8 +15,10 @@ from lukefi.metsi.domain.forestry_types import StandList
 
 class VMI13Builder(VMIBuilder):
 
-    def __init__(self, builder_flags: dict[str, bool],
-                 declared_conversions: dict[str, Conversion], data_rows: list[str]) -> None:
+    def __init__(self,
+                 builder_flags: dict[str, bool],
+                 declared_conversions: dict[str, Conversion],
+                 data_rows: list[str]) -> None:
         super().__init__(builder_flags, declared_conversions)
         for row in data_rows:
             kind = self._classify_row(row)

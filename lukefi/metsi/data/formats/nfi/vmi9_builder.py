@@ -20,8 +20,10 @@ from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 
 class VMI9Builder(VMIBuilder):
-    def __init__(self, builder_flags: dict[str, bool],
-                 declared_conversions: dict[str, Conversion], data_rows: list[str]) -> None:
+    def __init__(self,
+                 builder_flags: dict[str, bool],
+                 declared_conversions: dict[str, Conversion],
+                 data_rows: list[str]) -> None:
         super().__init__(builder_flags, declared_conversions)
         for row in data_rows:
             kind = self._classify_row(row)
@@ -151,9 +153,7 @@ class VMI9Builder(VMIBuilder):
         return result
 
     @staticmethod
-    def _determine_forest_management_category(
-        row: dict[str, str],
-    ) -> float:
+    def _determine_forest_management_category(row: dict[str, str]) -> float:
         """
         VMI9 käsittelyluokka (forest_management_category) calculation.
         """
@@ -360,22 +360,20 @@ class VMI9Builder(VMIBuilder):
         strata.delete(missing_indices)
 
     @staticmethod
-    def _emit_stratum(
-        strata: TreeStrata,
-        stand_identifier: str,
-        species_code_raw: str,
-        share_raw: str,
-        seg_stems1000_raw: str,
-        seg_d_cm_raw: str,
-        seg_h_dm_raw: str,
-        seg_d13_age_raw: str,
-        seg_age_inc_raw: str,
-        seg_syntytapa_raw: str,
-        seg_asema_raw: str,
-        seg_ppa_total: float,
-        fallback_age: float,
-        i: int
-    ):
+    def _emit_stratum(strata: TreeStrata,
+                      stand_identifier: str,
+                      species_code_raw: str,
+                      share_raw: str,
+                      seg_stems1000_raw: str,
+                      seg_d_cm_raw: str,
+                      seg_h_dm_raw: str,
+                      seg_d13_age_raw: str,
+                      seg_age_inc_raw: str,
+                      seg_syntytapa_raw: str,
+                      seg_asema_raw: str,
+                      seg_ppa_total: float,
+                      fallback_age: float,
+                      i: int):
         species_code = (species_code_raw or "").strip()
         if not species_code or species_code in (".", "0"):
             return

@@ -20,8 +20,10 @@ from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 class VMI11Builder(VMIBuilder):
 
-    def __init__(self, builder_flags: dict[str, bool],
-                 declared_conversions: dict[str, Conversion], data_rows: list[str]) -> None:
+    def __init__(self,
+                 builder_flags: dict[str, bool],
+                 declared_conversions: dict[str, Conversion],
+                 data_rows: list[str]) -> None:
         super().__init__(builder_flags, declared_conversions)
         for row in data_rows:
             kind = self._classify_row(row)
@@ -197,14 +199,12 @@ class VMI11Builder(VMIBuilder):
         return result
 
     @staticmethod
-    def _determine_area_ha(
-        forestry_centre: int,
-        lohkomuoto: int,
-        eduala_raw: str,
-        inventointitunnus: str | None = None,
-        lohy_raw: str | None = None,
-        ahvkeilaus: str | None = None,
-    ) -> float:
+    def _determine_area_ha(forestry_centre: int,
+                           lohkomuoto: int,
+                           eduala_raw: str,
+                           inventointitunnus: str | None = None,
+                           lohy_raw: str | None = None,
+                           ahvkeilaus: str | None = None) -> float:
         """
         Determine stand area_ha for VMI11.
 
