@@ -12,7 +12,7 @@ import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
 
-from lukefi.metsi.data.vector_model import TreeStrata
+from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     resolve_shared_object,
@@ -61,9 +61,10 @@ def make_empty_sapling() -> SimpleNamespace:
     )
 
 
-def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
+def make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
+        identifier="stand-12345",
         time=2000,
         year=2000,
         geo_location=(6900000.0, 3400000.0, 150.0),
@@ -89,6 +90,7 @@ def make_stand_vec(rt: SimpleNamespace) -> SimpleNamespace:
         drainage_category=DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
         drainage_year=3,
         stratum="123",
+        start_year=2025,
     )
 
 
@@ -101,45 +103,48 @@ def make_rt(
     bh_age=(20.0, 22.0),
     crown_ratio=(0.3, 0.4),
     origin=(0, 0),
-):
-    stems = np.asarray(stems, dtype=float)
-    d = np.asarray(d, dtype=float)
-    h = np.asarray(h, dtype=float)
-    species = np.asarray(species, dtype=int)
-    bio_age = np.asarray(bio_age, dtype=float)
-    bh_age = np.asarray(bh_age, dtype=float)
-    crown_ratio = np.asarray(crown_ratio, dtype=float)
-    origin = np.asarray(origin, dtype=int)
+    storey=(0, 0),
+) -> ReferenceTrees:
+    """Build a real ReferenceTrees vector container for Motti sync tests.
 
-    n = stems.shape[0]
-    tree_number = np.arange(1, n + 1, dtype=int)
-    stratum = np.asarray(origin, dtype=str)
-    sapling = h < 1.3
+    The Motti reconciliation path now calls ReferenceTrees.create/update/delete
+    and also allocates new identifiers from stand.identifier. Returning the
+    production vector container keeps this fixture aligned with that API.
+    """
+    stems_arr = np.asarray(stems, dtype=float)
+    d_arr = np.asarray(d, dtype=float)
+    h_arr = np.asarray(h, dtype=float)
+    species_arr = np.asarray(species, dtype=int)
+    bio_age_arr = np.asarray(bio_age, dtype=float)
+    bh_age_arr = np.asarray(bh_age, dtype=float)
+    crown_ratio_arr = np.asarray(crown_ratio, dtype=float)
+    origin_arr = np.asarray(origin, dtype=int)
+    storey_arr = np.asarray(storey, dtype=int)
 
-    rt = SimpleNamespace(
-        size=n,
-        stems_per_ha=stems,
-        breast_height_diameter=d,
-        height=h,
-        species=species,
-        biological_age=bio_age,
-        breast_height_age=bh_age,
-        crown_ratio=crown_ratio,
-        origin=origin,
-        tree_number=tree_number,
-        sapling=sapling,
-        stratum=stratum,
-    )
-
-    def delete(index):
-        idx = np.asarray(index, dtype=int)
-        for name, value in vars(rt).items():
-            if isinstance(value, np.ndarray):
-                setattr(rt, name, np.delete(value, idx, axis=0))
-        rt.size = len(rt.stems_per_ha)
-
-    rt.delete = delete
+    n = stems_arr.shape[0]
+    rt = ReferenceTrees()
+    rt.create([
+        {
+            "identifier": f"stand-12345-{i + 1}-tree",
+            "tree_number": i + 1,
+            "stems_per_ha": float(stems_arr[i]),
+            "breast_height_diameter": float(d_arr[i]),
+            "height": float(h_arr[i]),
+            "species": int(species_arr[i]),
+            "biological_age": float(bio_age_arr[i]),
+            "breast_height_age": float(bh_age_arr[i]),
+            "crown_ratio": float(crown_ratio_arr[i]),
+            "origin": int(origin_arr[i]),
+            "stratum": int(origin_arr[i]),
+            "storey": int(storey_arr[i]),
+            "sapling": bool(h_arr[i] < 1.3),
+            "tree_category": "1",
+            "management_category": 1,
+        }
+        for i in range(n)
+    ])
     return rt
+
 # ---------- DLL stub ----------
 
 
@@ -412,44 +417,44 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         stand = make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
-            def grow_with_state(self, *args: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
-                # Only tree id=1 grows / survives
+            def grow_with_state(self, yy: Any, yp: Any, numtrees: int, buffers: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
+                # Mimic the real Motti wrapper: Growth mutates the persistent yp
+                # buffer, and the returned tree_ids are the surviving trees.
+                surviving = yp[0][0]
+                surviving.d13 += 0.7
+                surviving.h += 1.2
+                surviving.f -= 5.0
+                surviving.age = 20.0
+                surviving.age13 = 10.0
+
                 return GrowthDeltas(
-                    tree_ids=[1],
-                    tree_sids=[2],
+                    tree_ids=[int(surviving.id)],
+                    tree_sids=[int(surviving.sid)],
                     trees_id=[+0.7],    # Δd
                     trees_ih=[+1.2],    # Δh
                     trees_if=[-5.0],    # Δf
-                    trees_age=[20],
-                    trees_age13=[10],
+                    trees_age=[20.0],
+                    trees_age13=[10.0],
                 )
 
         dll_stub = GrowingDLL()
         pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        orig_prune = grow_motti.prune_reference_trees_not_in_motti
-        try:
-            grow_motti.prune_reference_trees_not_in_motti = lambda stand: None
-
-            out_stand, _ = grow_motti.grow_motti_dll_fn(
-                stand,
-                predictor=pred,
-                step=5,
-            )
-        finally:
-            grow_motti.prune_reference_trees_not_in_motti = orig_prune
+        out_stand, _ = grow_motti.grow_motti_dll_fn(
+            stand,
+            predictor=pred,
+            step=5,
+        )
 
         # Make linters happy: ensure we got a vector trees container back
         self.assertIsNotNone(out_stand.reference_trees)
         rt_out = out_stand.reference_trees
         assert rt_out is not None
 
-        # tree 1 updated by deltas
+        # tree 1 updated through the mutated Motti yp buffer
+        self.assertEqual(rt_out.size, 1)
         self.assertAlmostEqual(rt_out.breast_height_diameter[0], 10.0 + 0.7, places=6)
         self.assertAlmostEqual(rt_out.height[0], 12.0 + 1.2, places=6)
         self.assertAlmostEqual(rt_out.stems_per_ha[0], 100.0 - 5.0, places=6)
 
-        # tree 2 missing from DLL result → stems set to 0 (d, h unchanged)
-        self.assertAlmostEqual(rt_out.breast_height_diameter[1], 12.0, places=6)
-        self.assertAlmostEqual(rt_out.height[1], 14.0, places=6)
-        self.assertEqual(float(rt_out.stems_per_ha[1]), 0.0)
+        # tree 2 missing from DLL result → pruned by reconcile_reference_trees_from_motti

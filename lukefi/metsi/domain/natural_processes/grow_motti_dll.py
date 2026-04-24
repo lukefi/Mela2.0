@@ -813,10 +813,9 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     predictor = operation_parameters.get("predictor", None)
 
     stand = input_
-    if stand.year > stand.start_year:
-        sim_year: int = (stand.year - stand.start_year)
-    else:
-        sim_year: int = stand.year
+
+    sim_year: int = (stand.year - stand.start_year) or 0
+
     rt = stand.reference_trees
 
     if stand.land_use_category and stand.land_use_category >= LandUseCategory.WASTE_LAND:
