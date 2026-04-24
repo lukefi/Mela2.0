@@ -11,15 +11,6 @@ from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.formats.util import parse_int
 
 
-def _select_vmi9_indices(row: str):
-    fc_raw = row[VMI9_STAND_COMMON["forestry_centre"]]
-    fc = parse_int((fc_raw or "").strip())
-    # Match VMI9Builder: 11..13 => North, else South
-    if fc is not None and 11 <= fc <= 13:
-        return VMI9_STAND_INDICES_PSUOMI
-    return VMI9_STAND_INDICES_ESUOMI
-
-
 def test_vmi9_kasittelyluokka():
     base = pathlib.Path(__file__).resolve().parent.parent
 
@@ -35,7 +26,7 @@ def test_vmi9_kasittelyluokka():
     assert len(stand_rows) == len(expected), f"stand_rows={len(stand_rows)} expected={len(expected)}"
 
     for row, exp in zip(stand_rows, expected):
-        idx = _select_vmi9_indices(row)
+        idx = VMI9Builder._select_stand_indices(row)
         src = vmi_util.generate_source_data(idx, row)
         got = VMI9Builder._determine_forest_management_category(src)
         assert math.isclose(got, exp, rel_tol=0.0, abs_tol=1e-9), (got, exp)
