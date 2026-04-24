@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Callable, List
+from typing import Any, Tuple, Callable
 
 
 class Conversion():
@@ -8,10 +8,10 @@ class Conversion():
         self.indices = indices
         self.object_type = object_type
 
-    def extract_index(self, data: List):
+    def extract_index(self, data: dict[str, str]):
         return (data[i] for i in self.indices)
 
-    def __call__(self, data: List, obj: Any):
+    def __call__(self, data: dict[str, str], obj: Any):
         datavars = self.extract_index(data)
         obj = () if self.object_type is None else (obj,)
         input_ = [*datavars, *obj]
@@ -30,7 +30,7 @@ class ConversionMapper():
                 subset.update({k: dconv})
         return subset
 
-    def apply_conversions[T](self, obj: T, source: list[Any]) -> T:
+    def apply_conversions[T](self, obj: T, source: dict[str, str]) -> T:
         """ Applies declared conversions with source data and
             adds the mapping result to the given object.
 
