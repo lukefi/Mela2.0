@@ -29,10 +29,10 @@ class VMI9Builder(VMIBuilder):
             kind = self._classify_row(row)
 
             if kind == RowKind.STAND:
-                self.stand_rows.append({key: row[index] for key, index in self._select_stand_indices(row).items()})
+                self.stand_rows.append(vmi_util.generate_source_data(self._select_stand_indices(row), row))
 
             elif kind == RowKind.TREE and self.builder_flags.get("measured_trees", False):
-                tree_row = {key: row[index] for key, index in VMI9_TREE_INDICES.items()}
+                tree_row = vmi_util.generate_source_data(VMI9_TREE_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(tree_row)
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 

@@ -10,6 +10,10 @@ from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_in
 from lukefi.metsi.app.utils import MetsiException
 
 
+def generate_source_data(indices: dict[str, slice], row: str) -> dict[str, str]:
+    return {key: row[index] for key, index in indices.items()}
+
+
 def determine_area_factors(small_tree_sourcevalue: str, big_tree_sourcevalue: str) -> tuple[float, float]:
     """Compute forest stand specific scaling factors for area and reference tree stem count scaling."""
     small = get_or_default(parse_float(small_tree_sourcevalue), 0.0) / 10

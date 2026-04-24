@@ -22,24 +22,28 @@ class VMI13Builder(VMIBuilder):
         super().__init__(builder_flags, declared_conversions)
         for row in data_rows:
             kind = self._classify_row(row)
-            split_row = row.split()
 
             if kind == RowKind.STAND:
-                self.stand_rows.append({key: split_row[index] for key, index in VMI13_STAND_INDICES.items()})
+                self.stand_rows.append(self._generate_source_data(VMI13_STAND_INDICES, row))
 
             elif kind == RowKind.STRATUM and self.builder_flags.get("strata", False):
-                stratum_row = {key: split_row[index] for key, index in VMI13_STRATUM_INDICES.items()}
+                stratum_row = self._generate_source_data(VMI13_STRATUM_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(stratum_row)
                 self.stratum_rows.setdefault(stand_identifier, []).append(stratum_row)
 
             elif kind == RowKind.TREE and self.builder_flags.get("measured_trees", False):
-                tree_row = {key: split_row[index] for key, index in VMI13_TREE_INDICES.items()}
+                tree_row = self._generate_source_data(VMI13_TREE_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(tree_row)
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
     @staticmethod
     def _classify_row(row: str) -> RowKind:
         return RowKind(row[VMI13_STAND_INDICES["row_type"]])
+
+    @staticmethod
+    def _generate_source_data(indices: dict[str, int], row: str) -> dict[str, str]:
+        split_row = row.split()
+        return {key: split_row[index] for key, index in indices.items()}
 
     @override
     def build(self) -> StandList:

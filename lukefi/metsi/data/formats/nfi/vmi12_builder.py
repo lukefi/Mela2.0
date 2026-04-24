@@ -28,15 +28,15 @@ class VMI12Builder(VMIBuilder):
             kind = self._classify_row(row)
 
             if kind == RowKind.STAND:
-                self.stand_rows.append({key: row[index] for key, index in VMI12_STAND_INDICES.items()})
+                self.stand_rows.append(vmi_util.generate_source_data(VMI12_STAND_INDICES, row))
 
             elif kind == RowKind.STRATUM and self.builder_flags.get("strata", False):
-                stratum_row = {key: row[index] for key, index in VMI12_STRATUM_INDICES.items()}
+                stratum_row = vmi_util.generate_source_data(VMI12_STRATUM_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(stratum_row)
                 self.stratum_rows.setdefault(stand_identifier, []).append(stratum_row)
 
             elif kind == RowKind.TREE and self.builder_flags.get("measured_trees", False):
-                tree_row = {key: row[index] for key, index in VMI12_TREE_INDICES.items()}
+                tree_row = vmi_util.generate_source_data(VMI12_TREE_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(tree_row)
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
