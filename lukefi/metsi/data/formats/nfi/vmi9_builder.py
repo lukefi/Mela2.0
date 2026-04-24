@@ -146,12 +146,12 @@ class VMI9Builder(VMIBuilder):
             result.year
         )
 
-        result.forest_management_category = VMI9Builder.determine_forest_management_category(row)
+        result.forest_management_category = VMI9Builder._determine_forest_management_category(row)
 
         return result
 
     @staticmethod
-    def determine_forest_management_category(
+    def _determine_forest_management_category(
         row: dict[str, str],
     ) -> float:
         """

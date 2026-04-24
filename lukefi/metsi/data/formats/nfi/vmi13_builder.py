@@ -123,7 +123,7 @@ class VMI13Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
-        height = VMI13Builder.transform_height_above_sea_level(row["height_above_sea_level"])
+        height = VMI13Builder._transform_height_above_sea_level(row["height_above_sea_level"])
         result.set_geo_location(lat, lon, height)
 
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
@@ -276,7 +276,7 @@ class VMI13Builder(VMIBuilder):
                             county {county}, lohkomuoto {lohkomuoto} and lohkotarkenne {lohkotarkenne}")
 
     @staticmethod
-    def transform_height_above_sea_level(sourcevalue: str) -> float | None:
+    def _transform_height_above_sea_level(sourcevalue: str) -> float | None:
         """Return given number value string as float, or None on error"""
         try:
             return float(sourcevalue)
