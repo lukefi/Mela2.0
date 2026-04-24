@@ -694,15 +694,6 @@ class MottiDLLPredictor:
             buffers=buffers,
         )
 
-        temp_ms = MottiState(
-            dll=self.dll,
-            yy=yy,
-            yp=yp,
-            ntrees=int(ntrees),
-            buffers=buffers,
-            signature=tuple(ids.tolist()),
-        )
-
         _strip_tree_strata(self.stand)
 
         if MottiState is not None:
@@ -822,8 +813,10 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     predictor = operation_parameters.get("predictor", None)
 
     stand = input_
-    sim_year: int = (stand.year - stand.start_year) or 0
-
+    if stand.year > stand.start_year:
+        sim_year: int = (stand.year - stand.start_year)
+    else:
+        sim_year: int = stand.year
     rt = stand.reference_trees
 
     if stand.land_use_category and stand.land_use_category >= LandUseCategory.WASTE_LAND:
