@@ -33,89 +33,6 @@ from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natura
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
-def debug_dump_reference_trees(stand: ForestStand, label: str) -> None:
-    rt = getattr(stand, "reference_trees", None)
-    print(f"\n=== {label} / reference_trees ===")
-    if rt is None:
-        print("reference_trees = None")
-        return
-    print("rt.size =", rt.size)
-    for i in range(rt.size):
-        print(
-            "  RT",
-            i,
-            "sid=", rt.stratum[i],
-            "tree_number=", rt.tree_number[i],
-            "sapling=", bool(rt.sapling[i]),
-            "f=", float(rt.stems_per_ha[i]),
-            "d=", float(rt.breast_height_diameter[i]),
-            "h=", float(rt.height[i]),
-            "age=", float(rt.biological_age[i]),
-            "age13=", float(rt.breast_height_age[i]),
-            "ba=", float(rt.basal_area[i]),
-            "vol=", float(rt.volume[i]),
-        )
-
-
-def debug_dump_motti_state_raw(ms: MottiState, label: str) -> None:
-    print(f"\n=== {label} ===")
-    if ms is None:
-        print("ms = None")
-        return
-
-    print("ms.ntrees =", ms.ntrees)
-
-    # Dump yp rows that Motti says are active
-    if ms.yp is None:
-        print("yp = None")
-    else:
-        print("yp active rows:")
-        for i in range(int(ms.ntrees)):
-            t = ms.yp[0][i]
-            print(
-                "  YP",
-                i,
-                "sid=", getattr(t, "sid", None),
-                "id=", getattr(t, "id", None),
-                "spe=", getattr(t, "spe", None),
-                "f=", getattr(t, "f", None),
-                "d13=", getattr(t, "d13", None),
-                "h=", getattr(t, "h", None),
-                "age=", getattr(t, "age", None),
-                "age13=", getattr(t, "age13", None),
-            )
-
-    # Dump ut rows with positive stems
-    if ms.buffers is None:
-        print("buffers = None")
-    else:
-        ut = ms.buffers.saplings
-        found_ut = False
-        for layer in range(10):
-            for spe_name, _internal_species in UT_SPECIES_FIELDS:
-                s = getattr(ut[0][layer], spe_name)
-                year = getattr(s, "year", None)
-                for cat_code, _cat_label in UT_CATEGORIES:
-                    stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
-                    if stems > 0.0:
-                        found_ut = True
-                        print(
-                            "  UT",
-                            "layer=", layer,
-                            "spe=", spe_name,
-                            "cat=", cat_code,
-                            "year=", year,
-                            "osid=", getattr(s, f"osid_{cat_code}", None),
-                            "f=", stems,
-                            "h=", getattr(s, f"h_{cat_code}", None),
-                            "d=", getattr(s, f"d_{cat_code}", None),
-                            "age=", getattr(s, f"age_{cat_code}", None),
-                            "age13=", getattr(s, f"age13_{cat_code}", None),
-                        )
-        if not found_ut:
-            print("ut positive rows: none")
-
-
 def _build_reference_tree_update(
     *,
     identifier: str,
@@ -151,268 +68,6 @@ def _build_reference_tree_update(
         "basal_area": float(basal_area),
         "volume": float(volume),
     }
-
-
-def _grouped_yp_indices_by_sid(ms: MottiState) -> dict[int, list[int]]:
-    grouped: dict[int, list[int]] = {}
-    for i in range(int(ms.ntrees)):
-        sid = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
-        if sid is None:
-            continue
-        grouped.setdefault(sid, []).append(i)
-
-    for sid, indices in grouped.items():
-        indices.sort(key=lambda j: int(getattr(ms.yp[0][j], "id", 0) or 0))
-    return grouped
-
-
-def sync_ut_to_reference_trees(stand: ForestStand) -> None:
-    ms = getattr(stand, "motti_state", None)
-    if ms is None or ms.buffers is None:
-        return
-
-    ut = ms.buffers.saplings
-    rt = stand.reference_trees
-    next_osid = next_osite_id(stand)
-
-    for layer in range(10):
-        for spe_name, internal_species in UT_SPECIES_FIELDS:
-            s = getattr(ut[0][layer], spe_name)
-
-            try:
-                if float(s.year) == -1.0:
-                    continue
-            except TypeError:
-                continue
-
-            for cat_code, _cat_label in UT_CATEGORIES:
-                stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
-                if stems <= 0.0:
-                    continue
-
-                osid_raw = getattr(s, f"osid_{cat_code}", 0.0)
-                osid = parse_int_id(osid_raw)
-
-                if osid is None:
-                    osid = next_osid
-                    next_osid += 1
-                    setattr(s, f"osid_{cat_code}", float(osid))
-
-                idx = find_sapling_reference_tree_index(rt, osid)
-                if idx is None:
-                    identifier, tree_number = new_reference_tree_identity(stand)
-                    storey = storey_from_layer(stand, layer)
-                else:
-                    identifier = str(rt.identifier[idx])
-                    tree_number = int(rt.tree_number[idx])
-
-                    existing_storey = int(rt.storey[idx])
-                    if existing_storey >= 0:
-                        storey = existing_storey
-                    else:
-                        storey = storey_from_layer(stand, layer)
-
-                row = _build_reference_tree_update(
-                    identifier=identifier,
-                    tree_number=tree_number,
-                    osid=osid,
-                    species=internal_species,
-                    category_code="0",  # Small tree
-                    stems_per_ha=stems,
-                    origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
-                    height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
-                    diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
-                    age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
-                    age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
-                    basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
-                    volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
-                    storey=storey,
-                )
-
-                print(
-                    "UT ROW",
-                    "osid=", osid,
-                    "stems=", stems,
-                    "sapling_idx=", find_sapling_reference_tree_index(rt, osid),
-                )
-
-                if idx is None:
-                    rt.create(row)
-                else:
-                    rt.update(row, idx)
-
-
-def sync_yp_to_reference_trees(stand: ForestStand) -> None:
-    ms = getattr(stand, "motti_state", None)
-    if ms is None or ms.yp is None:
-        return
-
-    yp = ms.yp
-    rt = stand.reference_trees
-
-    for i in range(int(ms.ntrees)):
-        t = yp[0][i]
-
-        sid = parse_int_id(getattr(t, "sid", 0))
-        if sid is None:
-            continue
-        yp_tree_id = parse_int_id(getattr(t, "id", 0))
-
-        if yp_tree_id is None:
-            identifier, tree_number = new_reference_tree_identity(stand)
-            yp_tree_id = tree_number
-            t.id = float(tree_number)
-            idx = None
-            storey = int(Storey.UNSET)
-        else:
-            idx = find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
-
-            if idx is None:
-                identifier, tree_number = new_reference_tree_identity(stand)
-                yp_tree_id = tree_number
-                t.id = float(tree_number)
-                storey = int(Storey.UNSET)
-            else:
-                identifier = str(rt.identifier[idx])
-                tree_number = int(rt.tree_number[idx])
-                storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
-
-        row = {
-            "identifier": identifier,
-            "tree_number": int(yp_tree_id),
-            "stratum": str(int(sid)),
-            "species": int(t.spe),
-            "stems_per_ha": float(t.f),
-            "origin": safe_origin(int(t.snt) - 1),
-            "height": float(t.h),
-            "breast_height_diameter": float(t.d13),
-            "biological_age": float(t.age),
-            "breast_height_age": float(t.age13),
-            "sapling": False,
-            "tree_category": "1",
-            "management_category": 1,
-            "storey": int(storey),
-            "basal_area": float(t.ba) if getattr(t, "ba", None) is not None else 0.0,
-            "volume": float(t.vol) if getattr(t, "vol", None) is not None else 0.0,
-        }
-
-        if idx is None:
-            rt.create(row)
-        else:
-            rt.update(row, idx)
-
-
-def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
-    """
-    Keep only ReferenceTrees that have a live match in the current Motti YP vector.
-
-    This is intentionally stricter than prune_reference_trees_not_in_motti():
-    after Motti init / refresh we first rebuild the tree layer from YP, then we
-    rebuild the sapling layer from UT. Any pre-existing RF that is not present in
-    YP is deleted before UT rows are recreated.
-    """
-    rt = stand.reference_trees
-    ms = getattr(stand, "motti_state", None)
-
-    if rt is None or rt.size == 0:
-        return
-
-    live_yp: set[tuple[int, int]] = set()
-    if ms is not None and ms.yp is not None:
-        for i in range(int(ms.ntrees)):
-            t = ms.yp[0][i]
-            sid = parse_int_id(getattr(t, "sid", 0))
-            tree_id = parse_int_id(getattr(t, "id", 0))
-            if sid is not None and tree_id is not None:
-                live_yp.add((sid, tree_id))
-
-    delete_idx: list[int] = []
-    for i in range(rt.size):
-        sid = parse_int_id(rt.stratum[i])
-        try:
-            tree_number = int(rt.tree_number[i])
-        except (TypeError, ValueError):
-            tree_number = -1
-
-        if sid is None or tree_number <= 0 or (sid, tree_number) not in live_yp:
-            delete_idx.append(i)
-
-    if delete_idx:
-        rt.delete(np.array(delete_idx, dtype=int))
-
-
-def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
-    sync_yp_to_reference_trees(stand)
-    prune_promoted_sapling_reference_trees(stand)
-
-    if init_mode:
-        prune_reference_trees_not_in_yp(stand)
-
-    sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand)
-
-
-def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
-    """
-    Normalize to EUREF-FIN/TM35FIN kilometers.
-    Input is expected to be in meters
-    - Raise if values look like lat/long.
-    """
-    if not y1 or not x1:
-        raise ValueError("Stand is missing coordinates required by Motti")
-    abs_y, abs_x = abs(y1), abs(x1)
-
-    # Clear lat/long guard
-    if abs_y <= 90.0 and abs_x <= 180.0:
-        raise ValueError(
-            f"Coordinates look like lat/long (Y={y1}, X={x1}). "
-            "Expected EUREF-FIN/TM35 in kilometers."
-        )
-
-    return y1 / 1000.0, x1 / 1000.0
-
-
-def find_repo_root(start: Path) -> Optional[Path]:
-    """
-    Walk up from 'start' to find a repository root by markers:
-    - a directory that contains 'data/motti'
-    - or has a '.git' directory
-    - or has a 'pyproject.toml' file
-    """
-    cur = start.resolve()
-    for p in [cur, *cur.parents]:
-        if (p / "data" / "motti").exists():
-            return p
-        if (p / ".git").exists():
-            return p
-        if (p / "pyproject.toml").exists():
-            return p
-    return None
-
-
-def default_data_dir() -> Path:
-    """
-    Resolve default data_dir as {repository_root}/data/motti,
-    with optional override via MOTTI_DATA_DIR.
-    """
-    env = os.environ.get("MOTTI_DATA_DIR")
-    if env:
-        return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
-    repo = find_repo_root(Path.cwd())
-    base = repo if repo else Path.cwd()
-    return (base / "data" / "motti").resolve()
-
-
-def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
-    """
-    Turn a user-provided path into an absolute Path. If None, use default.
-    """
-    if path_like is None:
-        return default_data_dir()
-    p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
-    if not p.is_absolute():
-        p = Path.cwd() / p
-    return p.resolve()
 
 
 def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
@@ -523,6 +178,281 @@ def _strip_tree_strata(stand: ForestStand):
     stripped.storey = stand.tree_strata.storey.copy()
 
     stand.tree_strata = stripped
+
+
+def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
+    ms = getattr(stand, "motti_state", None)
+    rt = getattr(stand, "reference_trees", None)
+    if ms is None or ms.yp is None or rt is None or rt.size == 0:
+        return False
+
+    changed = False
+    for idx, delta in enumerate(np.asarray(removed_f, dtype=float).tolist()):
+        if delta <= 0.0:
+            continue
+        if bool(rt.sapling[idx]):
+            continue
+
+        sid = parse_int_id(rt.stratum[idx])
+        if sid is None:
+            continue
+
+        tree_number = int(rt.tree_number[idx])
+        if tree_number <= 0:
+            continue
+
+        for i in range(int(ms.ntrees)):
+            t = ms.yp[0][i]
+            if parse_int_id(getattr(t, "sid", 0)) != sid:
+                continue
+            if parse_int_id(getattr(t, "id", 0)) != tree_number:
+                continue
+
+            new_f = max(float(t.f) - float(delta), 0.0)
+            if new_f != float(t.f):
+                t.f = float(new_f)
+                changed = True
+            break
+
+    return changed
+
+
+def sync_ut_to_reference_trees(stand: ForestStand) -> None:
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.buffers is None:
+        return
+
+    ut = ms.buffers.saplings
+    rt = stand.reference_trees
+    next_osid = next_osite_id(stand)
+
+    for layer in range(10):
+        for spe_name, internal_species in UT_SPECIES_FIELDS:
+            s = getattr(ut[0][layer], spe_name)
+
+            try:
+                if float(s.year) == -1.0:
+                    continue
+            except TypeError:
+                continue
+
+            for cat_code, _cat_label in UT_CATEGORIES:
+                stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
+                if stems <= 0.0:
+                    continue
+
+                osid_raw = getattr(s, f"osid_{cat_code}", 0.0)
+                osid = parse_int_id(osid_raw)
+
+                if osid is None:
+                    osid = next_osid
+                    next_osid += 1
+                    setattr(s, f"osid_{cat_code}", float(osid))
+
+                idx = find_sapling_reference_tree_index(rt, osid)
+                if idx is None:
+                    identifier, tree_number = new_reference_tree_identity(stand)
+                    storey = storey_from_layer(stand, layer)
+                else:
+                    identifier = str(rt.identifier[idx])
+                    tree_number = int(rt.tree_number[idx])
+
+                    existing_storey = int(rt.storey[idx])
+                    if existing_storey >= 0:
+                        storey = existing_storey
+                    else:
+                        storey = storey_from_layer(stand, layer)
+
+                row = _build_reference_tree_update(
+                    identifier=identifier,
+                    tree_number=tree_number,
+                    osid=osid,
+                    species=internal_species,
+                    category_code="0",  # Small tree
+                    stems_per_ha=stems,
+                    origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
+                    height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
+                    diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
+                    age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
+                    age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
+                    basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
+                    volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
+                    storey=storey,
+                )
+
+                if idx is None:
+                    rt.create(row)
+                else:
+                    rt.update(row, idx)
+
+
+def sync_yp_to_reference_trees(stand: ForestStand) -> None:
+    ms = getattr(stand, "motti_state", None)
+    if ms is None or ms.yp is None:
+        return
+
+    yp = ms.yp
+    rt = stand.reference_trees
+
+    for i in range(int(ms.ntrees)):
+        t = yp[0][i]
+
+        sid = parse_int_id(getattr(t, "sid", 0))
+        if sid is None:
+            continue
+        yp_tree_id = parse_int_id(getattr(t, "id", 0))
+
+        if yp_tree_id is None:
+            identifier, tree_number = new_reference_tree_identity(stand)
+            yp_tree_id = tree_number
+            t.id = float(tree_number)
+            idx = None
+            storey = int(Storey.UNSET)
+        else:
+            idx = find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
+
+            if idx is None:
+                identifier, tree_number = new_reference_tree_identity(stand)
+                yp_tree_id = tree_number
+                t.id = float(tree_number)
+                storey = int(Storey.UNSET)
+            else:
+                identifier = str(rt.identifier[idx])
+                tree_number = int(rt.tree_number[idx])
+                storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
+
+        row = {
+            "identifier": identifier,
+            "tree_number": int(yp_tree_id),
+            "stratum": str(int(sid)),
+            "species": int(t.spe),
+            "stems_per_ha": float(t.f),
+            "origin": safe_origin(int(t.snt) - 1),
+            "height": float(t.h),
+            "breast_height_diameter": float(t.d13),
+            "biological_age": float(t.age),
+            "breast_height_age": float(t.age13),
+            "sapling": False,
+            "tree_category": "1",
+            "management_category": 1,
+            "storey": int(storey),
+            "basal_area": float(t.ba) if getattr(t, "ba", None) is not None else 0.0,
+            "volume": float(t.vol) if getattr(t, "vol", None) is not None else 0.0,
+        }
+
+        if idx is None:
+            rt.create(row)
+        else:
+            rt.update(row, idx)
+
+
+def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
+    """
+    Keep only ReferenceTrees that have a live in the YP vector.
+    Used after Motti4Init init.
+    """
+    rt = stand.reference_trees
+    ms = getattr(stand, "motti_state", None)
+
+    if rt is None or rt.size == 0:
+        return
+
+    live_yp: set[tuple[int, int]] = set()
+    if ms is not None and ms.yp is not None:
+        for i in range(int(ms.ntrees)):
+            t = ms.yp[0][i]
+            sid = parse_int_id(getattr(t, "sid", 0))
+            tree_id = parse_int_id(getattr(t, "id", 0))
+            if sid is not None and tree_id is not None:
+                live_yp.add((sid, tree_id))
+
+    delete_idx: list[int] = []
+    for i in range(rt.size):
+        sid = parse_int_id(rt.stratum[i])
+        try:
+            tree_number = int(rt.tree_number[i])
+        except (TypeError, ValueError):
+            tree_number = -1
+
+        if sid is None or tree_number <= 0 or (sid, tree_number) not in live_yp:
+            delete_idx.append(i)
+
+    if delete_idx:
+        rt.delete(np.array(delete_idx, dtype=int))
+
+
+def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
+    sync_yp_to_reference_trees(stand)
+    prune_promoted_sapling_reference_trees(stand)
+
+    if init_mode:
+        prune_reference_trees_not_in_yp(stand)
+
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
+
+
+def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
+    """
+    Normalize to EUREF-FIN/TM35FIN kilometers.
+    Input is expected to be in meters
+    - Raise if values look like lat/long.
+    """
+    if not y1 or not x1:
+        raise ValueError("Stand is missing coordinates required by Motti")
+    abs_y, abs_x = abs(y1), abs(x1)
+
+    # Clear lat/long guard
+    if abs_y <= 90.0 and abs_x <= 180.0:
+        raise ValueError(
+            f"Coordinates look like lat/long (Y={y1}, X={x1}). "
+            "Expected EUREF-FIN/TM35 in kilometers."
+        )
+
+    return y1 / 1000.0, x1 / 1000.0
+
+
+def find_repo_root(start: Path) -> Optional[Path]:
+    """
+    Walk up from 'start' to find a repository root by markers:
+    - a directory that contains 'data/motti'
+    - or has a '.git' directory
+    - or has a 'pyproject.toml' file
+    """
+    cur = start.resolve()
+    for p in [cur, *cur.parents]:
+        if (p / "data" / "motti").exists():
+            return p
+        if (p / ".git").exists():
+            return p
+        if (p / "pyproject.toml").exists():
+            return p
+    return None
+
+
+def default_data_dir() -> Path:
+    """
+    Resolve default data_dir as {repository_root}/data/motti,
+    with optional override via MOTTI_DATA_DIR.
+    """
+    env = os.environ.get("MOTTI_DATA_DIR")
+    if env:
+        return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
+    repo = find_repo_root(Path.cwd())
+    base = repo if repo else Path.cwd()
+    return (base / "data" / "motti").resolve()
+
+
+def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
+    """
+    Turn a user-provided path into an absolute Path. If None, use default.
+    """
+    if path_like is None:
+        return default_data_dir()
+    p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    return p.resolve()
 
 
 # -------- vectorized predictor --------
@@ -676,11 +606,6 @@ class MottiDLLPredictor:
 
         spedom = _spedom(self.stand.reference_trees)
 
-        print("ENSURE_STATE ENTER",
-              "has_ms=", getattr(self.stand, "motti_state", None) is not None,
-              "rt.size=", self.stand.reference_trees.size,
-              "strata.size=", 0 if self.stand.tree_strata is None else self.stand.tree_strata.size)
-
         y_km, x_km = auto_euref_km(self.get_y, self.get_x)
         yy = self.dll.new_site(
             Y=y_km,
@@ -756,16 +681,7 @@ class MottiDLLPredictor:
             )
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
-
-        print("\nINIT INPUT TREES_PY:")
-        for row in trees_py:
-            print(" ", row)
-        yp, ntrees = self.dll.new_trees(trees_py)
-
         strata_py = _build_motti_strata_py(self.stand)
-        print("\nINIT INPUT STRATA_PY:")
-        for row in strata_py:
-            print(" ", row)
         yo = self.dll.new_strata(strata_py)
 
         buffers = self.dll.alloc_state_buffers(ctrl=None)
@@ -787,9 +703,7 @@ class MottiDLLPredictor:
             signature=tuple(ids.tolist()),
         )
 
-        debug_dump_motti_state_raw(temp_ms, "after initialize_with_state")
-        debug_dump_yy_sapling_storey(temp_ms, "after initialize_with_state")
-        # _strip_tree_strata(self.stand)
+        _strip_tree_strata(self.stand)
 
         if MottiState is not None:
             self.stand.motti_state = MottiState(
@@ -925,73 +839,12 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     else:
         pred = predictor
 
-    debug_dump_reference_trees(stand, "before evolve")
-    ms_before = getattr(stand, "motti_state", None)
-    if ms_before is not None:
-        debug_dump_motti_state_raw(ms_before, "before evolve")
-        debug_dump_yy_sapling_storey(ms_before, "before evolve")
-
-    growth = pred.evolve(step=step, sim_year=sim_year)
-
-    ms_after = getattr(stand, "motti_state", None)
-    if ms_after is not None:
-        debug_dump_motti_state_raw(ms_after, "after evolve before sync")
-        debug_dump_yy_sapling_storey(ms_after, "after evolve before sync")
-
-    print(
-        "GROWTH DELTAS SUMMARY",
-        "returned_keys=", sorted(
-            (int(sid), int(tid))
-            for sid, tid in zip(growth.tree_sids, growth.tree_ids)
-            if sid is not None
-        ),
-        "n_growth_rows=", len(growth.tree_ids),
-    )
-
-    # Advance simulation year, but do not mutate tree measurements from Python-side deltas.
+    pred.evolve(step=step, sim_year=sim_year)
     stand.year = (stand.year or 0) + step
 
     reconcile_reference_trees_from_motti(stand, init_mode=False)
-    debug_dump_reference_trees(stand, "after full motti sync")
 
     return stand, []
-
-
-def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
-    ms = getattr(stand, "motti_state", None)
-    rt = getattr(stand, "reference_trees", None)
-    if ms is None or ms.yp is None or rt is None or rt.size == 0:
-        return False
-
-    changed = False
-    for idx, delta in enumerate(np.asarray(removed_f, dtype=float).tolist()):
-        if delta <= 0.0:
-            continue
-        if bool(rt.sapling[idx]):
-            continue
-
-        sid = parse_int_id(rt.stratum[idx])
-        if sid is None:
-            continue
-
-        tree_number = int(rt.tree_number[idx])
-        if tree_number <= 0:
-            continue
-
-        for i in range(int(ms.ntrees)):
-            t = ms.yp[0][i]
-            if parse_int_id(getattr(t, "sid", 0)) != sid:
-                continue
-            if parse_int_id(getattr(t, "id", 0)) != tree_number:
-                continue
-
-            new_f = max(float(t.f) - float(delta), 0.0)
-            if new_f != float(t.f):
-                t.f = float(new_f)
-                changed = True
-            break
-
-    return changed
 
 
 def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
@@ -999,11 +852,10 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
     Rebuild Motti internal state after yp edits, run grow(step=0) and
     then synchronize ReferenceTrees from yp/ut.
     """
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.yp is None or ms.buffers is None:
         return
 
-    debug_dump_yy_sapling_storey(ms, "before grow_with_state")
     growth = ms.dll.grow_with_state(
         ms.yy,
         ms.yp,
@@ -1012,8 +864,6 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
         step=0,
     )
     ms.ntrees = len(growth.tree_ids)
-
-    debug_dump_yy_sapling_storey(ms, "after grow_with_state")
 
     reconcile_reference_trees_from_motti(stand)
 
@@ -1039,7 +889,7 @@ def apply_motti_yp_reduction_from_removed_reference_trees(
 def collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
     live: set[tuple[str, int, int | None]] = set()
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None:
         return live
 
@@ -1102,7 +952,7 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
 def prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     """
-    Delete old sapling RF if SID exists in YP vector.
+    Delete old sapling RFs if SID exists in YP vector.
     """
     ms = stand.motti_state
     rt = stand.reference_trees
@@ -1131,24 +981,3 @@ def prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
 
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
-
-
-def debug_dump_yy_sapling_storey(ms: MottiState, label: str) -> None:
-    print(f"\n=== {label} / yy ===")
-    if ms is None or ms.yy is None:
-        print("yy = None")
-        return
-
-    yy = ms.yy
-
-    print("yy.year =", float(yy.year))      # index 50
-    print("yy.step =", float(yy.step))
-    print("yy.nstorey =", float(yy.nstorey))
-    print("yy.gstorey =", float(yy.gstorey))
-
-    print("yy.st2.age100 =", float(yy.st2.age100))  # index 86
-    print("yy.st2.h100   =", float(yy.st2.h100))    # 87
-    print("yy.st2.g      =", float(yy.st2.g))       # 88
-    print("yy.st2.f      =", float(yy.st2.f))       # 89
-    print("yy.st2.dg     =", float(yy.st2.dg))      # 90
-    print("yy.st2.spe    =", float(yy.st2.spe))     # 91
