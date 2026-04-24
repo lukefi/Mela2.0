@@ -258,9 +258,7 @@ class VMI11Builder(VMIBuilder):
         try:
             return VMI11_COUNTY_AREAS[forestry_centre][osite]
         except KeyError as exc:
-            raise KeyError(
-                f"No VMI11 area_ha for metkes={forestry_centre}, osite={osite}"
-            ) from exc
+            raise KeyError(f"No VMI11 area_ha for metkes={forestry_centre}, osite={osite}") from exc
 
     @staticmethod
     def _transform_height_above_sea_level(sourcevalue: str) -> float | None:
