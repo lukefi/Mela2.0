@@ -628,8 +628,7 @@ class MottiDLLPredictor:
             drain=self.drain,
             xt_ndrain=self.xt_ndrain,
             alr=self.alr,
-            # year=sim_year - self.stand.start_year,
-            year=sim_year,
+            year=sim_year - self.stand.start_year,
             step=step,
             convert_mela_site=self.use_dll_site_convert,
             spedom=spedom,
@@ -815,8 +814,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
 
     stand = input_
 
-    # sim_year: int = (stand.year - stand.start_year) or 0
-    sim_year: int = stand.year or 0
+    sim_year: int = (stand.year - stand.start_year) or 0
 
     rt = stand.reference_trees
 

@@ -135,6 +135,13 @@ def next_osite_id(stand: ForestStand) -> int:
                     if x is not None:
                         used.append(x)
 
+    if ms is not None and getattr(ms, "yp", None) is not None:
+        for i in range(int(getattr(ms, "ntrees", 0) or 0)):
+            x = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
+            if x is not None:
+                used.append(x)
+
+    print("Used SID:s:", used)
     return (max(used) + 1) if used else 1
 
 
