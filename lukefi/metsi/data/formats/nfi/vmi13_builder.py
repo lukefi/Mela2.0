@@ -38,7 +38,10 @@ class VMI13Builder(VMIBuilder):
 
     @staticmethod
     def _classify_row(row: str) -> RowKind:
-        return RowKind(row[VMI13_STAND_INDICES["row_type"]])
+        try:
+            return RowKind(row[VMI13_STAND_INDICES["row_type"]])
+        except ValueError:
+            return RowKind.UNKNOWN
 
     @staticmethod
     def _generate_source_data(indices: dict[str, int], row: str) -> dict[str, str]:

@@ -42,7 +42,10 @@ class VMI12Builder(VMIBuilder):
 
     @staticmethod
     def _classify_row(row: str) -> RowKind:
-        return RowKind(row[VMI12_STAND_INDICES["row_type"]])
+        try:
+            return RowKind(row[VMI12_STAND_INDICES["row_type"]])
+        except ValueError:
+            return RowKind.UNKNOWN
 
     @override
     def build(self) -> StandList:
