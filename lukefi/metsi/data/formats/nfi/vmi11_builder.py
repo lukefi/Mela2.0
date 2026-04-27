@@ -1,4 +1,4 @@
-from typing import override
+from typing import Generator, override
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
@@ -23,7 +23,7 @@ class VMI11Builder(VMIBuilder):
     def __init__(self,
                  builder_flags: dict[str, bool],
                  declared_conversions: dict[str, Conversion],
-                 data_rows: list[str]) -> None:
+                 data_rows: Generator[str]) -> None:
         super().__init__(builder_flags, declared_conversions)
         for row in data_rows:
             kind = self._classify_row(row)

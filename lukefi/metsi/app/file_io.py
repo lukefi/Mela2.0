@@ -4,7 +4,7 @@ import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 import sqlite3
-from typing import Any, Optional
+from typing import Any, Generator, Optional
 from lukefi.metsi.data.formats.forest_centre.forest_centre_builder import GeoPackageBuilder, XMLBuilder
 from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
 from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
@@ -219,9 +219,9 @@ def csv_exp_writer(filepath: Path, container: ExportableContainer[ForestStand]) 
                 w.writerow([csv_cell(x) for x in row])
 
 
-def vmi_file_reader(file: str | Path) -> list[str]:
+def vmi_file_reader(file: str | Path) -> Generator[str]:
     with open(file, 'r', encoding='utf-8') as input_file:
-        return input_file.readlines()
+        yield from map(lambda row: row.strip("\n"), input_file)
 
 
 def xml_file_reader(file: str | Path) -> str:
