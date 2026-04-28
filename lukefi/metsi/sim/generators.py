@@ -35,7 +35,8 @@ class EventGeneratorBase(ABC, Generic[T]):
     @abstractmethod
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None
+                 db: Optional[sqlite3.Connection] = None,
+                 node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
         pass
 
@@ -80,11 +81,12 @@ class Sequence(EventGenerator[T]):
     @override
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None
+                 db: Optional[sqlite3.Connection] = None,
+                 node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
         current = payload
         for child in self.children:
-            for child_ in child.evaluate(current, db):
+            for child_ in child.evaluate(current, db, node):
                 current = child_
                 yield current
 
@@ -100,10 +102,11 @@ class Alternatives(EventGenerator[T]):
         return retval
 
     @override
-    def evaluate(self, payload: SimulationPayload[T], db: sqlite3.Connection |
-                 None = None) -> Generator[SimulationPayload[T], None, None]:
+    def evaluate(self, payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
         for child in self.children:
-            yield from child.evaluate(copy(payload), db)
+            yield from child.evaluate(copy(payload), db, node)
 
 
 class First(EventGenerator[T]):
