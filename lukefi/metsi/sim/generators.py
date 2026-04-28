@@ -6,6 +6,8 @@ from typing import Any, Generic, Mapping, Optional, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.domain.utils.file_io import output_node_to_db
+from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
@@ -147,13 +149,11 @@ class Event(EventGeneratorBase[T]):
         else:
             self.static_parameters = {}
 
-        self.dynamic_parameters = dynamic_parameters or {}
-
         if file_parameters is not None:
-            self.file_parameters = file_parameters
-            self._check_file_params()
-        else:
-            self.file_parameters = {}
+            self._check_file_params(file_parameters)
+            self.static_parameters = self._merge_params(self.static_parameters, file_parameters)
+
+        self.dynamic_parameters = dynamic_parameters or {}
 
         if preconditions is not None:
             self.preconditions = preconditions
@@ -193,7 +193,13 @@ class Event(EventGeneratorBase[T]):
             if not condition(payload):
                 return
 
-        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit)
+        resolved_dynamic: dict[str, Any] = {
+            name: fn(payload.computational_unit) for name, fn in self.dynamic_parameters.items()
+        }
+
+        combined_params = {**self.static_parameters, **resolved_dynamic}
+        
+        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit, **combined_params)
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
@@ -216,6 +222,13 @@ class Event(EventGeneratorBase[T]):
         )
 
         new_payload.node_id.append(node)
+
+        if db is not None and self.db_output:
+            output_node_to_db(db, new_payload, new_collected_data, self.tags)
+
+        if isinstance(new_payload.computational_unit, Finalizable):
+            new_payload.computational_unit.finalize()
+        
         yield new_payload
 
     @override
@@ -251,15 +264,17 @@ class Event(EventGeneratorBase[T]):
 
         return _processed
 
-    def _check_file_params(self):
-        for _, path in self.file_parameters.items():
+    @staticmethod
+    def _check_file_params(file_parameters: dict[str, str]):
+        for _, path in file_parameters.items():
             if not os.path.isfile(path):
                 raise FileNotFoundError(f"file {path} defined in operation_file_params was not found")
 
-    def _merge_params(self) -> dict[str, Any]:
-        common_keys = self.static_parameters.keys() & self.file_parameters.keys()
+    @staticmethod
+    def _merge_params(static_params: dict[str, Any], file_params: dict[str, str]) -> dict[str, Any]:
+        common_keys = static_params.keys() & file_params.keys()
         if common_keys:
             raise MetsiException(
                 f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
                 "in control.py. Please change the name of one of them.")
-        return self.static_parameters | self.file_parameters  # pipe is the merge operator
+        return static_params | file_params  # pipe is the merge operator
