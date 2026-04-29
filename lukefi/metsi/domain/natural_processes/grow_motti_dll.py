@@ -25,9 +25,8 @@ from lukefi.metsi.domain.natural_processes.util import (
     new_reference_tree_identity,
     storey_from_layer,
     find_non_sapling_reference_tree_index,
-    find_sapling_reference_tree_index
-
-
+    find_sapling_reference_tree_index,
+    storey_to_motti
 )
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.sim.collected_data import OpTuple
@@ -97,7 +96,7 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
         origin = safe_storey_value(strata.origin[i])
-        storey = safe_storey_value(strata.storey[i])
+        storey = storey_to_motti(stand, i, strata.storey[i])
 
         stratum_sid = parse_int_id(strata.stratum_number[i])
         if stratum_sid is None:
@@ -653,7 +652,13 @@ class MottiDLLPredictor:
             parse_int_id(v) or (self.stand.stand_id or (idx + 1))
             for idx, v in enumerate(rt.stratum.tolist())
         ]
-
+        storey_vec = np.asarray(
+            [
+                storey_to_motti(self.stand, idx, rt.storey[idx])
+                for idx in range(n)
+            ],
+            dtype=int,
+        )
         trees_py = [
             {
                 "id": int(i),
@@ -666,8 +671,10 @@ class MottiDLLPredictor:
                 "age13": float(a13),
                 "cr": float(c),
                 "snt": int(o + 1),
+                "storie": float(storey),
+
             }
-            for i, sid, f, d, hh, sp, a, a13, c, o in zip(
+            for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
                 ids.tolist(),
                 stratum_ids,
                 stems.tolist(),
@@ -678,6 +685,7 @@ class MottiDLLPredictor:
                 age13.tolist(),
                 cr.tolist(),
                 origin.astype(int).tolist(),
+                storey_vec.tolist(),
             )
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
@@ -876,6 +884,50 @@ def apply_motti_yp_reduction_from_removed_reference_trees(
     if changed and refresh:
         refresh_reference_trees_from_motti_after_yp_change(stand)
     return changed
+
+
+def mark_motti_yp_as_seed_trees(stand: ForestStand, *, tree_class: int = 3) -> bool:
+    """Mark all currently live YP trees as seed trees for Motti.
+
+    Motti's YP vector field at documented index 38 is exposed in the
+    CFFI wrapper as ``storie``. For seed-tree cutting the remaining trees
+    must have puuluokka/tree class 3 before Motti4AfterSeedtreeCutting is
+    called.
+    """
+
+    ms = stand.motti_state
+    if ms is None or ms.yp is None:
+        return False
+
+    changed = False
+    for i in range(int(ms.ntrees)):
+        t = ms.yp[0][i]
+        if float(getattr(t, "f", 0.0) or 0.0) <= 0.0:
+            continue
+        if float(getattr(t, "storie", 0.0) or 0.0) != float(tree_class):
+            t.storie = float(tree_class)
+            changed = True
+
+    return changed
+
+
+def after_seedtree_cutting_in_motti(stand: ForestStand, *, tree_class: int = 3) -> None:
+    """Run Motti seed-tree cutting post-processing and sync Python vectors."""
+
+    ms = stand.motti_state
+    if ms is None or ms.yp is None or ms.buffers is None:
+        return
+
+    mark_motti_yp_as_seed_trees(stand, tree_class=tree_class)
+
+    ms.ntrees = ms.dll.after_seedtree_cutting_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+    )
+
+    reconcile_reference_trees_from_motti(stand)
 
 
 def collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:

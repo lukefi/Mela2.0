@@ -12,6 +12,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.generators import Event
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
+from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
@@ -461,6 +462,74 @@ class Harvest20percent(Event[ForestStand]):
         )
 
 
+class SeedtreeCutting(Event[ForestStand]):
+    """
+    Seed-tree cutting event.
+
+    Uses the same selection machinery as normal cutting. With Motti active,
+    the treatment additionally marks remaining YP trees as puuluokka/tree
+    class 3 and calls Motti4AfterSeedtreeCutting.
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+        **kw,
+    ) -> None:
+        params = parameters or {}
+
+        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+            return np.ones(trees.size, dtype=bool)
+
+        default_tree_selection = {
+            "target": SelectionTarget("relative", "stems_per_ha", 0.5),
+            "sets": [
+                SelectionSet[ForestStand, ReferenceTrees](
+                    s_all,
+                    "breast_height_diameter",
+                    "stems_per_ha",
+                    "relative",
+                    1.0,
+                    profile_x=[0, 1],
+                    profile_y=[0.5, 0.5],
+                    profile_xmode="relative",
+                )
+            ],
+        }
+
+        seedtree_method = getattr(MelaMethodOfTheLastCutting, "SEED_TREE_POSITION", None)
+        if seedtree_method is None:
+            seedtree_method = getattr(MelaMethodOfTheLastCutting, "SEED_TREE_CUTTING", None)
+        if seedtree_method is None:
+            seedtree_method = getattr(MelaMethodOfTheLastCutting, "REGENERATION_CUTTING", None)
+
+        event_params = {
+            "tree_selection": default_tree_selection,
+            "mode": "odds_units",
+            "select_from_all": True,
+            "cutting_method": seedtree_method.value if seedtree_method is not None else 4,
+            "seed_tree_class": 3,
+        } | params
+
+        default_preconds: list[ForestCondition] = [
+            TimeSinceTreatment(20, cutting),
+            Condition(_forest_categories_regeneration),
+        ]
+
+        super().__init__(
+            treatment=seedtree_cutting,
+            static_parameters=event_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"seedtree_cutting", "motti_seedtree_cutting"},
+            **kw,
+        )
+
+
 class SaplingTreatmentMotti(Event[ForestStand]):
     """
     Example event that uses Motti4PCT.
@@ -655,6 +724,7 @@ __all__ = [
     "PlantingPines",
     "MarkRetentionTrees",
     "Harvest20percent",
+    "SeedtreeCutting",
     "SaplingTreatmentMotti",
     "EarlyCareMotti",
     "FillinPlantingMotti",

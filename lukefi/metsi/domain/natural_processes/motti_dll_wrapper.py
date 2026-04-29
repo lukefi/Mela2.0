@@ -228,6 +228,10 @@ class Motti4DLL:
                                   Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
                                   int *numtrees, int *rspe, float *num, int *ositeID, int *rv);
 
+        void Motti4AfterSeedtreeCutting(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
+                                        Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
+                                        int *numtrees, int *rv);
+
         void Motti4SeedingAgeShift(Motti4Site *yy, Motti4Saplings *ut, int *istep, int *rv);
 
         void Motti4MineralSoilsFertilization(
@@ -353,6 +357,7 @@ class Motti4DLL:
             yp[0][i].cr = float(t.get("cr", 0.0))
             yp[0][i].snt = float(t.get("snt", 1))
             yp[0][i].crerror = 0.0  # clear before growth
+            yp[0][i].storie = float(t.get("storie", 2.0))
         return yp, len(trees_py)
 
     # ---------- full grow (Init -> UpdateAfterImport -> loop Growth) ----------
@@ -876,6 +881,42 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    def after_seedtree_cutting_with_state(
+        self,
+        yy: Any,
+        yp: Any,
+        numtrees: int,
+        buffers: MottiStateBuffers,
+    ) -> int:
+        """
+        Call Motti4AfterSeedtreeCutting after a seed-tree cutting.
+
+        Remaining seed trees must already have tree class / puuluokka = 3
+        in the YP vector before this function is called. If Motti creates
+        natural regeneration, it is written to the persistent sapling buffer.
+        """
+        ffi, lib = self.ffi, self.lib
+
+        ntrees_p = ffi.new("int *", int(numtrees))
+        rv = ffi.new("int *")
+
+        with _maybe_chdir(self.data_dir):
+            lib.Motti4AfterSeedtreeCutting(
+                yy,
+                yp,
+                buffers.saplings,
+                buffers.kor_state,
+                buffers.vcr_state,
+                buffers.apv_state,
+                ntrees_p,
+                rv,
+            )
+
+        if rv[0] != 0:
+            raise RuntimeError(f"Motti4AfterSeedtreeCutting failed (rv={rv[0]})")
+
+        return int(ntrees_p[0])
+
     def seedling_delay_with_state(
         self,
         yy: Any,
@@ -1005,17 +1046,7 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def initialize_with_state(
-        self,
-        yo: Any,
-        yy: Any,
-        yp: Any,
-        numtrees: int,
-        buffers: MottiStateBuffers,
-    ) -> int:
-        """
-        One-time initialization for Motti4Init
-        """
+    def initialize_with_state(self, yo, yy, yp, numtrees: int, buffers) -> int:
         ffi, lib = self.ffi, self.lib
 
         ntrees_p = ffi.new("int *", int(numtrees))
@@ -1036,7 +1067,11 @@ class Motti4DLL:
                 err,
                 rv,
             )
+
         if rv[0] != 0 or err[0] != 0:
             raise RuntimeError(f"Motti4InitVer2 failed (rv={rv[0]}, err={err[0]})")
 
-        return self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)
+        before_update = int(ntrees_p[0])
+        after_update = self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)
+
+        return after_update

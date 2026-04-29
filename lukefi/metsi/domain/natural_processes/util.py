@@ -31,6 +31,97 @@ UT_CATEGORIES = [
     ("vlj", "farmed"),
 ]
 
+FDM_TO_MOTTI_STOREY = {
+    int(Storey.DOMINANT): 2,  # ylempi
+    int(Storey.UNDER): 1,     # alempi
+    int(Storey.OVER): 3,      # siemenpuu
+    int(Storey.SPARE): 4,     # säästöpuu
+}
+
+MOTTI_TO_FDM_STOREY = {
+    1: int(Storey.UNDER),
+    2: int(Storey.DOMINANT),
+    3: int(Storey.OVER),
+    4: int(Storey.SPARE),
+}
+
+
+def storey_from_motti(value: Any) -> int:
+    try:
+        return MOTTI_TO_FDM_STOREY.get(int(float(value)), int(Storey.UNSET))
+    except (TypeError, ValueError):
+        return int(Storey.UNSET)
+
+
+def storey_to_motti(
+    stand: ForestStand,
+    index: int,
+    value: Any,
+    *,
+    is_stratum_index: bool = False,
+) -> int:
+    """
+    Convert FDM Storey -> Motti puustojakso/puuluokka.
+
+    Exact classes:
+      DOMINANT -> 2
+      UNDER    -> 1
+      OVER     -> 3
+      SPARE    -> 4
+
+    Fallback:
+      - if only one stratum: ylempi=2
+      - if multiple strata and this stratum is clearly lower:
+          height gap > 5m and lower stratum height < 10m -> alempi=1
+      - otherwise ylempi=2
+
+    Parameters
+    ----------
+    index:
+        If is_stratum_index=True, this is a direct tree_strata row index.
+        Otherwise it is assumed to be a reference_trees row index, and the
+        matching stratum row is resolved through rt.stratum -> strata.stratum_number.
+    """
+    try:
+        fdm_storey = int(getattr(value, "value", value))
+    except (TypeError, ValueError):
+        fdm_storey = int(Storey.UNSET)
+
+    if fdm_storey in FDM_TO_MOTTI_STOREY:
+        return FDM_TO_MOTTI_STOREY[fdm_storey]
+
+    strata = getattr(stand, "tree_strata", None)
+    if strata is None or strata.size <= 1:
+        return 2
+
+    stratum_idx: int | None = None
+
+    if is_stratum_index:
+        if 0 <= index < strata.size:
+            stratum_idx = index
+    else:
+        rt = getattr(stand, "reference_trees", None)
+        if rt is not None and 0 <= index < rt.size:
+            target_sid = parse_int_id(rt.stratum[index])
+            if target_sid is not None:
+                for j in range(strata.size):
+                    sid = parse_int_id(strata.stratum_number[j])
+                    if sid == target_sid:
+                        stratum_idx = j
+                        break
+
+    if stratum_idx is None:
+        return 2
+
+    heights = np.nan_to_num(strata.mean_height, nan=0.0)
+    current_h = float(heights[stratum_idx])
+    max_h = float(np.max(heights))
+
+    if (max_h - current_h) > 5.0 and current_h < 10.0:
+        return 1
+
+    return 2
+
 
 def find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
     target_osid = int(osid)
