@@ -16,8 +16,6 @@ from lukefi.metsi.sim.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
-ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
-
 
 class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
