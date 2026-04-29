@@ -173,6 +173,11 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     node_str = "-".join(map(str, current.node_id))
     if transition_count:
         node_str += "-T" * transition_count
+
+    operation = current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing"
+    params = str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"
+    print(f"{current.computational_unit.identifier}: {current.computational_unit.time}: {node_str}: {operation}: {params}")
+
     cur = db.cursor()
     cur.execute(
         """--sql
@@ -182,8 +187,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
         """,
         (node_str,
          current.computational_unit.identifier,
-         current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing",
-         str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}",
+         operation,
+         params,
          str(tags) if len(tags) > 0 else "{}"))
     if output_state:
         current.computational_unit.output_to_db(db, node_str)
