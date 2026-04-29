@@ -40,8 +40,6 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
         for instruction in config.instructions:
             if all(condition(payload) for condition in instruction.conditions):
                 all_instructions_failed = False
-                # for i, root in enumerate(instruction.unwrap()):
-                #     for new_branch in root.evaluate(copy(payload), db, i + offset):
                 for new_branch in instruction.evaluate(copy(payload), db, node = offset):
                     time_step = _find_next_time_step(
                         new_branch,

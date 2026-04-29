@@ -4,7 +4,6 @@ from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
@@ -27,9 +26,6 @@ class SimulationInstruction[T: ComputationalUnit]:
             self.conditions = conditions
         else:
             self.conditions = []
-
-    def unwrap(self) -> list[EventTree[T]]:
-        return self.event_generator.compose_nested()
 
     def time_points(self, start_time: int) -> set[int]:
         return set().union(*[condition.time_points |

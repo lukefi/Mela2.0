@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from copy import copy, deepcopy
-from functools import reduce
 import os
 import sqlite3
 from typing import Any, Generic, Mapping, Optional, TypeVar, override
@@ -9,13 +8,11 @@ from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.processor import processor
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
+from lukefi.metsi.sim.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
@@ -24,10 +21,6 @@ ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T]
 
 class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
-
-    @abstractmethod
-    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
-        pass
 
     @abstractmethod
     def get_types_of_collected_data(self) -> CollectableDataTypes:
@@ -50,17 +43,6 @@ class EventGenerator(EventGeneratorBase[T], ABC):
     def __init__(self, children: Sequence_[EventGeneratorBase]):
         self.children = children
 
-    def compose_nested(self) -> list[EventTree[T]]:
-        """
-        Generate a list of partial EventTrees representing a single SimulationInstruction from the nested children
-        generators and Events.
-
-        :return: list of (local) root nodes of the generated partial EventTrees
-        """
-        root: EventTree[T] = EventTree()
-        self.unwrap([root])
-        return root.branches
-
     @override
     def get_types_of_collected_data(self) -> CollectableDataTypes:
         retval = set()
@@ -71,13 +53,6 @@ class EventGenerator(EventGeneratorBase[T], ABC):
 
 class Sequence(EventGenerator[T]):
     """Generator for sequential events."""
-
-    @override
-    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
-        current = parents
-        for child in self.children:
-            current = child.unwrap(current)
-        return current
 
     @override
     def evaluate(self,
@@ -101,13 +76,6 @@ class Alternatives(EventGenerator[T]):
     """Generator for branching events."""
 
     @override
-    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
-        retval = []
-        for child in self.children:
-            retval.extend(child.unwrap(parents))
-        return retval
-
-    @override
     def evaluate(self, payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
@@ -117,16 +85,7 @@ class Alternatives(EventGenerator[T]):
 
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
-
-    def __init__(self, children: Sequence_[EventGeneratorBase]):
-        super().__init__(children)
-
-    @override
-    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
-        retval = []
-        for child in self.children:
-            retval.extend(child.unwrap(parents))
-        return retval
+    pass
 
 
 class Event(EventGeneratorBase[T]):
@@ -182,18 +141,6 @@ class Event(EventGeneratorBase[T]):
         self.db_output = db_output
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
-        retval = []
-        for parent in parents:
-            branch = EventTree(
-                self._prepare_paremeterized_treatment(),
-                self.tags | self.treatment.default_tags,
-                self.db_output)
-            parent.add_branch(branch)
-            retval.append(branch)
-        return retval
-
-    @override
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
@@ -245,35 +192,6 @@ class Event(EventGeneratorBase[T]):
     @override
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
         return self.treatment.collected_data
-
-    def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
-        self._check_file_params()
-        base_params = dict(self._merge_params())  # static + file
-
-        def _processed(payload: SimulationPayload[T]):
-            stand = payload.computational_unit
-
-            # Evaluate dynamic_parameters: name -> fn(stand)
-            resolved_dynamic: dict[str, Any] = {
-                name: fn(stand) for name, fn in self.dynamic_parameters.items()
-            }
-
-            # Static / file params overridden by dynamic ones if same key
-            combined_params = {**base_params, **resolved_dynamic}
-
-            # Prepare treatment with *this* call's parameters
-            treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
-
-            # Pass combined params to processor so they end up in operation_history
-            return processor(
-                payload,
-                treatment,
-                self.preconditions,
-                self.postconditions,
-                **combined_params,
-            )
-
-        return _processed
 
     @staticmethod
     def _check_file_params(file_parameters: dict[str, str]):
