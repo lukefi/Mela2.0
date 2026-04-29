@@ -70,27 +70,4 @@ class Treatment(Generic[T_contra]):
             self.name = name
 
 
-class PreparedTreatment[T: ComputationalUnit]:
-    name: str
-    treatment_fn: TreatmentFn[T]
-    tags: set[str]
-
-    def __init__(self, treatment: Treatment[T], event_tags: Optional[set[str]] = None, **treatment_params):
-        self.tags = copy(treatment.default_tags)
-        if event_tags is not None:
-            self.tags |= event_tags
-
-        self.treatment_fn = partial(treatment.treatment_fn, **treatment_params)
-        self.name = treatment.name
-
-    def __call__(self, state: T) -> OpTuple[T]:
-        return self.treatment_fn(state)
-
-    def __repr__(self) -> str:
-        return self.name
-
-    def __str__(self) -> str:
-        return self.name
-
-
 do_nothing = Treatment[ComputationalUnit](do_nothing_, "do_nothing", {"nothing"})
