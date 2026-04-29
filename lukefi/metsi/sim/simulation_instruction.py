@@ -35,5 +35,5 @@ class SimulationInstruction[T: ComputationalUnit]:
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
-                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
         yield from self.event_generator.evaluate(payload, db, node)

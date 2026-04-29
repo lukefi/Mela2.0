@@ -81,14 +81,13 @@ class Alternatives(EventGenerator[T]):
     @override
     def evaluate(self, payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
-                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
         for i, child in enumerate(self.children):
             yield from child.evaluate(copy(payload), db, node + i)
 
 
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
-    pass
 
 
 class Event(EventGeneratorBase[T]):
@@ -147,7 +146,7 @@ class Event(EventGeneratorBase[T]):
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
-                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
         for condition in self.preconditions:
             if not condition(payload):
                 return
