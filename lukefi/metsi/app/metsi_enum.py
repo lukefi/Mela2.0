@@ -76,16 +76,6 @@ class StrataOrigin(IntConfigEnum):
     FORECASTED = 3
 
 
-class FormationStrategy(StringConfigEnum):
-    PARTIAL = 'partial'
-    FULL = 'full'
-
-
-class EvaluationStrategy(StringConfigEnum):
-    DEPTH = 'depth'
-    CHAINS = 'chains'
-
-
 class StateFormat(StringConfigEnum):
     CSV = 'csv'
     CSV_EXP = 'csv_exp'
@@ -102,7 +92,5 @@ class StateFormat(StringConfigEnum):
 __all__ = [
     "RunMode",
     "StrataOrigin",
-    "FormationStrategy",
-    "EvaluationStrategy",
     "StateFormat",
 ]
