@@ -465,6 +465,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
             insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
 
+    @override
     def update_aggregates(self):
         trees = self.reference_trees
         strata = self.tree_strata
