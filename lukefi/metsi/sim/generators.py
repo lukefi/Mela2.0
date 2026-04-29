@@ -61,13 +61,16 @@ class Sequence(EventGenerator[T]):
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
 
-        def wrapper(inputs: Generator[SimulationPayload[T]], generator: EventGeneratorBase[T]):
+        def wrapper(inputs: Generator[SimulationPayload[T]],
+                    generator: EventGeneratorBase[T],
+                    node: int):
             for parent in inputs:
                 yield from generator.evaluate(parent, db, node)
 
         chain = (unit for unit in [payload])
         for child in self.children:
-            chain = wrapper(chain, child)
+            chain = wrapper(chain, child, node)
+            node = 0
 
         yield from chain
 
@@ -80,7 +83,7 @@ class Alternatives(EventGenerator[T]):
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
         for i, child in enumerate(self.children):
-            yield from child.evaluate(copy(payload), db, i)
+            yield from child.evaluate(copy(payload), db, node + i)
 
 
 class First(EventGenerator[T]):
@@ -172,17 +175,15 @@ class Event(EventGeneratorBase[T]):
             (
                 payload.computational_unit.time,
                 self.treatment.name,
-                self.static_parameters,
+                combined_params,
                 self.treatment.default_tags
             )
         )
 
         new_payload.node_id.append(node)
 
-        # print(f"{new_state.identifier}: {new_payload.node_id}: {self.treatment.name}")
-
         if db is not None and self.db_output:
-            output_node_to_db(db, new_payload, new_collected_data, self.tags)
+            output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
 
         if isinstance(new_payload.computational_unit, Finalizable):
             new_payload.computational_unit.finalize()
