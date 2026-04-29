@@ -1,9 +1,4 @@
 from collections.abc import Callable
-from typing import TypeVar
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-
-
-T = TypeVar("T", bound=ComputationalUnit)
 
 
 def evaluate_sequence[V](payload: V, *operations: Callable[[V], V]) -> V:
