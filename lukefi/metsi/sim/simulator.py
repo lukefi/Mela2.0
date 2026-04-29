@@ -40,15 +40,16 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
         for instruction in config.instructions:
             if all(condition(payload) for condition in instruction.conditions):
                 all_instructions_failed = False
-                for i, root in enumerate(instruction.unwrap()):
-                    for new_branch in root.evaluate(copy(payload), db, i + offset):
-                        time_step = _find_next_time_step(
-                            new_branch,
-                            config.instructions,
-                            config.transition.max_step)
-                        new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
-                        new_branch.computational_unit.update_aggregates()
-                        retval.extend(_simulate_unit(new_branch, config, db, 1))
+                # for i, root in enumerate(instruction.unwrap()):
+                #     for new_branch in root.evaluate(copy(payload), db, i + offset):
+                for new_branch in instruction.evaluate(copy(payload), db, node = offset):
+                    time_step = _find_next_time_step(
+                        new_branch,
+                        config.instructions,
+                        config.transition.max_step)
+                    new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
+                    new_branch.computational_unit.update_aggregates()
+                    retval.extend(_simulate_unit(new_branch, config, db, 1))
                 offset += 1
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.

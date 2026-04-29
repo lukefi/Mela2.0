@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import copy, deepcopy
+from functools import reduce
 import os
 import sqlite3
 from typing import Any, Generic, Mapping, Optional, TypeVar, override
@@ -44,7 +45,7 @@ class EventGeneratorBase(ABC, Generic[T]):
 class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
 
-    children: Sequence_[EventGeneratorBase]
+    children: Sequence_[EventGeneratorBase[T]]
 
     def __init__(self, children: Sequence_[EventGeneratorBase]):
         self.children = children
@@ -84,11 +85,16 @@ class Sequence(EventGenerator[T]):
                  db: Optional[sqlite3.Connection] = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
-        current = payload
+
+        def wrapper(inputs: Generator[SimulationPayload[T]], generator: EventGeneratorBase[T]):
+            for parent in inputs:
+                yield from generator.evaluate(parent, db, node)
+
+        chain = (unit for unit in [payload])
         for child in self.children:
-            for child_ in child.evaluate(current, db, node):
-                current = child_
-                yield current
+            chain = wrapper(chain, child)
+
+        yield from chain
 
 
 class Alternatives(EventGenerator[T]):
@@ -105,8 +111,8 @@ class Alternatives(EventGenerator[T]):
     def evaluate(self, payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
-        for child in self.children:
-            yield from child.evaluate(copy(payload), db, node)
+        for i, child in enumerate(self.children):
+            yield from child.evaluate(copy(payload), db, i)
 
 
 class First(EventGenerator[T]):
@@ -201,7 +207,7 @@ class Event(EventGeneratorBase[T]):
         }
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
-        
+
         new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit, **combined_params)
         new_state.update_aggregates()
 
@@ -226,12 +232,14 @@ class Event(EventGeneratorBase[T]):
 
         new_payload.node_id.append(node)
 
+        # print(f"{new_state.identifier}: {new_payload.node_id}: {self.treatment.name}")
+
         if db is not None and self.db_output:
             output_node_to_db(db, new_payload, new_collected_data, self.tags)
 
         if isinstance(new_payload.computational_unit, Finalizable):
             new_payload.computational_unit.finalize()
-        
+
         yield new_payload
 
     @override
