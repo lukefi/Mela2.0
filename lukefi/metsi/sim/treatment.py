@@ -1,5 +1,3 @@
-from copy import copy
-from functools import partial
 from typing import Callable, Generic, Optional, TypeVar
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
