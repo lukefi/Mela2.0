@@ -194,7 +194,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
 
 def update_leaf_node[T: ComputationalUnit](
         db: sqlite3.Connection,
-        leaf_node: SimulationPayload[T], 
+        leaf_node: SimulationPayload[T],
         transition_count: int):
     cur = db.cursor()
     node_id = "-".join(map(str, leaf_node.node_id))
