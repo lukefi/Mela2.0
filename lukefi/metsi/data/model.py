@@ -456,8 +456,8 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         # ForestStand
         self.stems_per_ha = np.sum(trees.stems_per_ha) + np.sum(strata.stems_per_ha)
-        self.basal_area = np.sum(trees.stems_per_ha *
-                                 trees.basal_area) + np.sum(strata.basal_area)
+        self.basal_area = np.nansum(trees.stems_per_ha *
+                                    trees.basal_area) + np.sum(strata.basal_area)
         self.ds_ba_weighted_mean_diameter = (
             (np.sum(
                 trees.stems_per_ha *

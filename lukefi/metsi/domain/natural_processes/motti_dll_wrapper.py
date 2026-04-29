@@ -1071,7 +1071,4 @@ class Motti4DLL:
         if rv[0] != 0 or err[0] != 0:
             raise RuntimeError(f"Motti4InitVer2 failed (rv={rv[0]}, err={err[0]})")
 
-        before_update = int(ntrees_p[0])
-        after_update = self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)
-
-        return after_update
+        return self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)

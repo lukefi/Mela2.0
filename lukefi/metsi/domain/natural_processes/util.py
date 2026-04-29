@@ -237,7 +237,7 @@ def next_osite_id(stand: ForestStand) -> int:
 
 
 def safe_origin(raw: float | int | None) -> int:
-    if not raw:
+    if raw is None:
         return int(Origin.UNSET)
     try:
         v = int(raw)
