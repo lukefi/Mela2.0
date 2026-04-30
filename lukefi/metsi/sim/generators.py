@@ -19,7 +19,9 @@ T = TypeVar("T", bound=ComputationalUnit)
 
 
 class EventGeneratorBase(ABC, Generic[T]):
-    """Shared abstract base class for Generator and Event types."""
+    """
+        Shared abstract base class for Generator and Event types.
+    """
 
     @abstractmethod
     def get_types_of_collected_data(self) -> CollectableDataTypes:
@@ -35,7 +37,9 @@ class EventGeneratorBase(ABC, Generic[T]):
 
 
 class EventGenerator(EventGeneratorBase[T], ABC):
-    """Abstract base class for generator types."""
+    """
+        Abstract base class for generator types.
+    """
 
     children: Sequence_[EventGeneratorBase[T]]
 
@@ -51,7 +55,9 @@ class EventGenerator(EventGeneratorBase[T], ABC):
 
 
 class Sequence(EventGenerator[T]):
-    """Generator for sequential events."""
+    """
+        Generator for sequential events.
+    """
 
     @override
     def evaluate(self,
@@ -75,7 +81,9 @@ class Sequence(EventGenerator[T]):
 
 
 class Alternatives(EventGenerator[T]):
-    """Generator for branching events."""
+    """
+        Generator for branching events.
+    """
 
     @override
     def evaluate(self, payload: SimulationPayload[T],
@@ -104,7 +112,10 @@ class First(EventGenerator[T]):
 
 
 class Optional(EventGenerator[T]):
-
+    """
+        Generator for continuing evaluation of child branches even if event conditions fail.
+        In such cases a `do_nothing` treatment is performed instead.
+    """
     def __init__(self, child: EventGeneratorBase):
         super().__init__(
             [
@@ -123,8 +134,10 @@ class Optional(EventGenerator[T]):
         yield from self.children[0].evaluate(payload, db, node)
 
 class Event(EventGeneratorBase[T]):
-    """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
-    simulation state."""
+    """
+        Base class for events.
+        Contains conditions and parameters and the actual treatment function that operates on the simulation state.
+    """
 
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
