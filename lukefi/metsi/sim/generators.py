@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy, deepcopy
 import os
 import sqlite3
-from typing import Any, Generic, Mapping, Optional, TypeVar, override
+from typing import Any, Generic, Mapping, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -27,7 +27,7 @@ class EventGeneratorBase(ABC, Generic[T]):
     @abstractmethod
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None,
+                 db: sqlite3.Connection | None = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
         pass
@@ -55,7 +55,7 @@ class Sequence(EventGenerator[T]):
     @override
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None,
+                 db: sqlite3.Connection | None = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
 
@@ -87,6 +87,46 @@ class Alternatives(EventGenerator[T]):
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
 
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        return super().evaluate(payload, db, node)
+
+
+class Optional(EventGenerator[T]):
+
+    def __init__(self, child: EventGeneratorBase):
+        super().__init__([child])
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        child = self.children[0]
+        generator = child.evaluate(payload, db, node)
+        new_state = copy(payload)
+        while True:
+            try:
+                new_state = next(generator)
+                yield new_state
+            except StopIteration:
+                new_state.node_id.append("S")
+                new_state.operation_history.append(
+                    (
+                        new_state.computational_unit.time,
+                        "skipped",
+                        {},
+                        set()
+                    )
+                )
+                if db is not None:
+                    output_node_to_db(db, new_state, [], set())
+                yield new_state
+                return
+
 
 class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
@@ -103,12 +143,12 @@ class Event(EventGeneratorBase[T]):
 
     def __init__(self,
                  treatment: Treatment[T],
-                 static_parameters: Optional[dict[str, Any]] = None,
-                 dynamic_parameters: Optional[Mapping[str, Callable[[T], Any]]] = None,
-                 preconditions: Optional[list[Condition[T]]] = None,
-                 postconditions: Optional[list[Condition[T]]] = None,
-                 file_parameters: Optional[dict[str, str]] = None,
-                 tags: Optional[set[str]] = None,
+                 static_parameters: dict[str, Any] | None = None,
+                 dynamic_parameters: Mapping[str, Callable[[T], Any]] | None = None,
+                 preconditions: list[Condition[T]] | None = None,
+                 postconditions: list[Condition[T]] | None = None,
+                 file_parameters: dict[str, str] | None = None,
+                 tags: set[str] | None = None,
                  db_output: bool = True) -> None:
         self.treatment = treatment
 
@@ -177,7 +217,7 @@ class Event(EventGeneratorBase[T]):
             )
         )
 
-        new_payload.node_id.append(node)
+        new_payload.node_id.append(str(node))
 
         if db is not None and self.db_output:
             output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
