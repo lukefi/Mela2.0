@@ -7,7 +7,6 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Optional, Sequence
 from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
-from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
 
 
