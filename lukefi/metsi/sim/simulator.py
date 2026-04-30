@@ -20,8 +20,8 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     for i, unit in enumerate(units, 1):
         print(f"Simulating stand {unit.identifier} ({i} of {len(units)})...")
         payload = SimulationPayload(unit)
-        payload.computational_unit.update_aggregates()
         simconfig.transition.initialize(payload.computational_unit)
+        payload.computational_unit.update_aggregates()
 
         if db is not None:
             # Write initial state to database

@@ -232,7 +232,6 @@ def next_osite_id(stand: ForestStand) -> int:
             if x is not None:
                 used.append(x)
 
-    print("Used SID:s:", used)
     return (max(used) + 1) if used else 1
 
 

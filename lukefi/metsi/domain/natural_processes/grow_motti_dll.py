@@ -167,14 +167,20 @@ def _strip_tree_strata(stand: ForestStand):
         return
 
     n = stand.tree_strata.size
-
-    # Create same-length strata object with default values in every column
     stripped = TreeStrata(size=n)
 
-    # Keeping only fields that should survive
     stripped.identifier = stand.tree_strata.identifier.copy()
     stripped.origin = stand.tree_strata.origin.copy()
     stripped.storey = stand.tree_strata.storey.copy()
+
+    stripped.basal_area[:] = 0.0
+    stripped.stems_per_ha[:] = 0.0
+    stripped.mean_height[:] = 0.0
+    stripped.mean_diameter[:] = 0.0
+    stripped.breast_height_age[:] = 0.0
+    stripped.biological_age[:] = 0.0
+    stripped.sapling_stems_per_ha[:] = 0.0
+    stripped.number_of_generated_trees[:] = 0
 
     stand.tree_strata = stripped
 
@@ -332,10 +338,10 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             "biological_age": float(t.age),
             "breast_height_age": float(t.age13),
             "sapling": False,
-            "tree_category": "1",
+            "tree_category": "",
             "management_category": 1,
             "storey": int(storey),
-            "basal_area": float(t.ba) if getattr(t, "ba", None) is not None else 0.0,
+            "basal_area": (float(t.ba) / 10000.0) if getattr(t, "ba", None) is not None else 0.0,
             "volume": float(t.vol) if getattr(t, "vol", None) is not None else 0.0,
         }
 
