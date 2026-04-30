@@ -67,13 +67,6 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         trees.stems_per_ha = trees.stems_per_ha.copy()
     trees.stems_per_ha -= removed_f
 
-    # If Motti is in use, update removed trees to yp vector
-    if getattr(stand, "motti_state", None):
-        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
-
-    stand.cutting_year = stand.year
-    stand.method_of_last_cutting = method
-
     # Collected data: Removed trees
     removed_mask = removed_f > 0.0
     collected: list[CollectedData] = []
@@ -84,6 +77,13 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
         rt = RemovedTrees()
         rt.removed_trees = removed_view
         collected = [rt]
+
+    # If Motti is in use, update removed trees to yp vector
+    if stand.motti_state is not None:
+        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
+
+    stand.cutting_year = stand.year
+    stand.method_of_last_cutting = method
 
     return stand, collected
 

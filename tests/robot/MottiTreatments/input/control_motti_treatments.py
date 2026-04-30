@@ -20,6 +20,7 @@ from user_events import (
     EarlyCareMotti,
     FillinPlantingMotti,
     SeedlingDelayMotti,
+    SeedtreeCutting,
 )
 control_structure = {
     "app_configuration": {
@@ -89,6 +90,9 @@ control_structure = {
                                                                       5: 1800,
                                                                       6: 1800, }}),
                     FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
+                    SeedtreeCutting(parameters={
+                        "cutting_method": 7,
+                    })
                 ])
             ]
         )
