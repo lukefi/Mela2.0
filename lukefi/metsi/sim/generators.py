@@ -10,6 +10,7 @@ from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
@@ -92,41 +93,34 @@ class First(EventGenerator[T]):
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
-        return super().evaluate(payload, db, node)
+        stop = False
+        for child in self.children:
+            gen = child.evaluate(payload, db, node)
+            for leaf in gen:
+                yield leaf
+                stop = True
+            if stop:
+                return
 
 
 class Optional(EventGenerator[T]):
 
     def __init__(self, child: EventGeneratorBase):
-        super().__init__([child])
+        super().__init__(
+            [
+                First([
+                    child,
+                    Event(Treatment(do_nothing, "skip", {"skip"}))
+                ])
+            ]
+        )
 
     @override
     def evaluate(self,
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
-        child = self.children[0]
-        generator = child.evaluate(payload, db, node)
-        new_state = copy(payload)
-        while True:
-            try:
-                new_state = next(generator)
-                yield new_state
-            except StopIteration:
-                new_state.node_id.append("S")
-                new_state.operation_history.append(
-                    (
-                        new_state.computational_unit.time,
-                        "skipped",
-                        {},
-                        set()
-                    )
-                )
-                if db is not None:
-                    output_node_to_db(db, new_state, [], set())
-                yield new_state
-                return
-
+        yield from self.children[0].evaluate(payload, db, node)
 
 class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
@@ -217,7 +211,7 @@ class Event(EventGeneratorBase[T]):
             )
         )
 
-        new_payload.node_id.append(str(node))
+        new_payload.node_id.append(node)
 
         if db is not None and self.db_output:
             output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
