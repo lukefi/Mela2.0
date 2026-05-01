@@ -20,8 +20,6 @@ authors = [
     { name = "Tapani Stylman" }
 ]
 dependencies = [
-    "jsonpickle==4.1.1",
-    "lupa==2.5",
     "geopandas == 1.1.0",
     "pandas == 2.3.0",
     "rpy2==3.6.1",
@@ -38,7 +36,6 @@ tests = [
     "robotframework==7.3",
     "pylint==4.0.4",
     "mypy==1.19.1",
-    "types-lupa",
     "pandas-stubs",
     "types-shapely",
     "types-geopandas",
