@@ -176,8 +176,6 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
 
     operation = current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing"
     params = str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"
-    print(f"{current.computational_unit.identifier}: {current.computational_unit.time}: {node_str}: {operation}: "
-          f"{params}")
 
     cur = db.cursor()
     cur.execute(
