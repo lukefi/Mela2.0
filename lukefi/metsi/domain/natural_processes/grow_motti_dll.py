@@ -32,6 +32,81 @@ from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natura
 from lukefi.metsi.sim.collected_data import OpTuple
 
 
+def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> TreeStrata:
+    """
+    If there are more than max_strata strata, merge säästöpuut into one so the count becomes max_strata.
+
+    Candidate Säästöpuu for merge is:
+      - number_of_generated_trees == 1
+      - storey == SPARE
+
+    Merged result:
+      - species = species whose candidate strata have the highest total stems_per_ha
+      - mean_height = avg
+      - mean_diameter = avg
+      - stems_per_ha = sum
+      - storey / origin / stratum_rank / stratum_number / identifier = from base row
+
+    If there are not enough merge candidates, return original strata unchanged.
+    """
+    if strata is None or strata.size <= max_strata:
+        return strata
+
+    excess = strata.size - max_strata
+    if excess <= 0:
+        return strata
+
+    candidate_idx: list[int] = []
+    for i in range(strata.size):
+        n_gen = int(np.nan_to_num(strata.number_of_generated_trees[i], nan=0))
+        storey = int(np.nan_to_num(strata.storey[i], nan=-1))
+        if n_gen == 1 and storey == int(Storey.SPARE):
+            candidate_idx.append(i)
+
+    needed = excess + 1
+    if len(candidate_idx) < needed:
+        return strata  # fallback: current truncation behavior stays
+
+    # take exactly as many as needed; simplest and least invasive
+    merge_idx = candidate_idx[:needed]
+
+    # species totals by stems_per_ha -> choose dominant/base species
+    stems_by_species: dict[int, float] = {}
+    for i in merge_idx:
+        species = int(strata.species[i])
+        stems = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
+        stems_by_species[species] = stems_by_species.get(species, 0.0) + stems
+
+    base_species = max(stems_by_species.items(), key=lambda kv: kv[1])[0]
+
+    # choose base row as first row of the major species
+    base_idx = next(i for i in merge_idx if int(strata.species[i]) == base_species)
+    rest_idx = [i for i in merge_idx if i != base_idx]
+
+    out = strata[:]
+
+    # merged numeric values
+    out.stems_per_ha[base_idx] = float(np.nansum(out.stems_per_ha[merge_idx]))
+    out.mean_height[base_idx] = float(np.nanmean(out.mean_height[merge_idx]))
+    out.mean_diameter[base_idx] = float(np.nanmean(out.mean_diameter[merge_idx]))
+
+    if np.any(~np.isnan(out.biological_age[merge_idx])):
+        out.biological_age[base_idx] = float(np.nanmean(out.biological_age[merge_idx]))
+
+    if np.any(~np.isnan(out.breast_height_age[merge_idx])):
+        out.breast_height_age[base_idx] = float(np.nanmean(out.breast_height_age[merge_idx]))
+
+    out.sapling_stems_per_ha[base_idx] = float(np.nansum(out.sapling_stems_per_ha[merge_idx]))
+
+    # force species to same
+    out.species[base_idx] = int(base_species)
+
+    if rest_idx:
+        out.delete(np.array(rest_idx, dtype=int))
+
+    return out
+
+
 def _build_reference_tree_update(
     *,
     identifier: str,
@@ -69,16 +144,22 @@ def _build_reference_tree_update(
     }
 
 
-def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
+def _build_motti_strata_py(
+    stand: ForestStand,
+    strata: TreeStrata | None = None,
+) -> list[dict]:
     """
-    Convert stand.tree_strata into Python dicts for Motti4Strata.
+    Convert given TreeStrata into Python dicts for Motti4Strata.
+    If strata is not given, use stand.tree_strata.
 
     Uncertain fields:
       hw -> temporary fallback to mean_height
       dg -> temporary fallback to mean_diameter
       st -> temporary dummy 0.0
     """
-    strata = getattr(stand, "tree_strata", None)
+    if strata is None:
+        strata = getattr(stand, "tree_strata", None)
+
     if strata is None or strata.size == 0:
         return []
 
@@ -92,11 +173,16 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
         biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
         basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
-        # stems_sap = float(np.nan_to_num(strata.sapling_stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
         origin = safe_storey_value(strata.origin[i])
-        storey = storey_to_motti(stand, i, strata.storey[i])
+
+        storey = storey_to_motti(
+            stand,
+            i,
+            strata.storey[i],
+            is_stratum_index=True,
+        )
 
         stratum_sid = parse_int_id(strata.stratum_number[i])
         if stratum_sid is None:
@@ -109,9 +195,9 @@ def _build_motti_strata_py(stand: ForestStand) -> list[dict]:
             "ba": basal_area,
             "f": stems_main,
             "h": mean_height,
-            "hw": mean_height,      # ppa-weighted height
+            "hw": mean_height,
             "d": mean_diameter,
-            "dg": mean_diameter,    # ppa-weighted keskiläpimitta
+            "dg": mean_diameter,
             "storey": storey,
             "st": origin,
             "sid": float(stratum_sid),
@@ -695,7 +781,10 @@ class MottiDLLPredictor:
             )
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
-        strata_py = _build_motti_strata_py(self.stand)
+
+        compressed_strata = _compress_strata_for_motti(self.stand.tree_strata, max_strata=10)
+        strata_py = _build_motti_strata_py(self.stand, compressed_strata)
+
         yo = self.dll.new_strata(strata_py)
 
         buffers = self.dll.alloc_state_buffers(ctrl=None)
