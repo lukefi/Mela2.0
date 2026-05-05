@@ -50,6 +50,7 @@ mela2 = "lukefi.metsi.app.metsi:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
+examples = "examples"
 
 [tool.setuptools.package-data]
 "lukefi.metsi.forestry.lua" = ["*"]
