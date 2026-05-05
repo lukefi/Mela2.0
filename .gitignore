@@ -7,7 +7,7 @@ issues
 build
 *.egg-info
 **/c/lib
-data/motti/*
+data/motti*
 
 # Robot Framework output
 tests/robot/**/output/test/
