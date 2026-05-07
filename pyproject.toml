@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lukefi.mela2"
 description = "Mela2.0 forestry simulator."
-version = "0.7.9"
+version = "0.7.10"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
@@ -50,6 +50,7 @@ mela2 = "lukefi.metsi.app.metsi:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
+examples = "examples"
 
 [tool.setuptools.package-data]
 "lukefi.metsi.forestry.lua" = ["*"]
