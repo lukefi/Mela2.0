@@ -371,3 +371,8 @@ class CrownClass(StrEnum):
     RETENTION_UNDER_STOREY_TREE = 'E'
     RETENTION_DOMINANT_TREE_IN_OVER_STOREY = 'F'
     RETENTION_INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY = 'G'
+
+
+class RegenerationType(StrEnum):
+    ARTIFICIAL = "artificial"
+    NATURAL = "natural"
