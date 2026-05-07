@@ -2,6 +2,7 @@ from enum import IntEnum
 
 
 class MottiSpecies(IntEnum):
+    UNKNOWN = 0
     PINE = 1
     SPRUCE = 2
     SILVER_BIRCH = 3

@@ -10,7 +10,8 @@ _SPECIES_MAP = {
     TreeSpecies.DOWNY_BIRCH: MottiSpecies.DOWNY_BIRCH,
     TreeSpecies.ASPEN: MottiSpecies.ASPEN,
     TreeSpecies.GREY_ALDER: MottiSpecies.ALDER,
-    TreeSpecies.COMMON_ALDER: MottiSpecies.ALDER
+    TreeSpecies.COMMON_ALDER: MottiSpecies.ALDER,
+    TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN
 }
 
 _STOREY_MAP = {
