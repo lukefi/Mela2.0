@@ -27,8 +27,8 @@ def _regeneration_via_motti(
     if ms is None or ms.buffers is None:
         raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
 
-    cultivated_species = species_to_motti(species)
-    seed_species = species_to_motti(seed_tree_species) if seed_tree_species else 0
+    cultivated_species = convert_species(species)
+    seed_species = convert_species(seed_tree_species)
 
     method_vec = [
         float(method),
