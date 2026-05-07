@@ -25,7 +25,7 @@ def seedlingdelay_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[
     """
     stand = input_
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException(
             "Motti SeedlingDelay requested but stand has no initialized motti_state. "

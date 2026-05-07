@@ -1,5 +1,7 @@
+from typing import Any
+
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -10,7 +12,7 @@ from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
 )
 
 
-def _normalize_species_array(value) -> list[int]:
+def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
     """
     Normalize caller-provided species-wise remaining counts into a 10-slot list.
     Slots 1..9 are species, slot 0 is unused.
@@ -37,7 +39,7 @@ def _normalize_species_array(value) -> list[int]:
     )
 
 
-def _resolve_remaining_n(ms, operation_parameters) -> list[int]:
+def _resolve_remaining_n(ms: MottiState, operation_parameters: dict[str, Any]) -> list[int]:
     """
     Preferred flow:
       1) ask Motti for guideline array
@@ -47,7 +49,7 @@ def _resolve_remaining_n(ms, operation_parameters) -> list[int]:
     guidelines = ms.dll.pct_guidelines_with_state(
         ms.yy,
         ms.yp,
-        int(ms.ntrees),
+        ms.ntrees,
         ms.buffers,
     )
 
@@ -71,7 +73,7 @@ def pct_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStan
     """
     stand = input_
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException(
             "Motti PCT requested but stand has no initialized motti_state. "

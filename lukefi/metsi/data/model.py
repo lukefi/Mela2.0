@@ -23,6 +23,7 @@ from lukefi.metsi.data.enums.internal import (
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
@@ -424,7 +425,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 dll=dll,
                 yy=yy2,
                 yp=yp2,
-                ntrees=int(ntrees),
+                ntrees=ntrees,
                 buffers=buffers2,
                 signature=cast(tuple[int, ...], signature),
             )
@@ -616,7 +617,7 @@ def stand_as_internal_row(stand: ForestStand):
 
 @dataclass(eq=False, repr=False)
 class MottiState:
-    dll: Any
+    dll: Motti4DLL
     yy: Any                     # "Motti4Site *"
     yp: Any                     # "Motti4Trees *"
     ntrees: int                 # current number of “active” trees in yp

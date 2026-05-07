@@ -51,7 +51,7 @@ class Motti4DLL:
     ffi: FFI
     lib: Any
     """
-    Wrapper aligned with the C wrapper’s flow:
+    Wrapper aligned with the C wrapper's flow:
       SiteInit(Y,X,Z) -> fill yy (no dd) -> CheckYY -> Init -> UpdateAfterImport -> (loop) Growth
     """
 
@@ -77,7 +77,7 @@ class Motti4DLL:
                     if ps not in Motti4DLL._DLL_DIR_HANDLES:
                         Motti4DLL._DLL_DIR_HANDLES[ps] = os.add_dll_directory(ps)
 
-        lib: Any = ffi.dlopen(str(lib_path))
+        lib = ffi.dlopen(str(lib_path))
         Motti4DLL._LIB_CACHE[key] = (ffi, lib)
         self.ffi, self.lib = ffi, lib
 
@@ -580,7 +580,7 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def _normalize_remaining_n_array(self, remaining_n: Any) -> list[int]:
+    def _normalize_remaining_n_array(self, remaining_n: list[int] | dict[int, int]) -> list[int]:
         """
         Normalize remainingN into a 10-slot int list where indices 1..9 are species.
         Index 0 is kept as 0 because Motti species slots are documented as 1..9.
@@ -876,7 +876,7 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
-        remaining_n: Any,
+        remaining_n: list[int],
     ) -> int:
         """
         Call Motti4PCT against persistent state buffers.

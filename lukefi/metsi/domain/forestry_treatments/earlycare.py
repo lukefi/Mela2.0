@@ -26,7 +26,7 @@ def earlycare_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     """
     stand = input_
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException(
             "Motti EarlyCare requested but stand has no initialized motti_state. "
@@ -36,10 +36,10 @@ def earlycare_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     if imode not in (0, 1):
         raise MetsiException("EarlyCare parameter 'imode' must be 0 or 1")
 
-    _info = ms.dll.earlycare_with_state(
+    _ = ms.dll.earlycare_with_state(
         ms.yy,
         ms.yp,
-        int(ms.ntrees),
+        ms.ntrees,
         ms.buffers,
         imode=imode,
     )

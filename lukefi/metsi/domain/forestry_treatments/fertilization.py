@@ -25,7 +25,7 @@ def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameter
     """
     stand = input_
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException(
             "Motti mineral-soils fertilization requested but stand has no initialized motti_state. "
@@ -34,22 +34,22 @@ def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameter
     if "ftype" not in operation_parameters:
         raise MetsiException("Fertilization parameter 'ftype' is required")
 
-    amount_n = operation_parameters.get("amount_n", operation_parameters.get("amountN"))
+    amount_n: float | None = operation_parameters.get("amount_n", operation_parameters.get("amountN"))
     if amount_n is None:
         raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
 
-    bool_phosphorus = operation_parameters.get(
+    bool_phosphorus: int = operation_parameters.get(
         "bool_phosphorus",
         operation_parameters.get("boolPhosporus", operation_parameters.get("phosphorus", 0)),
     )
 
-    _response = ms.dll.mineral_soils_fertilization_with_state(
+    _ = ms.dll.mineral_soils_fertilization_with_state(
         ms.yy,
         ms.yp,
-        int(ms.ntrees),
+        ms.ntrees,
         ms.buffers,
         ftype=int(operation_parameters["ftype"]),
-        amount_n=float(amount_n),
+        amount_n=amount_n,
         bool_phosphorus=int(bool(bool_phosphorus)),
     )
 

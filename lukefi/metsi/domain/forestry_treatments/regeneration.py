@@ -23,7 +23,7 @@ def _regeneration_via_motti(
     clearing: int = 0,
     seed_tree_species: int = 0,
 ) -> None:
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
 
