@@ -18,3 +18,9 @@ class MottiStorey(IntEnum):
     DOMINANT = 2
     OVER = 3
     SPARE = 4
+
+
+class MottiRegenerationMethod(IntEnum):
+    NATURAL = 1
+    SOWING = 2
+    PLANTING = 3
