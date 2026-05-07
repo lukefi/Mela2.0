@@ -166,8 +166,8 @@ def _build_motti_strata_py(
     out: list[dict] = []
 
     for i in range(min(strata.size, 10)):
-        spe_raw = int(strata.species[i])
-        if spe_raw < 0:
+        species = TreeSpecies(int(strata.species[i]))
+        if species < 0:
             continue
 
         biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
@@ -188,7 +188,7 @@ def _build_motti_strata_py(
         if stratum_sid is None:
             stratum_sid = i + 1
 
-        spe = float(species_to_motti(spe_raw))
+        spe = float(convert_species(species))
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -206,7 +206,7 @@ def _build_motti_strata_py(
     return out
 
 
-def _spedom(rt: ReferenceTrees | Any | None) -> int:
+def _spedom(rt: ReferenceTrees | None) -> int:
     """
     Returns dominant species from Motti species.
 
@@ -220,7 +220,7 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
         return TreeSpecies.PINE
 
     # Convert species to Motti codes (will raise if invalid)
-    spe_codes = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
+    spe_codes =[convert_species(TreeSpecies(int(s))) for s in rt.species]
 
     # Basal area per tree: stems_per_ha * π * (0.5 * d_cm * 0.01 m/cm)^2
     d_cm = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
@@ -229,14 +229,14 @@ def _spedom(rt: ReferenceTrees | Any | None) -> int:
 
     # Sum BA per species code
     per: Dict[int, float] = {}
-    for code, ba in zip(spe_codes.tolist(), ba_per_tree.tolist()):
+    for code, ba in zip(spe_codes, ba_per_tree.tolist()):
         per[code] = per.get(code, 0.0) + float(ba)
 
     use_basal = any(v > 0.0 for v in per.values())
     if not use_basal:
         per.clear()
         # Fallback: stems/ha totals per species
-        for code, stems in zip(spe_codes.tolist(), f_ha.tolist()):
+        for code, stems in zip(spe_codes, f_ha.tolist()):
             per[code] = per.get(code, 0.0) + float(stems)
 
     if not per:
@@ -738,7 +738,7 @@ class MottiDLLPredictor:
         age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
         cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
         origin = np.nan_to_num(getattr(rt, "origin", np.zeros(n, dtype=float)), nan=0.0)
-        spe_vec = np.asarray([species_to_motti(int(s)) for s in rt.species.tolist()], dtype=int)
+        spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
         stratum_ids = [
             parse_int_id(v) or (self.stand.stand_id or (idx + 1))
@@ -772,7 +772,7 @@ class MottiDLLPredictor:
                 stems.tolist(),
                 d13.tolist(),
                 h.tolist(),
-                spe_vec.tolist(),
+                spe_vec,
                 age.tolist(),
                 age13.tolist(),
                 cr.tolist(),
@@ -876,29 +876,6 @@ def resolve_shared_object(p: Union[str, Path]) -> Path:
 
 
 # -------- public API --------
-
-def species_to_motti(spe: int) -> int:
-    """
-    Map internal TreeSpecies -> Motti species codes directly.
-    - Keep main species 1..5 as-is
-    - Collapse both alders (GREY_ALDER, COMMON_ALDER) to 6
-    - If in CONIFEROUS_SPECIES -> 8
-    - If in DECIDUOUS_SPECIES -> 9
-    """
-    ts = TreeSpecies(int(spe))
-    if ts in (TreeSpecies.PINE, TreeSpecies.SPRUCE,
-              TreeSpecies.SILVER_BIRCH, TreeSpecies.DOWNY_BIRCH,
-              TreeSpecies.ASPEN):
-        return int(ts)
-    if ts in (TreeSpecies.GREY_ALDER, TreeSpecies.COMMON_ALDER):
-        return int(TreeSpecies.GREY_ALDER)  # Motti uses a single Alder code (6)
-    if ts in CONIFEROUS_SPECIES:
-        return int(TreeSpecies.OTHER_CONIFEROUS)  # 8
-    if ts in DECIDUOUS_SPECIES:
-        return int(TreeSpecies.OTHER_DECIDUOUS)  # 9
-
-    raise ValueError(f"Unsupported tree species code: {int(spe)}")
-
 
 @natural_process_transition
 def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
