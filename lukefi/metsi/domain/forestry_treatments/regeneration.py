@@ -1,3 +1,4 @@
+from typing import cast
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
@@ -10,11 +11,12 @@ from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
     sync_ut_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )
+from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
 
 
 def _regeneration_via_motti(stand: ForestStand,
                             *,
-                            method: int,
+                            method: MottiRegenerationMethod,
                             species: TreeSpecies,
                             stems_per_ha: float,
                             step: int,
@@ -82,7 +84,7 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
     regen_type: RegenerationType = req(operation_parameters, "type")
 
     # ---- optional ----
-    method = int(operation_parameters.get("method", 0))
+    method = cast(MottiRegenerationMethod | None, operation_parameters.get("method", None))
     breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
     breast_height_age = operation_parameters.get("breast_height_age", None)
     ntrees = operation_parameters.get("ntrees", 10)
@@ -97,12 +99,9 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
     if regen_type == RegenerationType.ARTIFICIAL:
         stand.artificial_regeneration_year = stand.year
 
-    if getattr(stand, "motti_state", None) is not None:
-        if method not in (1, 2, 3):
-            raise MetsiException(
-                "When Motti is active, regeneration 'method' must be one of: "
-                "1=natural, 2=sowing, 3=planting"
-            )
+    if stand.motti_state is not None:
+        if method is None:
+            raise MetsiException(f"Regeneration method missing")
 
         _regeneration_via_motti(
             stand,
