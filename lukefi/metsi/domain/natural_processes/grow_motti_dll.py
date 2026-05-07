@@ -271,32 +271,32 @@ def _strip_tree_strata(stand: ForestStand):
     stand.tree_strata = stripped
 
 
-def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: np.ndarray) -> bool:
-    ms = getattr(stand, "motti_state", None)
-    rt = getattr(stand, "reference_trees", None)
-    if ms is None or ms.yp is None or rt is None or rt.size == 0:
+def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: npt.NDArray[np.float64]) -> bool:
+    ms = stand.motti_state
+    trees = stand.reference_trees
+    if ms is None or ms.yp is None or trees is None or trees.size == 0:
         return False
 
     changed = False
-    for idx, delta in enumerate(np.asarray(removed_f, dtype=float).tolist()):
+    for idx, delta in enumerate(removed_f):
         if delta <= 0.0:
             continue
-        if bool(rt.sapling[idx]):
+        if bool(trees.sapling[idx]):
             continue
 
-        sid = parse_int_id(rt.stratum[idx])
+        sid = parse_int_id(trees.stratum[idx])
         if sid is None:
             continue
 
-        tree_number = int(rt.tree_number[idx])
+        tree_number = int(trees.tree_number[idx])
         if tree_number <= 0:
             continue
 
         for i in range(int(ms.ntrees)):
             t = ms.yp[0][i]
-            if parse_int_id(getattr(t, "sid", 0)) != sid:
+            if parse_int_id(t.sid) != sid:
                 continue
-            if parse_int_id(getattr(t, "id", 0)) != tree_number:
+            if parse_int_id(t.id) != tree_number:
                 continue
 
             new_f = max(float(t.f) - float(delta), 0.0)
@@ -793,7 +793,7 @@ class MottiDLLPredictor:
             yo=yo,
             yy=yy,
             yp=yp,
-            numtrees=int(ntrees),
+            numtrees=ntrees,
             buffers=buffers,
         )
 
@@ -804,7 +804,7 @@ class MottiDLLPredictor:
                 dll=self.dll,
                 yy=yy,
                 yp=yp,
-                ntrees=int(ntrees),
+                ntrees=ntrees,
                 buffers=buffers,
                 signature=tuple(ids.tolist()),
             )
@@ -813,7 +813,7 @@ class MottiDLLPredictor:
             ms.dll = self.dll
             ms.yy = yy
             ms.yp = yp
-            ms.ntrees = int(ntrees)
+            ms.ntrees = ntrees
             ms.buffers = buffers
             ms.signature = tuple(ids.tolist())
             self.stand.motti_state = ms
