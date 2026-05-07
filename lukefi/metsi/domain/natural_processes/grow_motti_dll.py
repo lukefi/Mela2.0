@@ -10,8 +10,6 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     TreeSpecies,
     Storey,
-    CONIFEROUS_SPECIES,
-    DECIDUOUS_SPECIES
 )
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
