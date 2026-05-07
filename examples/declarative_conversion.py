@@ -3,7 +3,7 @@
 from random import random
 from examples.declarations.export_prepro import mela
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
-from lukefi.metsi.data.model import ForestStand, TreeStratum
+from lukefi.metsi.data.model import ForestStand
 
 
 def sum3(x, y, z) -> float:
@@ -31,7 +31,6 @@ control_structure = {
             # conversions based on object type spesifications
             'VAR9': Conversion(lambda x, obj: int(x) * obj.area, indices=(0,), object_type=ForestStand),
             'VAR10': Conversion(lambda x, obj: int(x) * obj.VAR1, indices=(0,), object_type=ForestStand),
-            'VAR11': Conversion(lambda x, obj: int(x) * obj.VAR1, indices=(0,), object_type=TreeStratum),
         }
     }
 }

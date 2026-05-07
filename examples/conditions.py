@@ -1,5 +1,8 @@
 from lukefi.metsi.data.enums.internal import CuttingMethod
+from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
+from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.sim.sim_configuration import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.domain.events import GrowActa
 from lukefi.metsi.domain.conditions import TimePoints
@@ -11,17 +14,17 @@ from lukefi.metsi.sim.treatment import Treatment
 
 def do_a_thing(x):
     """A treatment of some kind."""
-    return x
+    return x, []
 
 
 def do_another_thing(x):
     """Another type of treatment."""
-    return x
+    return x, []
 
 
 def do_yet_another_thing(x):
     """Yeat another type of treatment."""
-    return x
+    return x, []
 
 
 def first_condition_check(x: ForestOpPayload):
@@ -109,12 +112,13 @@ control_structure = {
                               preconditions=[
                                   (first_condition & second_condition) | (third_condition)
                         ])
-                    ]),
-                    GrowActa()
+                    ])
                 ])
             ]
         )
-    ]
+    ],
+    "transition": Transition(grow_acta_fn, db_output=False),
+    "end_condition": ForestCondition(lambda payload: payload.computational_unit.time > 2035)
 }
 
 __all__ = ['control_structure']
