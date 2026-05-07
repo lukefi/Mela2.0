@@ -1,10 +1,11 @@
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.data.conversion.internal2motti import convert_species
+from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.util import next_osite_id
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
-    species_to_motti,
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,
@@ -38,7 +39,7 @@ def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
             "Use Motti transition / bootstrap so state exists before this event."
         )
 
-    species = int(operation_parameters.get("species", operation_parameters.get("rspe", 0)))
+    species: TreeSpecies = operation_parameters.get("species", operation_parameters.get("rspe", TreeSpecies.TREELESS))
     if species <= 0:
         raise MetsiException("FillinPlanting requires parameter 'species' (internal TreeSpecies code)")
 
@@ -50,7 +51,7 @@ def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     if osite_id <= 0:
         raise MetsiException("FillinPlanting parameter 'osite_id' must be > 0")
 
-    rspe = species_to_motti(species)
+    rspe = convert_species(species)
 
     ms.ntrees = ms.dll.fillin_planting_with_state(
         ms.yy,
