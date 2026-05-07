@@ -49,7 +49,7 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
     If there are not enough merge candidates, return original strata unchanged.
     """
-    if strata is None or strata.size <= max_strata:
+    if strata.size <= max_strata:
         return strata
 
     excess = strata.size - max_strata
@@ -158,7 +158,7 @@ def _build_motti_strata_py(
       st -> temporary dummy 0.0
     """
     if strata is None:
-        strata = getattr(stand, "tree_strata", None)
+        strata = stand.tree_strata
 
     if strata is None or strata.size == 0:
         return []
@@ -180,7 +180,7 @@ def _build_motti_strata_py(
         storey = storey_to_motti(
             stand,
             i,
-            strata.storey[i],
+            Storey(int(strata.storey[i])),
             is_stratum_index=True,
         )
 
@@ -249,7 +249,7 @@ def _strip_tree_strata(stand: ForestStand):
     """
     Clear tree information from  strata
     """
-    if stand.tree_strata is None or stand.tree_strata.size == 0:
+    if stand.tree_strata.size == 0:
         return
 
     n = stand.tree_strata.size
@@ -309,7 +309,7 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
 
 
 def sync_ut_to_reference_trees(stand: ForestStand) -> None:
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.buffers is None:
         return
 
@@ -327,7 +327,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
             except TypeError:
                 continue
 
-            for cat_code, _cat_label in UT_CATEGORIES:
+            for cat_code, _ in UT_CATEGORIES:
                 stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
                 if stems <= 0.0:
                     continue
@@ -378,7 +378,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
 
 
 def sync_yp_to_reference_trees(stand: ForestStand) -> None:
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is None or ms.yp is None:
         return
 
@@ -388,7 +388,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     for i in range(int(ms.ntrees)):
         t = yp[0][i]
 
-        sid = parse_int_id(getattr(t, "sid", 0))
+        sid = parse_int_id(t.sid)
         if sid is None:
             continue
         yp_tree_id = parse_int_id(getattr(t, "id", 0))
@@ -437,7 +437,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             rt.update(row, idx)
 
 
-def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
+def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
     """
     Keep only ReferenceTrees that have a live in the YP vector.
     Used after Motti4Init init.
@@ -472,18 +472,18 @@ def prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
+def _reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
     sync_yp_to_reference_trees(stand)
-    prune_promoted_sapling_reference_trees(stand)
+    _prune_promoted_sapling_reference_trees(stand)
 
     if init_mode:
-        prune_reference_trees_not_in_yp(stand)
+        _prune_reference_trees_not_in_yp(stand)
 
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
 
-def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
+def _auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     """
     Normalize to EUREF-FIN/TM35FIN kilometers.
     Input is expected to be in meters
@@ -503,7 +503,7 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     return y1 / 1000.0, x1 / 1000.0
 
 
-def find_repo_root(start: Path) -> Optional[Path]:
+def _find_repo_root(start: Path) -> Optional[Path]:
     """
     Walk up from 'start' to find a repository root by markers:
     - a directory that contains 'data/motti'
@@ -521,7 +521,7 @@ def find_repo_root(start: Path) -> Optional[Path]:
     return None
 
 
-def default_data_dir() -> Path:
+def _default_data_dir() -> Path:
     """
     Resolve default data_dir as {repository_root}/data/motti,
     with optional override via MOTTI_DATA_DIR.
@@ -529,17 +529,17 @@ def default_data_dir() -> Path:
     env = os.environ.get("MOTTI_DATA_DIR")
     if env:
         return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
-    repo = find_repo_root(Path.cwd())
+    repo = _find_repo_root(Path.cwd())
     base = repo if repo else Path.cwd()
     return (base / "data" / "motti").resolve()
 
 
-def resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
+def _resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
     """
     Turn a user-provided path into an absolute Path. If None, use default.
     """
     if path_like is None:
-        return default_data_dir()
+        return _default_data_dir()
     p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
     if not p.is_absolute():
         p = Path.cwd() / p
@@ -567,16 +567,12 @@ class MottiDLLPredictor:
         else:
 
             # Resolve given path or default to {repo_root}/data/motti
-            data_dir_path = resolve_dir_or_file(data_dir)
+            data_dir_path = _resolve_dir_or_file(data_dir)
 
-            so_path = resolve_shared_object(data_dir_path)
+            so_path = _resolve_shared_object(data_dir_path)
             self.dll = Motti4DLL(so_path, data_dir=str(data_dir_path))
 
     # ---- stand/site properties ----
-    @property
-    def year(self) -> float:
-        y = getattr(self.stand, "start_year", None)
-        return float(y) if y is not None else 2010.0
 
     @property
     def get_y(self) -> float | None:
@@ -688,7 +684,7 @@ class MottiDLLPredictor:
 
     def ensure_state(self, step: int, sim_year: int):
         """Initialize and attach persistent MottiState to stand if missing."""
-        if getattr(self.stand, "motti_state", None) is not None:
+        if self.stand.motti_state is not None:
             return self.stand.motti_state
 
         rt = self.stand.reference_trees
@@ -697,7 +693,7 @@ class MottiDLLPredictor:
 
         spedom = _spedom(self.stand.reference_trees)
 
-        y_km, x_km = auto_euref_km(self.get_y, self.get_x)
+        y_km, x_km = _auto_euref_km(self.get_y, self.get_x)
         yy = self.dll.new_site(
             Y=y_km,
             X=x_km,
@@ -744,13 +740,7 @@ class MottiDLLPredictor:
             parse_int_id(v) or (self.stand.stand_id or (idx + 1))
             for idx, v in enumerate(rt.stratum.tolist())
         ]
-        storey_vec = np.asarray(
-            [
-                storey_to_motti(self.stand, idx, rt.storey[idx])
-                for idx in range(n)
-            ],
-            dtype=int,
-        )
+        storey_vec =[storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
         trees_py = [
             {
                 "id": int(i),
@@ -777,7 +767,7 @@ class MottiDLLPredictor:
                 age13.tolist(),
                 cr.tolist(),
                 origin.astype(int).tolist(),
-                storey_vec.tolist(),
+                storey_vec,
             )
         ]
         yp, ntrees = self.dll.new_trees(trees_py)
@@ -818,7 +808,7 @@ class MottiDLLPredictor:
             ms.signature = tuple(ids.tolist())
             self.stand.motti_state = ms
 
-        reconcile_reference_trees_from_motti(self.stand, init_mode=True)
+        _reconcile_reference_trees_from_motti(self.stand, init_mode=True)
 
         return self.stand.motti_state
 
@@ -845,9 +835,7 @@ class MottiDLLPredictor:
         return growth
 
 
-# -------- DLL path resolver (same behavior as AoS helper) --------
-
-def resolve_shared_object(p: Union[str, Path]) -> Path:
+def _resolve_shared_object(p: Union[str, Path]) -> Path:
     """
     Resolve a Motti shared library inside a directory, or pass through an exact file path.
     Raises ValueError if p is None. Returns a Path (may be a directory if nothing matched).
@@ -874,8 +862,6 @@ def resolve_shared_object(p: Union[str, Path]) -> Path:
     # No match found; return directory so downstream can raise a clear error when loading.
     return p
 
-
-# -------- public API --------
 
 @natural_process_transition
 def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
@@ -906,7 +892,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
         return stand, []
 
     if predictor is None:
-        resolved_dir = resolve_dir_or_file(data_dir)
+        resolved_dir = _resolve_dir_or_file(data_dir)
         pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
@@ -914,12 +900,12 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
     pred.evolve(step=step, sim_year=sim_year)
     stand.year = (stand.year or 0) + step
 
-    reconcile_reference_trees_from_motti(stand, init_mode=False)
+    _reconcile_reference_trees_from_motti(stand, init_mode=False)
 
     return stand, []
 
 
-def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
+def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
     """
     Rebuild Motti internal state after yp edits, run grow(step=0) and
     then synchronize ReferenceTrees from yp/ut.
@@ -937,7 +923,7 @@ def refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> No
     )
     ms.ntrees = len(growth.tree_ids)
 
-    reconcile_reference_trees_from_motti(stand)
+    _reconcile_reference_trees_from_motti(stand)
 
 
 def apply_motti_yp_reduction_from_removed_reference_trees(
@@ -954,11 +940,11 @@ def apply_motti_yp_reduction_from_removed_reference_trees(
     """
     changed = _reduce_motti_yp_by_removed_reference_trees(stand, removed_f)
     if changed and refresh:
-        refresh_reference_trees_from_motti_after_yp_change(stand)
+        _refresh_reference_trees_from_motti_after_yp_change(stand)
     return changed
 
 
-def mark_motti_yp_as_seed_trees(stand: ForestStand, *, tree_class: int = 3) -> bool:
+def _mark_motti_yp_as_seed_trees(stand: ForestStand, *, tree_class: int = 3) -> bool:
     """Mark all currently live YP trees as seed trees for Motti.
 
     Motti's YP vector field at documented index 38 is exposed in the
@@ -990,7 +976,7 @@ def after_seedtree_cutting_in_motti(stand: ForestStand, *, tree_class: int = 3) 
     if ms is None or ms.yp is None or ms.buffers is None:
         return
 
-    mark_motti_yp_as_seed_trees(stand, tree_class=tree_class)
+    _mark_motti_yp_as_seed_trees(stand, tree_class=tree_class)
 
     ms.ntrees = ms.dll.after_seedtree_cutting_with_state(
         ms.yy,
@@ -999,10 +985,10 @@ def after_seedtree_cutting_in_motti(stand: ForestStand, *, tree_class: int = 3) 
         ms.buffers,
     )
 
-    reconcile_reference_trees_from_motti(stand)
+    _reconcile_reference_trees_from_motti(stand)
 
 
-def collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
+def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
     live: set[tuple[str, int, int | None]] = set()
 
     ms = stand.motti_state
@@ -1041,7 +1027,7 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
     if rt is None or rt.size == 0:
         return
 
-    live = collect_live_motti_keys(stand)
+    live = _collect_live_motti_keys(stand)
     delete_idx = []
 
     for i, value in enumerate(rt.stratum.tolist()):
@@ -1066,7 +1052,7 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
+def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     """
     Delete old sapling RFs if SID exists in YP vector.
     """

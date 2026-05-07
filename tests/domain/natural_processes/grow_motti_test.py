@@ -15,10 +15,10 @@ from lukefi.metsi.data.enums.internal import DrainageCategory
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
-    resolve_shared_object,
-    resolve_dir_or_file,
-    default_data_dir,
-    find_repo_root,
+    _resolve_shared_object,
+    _resolve_dir_or_file,
+    _default_data_dir,
+    _find_repo_root,
 )
 
 
@@ -255,7 +255,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             lib = Path(td) / "libmottisc.so"
             lib.write_text("")  # create empty placeholder
-            out = resolve_shared_object(lib)
+            out = _resolve_shared_object(lib)
             self.assertTrue(out.is_file())
             self.assertEqual(out.resolve(), lib.resolve())
 
@@ -264,13 +264,13 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             base = Path(td)
             target = base / "libmottisc.so"
             target.write_text("")
-            out = resolve_shared_object(base)
+            out = _resolve_shared_object(base)
             self.assertEqual(out.resolve(), target.resolve())
 
     def test_resolve_shared_object_no_match_returns_dir(self):
         with tempfile.TemporaryDirectory() as td:
             base = Path(td)
-            out = resolve_shared_object(base)
+            out = _resolve_shared_object(base)
             # No candidate found → function returns the directory for downstream to error clearly
             self.assertTrue(out.is_dir())
             self.assertEqual(out.resolve(), base.resolve())
@@ -278,14 +278,14 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
     def test_resolve_shared_object_none_raises(self):
         # type: ignore to call with None on purpose (function raises by design)
         with self.assertRaises(ValueError):
-            resolve_shared_object(None)  # type: ignore[arg-type]
+            _resolve_shared_object(None)  # type: ignore[arg-type]
 
     def test_resolve_dir_or_file_none_uses_default_env_override(self):
         with tempfile.TemporaryDirectory() as td:
             override = Path(td) / "data" / "motti"
             override.mkdir(parents=True, exist_ok=True)
             os.environ["MOTTI_DATA_DIR"] = str(override)
-            out = resolve_dir_or_file(None)
+            out = _resolve_dir_or_file(None)
             self.assertEqual(out, override.resolve())
 
     def test_resolve_dir_or_file_relative_and_tilde(self):
@@ -296,7 +296,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
                 os.chdir(td)
                 rel = Path("some/dir")
                 rel.mkdir(parents=True, exist_ok=True)
-                out_rel = resolve_dir_or_file("some/dir")
+                out_rel = _resolve_dir_or_file("some/dir")
                 self.assertEqual(out_rel, (Path(td) / "some" / "dir").resolve())
             finally:
                 os.chdir(cwd)
@@ -310,7 +310,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             os.environ.pop("HOMEDRIVE", None)          # Avoid legacy precedence
             os.environ.pop("HOMEPATH", None)
             expected = (Path(os.path.expanduser("~")) / "x").resolve()
-            out_tilde = resolve_dir_or_file("~/x")
+            out_tilde = _resolve_dir_or_file("~/x")
             self.assertEqual(out_tilde.resolve(), expected)
 
     def test_default_data_dir_prefers_repo_root_or_env(self):
@@ -319,7 +319,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             override = Path(td) / "over" / "ride"
             override.mkdir(parents=True, exist_ok=True)
             os.environ["MOTTI_DATA_DIR"] = str(override)
-            self.assertEqual(default_data_dir(), override.resolve())
+            self.assertEqual(_default_data_dir(), override.resolve())
             os.environ.pop("MOTTI_DATA_DIR", None)
 
         # 2) No env: it should pick {repo_root}/data/motti; validate root detection
@@ -333,7 +333,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             try:
                 os.chdir(child)
                 # Because repo root is discovered, default dir should be root/data/motti
-                out = default_data_dir()
+                out = _default_data_dir()
                 self.assertEqual(out, (root / "data" / "motti").resolve())
             finally:
                 os.chdir(cwd)
@@ -343,12 +343,12 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             base = Path(td)
             # Any of these should count; try pyproject first
             (base / "pyproject.toml").write_text("[tool.poetry]\nname='x'\n")
-            self.assertEqual(find_repo_root(base / "a" / "b" / "c"), base.resolve())
+            self.assertEqual(_find_repo_root(base / "a" / "b" / "c"), base.resolve())
 
             # Try .git marker
             (base / "pyproject.toml").unlink()
             (base / ".git").mkdir()
-            self.assertEqual(find_repo_root(base / "x"), base.resolve())
+            self.assertEqual(_find_repo_root(base / "x"), base.resolve())
 
             # Try data/motti marker
             for p in (base / ".git",):
@@ -360,7 +360,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td2:
             base2 = Path(td2)
             (base2 / "data" / "motti").mkdir(parents=True, exist_ok=True)
-            self.assertEqual(find_repo_root(base2 / "n1" / "n2"), base2.resolve())
+            self.assertEqual(_find_repo_root(base2 / "n1" / "n2"), base2.resolve())
 
     def test_wrapper_maybe_chdir_changes_cwd_temporarily(self):
         start = Path.cwd().resolve()
@@ -379,12 +379,12 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertEqual(grow_motti.species_to_motti(3), 3)
 
         # auto_euref_km conversion logic
-        y_km, x_km = grow_motti.auto_euref_km(6900000.0, 3400000.0)
+        y_km, x_km = grow_motti._auto_euref_km(6900000.0, 3400000.0)
         self.assertEqual((y_km, x_km), (6900.0, 3400.0))
-        y_10km, x_10km = grow_motti.auto_euref_km(6900.0, 3400.0)
+        y_10km, x_10km = grow_motti._auto_euref_km(6900.0, 3400.0)
         self.assertEqual((y_10km, x_10km), (6.9, 3.4))
         with self.assertRaises(ValueError):
-            grow_motti.auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
+            grow_motti._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
         rt = make_rt(species=(3, 7))  # 7 -> 6

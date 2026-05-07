@@ -32,10 +32,10 @@ UT_CATEGORIES = [
 ]
 
 FDM_TO_MOTTI_STOREY = {
-    int(Storey.DOMINANT): 2,  # ylempi
-    int(Storey.UNDER): 1,     # alempi
-    int(Storey.OVER): 3,      # siemenpuu
-    int(Storey.SPARE): 4,     # säästöpuu
+    Storey.DOMINANT: 2,  # ylempi
+    Storey.UNDER: 1,     # alempi
+    Storey.OVER: 3,      # siemenpuu
+    Storey.SPARE: 4,     # säästöpuu
 }
 
 MOTTI_TO_FDM_STOREY = {
@@ -56,7 +56,7 @@ def storey_from_motti(value: Any) -> int:
 def storey_to_motti(
     stand: ForestStand,
     index: int,
-    value: Any,
+    fdm_storey: Storey,
     *,
     is_stratum_index: bool = False,
 ) -> int:
@@ -82,15 +82,10 @@ def storey_to_motti(
         Otherwise it is assumed to be a reference_trees row index, and the
         matching stratum row is resolved through rt.stratum -> strata.stratum_number.
     """
-    try:
-        fdm_storey = int(getattr(value, "value", value))
-    except (TypeError, ValueError):
-        fdm_storey = int(Storey.UNSET)
-
     if fdm_storey in FDM_TO_MOTTI_STOREY:
         return FDM_TO_MOTTI_STOREY[fdm_storey]
 
-    strata = getattr(stand, "tree_strata", None)
+    strata = stand.tree_strata
     if strata is None or strata.size <= 1:
         return 2
 
