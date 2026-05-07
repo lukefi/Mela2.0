@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.9] - 2026-05-08
+
+### Fixed
+
+- Repeated transitions now properly get unique node identifiers with multiple `-T`
+
 ## [0.7.8] - 2026-04-24
 
 ### Changed
