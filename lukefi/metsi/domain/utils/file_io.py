@@ -160,7 +160,7 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
                                             tags: Optional[set[str]] = None,
                                             output_state: bool = True,
                                             output_collected_data: bool = True,
-                                            is_transition: bool = False):
+                                            transition_count: int = 0):
     """
     Writes current simulation state and collected data to database.
 
@@ -171,8 +171,8 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     if tags is None:
         tags = set()
     node_str = "-".join(map(str, current.node_id))
-    if is_transition:
-        node_str += "-T"
+    if transition_count:
+        node_str += "-T" * transition_count
     cur = db.cursor()
     cur.execute(
         """--sql
@@ -192,7 +192,10 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
             datum.output_to_db(db, node_str, current.computational_unit.identifier)
 
 
-def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: SimulationPayload[T]):
+def update_leaf_node[T: ComputationalUnit](
+        db: sqlite3.Connection,
+        leaf_node: SimulationPayload[T],
+        transition_count: int):
     cur = db.cursor()
     node_id = "-".join(map(str, leaf_node.node_id))
     cur.execute(
@@ -217,7 +220,7 @@ def update_leaf_node[T: ComputationalUnit](db: sqlite3.Connection, leaf_node: Si
             AND stand = ?;
         """,
         (
-            node_id + "-T",
+            node_id + ("-T" * transition_count),
             leaf_node.computational_unit.identifier
         )
     )
