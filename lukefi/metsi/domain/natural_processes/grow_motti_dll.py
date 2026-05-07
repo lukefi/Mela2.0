@@ -2,6 +2,8 @@ import os
 from typing import Any, Optional, Dict, Union, Iterable
 from pathlib import Path
 import numpy as np
+import numpy.typing as npt
+from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
