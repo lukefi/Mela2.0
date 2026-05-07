@@ -2,7 +2,6 @@ from typing import Any
 import re
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import (
@@ -95,12 +94,12 @@ def storey_to_motti(
         if 0 <= index < strata.size:
             stratum_idx = index
     else:
-        rt = getattr(stand, "reference_trees", None)
-        if rt is not None and 0 <= index < rt.size:
-            target_sid = parse_int_id(rt.stratum[index])
+        rt = stand.reference_trees
+        if 0 <= index < rt.size:
+            target_sid = int(rt.stratum[index])
             if target_sid is not None:
                 for j in range(strata.size):
-                    sid = parse_int_id(strata.stratum_number[j])
+                    sid = int(strata.stratum_number[j])
                     if sid == target_sid:
                         stratum_idx = j
                         break
@@ -186,44 +185,28 @@ def find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_nu
     return None
 
 
-def parse_int_id(value: Any) -> int | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return None
-    try:
-        x = int(float(value))
-        return x if x > 0 else None
-    except (TypeError, ValueError):
-        return None
-
-
 def next_osite_id(stand: ForestStand) -> int:
     used: list[int] = []
 
     rt = stand.reference_trees
-    if rt is not None and rt.size > 0:
-        for v in rt.stratum.tolist():
-            x = parse_int_id(v)
-            if x is not None:
-                used.append(x)
+    if rt.size > 0:
+        for v in rt.stratum:
+            used.append(int(v))
 
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
     if ms is not None and ms.buffers is not None:
         ut = ms.buffers.saplings
         for layer in range(10):
             for spe_name, _ in UT_SPECIES_FIELDS:
                 s = getattr(ut[0][layer], spe_name)
                 for cat_code, _ in UT_CATEGORIES:
-                    x = parse_int_id(getattr(s, f"osid_{cat_code}", 0))
+                    x = int(getattr(s, f"osid_{cat_code}", 0))
                     if x is not None:
                         used.append(x)
 
-    if ms is not None and getattr(ms, "yp", None) is not None:
-        for i in range(int(getattr(ms, "ntrees", 0) or 0)):
-            x = parse_int_id(getattr(ms.yp[0][i], "sid", 0))
+    if ms is not None and ms.yp is not None:
+        for i in range(int(ms.ntrees or 0)):
+            x = int(ms.yp[0][i].sid)
             if x is not None:
                 used.append(x)
 
@@ -294,8 +277,6 @@ def update_stand_growth(stand: ForestStand,
                         update_sapling: bool = True):
     """In-place update stand's reference trees with given diameters, heights and stem count.
     Increase ages for trees and stand. Remove sapling flag from trees that have grown beyond 1.3m. """
-    if stand.reference_trees is None:
-        raise MetsiException("Data not vectorized")
 
     trees = stand.reference_trees
 

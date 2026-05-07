@@ -1,5 +1,5 @@
 import os
-from typing import Any, Optional, Dict, Union, Iterable
+from typing import Any, Optional, Iterable
 from pathlib import Path
 import numpy as np
 import numpy.typing as npt
@@ -19,7 +19,6 @@ from lukefi.metsi.domain.natural_processes.util import (
     update_stand_growth, safe_storey_value,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
-    parse_int_id,
     next_osite_id,
     safe_origin,
     new_reference_tree_identity,
@@ -99,10 +98,10 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
     out.sapling_stems_per_ha[base_idx] = float(np.nansum(out.sapling_stems_per_ha[merge_idx]))
 
     # force species to same
-    out.species[base_idx] = int(base_species)
+    out.species[base_idx] = base_species
 
     if rest_idx:
-        out.delete(np.array(rest_idx, dtype=int))
+        out.delete(rest_idx)
 
     return out
 
@@ -184,7 +183,7 @@ def _build_motti_strata_py(
             is_stratum_index=True,
         )
 
-        stratum_sid = parse_int_id(strata.stratum_number[i])
+        stratum_sid = int(strata.stratum_number[i])
         if stratum_sid is None:
             stratum_sid = i + 1
 
@@ -206,21 +205,19 @@ def _build_motti_strata_py(
     return out
 
 
-def _spedom(rt: ReferenceTrees | None) -> int:
+def _spedom(rt: ReferenceTrees) -> int:
     """
     Returns dominant species from Motti species.
 
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
     If trees are empty fall back to PINE, we need to give valid value for growth.
     """
-    if rt is None:
-        return TreeSpecies.PINE
     n = rt.size
     if n == 0:
         return TreeSpecies.PINE
 
     # Convert species to Motti codes (will raise if invalid)
-    spe_codes =[convert_species(TreeSpecies(int(s))) for s in rt.species]
+    spe_codes = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
     # Basal area per tree: stems_per_ha * π * (0.5 * d_cm * 0.01 m/cm)^2
     d_cm = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
@@ -228,7 +225,7 @@ def _spedom(rt: ReferenceTrees | None) -> int:
     ba_per_tree = f_ha * np.pi * (0.5 * d_cm * 0.01) ** 2  # m²/ha contribution
 
     # Sum BA per species code
-    per: Dict[int, float] = {}
+    per: dict[int, float] = {}
     for code, ba in zip(spe_codes, ba_per_tree.tolist()):
         per[code] = per.get(code, 0.0) + float(ba)
 
@@ -284,7 +281,7 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
         if bool(trees.sapling[idx]):
             continue
 
-        sid = parse_int_id(trees.stratum[idx])
+        sid = int(trees.stratum[idx])
         if sid is None:
             continue
 
@@ -294,9 +291,9 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
 
         for i in range(int(ms.ntrees)):
             t = ms.yp[0][i]
-            if parse_int_id(t.sid) != sid:
+            if int(t.sid) != sid:
                 continue
-            if parse_int_id(t.id) != tree_number:
+            if int(t.id) != tree_number:
                 continue
 
             new_f = max(float(t.f) - float(delta), 0.0)
@@ -333,7 +330,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     continue
 
                 osid_raw = getattr(s, f"osid_{cat_code}", 0.0)
-                osid = parse_int_id(osid_raw)
+                osid = int(osid_raw)
 
                 if osid is None:
                     osid = next_osid
@@ -388,10 +385,10 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     for i in range(int(ms.ntrees)):
         t = yp[0][i]
 
-        sid = parse_int_id(t.sid)
+        sid = int(t.sid)
         if sid is None:
             continue
-        yp_tree_id = parse_int_id(getattr(t, "id", 0))
+        yp_tree_id = int(t.d)
 
         if yp_tree_id is None:
             identifier, tree_number = new_reference_tree_identity(stand)
@@ -443,23 +440,23 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
     Used after Motti4Init init.
     """
     rt = stand.reference_trees
-    ms = getattr(stand, "motti_state", None)
+    ms = stand.motti_state
 
-    if rt is None or rt.size == 0:
+    if rt.size == 0:
         return
 
     live_yp: set[tuple[int, int]] = set()
     if ms is not None and ms.yp is not None:
         for i in range(int(ms.ntrees)):
             t = ms.yp[0][i]
-            sid = parse_int_id(getattr(t, "sid", 0))
-            tree_id = parse_int_id(getattr(t, "id", 0))
+            sid = int(t.sid)
+            tree_id = int(t.id)
             if sid is not None and tree_id is not None:
                 live_yp.add((sid, tree_id))
 
     delete_idx: list[int] = []
     for i in range(rt.size):
-        sid = parse_int_id(rt.stratum[i])
+        sid = int(rt.stratum[i])
         try:
             tree_number = int(rt.tree_number[i])
         except (TypeError, ValueError):
@@ -546,12 +543,7 @@ def _resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
     return p.resolve()
 
 
-# -------- vectorized predictor --------
 class MottiDLLPredictor:
-    """
-    SoA-based predictor feeding the Motti DLL. Builds C tree buffers from vector arrays.
-    """
-
     def __init__(
         self,
         stand: ForestStand,
@@ -737,8 +729,8 @@ class MottiDLLPredictor:
         spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
         stratum_ids = [
-            parse_int_id(v) or (self.stand.stand_id or (idx + 1))
-            for idx, v in enumerate(rt.stratum.tolist())
+            int(v) or (self.stand.stand_id or (idx + 1))
+            for idx, v in enumerate(rt.stratum)
         ]
         storey_vec =[storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
         trees_py = [
@@ -835,13 +827,11 @@ class MottiDLLPredictor:
         return growth
 
 
-def _resolve_shared_object(p: Union[str, Path]) -> Path:
+def _resolve_shared_object(p: str | Path) -> Path:
     """
     Resolve a Motti shared library inside a directory, or pass through an exact file path.
     Raises ValueError if p is None. Returns a Path (may be a directory if nothing matched).
     """
-    if p is None:
-        raise ValueError("data_dir must be provided (directory containing the Motti library).")
 
     p = Path(p)
 
@@ -884,7 +874,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
 
     rt = stand.reference_trees
 
-    if stand.land_use_category and stand.land_use_category >= LandUseCategory.WASTE_LAND:
+    if stand.land_use_category is not None and stand.land_use_category >= LandUseCategory.WASTE_LAND:
         base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         base_h = np.nan_to_num(rt.height, nan=0.0)
         base_f = np.nan_to_num(rt.stems_per_ha, nan=0.0)
@@ -960,9 +950,9 @@ def _mark_motti_yp_as_seed_trees(stand: ForestStand, *, tree_class: int = 3) -> 
     changed = False
     for i in range(int(ms.ntrees)):
         t = ms.yp[0][i]
-        if float(getattr(t, "f", 0.0) or 0.0) <= 0.0:
+        if float(t.f) <= 0.0:
             continue
-        if float(getattr(t, "storie", 0.0) or 0.0) != float(tree_class):
+        if float(t.storie) != float(tree_class):
             t.storie = float(tree_class)
             changed = True
 
@@ -999,8 +989,8 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
         for i in range(int(ms.ntrees)):
             t = ms.yp[0][i]
 
-            sid = parse_int_id(getattr(t, "sid", 0))
-            tree_id = parse_int_id(getattr(t, "id", 0))
+            sid = int(t.sid)
+            tree_id = int(t.id)
 
             if sid is not None and tree_id is not None:
                 live.add(("yp", sid, tree_id))
@@ -1014,7 +1004,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
                     stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
                     if stems <= 0.0:
                         continue
-                    osid = parse_int_id(getattr(s, f"osid_{cat_code}", 0))
+                    osid = int(getattr(s, f"osid_{cat_code}", 0))
                     if osid is not None:
                         live.add(("ut", osid, None))
 
@@ -1024,16 +1014,14 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
 def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     rt = stand.reference_trees
-    if rt is None or rt.size == 0:
+    if rt.size == 0:
         return
 
     live = _collect_live_motti_keys(stand)
     delete_idx = []
 
-    for i, value in enumerate(rt.stratum.tolist()):
-        sid = parse_int_id(value)
-        if sid is None:
-            continue
+    for i, value in enumerate(rt.stratum):
+        sid = int(value)
 
         key: tuple[str, int, int | None]
         if bool(rt.sapling[i]):
@@ -1059,13 +1047,13 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     ms = stand.motti_state
     rt = stand.reference_trees
 
-    if ms is None or ms.yp is None or rt is None or rt.size == 0:
+    if ms is None or ms.yp is None or rt.size == 0:
         return
 
     yp_strata: set[int] = set()
     for i in range(int(ms.ntrees)):
         t = ms.yp[0][i]
-        sid = parse_int_id(getattr(t, "sid", 0))
+        sid = int(t.sid)
         if sid is not None:
             yp_strata.add(sid)
 
@@ -1077,8 +1065,8 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
         if not bool(rt.sapling[i]):
             continue
 
-        sid = parse_int_id(rt.stratum[i])
-        if sid is not None and sid in yp_strata:
+        sid = int(rt.stratum[i])
+        if sid in yp_strata:
             delete_idx.append(i)
 
     if delete_idx:
