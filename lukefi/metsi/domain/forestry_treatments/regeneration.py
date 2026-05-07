@@ -101,7 +101,7 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
 
     if stand.motti_state is not None:
         if method is None:
-            raise MetsiException(f"Regeneration method missing")
+            raise MetsiException("Regeneration method missing")
 
         _regeneration_via_motti(
             stand,
