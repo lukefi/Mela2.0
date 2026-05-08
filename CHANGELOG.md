@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.11] - 2026-05-08
+
+### Changed
+
+- Refactored and cleaned up forest builder classes
+
 ## [0.7.10] - 2026-05-08
 
 ### Fixed

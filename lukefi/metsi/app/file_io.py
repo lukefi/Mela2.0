@@ -4,10 +4,12 @@ import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 import sqlite3
-from typing import Any, Optional
-from lukefi.metsi.data.formats.forest_builder import (
-    VMI13Builder, VMI12Builder, VMI11Builder, VMI10Builder, VMI9Builder,
-    XMLBuilder, GeoPackageBuilder)
+from typing import Any, Generator, Optional
+from lukefi.metsi.data.formats.forest_centre.forest_centre_builder import GeoPackageBuilder, XMLBuilder
+from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
+from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
+from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
+from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
 
 from lukefi.metsi.data.formats.io_utils import (
     stands_to_csv_content,
@@ -17,6 +19,7 @@ from lukefi.metsi.data.formats.io_utils import (
     mela_par_file_content)
 from lukefi.metsi.app.app_io import MetsiConfiguration
 from lukefi.metsi.app.app_types import ExportableContainer
+from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
 from lukefi.metsi.domain.forestry_types import SimResults
 from lukefi.metsi.domain.forestry_types import StandList, ForestStand
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
@@ -216,9 +219,9 @@ def csv_exp_writer(filepath: Path, container: ExportableContainer[ForestStand]) 
                 w.writerow([csv_cell(x) for x in row])
 
 
-def vmi_file_reader(file: str | Path) -> list[str]:
+def vmi_file_reader(file: str | Path) -> Generator[str]:
     with open(file, 'r', encoding='utf-8') as input_file:
-        return input_file.readlines()
+        yield from map(lambda row: row.strip("\n"), input_file)
 
 
 def xml_file_reader(file: str | Path) -> str:
