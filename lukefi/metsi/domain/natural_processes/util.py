@@ -97,7 +97,7 @@ def storey_to_motti(
         rt = stand.reference_trees
         if 0 <= index < rt.size:
             target_sid = int(rt.stratum[index])
-            if target_sid is not None:
+            if target_sid > 0:
                 for j in range(strata.size):
                     sid = int(strata.stratum_number[j])
                     if sid == target_sid:
@@ -191,7 +191,9 @@ def next_osite_id(stand: ForestStand) -> int:
     rt = stand.reference_trees
     if rt.size > 0:
         for v in rt.stratum:
-            used.append(int(v))
+            x = int(v)
+            if x > 0:
+                used.append(int(v))
 
     ms = stand.motti_state
     if ms is not None and ms.buffers is not None:
@@ -201,13 +203,13 @@ def next_osite_id(stand: ForestStand) -> int:
                 s = getattr(ut[0][layer], spe_name)
                 for cat_code, _ in UT_CATEGORIES:
                     x = int(getattr(s, f"osid_{cat_code}", 0))
-                    if x is not None:
+                    if x > 0:
                         used.append(x)
 
     if ms is not None and ms.yp is not None:
         for i in range(int(ms.ntrees or 0)):
             x = int(ms.yp[0][i].sid)
-            if x is not None:
+            if x > 0:
                 used.append(x)
 
     return (max(used) + 1) if used else 1

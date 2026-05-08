@@ -181,7 +181,7 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         )
 
         stratum_sid = int(strata.stratum_number[i])
-        if stratum_sid is None:
+        if stratum_sid <= 0:
             stratum_sid = i + 1
 
         spe = float(convert_species(species))
@@ -279,7 +279,7 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
             continue
 
         sid = int(trees.stratum[idx])
-        if sid is None:
+        if sid <= 0:
             continue
 
         tree_number = int(trees.tree_number[idx])
@@ -329,7 +329,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                 osid_raw = getattr(s, f"osid_{cat_code}", 0.0)
                 osid = int(osid_raw)
 
-                if osid is None:
+                if osid <= 0:
                     osid = next_osid
                     next_osid += 1
                     setattr(s, f"osid_{cat_code}", float(osid))
@@ -382,11 +382,11 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         t = yp[0][i]
 
         sid = int(t.sid)
-        if sid is None:
+        if sid <= 0:
             continue
         yp_tree_id = int(t.id)
 
-        if yp_tree_id is None:
+        if yp_tree_id <= 0:
             identifier, tree_number = new_reference_tree_identity(stand)
             yp_tree_id = tree_number
             t.id = float(tree_number)
@@ -447,7 +447,7 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
             t = ms.yp[0][i]
             sid = int(t.sid)
             tree_id = int(t.id)
-            if sid is not None and tree_id is not None:
+            if sid > 0 and tree_id > 0:
                 live_yp.add((sid, tree_id))
 
     delete_idx: list[int] = []
@@ -458,7 +458,7 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
         except (TypeError, ValueError):
             tree_number = -1
 
-        if sid is None or tree_number <= 0 or (sid, tree_number) not in live_yp:
+        if sid <= 0 or tree_number <= 0 or (sid, tree_number) not in live_yp:
             delete_idx.append(i)
 
     if delete_idx:
@@ -725,7 +725,7 @@ class MottiDLLPredictor:
         spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
         stratum_ids = [
-            int(v) or (self.stand.stand_id or (idx + 1))
+            int(v) if v > 0 else (self.stand.stand_id or (idx + 1))
             for idx, v in enumerate(rt.stratum)
         ]
         storey_vec = [storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
@@ -987,7 +987,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
             sid = int(t.sid)
             tree_id = int(t.id)
 
-            if sid is not None and tree_id is not None:
+            if sid > 0 and tree_id > 0:
                 live.add(("yp", sid, tree_id))
 
     if ms.buffers is not None:
@@ -1000,7 +1000,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
                     if stems <= 0.0:
                         continue
                     osid = int(getattr(s, f"osid_{cat_code}"))
-                    if osid is not None:
+                    if osid > 0:
                         live.add(("ut", osid, None))
 
     return live
@@ -1017,6 +1017,8 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     for i, value in enumerate(rt.stratum):
         sid = int(value)
+        if sid <= 0:
+            continue
 
         key: tuple[str, int, int | None]
         if bool(rt.sapling[i]):
@@ -1049,7 +1051,7 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     for i in range(int(ms.ntrees)):
         t = ms.yp[0][i]
         sid = int(t.sid)
-        if sid is not None:
+        if sid > 0:
             yp_strata.add(sid)
 
     if not yp_strata:
@@ -1061,7 +1063,7 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
             continue
 
         sid = int(rt.stratum[i])
-        if sid in yp_strata:
+        if sid > 0 and sid in yp_strata:
             delete_idx.append(i)
 
     if delete_idx:
