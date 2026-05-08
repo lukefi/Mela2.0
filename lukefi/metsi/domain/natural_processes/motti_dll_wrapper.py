@@ -109,16 +109,7 @@ class Motti4DLL:
         """Public wrapper around internal contextmanager _maybe_chdir."""
         return _maybe_chdir(tmp_dir)
 
-    @property
-    def param_290(self) -> float:
-        # expose a public name
-        return getattr(self, "_290", 0.0)
-
-    @param_290.setter
-    def param_290(self, value: float) -> None:
-        self._290 = value
-
-    def convert_site_index(self, mty: int | float) -> int:
+    def _convert_site_index(self, mty: int | float) -> int:
         # Prefer DLL helper; otherwise cap <= 6 (matches their Convert_Site policy)
         if hasattr(self.lib, "Convert_Site"):
             return int(round(float(self.lib.Convert_Site(float(mty)))))
@@ -176,7 +167,7 @@ class Motti4DLL:
         yy.lake = float(lake)
         yy.sea = float(sea)
         yy.mal = float(mal)
-        yy.mty = float(self.convert_site_index(mty) if convert_mela_site else mty)
+        yy.mty = float(self._convert_site_index(mty) if convert_mela_site else mty)
         yy.verl = float(verl)
         yy.verlt = float(verlt)
         yy.xt_regen = float(xt_regen)
