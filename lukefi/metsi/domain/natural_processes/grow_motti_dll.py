@@ -388,7 +388,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         sid = int(t.sid)
         if sid is None:
             continue
-        yp_tree_id = int(t.d)
+        yp_tree_id = int(t.id)
 
         if yp_tree_id is None:
             identifier, tree_number = new_reference_tree_identity(stand)
