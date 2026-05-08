@@ -712,6 +712,7 @@ class MottiDLLPredictor:
             gstorey=1.0,
         )
 
+        # TODO: Is this right?
         rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
         ids = rt.tree_number.astype(int).copy()
 
@@ -720,8 +721,9 @@ class MottiDLLPredictor:
         h = np.nan_to_num(rt.height, nan=0.0)
         age = np.nan_to_num(rt.biological_age, nan=0.0)
         age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
+        # TODO: ReferenceTrees does not have this attribute; where did it come from?
         cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
-        origin = np.nan_to_num(getattr(rt, "origin", np.zeros(n, dtype=float)), nan=0.0)
+        origin = rt.origin
         spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
         stratum_ids = [
@@ -745,16 +747,16 @@ class MottiDLLPredictor:
 
             }
             for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
-                ids.tolist(),
+                ids,
                 stratum_ids,
-                stems.tolist(),
-                d13.tolist(),
-                h.tolist(),
+                stems,
+                d13,
+                h,
                 spe_vec,
-                age.tolist(),
-                age13.tolist(),
-                cr.tolist(),
-                origin.astype(int).tolist(),
+                age,
+                age13,
+                cr,
+                origin,
                 storey_vec,
             )
         ]
@@ -813,7 +815,7 @@ class MottiDLLPredictor:
         growth = self.dll.grow_with_state(
             state.yy,
             state.yp,
-            int(state.ntrees),
+            state.ntrees,
             state.buffers,
             step=step,
         )
@@ -879,6 +881,8 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
 
     if predictor is None:
         resolved_dir = _resolve_dir_or_file(data_dir)
+        # TODO: A new predictor is created every time -> no persistence for Motti state and ensure_state calls
+        # dll.new_site every time.
         pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
     else:
         pred = predictor
