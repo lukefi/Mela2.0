@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.data.conversion.internal2motti import convert_species
+from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
@@ -993,12 +994,12 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
         ut = ms.buffers.saplings
         for layer in range(10):
             for spe_name, _ in UT_SPECIES_FIELDS:
-                s = getattr(ut[0][layer], spe_name)
+                s: Motti4SaplingStratum = getattr(ut[0][layer], spe_name)
                 for cat_code, _ in UT_CATEGORIES:
-                    stems = float(getattr(s, f"f_{cat_code}", 0.0) or 0.0)
+                    stems = float(getattr(s, f"f_{cat_code}"))
                     if stems <= 0.0:
                         continue
-                    osid = int(getattr(s, f"osid_{cat_code}", 0))
+                    osid = int(getattr(s, f"osid_{cat_code}"))
                     if osid is not None:
                         live.add(("ut", osid, None))
 
