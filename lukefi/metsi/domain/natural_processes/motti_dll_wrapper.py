@@ -227,96 +227,6 @@ class Motti4DLL:
             yp[0][i].storie = float(t.get("storie", 2.0))
         return yp, len(trees_py)
 
-    # ---------- full grow (Init -> UpdateAfterImport -> loop Growth) ----------
-
-    def grow(
-        self,
-        yy: Motti4Site,
-        yp,
-        numtrees: int,
-        step: int = 5,
-        ctrl: Optional[dict] = None
-    ) -> GrowthDeltas:
-        ffi, lib = self.ffi, self.lib
-        saplings = ffi.new("Motti4Saplings *")
-        kor_state = ffi.new("Motti4KorArray *")
-        vcr_state = ffi.new("Motti4VcrArray *")
-        apv_state = ffi.new("Motti4KorArray *")
-        fert_array = ffi.new("Motti4FerArray *")
-        motti_control = cast(Any, ffi.new("Motti4Ctrl *"))
-        # defaults like the C wrapper
-        motti_control.death_tree = 1
-        if ctrl:
-            if "death_tree" in ctrl:
-                motti_control.death_tree = int(bool(ctrl["death_tree"]))
-            if "death_forest" in ctrl:
-                motti_control.death_forest = int(bool(ctrl["death_forest"]))
-            if "calibrate" in ctrl:
-                motti_control.calibrate = int(bool(ctrl["calibrate"]))
-
-        ntrees_p = ffi.new("int *", numtrees)
-        rv = ffi.new("int *")
-        numfer = ffi.new("int *", 0)
-
-        # Accumulators keyed by tree id (order can change between sub-steps)
-        acc_id: Dict[int, float] = {}
-        acc_ih: Dict[int, float] = {}
-        acc_if: Dict[int, float] = {}
-        prev_f: Dict[int, float] = {int(yp[0][i].id): float(yp[0][i].f) for i in range(ntrees_p[0])}
-
-        remaining = int(step)
-        while remaining > 0:
-            yy._290 = 0.0  # pylint: disable=protected-access
-            for i in range(ntrees_p[0]):
-                yp[0][i].crerror = 0.0
-
-            step_p = ffi.new("int *", remaining)
-            rv[0] = 0
-            with _maybe_chdir(self.data_dir):
-                lib.Motti4Growth(yy, yp, saplings, kor_state, vcr_state, apv_state, ntrees_p,
-                                 fert_array, numfer, motti_control, step_p, rv)
-            if rv[0] != 0:
-                raise RuntimeError(f"Motti4Growth failed (rv={rv[0]})")
-
-            for i in range(ntrees_p[0]):
-                tid = int(yp[0][i].id)
-                acc_id[tid] = acc_id.get(tid, 0.0) + float(yp[0][i].xd)
-                acc_ih[tid] = acc_ih.get(tid, 0.0) + float(yp[0][i].xh)
-                nf = float(yp[0][i].f)
-                pf = prev_f.get(tid, nf)  # if first time we see tid, Δf=0
-                acc_if[tid] = acc_if.get(tid, 0.0) + (nf - pf)
-                prev_f[tid] = nf
-
-            done = int(step_p[0])
-            if done <= 0:
-                break
-            remaining -= done
-
-        ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
-        sids_now = []
-        for i in range(ntrees_p[0]):
-            raw_sid = getattr(yp[0][i], "sid", 0)
-            try:
-                sid = int(float(raw_sid))
-                sids_now.append(sid if sid > 0 else None)
-            except (TypeError, ValueError):
-                sids_now.append(None)
-        out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
-        out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
-        out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
-        out_age = [float(yp[0][i].age) for i in range(ntrees_p[0])]
-        out_age13 = [float(yp[0][i].age13) for i in range(ntrees_p[0])]
-
-        return GrowthDeltas(
-            tree_ids=ids_now,
-            tree_sids=sids_now,
-            trees_id=out_id,
-            trees_ih=out_ih,
-            trees_if=out_if,
-            trees_age=out_age,
-            trees_age13=out_age13,
-        )
-
     def new_strata(self, strata_py: list[dict]) -> Any:
         """
         Builds Motti4Strata from FDM strata.
@@ -404,7 +314,7 @@ class Motti4DLL:
     def grow_with_state(
         self,
         yy: Motti4Site,
-        yp: Any,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         step: int = 5,
@@ -417,7 +327,7 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         rv = ffi.new("int *")
 
         acc_id: Dict[int, float] = {}
@@ -473,12 +383,9 @@ class Motti4DLL:
         ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
         sids_now = []
         for i in range(ntrees_p[0]):
-            raw_sid = getattr(yp[0][i], "sid", 0)
-            try:
-                sid = int(float(raw_sid))
-                sids_now.append(sid if sid > 0 else None)
-            except (TypeError, ValueError):
-                sids_now.append(None)
+            raw_sid = yp[0][i].sid
+            sid = int(raw_sid)
+            sids_now.append(sid if sid > 0 else None)
         out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
         out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
         out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
