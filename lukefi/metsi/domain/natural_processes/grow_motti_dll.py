@@ -16,7 +16,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import (
-    update_stand_growth, safe_storey_value,
+    update_stand_growth,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
     next_osite_id,
@@ -106,23 +106,22 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
     return out
 
 
-def _build_reference_tree_update(
-    *,
-    identifier: str,
-    tree_number: int,
-    osid: int,
-    species: TreeSpecies,
-    category_code: str,
-    stems_per_ha: float,
-    origin_raw: float,
-    height: float,
-    diameter: float,
-    age: float,
-    age13: float,
-    basal_area: float,
-    volume: float,
-    storey: int,
-) -> dict[str, Any]:
+def _build_reference_tree_update(*,
+                                 identifier: str,
+                                 tree_number: int,
+                                 osid: int,
+                                 species: TreeSpecies,
+                                 category_code: str,
+                                 stems_per_ha: float,
+                                 origin_raw: float,
+                                 height: float,
+                                 diameter: float,
+                                 age: float,
+                                 age13: float,
+                                 basal_area: float,
+                                 volume: float,
+                                 storey: int,
+                                 ) -> dict[str, Any]:
     return {
         "identifier": identifier,
         "tree_number": int(tree_number),
@@ -143,10 +142,7 @@ def _build_reference_tree_update(
     }
 
 
-def _build_motti_strata_py(
-    stand: ForestStand,
-    strata: TreeStrata | None = None,
-) -> list[dict]:
+def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None) -> list[dict[str, float]]:
     """
     Convert given TreeStrata into Python dicts for Motti4Strata.
     If strata is not given, use stand.tree_strata.
@@ -159,10 +155,10 @@ def _build_motti_strata_py(
     if strata is None:
         strata = stand.tree_strata
 
-    if strata is None or strata.size == 0:
+    if strata.size == 0:
         return []
 
-    out: list[dict] = []
+    out: list[dict[str, float]] = []
 
     for i in range(min(strata.size, 10)):
         species = TreeSpecies(int(strata.species[i]))
@@ -174,7 +170,7 @@ def _build_motti_strata_py(
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
-        origin = safe_storey_value(strata.origin[i])
+        origin = float(strata.origin[i])
 
         storey = storey_to_motti(
             stand,
@@ -271,7 +267,7 @@ def _strip_tree_strata(stand: ForestStand):
 def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: npt.NDArray[np.float64]) -> bool:
     ms = stand.motti_state
     trees = stand.reference_trees
-    if ms is None or ms.yp is None or trees is None or trees.size == 0:
+    if ms is None or ms.yp is None or trees.size == 0:
         return False
 
     changed = False
@@ -351,22 +347,21 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     else:
                         storey = storey_from_layer(stand, layer)
 
-                row = _build_reference_tree_update(
-                    identifier=identifier,
-                    tree_number=tree_number,
-                    osid=osid,
-                    species=internal_species,
-                    category_code="0",  # Small tree
-                    stems_per_ha=stems,
-                    origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
-                    height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
-                    diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
-                    age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
-                    age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
-                    basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
-                    volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
-                    storey=storey,
-                )
+                row = _build_reference_tree_update(identifier=identifier,
+                                                   tree_number=tree_number,
+                                                   osid=osid,
+                                                   species=internal_species,
+                                                   category_code="0",  # Small tree
+                                                   stems_per_ha=stems,
+                                                   origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
+                                                   height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
+                                                   diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
+                                                   age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
+                                                   age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
+                                                   basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
+                                                   volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
+                                                   storey=storey,
+                                                   )
 
                 if idx is None:
                     rt.create(row)
@@ -415,7 +410,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             "stratum": str(int(sid)),
             "species": int(t.spe),
             "stems_per_ha": float(t.f),
-            "origin": safe_origin(int(t.snt) - 1),
+            "origin": int(t.snt) - 1,
             "height": float(t.h),
             "breast_height_diameter": float(t.d13),
             "biological_age": float(t.age),
@@ -544,13 +539,13 @@ def _resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
 
 
 class MottiDLLPredictor:
-    def __init__(
-        self,
-        stand: ForestStand,
-        data_dir: Optional[str] = None,
-        use_dll_site_convert: bool = True,
-        dll: Optional["Motti4DLL"] = None,
-    ) -> None:
+
+    def __init__(self,
+                 stand: ForestStand,
+                 data_dir: Optional[str] = None,
+                 use_dll_site_convert: bool = True,
+                 dll: Optional["Motti4DLL"] = None,
+                 ) -> None:
         self.stand = stand
         self.use_dll_site_convert = use_dll_site_convert
 
@@ -732,7 +727,7 @@ class MottiDLLPredictor:
             int(v) or (self.stand.stand_id or (idx + 1))
             for idx, v in enumerate(rt.stratum)
         ]
-        storey_vec =[storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
+        storey_vec = [storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
         trees_py = [
             {
                 "id": int(i),
@@ -916,12 +911,11 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
     _reconcile_reference_trees_from_motti(stand)
 
 
-def apply_motti_yp_reduction_from_removed_reference_trees(
-    stand: ForestStand,
-    removed_f: np.ndarray,
-    *,
-    refresh: bool = True,
-) -> bool:
+def apply_motti_yp_reduction_from_removed_reference_trees(stand: ForestStand,
+                                                          removed_f: np.ndarray,
+                                                          *,
+                                                          refresh: bool = True,
+                                                          ) -> bool:
     """
     Generic helper for treatments that reduce tree amounts.
     This helper maps removed trees to the yp vector via the shared stratum/sid,

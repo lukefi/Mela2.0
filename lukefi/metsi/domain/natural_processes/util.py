@@ -213,15 +213,9 @@ def next_osite_id(stand: ForestStand) -> int:
     return (max(used) + 1) if used else 1
 
 
-def safe_origin(raw: float | int | None) -> int:
-    if raw is None:
-        return int(Origin.UNSET)
-    try:
-        v = int(raw)
-        return v if v >= 0 else int(Origin.UNSET)
-    except (ValueError, TypeError):
-        return int(Origin.UNSET)
-
+def safe_origin(raw: float | int) -> int:
+    v = int(raw)
+    return v if v >= 0 else int(Origin.UNSET)
 
 def next_reference_tree_number(rt: ReferenceTrees) -> int:
     vals = []
@@ -296,9 +290,3 @@ def update_stand_growth(stand: ForestStand,
             trees.sapling)
 
     stand.year = (stand.year or 0) + step
-
-
-def safe_storey_value(v: Any) -> float:
-    if v is None:
-        return 0.0
-    return float(getattr(v, "value", v))

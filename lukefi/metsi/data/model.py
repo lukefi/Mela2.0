@@ -2,7 +2,7 @@ from copy import copy
 from enum import Enum
 import dataclasses
 import sqlite3
-from typing import Optional, override, Any, cast
+from typing import Optional, override, cast
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,8 +22,9 @@ from lukefi.metsi.data.enums.internal import (
     PeatlandForestType,
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
+from lukefi.metsi.data.motti.motti_types import Motti4Site, Motti4Trees
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL, MottiStateBuffers
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
@@ -413,8 +414,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                 retval.motti_state = None
                 return retval
             try:
-                yy2 = dll.clone_site(yy)
-                yp2 = dll.clone_trees(yp)
+                yy2 = cast(Motti4Site, dll.clone_site(yy))
+                yp2 = cast(Motti4Trees, dll.clone_trees(yp))
                 buffers2 = dll.clone_state_buffers(buffers)
             except (AttributeError, TypeError, ValueError, RuntimeError):
                 # cloning failed -> drop state rather than share pointers
@@ -618,8 +619,8 @@ def stand_as_internal_row(stand: ForestStand):
 @dataclass(eq=False, repr=False)
 class MottiState:
     dll: Motti4DLL
-    yy: Any                     # "Motti4Site *"
-    yp: Any                     # "Motti4Trees *"
+    yy: Motti4Site              # "Motti4Site *"
+    yp: Motti4Trees             # "Motti4Trees *"
     ntrees: int                 # current number of “active” trees in yp
-    buffers: Any                # MottiStateBuffers
+    buffers: MottiStateBuffers  # MottiStateBuffers
     signature: tuple[int, ...]

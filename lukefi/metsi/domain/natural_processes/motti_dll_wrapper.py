@@ -6,17 +6,28 @@ from contextlib import contextmanager
 
 from cffi import FFI
 
+from lukefi.metsi.data.motti.motti_types import (
+    IntPtr,
+    Motti4Ctrl,
+    Motti4FerArray,
+    Motti4KorArray,
+    Motti4Saplings,
+    Motti4Site,
+    Motti4Trees,
+    Motti4VcrArray
+)
+
 
 @dataclass
 class MottiStateBuffers:
     """Persistent Motti model state buffers that must be carried across Growth calls."""
-    saplings: Any        # "Motti4Saplings *"   (ut)
-    kor_state: Any       # "Motti4KorArray *"   (kor)
-    vcr_state: Any       # "Motti4VcrArray *"   (vcr)
-    apv_state: Any       # "Motti4KorArray *"   (apv)
-    fert_array: Any      # "Motti4FerArray *"   (fer)
-    numfer: Any          # "int *"              (numfer)
-    ctrl: Any            # "Motti4Ctrl *"       (o)
+    saplings: Motti4Saplings        # "Motti4Saplings *"   (ut)
+    kor_state: Motti4KorArray       # "Motti4KorArray *"   (kor)
+    vcr_state: Motti4VcrArray       # "Motti4VcrArray *"   (vcr)
+    apv_state: Motti4KorArray       # "Motti4KorArray *"   (apv)
+    fert_array: Motti4FerArray      # "Motti4FerArray *"   (fer)
+    numfer: IntPtr                  # "int *"              (numfer)
+    ctrl: Motti4Ctrl                # "Motti4Ctrl *"       (o)
 
 
 @dataclass
@@ -145,7 +156,7 @@ class Motti4DLL:
         If Z is unknown, pass Z=-1.0 to let the DLL infer it.
         """
         ffi, lib = self.ffi, self.lib
-        yy = cast(Any, ffi.new("Motti4Site *"))
+        yy = cast(Motti4Site, ffi.new("Motti4Site *"))
 
         # SiteInit with only Y,X,Z
         rv = ffi.new("int *")
@@ -204,7 +215,7 @@ class Motti4DLL:
 
         return yy
 
-    def new_trees(self, trees_py: list[dict]) -> Tuple[object, int]:
+    def new_trees(self, trees_py: list[dict]) -> Tuple[Any, int]:
         """
             fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
         """
@@ -228,7 +239,11 @@ class Motti4DLL:
     # ---------- full grow (Init -> UpdateAfterImport -> loop Growth) ----------
 
     def grow(
-        self, yy, yp, numtrees: int, step: int = 5,
+        self,
+        yy: Motti4Site,
+        yp,
+        numtrees: int,
+        step: int = 5,
         ctrl: Optional[dict] = None
     ) -> GrowthDeltas:
         ffi, lib = self.ffi, self.lib
@@ -260,11 +275,7 @@ class Motti4DLL:
 
         remaining = int(step)
         while remaining > 0:
-            # reset like C wrapper
-            try:
-                yy.param_290 = 0.0
-            except AttributeError:
-                pass
+            yy._290 = 0.0  # pylint: disable=protected-access
             for i in range(ntrees_p[0]):
                 yp[0][i].crerror = 0.0
 
@@ -343,13 +354,13 @@ class Motti4DLL:
     def alloc_state_buffers(self, ctrl: Optional[dict] = None) -> MottiStateBuffers:
         """Allocate persistent buffers that must be reused across Growth calls."""
         ffi = self.ffi
-        saplings = ffi.new("Motti4Saplings *")
-        kor_state = ffi.new("Motti4KorArray *")
-        vcr_state = ffi.new("Motti4VcrArray *")
-        apv_state = ffi.new("Motti4KorArray *")
-        fert_array = ffi.new("Motti4FerArray *")
-        numfer = ffi.new("int *", 0)
-        motti_control = cast(Any, ffi.new("Motti4Ctrl *"))
+        saplings = cast(Motti4Saplings, ffi.new("Motti4Saplings *"))
+        kor_state = cast(Motti4KorArray, ffi.new("Motti4KorArray *"))
+        vcr_state = cast(Motti4VcrArray, ffi.new("Motti4VcrArray *"))
+        apv_state = cast(Motti4KorArray, ffi.new("Motti4KorArray *"))
+        fert_array = cast(Motti4FerArray, ffi.new("Motti4FerArray *"))
+        numfer = cast(IntPtr, ffi.new("int *", 0))
+        motti_control = cast(Motti4Ctrl, ffi.new("Motti4Ctrl *"))
         # defaults like the C wrapper
         motti_control.death_tree = 1
         if ctrl:
@@ -374,34 +385,34 @@ class Motti4DLL:
         ffi = self.ffi
         out = self.alloc_state_buffers(ctrl={
             "death_tree": int(bool(buffers.ctrl.death_tree)),
-            "death_forest": int(bool(getattr(buffers.ctrl, "death_forest", 0))),
-            "calibrate": int(bool(getattr(buffers.ctrl, "calibrate", 0))),
+            "death_forest": int(bool(buffers.ctrl.death_forest)),
+            "calibrate": int(bool(buffers.ctrl.calibrate)),
         })
-        ffi.memmove(out.saplings, buffers.saplings, ffi.sizeof("Motti4Saplings"))
-        ffi.memmove(out.kor_state, buffers.kor_state, ffi.sizeof("Motti4KorArray"))
-        ffi.memmove(out.vcr_state, buffers.vcr_state, ffi.sizeof("Motti4VcrArray"))
-        ffi.memmove(out.apv_state, buffers.apv_state, ffi.sizeof("Motti4KorArray"))
-        ffi.memmove(out.fert_array, buffers.fert_array, ffi.sizeof("Motti4FerArray"))
+        ffi.memmove(cast(FFI.CData, out.saplings), cast(FFI.CData, buffers.saplings), ffi.sizeof("Motti4Saplings"))
+        ffi.memmove(cast(FFI.CData, out.kor_state), cast(FFI.CData, buffers.kor_state), ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(cast(FFI.CData, out.vcr_state), cast(FFI.CData, buffers.vcr_state), ffi.sizeof("Motti4VcrArray"))
+        ffi.memmove(cast(FFI.CData, out.apv_state), cast(FFI.CData, buffers.apv_state), ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(cast(FFI.CData, out.fert_array), cast(FFI.CData, buffers.fert_array), ffi.sizeof("Motti4FerArray"))
         out.numfer[0] = int(buffers.numfer[0])
         return out
 
-    def clone_site(self, yy: Any) -> Any:
+    def clone_site(self, yy: Motti4Site) -> Any:
         """Deep-copy a site struct (yy) for branching."""
         ffi = self.ffi
         yy2 = ffi.new("Motti4Site *")
-        ffi.memmove(yy2, yy, ffi.sizeof("Motti4Site"))
+        ffi.memmove(yy2, cast(FFI.CData, yy), ffi.sizeof("Motti4Site"))
         return yy2
 
-    def clone_trees(self, yp: Any) -> Any:
+    def clone_trees(self, yp: Motti4Trees) -> Any:
         """Deep-copy a full Motti4Trees buffer (fixed 1000-tree array)."""
         ffi = self.ffi
         yp2 = ffi.new("Motti4Trees *")
-        ffi.memmove(yp2, yp, ffi.sizeof("Motti4Trees"))
+        ffi.memmove(yp2, cast(FFI.CData, yp), ffi.sizeof("Motti4Trees"))
         return yp2
 
     def grow_with_state(
         self,
-        yy: Any,
+        yy: Motti4Site,
         yp: Any,
         numtrees: int,
         buffers: MottiStateBuffers,
@@ -426,10 +437,7 @@ class Motti4DLL:
         remaining = int(step)
         runs_left = 1 if remaining <= 0 else None
         while remaining > 0 or runs_left:
-            try:
-                yy.param_290 = 0.0
-            except AttributeError:
-                pass
+            yy._290 = 0.0  # pylint: disable=protected-access
             for i in range(ntrees_p[0]):
                 yp[0][i].crerror = 0.0
 
@@ -498,7 +506,7 @@ class Motti4DLL:
 
     def update_after_import(
         self,
-        yy: Any,
+        yy: Motti4Site,
         yp: Any,
         numtrees: int,
         buffers: MottiStateBuffers,
@@ -528,8 +536,8 @@ class Motti4DLL:
 
     def regenerate_with_state(
         self,
-        yy: Any,
-        yp: Any,
+        yy: Motti4Site,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
@@ -615,8 +623,8 @@ class Motti4DLL:
 
     def pct_guidelines_with_state(
         self,
-        yy: Any,
-        yp: Any,
+        yy: Motti4Site,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
     ) -> list[int]:
@@ -650,8 +658,8 @@ class Motti4DLL:
 
     def earlycare_with_state(
         self,
-        yy: Any,
-        yp: Any,
+        yy: Motti4Site,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
@@ -697,8 +705,8 @@ class Motti4DLL:
 
     def fillin_planting_with_state(
         self,
-        yy: Any,
-        yp: Any,
+        yy: Motti4Site,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
@@ -748,7 +756,7 @@ class Motti4DLL:
 
     def after_seedtree_cutting_with_state(
         self,
-        yy: Any,
+        yy: Motti4Site,
         yp: Any,
         numtrees: int,
         buffers: MottiStateBuffers,
@@ -786,7 +794,7 @@ class Motti4DLL:
 
     def seedling_delay_with_state(
         self,
-        yy: Any,
+        yy: Motti4Site,
         buffers: MottiStateBuffers,
         *,
         istep: int,
@@ -816,8 +824,8 @@ class Motti4DLL:
 
     def mineral_soils_fertilization_with_state(
         self,
-        yy: Any,
-        yp: Any,
+        yy: Motti4Site,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
@@ -871,7 +879,7 @@ class Motti4DLL:
 
     def pct_with_state(
         self,
-        yy: Any,
+        yy: Motti4Site,
         yp: Any,
         numtrees: int,
         buffers: MottiStateBuffers,
@@ -913,7 +921,7 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def initialize_with_state(self, yo, yy, yp, numtrees: int, buffers) -> int:
+    def initialize_with_state(self, yo, yy: Motti4Site, yp, numtrees: int, buffers) -> int:
         ffi, lib = self.ffi, self.lib
 
         ntrees_p = ffi.new("int *", int(numtrees))
