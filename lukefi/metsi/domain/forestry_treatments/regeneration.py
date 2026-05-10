@@ -34,11 +34,11 @@ def _regeneration_via_motti(stand: ForestStand,
 
     method_vec = [
         float(method),
-        float(survival_percent),
+        survival_percent,
         float(cultivated_species),
-        float(stems_per_ha),
-        float(soil_preparation_type),
-        float(clearing),
+        stems_per_ha,
+        soil_preparation_type,
+        clearing,
         float(seed_species),
     ]
 

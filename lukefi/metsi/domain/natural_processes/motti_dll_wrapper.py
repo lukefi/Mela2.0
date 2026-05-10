@@ -94,21 +94,6 @@ class Motti4DLL:
 
     # ---------- helpers ----------
 
-    @classmethod
-    def set_lib_cache(cls, key: str, value: tuple[FFI, Any]) -> None:
-        """Expose safe setter for LIB_CACHE (for tests)."""
-        cls._LIB_CACHE[key] = value
-
-    @classmethod
-    def get_lib_cache(cls, key: str) -> tuple[FFI, Any] | None:
-        """Expose safe getter for LIB_CACHE (for tests)."""
-        return cls._LIB_CACHE.get(key)
-
-    @staticmethod
-    def maybe_chdir(tmp_dir: Path | None = None):
-        """Public wrapper around internal contextmanager _maybe_chdir."""
-        return _maybe_chdir(tmp_dir)
-
     def _convert_site_index(self, mty: int | float) -> int:
         # Prefer DLL helper; otherwise cap <= 6 (matches their Convert_Site policy)
         if hasattr(self.lib, "Convert_Site"):
@@ -152,49 +137,48 @@ class Motti4DLL:
         # SiteInit with only Y,X,Z
         rv = ffi.new("int *")
         with _maybe_chdir(self.data_dir):
-
             lib.Motti4SiteInit(yy,
-                               ffi.new("float *", float(Y)),
-                               ffi.new("float *", float(X)),
-                               ffi.new("float *", float(Z)),
+                               ffi.new("float *", Y),
+                               ffi.new("float *", X),
+                               ffi.new("float *", Z),
                                rv)
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SiteInit failed (rv={rv[0]})")
 
-        yy.Y = float(Y)
-        yy.X = float(X)
-        yy.Z = float(Z)
-        yy.lake = float(lake)
-        yy.sea = float(sea)
-        yy.mal = float(mal)
-        yy.mty = float(self._convert_site_index(mty) if convert_mela_site else mty)
-        yy.verl = float(verl)
-        yy.verlt = float(verlt)
-        yy.xt_regen = float(xt_regen)
-        yy.xt_muok = float(xt_muok)
-        yy.xt_raiv = float(xt_raiv)
-        yy.sid = float(sid)
+        yy.Y = Y
+        yy.X = X
+        yy.Z = Z
+        yy.lake = lake
+        yy.sea = sea
+        yy.mal = mal
+        yy.mty = self._convert_site_index(mty) if convert_mela_site else mty
+        yy.verl = verl
+        yy.verlt = verlt
+        yy.xt_regen = xt_regen
+        yy.xt_muok = xt_muok
+        yy.xt_raiv = xt_raiv
+        yy.sid = sid
 
-        yy.fthin = float(fthin)
-        yy.xt_thin = float(xt_thin)
-        yy.xt_fert = float(xt_fert)
-        yy.xt_thoit = float(xt_thoit)
-        yy.drain = float(drain)
-        yy.xt_ndrain = float(xt_ndrain)
+        yy.fthin = fthin
+        yy.xt_thin = xt_thin
+        yy.xt_fert = xt_fert
+        yy.xt_thoit = xt_thoit
+        yy.drain = drain
+        yy.xt_ndrain = xt_ndrain
 
-        yy.alr = float(alr)
+        yy.alr = alr
         if year is not None:
-            yy.year = float(year)
-        yy.step = float(step)
+            yy.year = year
+        yy.step = step
         yy.nstorey = 1.0
         yy.gstorey = 1.0
 
-        yy.nstorey = float(nstorey)
-        yy.gstorey = float(gstorey)
+        yy.nstorey = nstorey
+        yy.gstorey = gstorey
         if spedom is not None:
-            yy.spedom = float(spedom)
+            yy.spedom = spedom
         if spedom2 is not None:
-            yy.spedom2 = float(spedom2)
+            yy.spedom2 = spedom2
 
         # 3) Validate
         nerr = ffi.new("int *")
@@ -210,8 +194,7 @@ class Motti4DLL:
         """
             fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
         """
-        ffi = self.ffi
-        yp = ffi.new("Motti4Trees *")
+        yp = self.ffi.new("Motti4Trees *")
         for i, t in enumerate(trees_py):
             yp[0][i].id = int(t.get("id", i + 1))
             yp[0][i].sid = float(t.get("sid", 0))
@@ -231,8 +214,7 @@ class Motti4DLL:
         """
         Builds Motti4Strata from FDM strata.
         """
-        ffi = self.ffi
-        yo = ffi.new("Motti4Strata *")
+        yo = self.ffi.new("Motti4Strata *")
 
         max_n = min(len(strata_py), 10)
         for i in range(max_n):
@@ -262,7 +244,6 @@ class Motti4DLL:
         fert_array = cast(Motti4FerArray, ffi.new("Motti4FerArray *"))
         numfer = cast(IntPtr, ffi.new("int *", 0))
         motti_control = cast(Motti4Ctrl, ffi.new("Motti4Ctrl *"))
-        # defaults like the C wrapper
         motti_control.death_tree = 1
         if ctrl:
             if "death_tree" in ctrl:
@@ -405,7 +386,7 @@ class Motti4DLL:
     def update_after_import(
         self,
         yy: Motti4Site,
-        yp: Any,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
     ) -> int:
@@ -460,7 +441,7 @@ class Motti4DLL:
         if len(method) > 10:
             raise ValueError("Motti4Regenerate method vector may contain at most 10 values")
 
-        method_vec = [float(x) for x in method] + [0.0] * (10 - len(method))
+        method_vec = method + [0.0] * (10 - len(method))
         method_p = ffi.new("float[10]", method_vec)
 
         ntrees_p = ffi.new("int *", int(numtrees))
@@ -486,7 +467,7 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def _normalize_remaining_n_array(self, remaining_n: list[int] | dict[int, int]) -> list[int]:
+    def _normalize_remaining_n_array(self, remaining_n: list[int]) -> list[int]:
         """
         Normalize remainingN into a 10-slot int list where indices 1..9 are species.
         Index 0 is kept as 0 because Motti species slots are documented as 1..9.
@@ -495,14 +476,6 @@ class Motti4DLL:
           - list/tuple/ndarray of length 10 -> used as-is
           - dict {species_slot: stems}
         """
-        if isinstance(remaining_n, dict):
-            arr = [0] * 10
-            for key, value in remaining_n.items():
-                idx = int(key)
-                if not 1 <= idx <= 9:
-                    raise ValueError(f"remaining_n species index must be 1..9, got {idx}")
-                arr[idx] = max(int(value), 0)
-            return arr
 
         vals = [int(x) for x in remaining_n]
 
