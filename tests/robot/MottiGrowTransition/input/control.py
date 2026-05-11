@@ -10,7 +10,7 @@ from lukefi.metsi.domain.pre_ops import (
     scale_area_weight)
 from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.sim_configuration import Initialization, Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
 
@@ -57,14 +57,14 @@ control_structure = {
             ]
         )
     ],
+    "initialization": Initialization(initialize_motti),
     "transition": Transition[ForestStand](grow_motti_dll_fn,
                                           max_step=5,
                                           collected_data={NaturalProcessInfo},
                                           name="grow_motti",
                                           db_output=True,
                                           db_output_state=True,
-                                          db_output_cd=True,
-                                          init_fn=initialize_motti),
+                                          db_output_cd=True),
     "end_condition": Condition[ForestStand](lambda x: x.computational_unit.year > 2030)
 }
 

@@ -9,14 +9,12 @@ from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T, int], OpTuple[T]]
-type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
+type InitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
 
 
 class Transition[T: ComputationalUnit]:
-    base_fn: TransitionFn[T]
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
-    init_fn: TransitionInitFn[T] | None
     name: str
     collected_data: CollectableDataTypes
     db_output: bool
@@ -33,14 +31,11 @@ class Transition[T: ComputationalUnit]:
         db_output: bool = True,
         db_output_state: bool = False,
         db_output_cd: bool = True,
-        *,
-        init_fn: TransitionInitFn[T] | None = None,
         **parameters,
     ):
         self.transition_fn = transition_fn
         self.max_step = max_step
         self.parameters = parameters
-        self.init_fn = init_fn
         self.db_output = db_output
         self.db_output_state = db_output_state
         self.db_output_cd = db_output_cd
@@ -54,10 +49,6 @@ class Transition[T: ComputationalUnit]:
             self.collected_data = collected_data
         else:
             self.collected_data = set()
-
-    def initialize(self, unit: T) -> None:
-        if self.init_fn is not None:
-            self.init_fn(unit, self.parameters)
 
     def __call__(self,
                  payload: SimulationPayload[T],
@@ -87,6 +78,18 @@ class Transition[T: ComputationalUnit]:
             f"max_step: {self.max_step}, parameters: {self.parameters}}}"
 
 
+class Initialization[T: ComputationalUnit]:
+    init_fn: InitFn
+    params: dict[str, Any]
+
+    def __init__(self, init_fn: InitFn, init_params: dict[str, Any] | None = None) -> None:
+        self.init_fn = init_fn
+        self.params = init_params or {}
+
+    def __call__(self, unit: T):
+        self.init_fn(unit, self.params)
+
+
 class SimConfiguration[T: ComputationalUnit]:
     """
     A class to manage simulation configuration, including treatments, generators,
@@ -103,11 +106,13 @@ class SimConfiguration[T: ComputationalUnit]:
     transition: Transition[T]
     end_condition: Condition[T]
     collected_data: CollectableDataTypes
+    initialization: Initialization[T] | None
 
     def __init__(self,
                  simulation_instructions: list[SimulationInstruction[T]],
                  transition: Transition[T],
-                 end_condition: Condition[T]):
+                 end_condition: Condition[T],
+                 initialization: Initialization[T] | None = None):
         """
         Initializes the core simulation object.
 
@@ -124,6 +129,7 @@ class SimConfiguration[T: ComputationalUnit]:
         self.instructions = simulation_instructions
         self.end_condition = end_condition
         self._get_collected_data_types()
+        self.initialization = initialization
 
     def _get_collected_data_types(self):
         collected_data = self.transition.collected_data

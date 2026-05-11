@@ -12,7 +12,11 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
                                                 units: list[T],
                                                 db: Optional[sqlite3.Connection] = None):
-    simconfig = SimConfiguration[T](control["simulation_instructions"], control["transition"], control["end_condition"])
+    simconfig = SimConfiguration[T](
+        control["simulation_instructions"],
+        control["transition"],
+        control["end_condition"],
+        control["initialization"])
 
     if db is not None:
         init_collected_data_tables(db, simconfig.collected_data)
@@ -20,7 +24,8 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
     for i, unit in enumerate(units, 1):
         print(f"Simulating stand {unit.identifier} ({i} of {len(units)})...")
         payload = SimulationPayload(unit)
-        simconfig.transition.initialize(payload.computational_unit)
+        if simconfig.initialization is not None:
+            simconfig.initialization(payload.computational_unit)
         payload.computational_unit.update_aggregates()
 
         if db is not None:
