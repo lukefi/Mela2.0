@@ -16,7 +16,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         control["simulation_instructions"],
         control["transition"],
         control["end_condition"],
-        control["initialization"])
+        control.get("initialization", None))
 
     if db is not None:
         init_collected_data_tables(db, simconfig.collected_data)
