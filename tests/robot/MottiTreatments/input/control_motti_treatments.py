@@ -6,7 +6,7 @@ from lukefi.metsi.domain.pre_ops import (
     filter_trees,
     generate_reference_trees,
     scale_area_weight)
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Initialization, Transition
@@ -103,7 +103,7 @@ control_structure = {
     ],
     "initialization": Initialization(initialize_motti),
     "transition": Transition(
-        grow_motti_dll_fn,
+        grow_motti_fn,
         max_step=5,
         db_output=False,
     ),

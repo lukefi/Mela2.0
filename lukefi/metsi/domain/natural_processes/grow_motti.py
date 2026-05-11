@@ -667,7 +667,7 @@ def evolve(stand: ForestStand, step: int = 5, sim_year: int = 0) -> GrowthDeltas
 
 
 @natural_process_transition
-def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     Vector-only Motti grow:
       - Requires stand.reference_trees

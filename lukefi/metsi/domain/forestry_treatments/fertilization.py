@@ -3,7 +3,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,

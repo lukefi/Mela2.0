@@ -2,7 +2,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     after_seedtree_cutting_in_motti,
 )
 

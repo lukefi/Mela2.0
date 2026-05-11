@@ -8,13 +8,13 @@ import numpy as np
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 
-import lukefi.metsi.domain.natural_processes.grow_motti_dll as grow_motti
+import lukefi.metsi.domain.natural_processes.grow_motti as grow_motti
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
 
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     _resolve_shared_object,
     _resolve_dir_or_file,
     _default_data_dir,
@@ -440,7 +440,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         dll_stub = GrowingDLL()
         pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        out_stand, _ = grow_motti.grow_motti_dll_fn(
+        out_stand, _ = grow_motti.grow_motti_fn(
             stand,
             predictor=pred,
             step=5,

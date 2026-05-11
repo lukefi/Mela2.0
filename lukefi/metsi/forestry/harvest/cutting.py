@@ -6,7 +6,7 @@ from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     apply_motti_yp_reduction_from_removed_reference_trees,
 )
 

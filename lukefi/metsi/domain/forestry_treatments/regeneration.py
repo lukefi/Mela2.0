@@ -8,7 +8,7 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     sync_ut_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )

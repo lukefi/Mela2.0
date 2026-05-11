@@ -13,7 +13,7 @@ from lukefi.metsi.data.enums.internal import (
     SoilPeatlandCategory,
     TreeSpecies,
 )
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
+from lukefi.metsi.domain.natural_processes.grow_motti import (
     apply_motti_yp_reduction_from_removed_reference_trees,
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,

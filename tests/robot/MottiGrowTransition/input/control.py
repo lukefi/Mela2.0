@@ -1,7 +1,7 @@
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
@@ -60,7 +60,7 @@ control_structure = {
         )
     ],
     "initialization": Initialization(initialize_motti),
-    "transition": Transition[ForestStand](grow_motti_dll_fn,
+    "transition": Transition[ForestStand](grow_motti_fn,
                                           max_step=5,
                                           collected_data={NaturalProcessInfo},
                                           name="grow_motti",
