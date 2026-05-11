@@ -1,6 +1,4 @@
-import os
-from typing import Any, Optional, Iterable
-from pathlib import Path
+from typing import Any
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.data.conversion.internal2motti import convert_species
@@ -496,359 +494,176 @@ def _auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     return y1 / 1000.0, x1 / 1000.0
 
 
-def _find_repo_root(start: Path) -> Optional[Path]:
-    """
-    Walk up from 'start' to find a repository root by markers:
-    - a directory that contains 'data/motti'
-    - or has a '.git' directory
-    - or has a 'pyproject.toml' file
-    """
-    cur = start.resolve()
-    for p in [cur, *cur.parents]:
-        if (p / "data" / "motti").exists():
-            return p
-        if (p / ".git").exists():
-            return p
-        if (p / "pyproject.toml").exists():
-            return p
-    return None
+def ensure_state(stand: ForestStand,
+                 step: int,
+                 sim_year: int,
+                 use_dll_site_convert: bool = True):
+    """Initialize and attach persistent MottiState to stand if missing."""
+    if stand.motti_state is not None:
+        return stand.motti_state
 
+    rt = stand.reference_trees
 
-def _default_data_dir() -> Path:
-    """
-    Resolve default data_dir as {repository_root}/data/motti,
-    with optional override via MOTTI_DATA_DIR.
-    """
-    env = os.environ.get("MOTTI_DATA_DIR")
-    if env:
-        return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
-    repo = _find_repo_root(Path.cwd())
-    base = repo if repo else Path.cwd()
-    return (base / "data" / "motti").resolve()
+    n = rt.size
 
+    spedom = _spedom(stand.reference_trees)
 
-def _resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
-    """
-    Turn a user-provided path into an absolute Path. If None, use default.
-    """
-    if path_like is None:
-        return _default_data_dir()
-    p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
-    if not p.is_absolute():
-        p = Path.cwd() / p
-    return p.resolve()
+    y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
+                                stand.geo_location[1] if stand.geo_location is not None else None)
 
+    if stand.geo_location is not None:
+        z = stand.geo_location[2]
+        if z is None or z == 0.0:
+            z = -1.0
+    else:
+        z = -1.0
 
-class MottiDLLPredictor:
+    yy = Motti4DLL.new_site(
+        Y=y_km,
+        X=x_km,
+        Z=z,
+        lake=stand.lake_effect if stand.lake_effect is not None else 0.0,
+        sea=stand.sea_effect if stand.sea_effect is not None else 0.0,
+        mal=stand.land_use_category.value if stand.land_use_category is not None else 0,
+        mty=stand.site_type_category.value if stand.site_type_category is not None else 0,
+        verl=stand.tax_class if stand.tax_class is not None else 0,
+        verlt=stand.tax_class_reduction if stand.tax_class_reduction is not None else 0,
+        xt_regen=((stand.start_time - stand.artificial_regeneration_year)
+                  if stand.artificial_regeneration_year is not None else stand.start_time),
+        xt_muok=((stand.start_time - stand.soil_surface_preparation_year)
+                 if stand.soil_surface_preparation_year is not None else stand.start_time),
+        xt_raiv=((stand.start_time - stand.regeneration_area_cleaning_year)
+                 if stand.regeneration_area_cleaning_year is not None else stand.start_time),
+        sid=stand.stand_id or 0,
+        fthin=bool(stand.method_of_last_cutting),
+        xt_thin=stand.method_of_last_cutting or stand.cutting_year or 0,
+        xt_fert=((stand.start_time - stand.fertilization_year)
+                 if stand.fertilization_year is not None else stand.start_time),
+        xt_thoit=((stand.start_time - stand.young_stand_tending_year)
+                  if stand.young_stand_tending_year is not None else stand.start_time),
+        drain=stand.drainage_category.value if stand.drainage_category is not None else 0,
+        xt_ndrain=((stand.start_time - stand.drainage_year)
+                   if stand.drainage_year is not None else stand.start_time),
+        alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
+        year=sim_year - stand.start_year,
+        step=step,
+        convert_mela_site=use_dll_site_convert,
+        spedom=spedom,
+        spedom2=spedom,
+        nstorey=1.0,
+        gstorey=1.0,
+    )
 
-    def __init__(self,
-                 stand: ForestStand,
-                 data_dir: Optional[str] = None,
-                 use_dll_site_convert: bool = True,
-                 dll: Optional["Motti4DLL"] = None,
-                 ) -> None:
-        self.stand = stand
-        self.use_dll_site_convert = use_dll_site_convert
+    # TODO: Is this right?
+    rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
+    ids = rt.tree_number.astype(int).copy()
 
-        if dll is not None:
-            self.dll = dll
-        else:
+    stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
+    d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
+    h = np.nan_to_num(rt.height, nan=0.0)
+    age = np.nan_to_num(rt.biological_age, nan=0.0)
+    age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
+    # TODO: ReferenceTrees does not have this attribute; where did it come from?
+    cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
+    origin = rt.origin
+    spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
-            # Resolve given path or default to {repo_root}/data/motti
-            data_dir_path = _resolve_dir_or_file(data_dir)
+    stratum_ids = [
+        int(v) if v > 0 else (stand.stand_id or (idx + 1))
+        for idx, v in enumerate(rt.stratum)
+    ]
+    storey_vec = [storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
+    trees_py = [
+        {
+            "id": int(i),
+            "sid": int(sid),
+            "f": float(f),
+            "d13": float(d),
+            "h": float(hh),
+            "spe": int(sp),
+            "age": float(a),
+            "age13": float(a13),
+            "cr": float(c),
+            "snt": int(o + 1),
+            "storie": float(storey),
 
-            so_path = _resolve_shared_object(data_dir_path)
-            self.dll = Motti4DLL(so_path, data_dir=str(data_dir_path))
-
-    # ---- stand/site properties ----
-
-    @property
-    def get_y(self) -> float | None:
-        if self.stand and self.stand.geo_location:
-            return self.stand.geo_location[0]
-        return None
-
-    @property
-    def get_x(self) -> float | None:
-        if self.stand and self.stand.geo_location:
-            return self.stand.geo_location[1]
-        return None
-
-    @property
-    def get_z(self) -> float:
-        if self.stand and self.stand.geo_location:
-            z = self.stand.geo_location[2]
-            if z is None or z == 0.0:
-                return -1.0
-            return float(z)
-        return -1.0
-
-    @property
-    def lake(self) -> float:
-        v = getattr(self.stand, "lake_effect", 0.0)
-        return float(v if v is not None else 0.0)
-
-    @property
-    def sea(self) -> float:
-        v = getattr(self.stand, "sea_effect", 0.0)
-        return float(v if v is not None else 0.0)
-
-    @property
-    def mal(self) -> int:
-        luc = getattr(self.stand, "land_use_category", None)
-        return int(luc.value) if luc is not None else 0
-
-    @property
-    def mty(self) -> int:
-        st = getattr(self.stand, "site_type_category", None)
-        return int(st.value) if st is not None else 0
-
-    @property
-    def alr(self) -> int:
-        s = getattr(self.stand, "soil_peatland_category", None)
-        return int(s.value) if s is not None else 0
-
-    @property
-    def verl(self) -> int:
-        v = getattr(self.stand, "tax_class", None)
-        return int(v) if v is not None else 0
-
-    @property
-    def verlt(self) -> int:
-        v = getattr(self.stand, "tax_class_reduction", None)
-        return int(v) if v is not None else 0
-
-    @property
-    def xt_regen(self) -> int:
-        art = self.stand.artificial_regeneration_year
-        return (self.stand.start_time - art) if art \
-            is not None else self.stand.start_time
-
-    @property
-    def xt_muok(self) -> int:
-        soil = self.stand.soil_surface_preparation_year
-        return (self.stand.start_time - soil) if soil \
-            is not None else self.stand.start_time
-
-    @property
-    def xt_raiv(self) -> int:
-        reg = self.stand.regeneration_area_cleaning_year
-        return (self.stand.start_time - reg) if reg \
-            is not None else self.stand.start_time
-
-    @property
-    def sid(self) -> int:
-        return self.stand.stand_id or 0
-
-    @property
-    def fthin(self) -> bool:
-        return bool(self.stand.method_of_last_cutting)
-
-    @property
-    def xt_thin(self) -> int:
-        return (self.stand.method_of_last_cutting or self.stand.cutting_year or 0)
-
-    @property
-    def xt_fert(self) -> int:
-        return (self.stand.start_time - self.stand.fertilization_year) if self.stand.fertilization_year \
-            is not None else self.stand.start_time
-
-    @property
-    def xt_thoit(self) -> int:
-        return (self.stand.start_time - self.stand.young_stand_tending_year) if self.stand.young_stand_tending_year \
-            is not None else self.stand.start_time
-
-    @property
-    def drain(self) -> int:
-
-        if not self.stand.drainage_category:
-            return 0
-        return self.stand.drainage_category.value
-
-    @property
-    def xt_ndrain(self) -> int:
-        return (self.stand.start_time - self.stand.drainage_year) if self.stand.drainage_year \
-            is not None else self.stand.start_time
-
-    def ensure_state(self, step: int, sim_year: int):
-        """Initialize and attach persistent MottiState to stand if missing."""
-        if self.stand.motti_state is not None:
-            return self.stand.motti_state
-
-        rt = self.stand.reference_trees
-
-        n = rt.size
-
-        spedom = _spedom(self.stand.reference_trees)
-
-        y_km, x_km = _auto_euref_km(self.get_y, self.get_x)
-        yy = self.dll.new_site(
-            Y=y_km,
-            X=x_km,
-            Z=self.get_z,
-            lake=self.lake,
-            sea=self.sea,
-            mal=self.mal,
-            mty=self.mty,
-            verl=self.verl,
-            verlt=self.verlt,
-            xt_regen=self.xt_regen,
-            xt_muok=self.xt_muok,
-            xt_raiv=self.xt_raiv,
-            sid=self.sid,
-            fthin=self.fthin,
-            xt_thin=self.xt_thin,
-            xt_fert=self.xt_fert,
-            xt_thoit=self.xt_thoit,
-            drain=self.drain,
-            xt_ndrain=self.xt_ndrain,
-            alr=self.alr,
-            year=sim_year - self.stand.start_year,
-            step=step,
-            convert_mela_site=self.use_dll_site_convert,
-            spedom=spedom,
-            spedom2=spedom,
-            nstorey=1.0,
-            gstorey=1.0,
+        }
+        for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
+            ids,
+            stratum_ids,
+            stems,
+            d13,
+            h,
+            spe_vec,
+            age,
+            age13,
+            cr,
+            origin,
+            storey_vec,
         )
+    ]
+    yp, ntrees = Motti4DLL.new_trees(trees_py)
 
-        # TODO: Is this right?
-        rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
-        ids = rt.tree_number.astype(int).copy()
+    compressed_strata = _compress_strata_for_motti(stand.tree_strata, max_strata=10)
+    strata_py = _build_motti_strata_py(stand, compressed_strata)
 
-        stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
-        d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
-        h = np.nan_to_num(rt.height, nan=0.0)
-        age = np.nan_to_num(rt.biological_age, nan=0.0)
-        age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
-        # TODO: ReferenceTrees does not have this attribute; where did it come from?
-        cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
-        origin = rt.origin
-        spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
+    yo = Motti4DLL.new_strata(strata_py)
 
-        stratum_ids = [
-            int(v) if v > 0 else (self.stand.stand_id or (idx + 1))
-            for idx, v in enumerate(rt.stratum)
-        ]
-        storey_vec = [storey_to_motti(self.stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
-        trees_py = [
-            {
-                "id": int(i),
-                "sid": int(sid),
-                "f": float(f),
-                "d13": float(d),
-                "h": float(hh),
-                "spe": int(sp),
-                "age": float(a),
-                "age13": float(a13),
-                "cr": float(c),
-                "snt": int(o + 1),
-                "storie": float(storey),
+    buffers = Motti4DLL.alloc_state_buffers(ctrl=None)
 
-            }
-            for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
-                ids,
-                stratum_ids,
-                stems,
-                d13,
-                h,
-                spe_vec,
-                age,
-                age13,
-                cr,
-                origin,
-                storey_vec,
-            )
-        ]
-        yp, ntrees = self.dll.new_trees(trees_py)
+    ntrees = Motti4DLL.initialize_with_state(
+        yo=yo,
+        yy=yy,
+        yp=yp,
+        numtrees=ntrees,
+        buffers=buffers,
+    )
 
-        compressed_strata = _compress_strata_for_motti(self.stand.tree_strata, max_strata=10)
-        strata_py = _build_motti_strata_py(self.stand, compressed_strata)
+    _strip_tree_strata(stand)
 
-        yo = self.dll.new_strata(strata_py)
-
-        buffers = self.dll.alloc_state_buffers(ctrl=None)
-
-        ntrees = self.dll.initialize_with_state(
-            yo=yo,
+    if MottiState is not None:
+        stand.motti_state = MottiState(
             yy=yy,
             yp=yp,
-            numtrees=ntrees,
+            ntrees=ntrees,
             buffers=buffers,
+            signature=tuple(ids.tolist()),
         )
+    else:
+        ms = MottiState()
+        ms.yy = yy
+        ms.yp = yp
+        ms.ntrees = ntrees
+        ms.buffers = buffers
+        ms.signature = tuple(ids.tolist())
+        stand.motti_state = ms
 
-        _strip_tree_strata(self.stand)
+    _reconcile_reference_trees_from_motti(stand, init_mode=True)
 
-        if MottiState is not None:
-            self.stand.motti_state = MottiState(
-                dll=self.dll,
-                yy=yy,
-                yp=yp,
-                ntrees=ntrees,
-                buffers=buffers,
-                signature=tuple(ids.tolist()),
-            )
-        else:
-            ms = MottiState()
-            ms.dll = self.dll
-            ms.yy = yy
-            ms.yp = yp
-            ms.ntrees = ntrees
-            ms.buffers = buffers
-            ms.signature = tuple(ids.tolist())
-            self.stand.motti_state = ms
-
-        _reconcile_reference_trees_from_motti(self.stand, init_mode=True)
-
-        return self.stand.motti_state
-
-    def evolve(self, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
-        state = self.ensure_state(step=step, sim_year=sim_year)
-        if state is None:
-            return GrowthDeltas(tree_ids=[], tree_sids=[], trees_id=[], trees_ih=[], trees_if=[],
-                                trees_age=[], trees_age13=[]
-                                )
-
-        state.yy.year = sim_year
-        state.yy.step = step
-
-        growth = self.dll.grow_with_state(
-            state.yy,
-            state.yp,
-            state.ntrees,
-            state.buffers,
-            step=step,
-        )
-
-        state.ntrees = len(growth.tree_ids)
-
-        return growth
+    return stand.motti_state
 
 
-def _resolve_shared_object(p: str | Path) -> Path:
-    """
-    Resolve a Motti shared library inside a directory, or pass through an exact file path.
-    Raises ValueError if p is None. Returns a Path (may be a directory if nothing matched).
-    """
+def evolve(stand: ForestStand, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
+    state = ensure_state(stand, step=step, sim_year=sim_year)
+    if state is None:
+        return GrowthDeltas(tree_ids=[], tree_sids=[], trees_id=[], trees_ih=[], trees_if=[],
+                            trees_age=[], trees_age13=[]
+                            )
 
-    p = Path(p)
+    state.yy.year = sim_year
+    state.yy.step = step
 
-    if p.is_file():
-        return p
-
-    candidates: Iterable[str] = (
-        # Windows
-        "mottisc.dll", "mottiue.dll",
-        # Linux
-        "libmottisc.so", "libmottiue.so", "mottisc.so", "mottiue.so",
+    growth = Motti4DLL.grow_with_state(
+        state.yy,
+        state.yp,
+        state.ntrees,
+        state.buffers,
+        step=step,
     )
-    for name in candidates:
-        cand = p / name
-        if cand.exists():
-            return cand
 
-    # No match found; return directory so downstream can raise a clear error when loading.
-    return p
+    state.ntrees = len(growth.tree_ids)
+
+    return growth
 
 
 @natural_process_transition
@@ -863,12 +678,8 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
       - predictor: optional injected Motti4DLL wrapper (testing)
     """
 
-    data_dir = operation_parameters.get("data_dir", None)
-    predictor = operation_parameters.get("predictor", None)
-
     stand = input_
-
-    sim_year: int = (stand.year - stand.start_year) or 0
+    _ = operation_parameters
 
     rt = stand.reference_trees
 
@@ -879,15 +690,7 @@ def grow_motti_dll_fn(input_: ForestStand, step: int = 5, /, **operation_paramet
         update_stand_growth(stand, base_d, base_h, base_f, step, False)
         return stand, []
 
-    if predictor is None:
-        resolved_dir = _resolve_dir_or_file(data_dir)
-        # TODO: A new predictor is created every time -> no persistence for Motti state and ensure_state calls
-        # dll.new_site every time.
-        pred = MottiDLLPredictor(stand, data_dir=str(resolved_dir))
-    else:
-        pred = predictor
-
-    pred.evolve(step=step, sim_year=sim_year)
+    evolve(stand, step=step, sim_year=stand.relative_year)
     stand.year = (stand.year or 0) + step
 
     _reconcile_reference_trees_from_motti(stand, init_mode=False)
@@ -904,7 +707,7 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
     if ms is None or ms.yp is None or ms.buffers is None:
         return
 
-    growth = ms.dll.grow_with_state(
+    growth = Motti4DLL.grow_with_state(
         ms.yy,
         ms.yp,
         int(ms.ntrees),
@@ -967,7 +770,7 @@ def after_seedtree_cutting_in_motti(stand: ForestStand, *, tree_class: int = 3) 
 
     _mark_motti_yp_as_seed_trees(stand, tree_class=tree_class)
 
-    ms.ntrees = ms.dll.after_seedtree_cutting_with_state(
+    ms.ntrees = Motti4DLL.after_seedtree_cutting_with_state(
         ms.yy,
         ms.yp,
         int(ms.ntrees),

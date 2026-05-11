@@ -2,6 +2,7 @@ from typing import Any
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand, MottiState
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -46,7 +47,7 @@ def _resolve_remaining_n(ms: MottiState, operation_parameters: dict[str, Any]) -
       2) optionally override or scale it
       3) pass the resulting species-wise array to Motti4PCT
     """
-    guidelines = ms.dll.pct_guidelines_with_state(
+    guidelines = Motti4DLL.pct_guidelines_with_state(
         ms.yy,
         ms.yp,
         ms.ntrees,
@@ -82,7 +83,7 @@ def pct_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStan
 
     remaining_n = _resolve_remaining_n(ms, operation_parameters)
 
-    ms.ntrees = ms.dll.pct_with_state(
+    ms.ntrees = Motti4DLL.pct_with_state(
         ms.yy,
         ms.yp,
         int(ms.ntrees),

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple, Optional, Dict, Any, cast
+from typing import Iterable, List, Tuple, Optional, Dict, Any, cast
 import os
 from contextlib import contextmanager
 
@@ -56,63 +56,120 @@ def _maybe_chdir(tmp_dir: Optional[Path] = None):
         os.chdir(str(prev))
 
 
-class Motti4DLL:
-    # Class-level caches to avoid reloading the DLL (and re-adding search dirs)
-    _LIB_CACHE: dict[str, tuple[FFI, Any]] = {}         # key: resolved dll path (str) -> (ffi, lib)
-    _DLL_DIR_HANDLES: dict[str, Any] = {}     # key: dir path (str) -> handle from os.add_dll_directory
+def _resolve_dir_or_file(path_like: Optional[str | Path]) -> Path:
+    """
+    Turn a user-provided path into an absolute Path. If None, use default.
+    """
+    if path_like is None:
+        return _default_data_dir()
+    p = Path(os.path.expanduser(os.path.expandvars(str(path_like))))
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    return p.resolve()
 
+
+def _default_data_dir() -> Path:
+    """
+    Resolve default data_dir as {repository_root}/data/motti,
+    with optional override via MOTTI_DATA_DIR.
+    """
+    env = os.environ.get("MOTTI_DATA_DIR")
+    if env:
+        return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
+    repo = _find_repo_root(Path.cwd())
+    base = repo if repo else Path.cwd()
+    return (base / "data" / "motti").resolve()
+
+
+def _find_repo_root(start: Path) -> Optional[Path]:
+    """
+    Walk up from 'start' to find a repository root by markers:
+    - a directory that contains 'data/motti'
+    - or has a '.git' directory
+    - or has a 'pyproject.toml' file
+    """
+    cur = start.resolve()
+    for p in [cur, *cur.parents]:
+        if (p / "data" / "motti").exists():
+            return p
+        if (p / ".git").exists():
+            return p
+        if (p / "pyproject.toml").exists():
+            return p
+    return None
+
+
+def _resolve_shared_object(p: str | Path) -> Path:
+    """
+    Resolve a Motti shared library inside a directory, or pass through an exact file path.
+    Raises ValueError if p is None. Returns a Path (may be a directory if nothing matched).
+    """
+
+    p = Path(p)
+
+    if p.is_file():
+        return p
+
+    candidates: Iterable[str] = (
+        # Windows
+        "mottisc.dll", "mottiue.dll",
+        # Linux
+        "libmottisc.so", "libmottiue.so", "mottisc.so", "mottiue.so",
+    )
+    for name in candidates:
+        cand = p / name
+        if cand.exists():
+            return cand
+
+    # No match found; return directory so downstream can raise a clear error when loading.
+    return p
+
+
+class Motti4DLL:
+    data_dir: Path
     ffi: FFI
     lib: Any
-    """
-    Wrapper aligned with the C wrapper's flow:
-      SiteInit(Y,X,Z) -> fill yy (no dd) -> CheckYY -> Init -> UpdateAfterImport -> (loop) Growth
-    """
 
-    def __init__(self, lib_path: str | Path, data_dir: str | Path):
-        self.data_dir = Path(data_dir)
-        lib_path = Path(lib_path).resolve()
-        key = str(lib_path).lower()
+    @classmethod
+    def load(cls, data_dir: str | Path | None = None):
 
-        # Reuse a single FFI/dlopen per DLL path
-        cached = Motti4DLL._LIB_CACHE.get(key)
-        if cached:
-            self.ffi, self.lib = cached
-            return
+        resolved_dir = _resolve_dir_or_file(data_dir)
+        so_path = _resolve_shared_object(resolved_dir)
 
+        lib_path = Path(so_path).resolve()
+        cls.data_dir = Path(resolved_dir)
         ffi = FFI()
-        ffi.cdef(self._cdef_source())
+        ffi.cdef(cls._cdef_source())
         # Add DLL search dirs once; keep handles alive
 
         if hasattr(os, "add_dll_directory"):
-            for p in (lib_path.parent, self.data_dir):
+            for p in (lib_path.parent, cls.data_dir):
                 if p:
                     ps = str(Path(p).resolve())
-                    if ps not in Motti4DLL._DLL_DIR_HANDLES:
-                        Motti4DLL._DLL_DIR_HANDLES[ps] = os.add_dll_directory(ps)
+                    os.add_dll_directory(ps)
 
         lib = ffi.dlopen(str(lib_path))
-        Motti4DLL._LIB_CACHE[key] = (ffi, lib)
-        self.ffi, self.lib = ffi, lib
+        cls.ffi, cls.lib = ffi, lib
 
     # ---------- helpers ----------
-
-    def _convert_site_index(self, mty: int | float) -> int:
+    @classmethod
+    def _convert_site_index(cls, mty: int | float) -> int:
         # Prefer DLL helper; otherwise cap <= 6 (matches their Convert_Site policy)
-        if hasattr(self.lib, "Convert_Site"):
-            return int(round(float(self.lib.Convert_Site(float(mty)))))
+        if hasattr(cls.lib, "Convert_Site"):
+            return int(round(float(cls.lib.Convert_Site(float(mty)))))
 
         return min(int(mty), 6)
 
     # ---------- FFI ----------
-
-    def _cdef_source(self) -> str:
-        with open(self.data_dir.joinpath("motti.h"), "r", encoding="utf-8") as header:
+    @classmethod
+    def _cdef_source(cls) -> str:
+        with open(cls.data_dir.joinpath("motti.h"), "r", encoding="utf-8") as header:
             return header.read()
 
     # ---------- site + trees ----------
-
+    @classmethod
     def new_site(
-        self,
+        cls,
         *,
         Y: float, X: float, Z: float = -1.0,
         lake: float = 0.0, sea: float = 0.0,
@@ -133,12 +190,12 @@ class Motti4DLL:
         IMPORTANT: Matches C flow -> SiteInit first, then fill fields (no dd), then CheckYY.
         If Z is unknown, pass Z=-1.0 to let the DLL infer it.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
         yy = cast(Motti4Site, ffi.new("Motti4Site *"))
 
         # SiteInit with only Y,X,Z
         rv = cast(IntPtr, ffi.new("int *"))
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4SiteInit(yy,
                                ffi.new("float *", Y),
                                ffi.new("float *", X),
@@ -153,7 +210,7 @@ class Motti4DLL:
         yy.lake = lake
         yy.sea = sea
         yy.mal = mal
-        yy.mty = self._convert_site_index(mty) if convert_mela_site else mty
+        yy.mty = cls._convert_site_index(mty) if convert_mela_site else mty
         yy.verl = verl
         yy.verlt = verlt
         yy.xt_regen = xt_regen
@@ -185,18 +242,19 @@ class Motti4DLL:
         # 3) Validate
         nerr = cast(IntPtr, ffi.new("int *"))
         err = cast(IntPtr, ffi.new("int *"))
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4CheckYY(yy, nerr, err)
         if nerr[0] != 0:
             raise RuntimeError(f"Motti4CheckYY signaled problem (nerr={nerr[0]}, err={err[0]})")
 
         return yy
 
-    def new_trees(self, trees_py: list[dict]) -> Tuple[Motti4Trees, int]:
+    @classmethod
+    def new_trees(cls, trees_py: list[dict]) -> Tuple[Motti4Trees, int]:
         """
             fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
         """
-        ypp = cast(Motti4Trees, self.ffi.new("Motti4Trees *"))
+        ypp = cast(Motti4Trees, cls.ffi.new("Motti4Trees *"))
         yp = ypp[0]
         for i, t in enumerate(trees_py):
             yp[i].id = int(t.get("id", i + 1))
@@ -213,11 +271,12 @@ class Motti4DLL:
             yp[i].storie = float(t.get("storie", 2.0))
         return ypp, len(trees_py)
 
-    def new_strata(self, strata_py: list[dict]) -> Motti4Strata:
+    @classmethod
+    def new_strata(cls, strata_py: list[dict]) -> Motti4Strata:
         """
         Builds Motti4Strata from FDM strata.
         """
-        yo = cast(Motti4Strata, self.ffi.new("Motti4Strata *"))
+        yo = cast(Motti4Strata, cls.ffi.new("Motti4Strata *"))
 
         max_n = min(len(strata_py), 10)
         for i in range(max_n):
@@ -237,9 +296,10 @@ class Motti4DLL:
         return yo
     # ---------- persistent state buffers ----------
 
-    def alloc_state_buffers(self, ctrl: Optional[dict] = None) -> MottiStateBuffers:
+    @classmethod
+    def alloc_state_buffers(cls, ctrl: Optional[dict] = None) -> MottiStateBuffers:
         """Allocate persistent buffers that must be reused across Growth calls."""
-        ffi = self.ffi
+        ffi = cls.ffi
         saplings = cast(Motti4Saplings, ffi.new("Motti4Saplings *"))
         kor_state = cast(Motti4KorArray, ffi.new("Motti4KorArray *"))
         vcr_state = cast(Motti4VcrArray, ffi.new("Motti4VcrArray *"))
@@ -265,10 +325,11 @@ class Motti4DLL:
             ctrl=motti_control,
         )
 
-    def clone_state_buffers(self, buffers: MottiStateBuffers) -> MottiStateBuffers:
+    @classmethod
+    def clone_state_buffers(cls, buffers: MottiStateBuffers) -> MottiStateBuffers:
         """Deep-copy buffers for branching."""
-        ffi = self.ffi
-        out = self.alloc_state_buffers(ctrl={
+        ffi = cls.ffi
+        out = cls.alloc_state_buffers(ctrl={
             "death_tree": int(bool(buffers.ctrl.death_tree)),
             "death_forest": int(bool(buffers.ctrl.death_forest)),
             "calibrate": int(bool(buffers.ctrl.calibrate)),
@@ -281,22 +342,25 @@ class Motti4DLL:
         out.numfer[0] = int(buffers.numfer[0])
         return out
 
-    def clone_site(self, yy: Motti4Site) -> Motti4Site:
+    @classmethod
+    def clone_site(cls, yy: Motti4Site) -> Motti4Site:
         """Deep-copy a site struct (yy) for branching."""
-        ffi = self.ffi
+        ffi = cls.ffi
         yy2 = cast(Motti4Site, ffi.new("Motti4Site *"))
         ffi.memmove(cast(FFI.CData, yy2), cast(FFI.CData, yy), ffi.sizeof("Motti4Site"))
         return yy2
 
-    def clone_trees(self, yp: Motti4Trees) -> Motti4Trees:
+    @classmethod
+    def clone_trees(cls, yp: Motti4Trees) -> Motti4Trees:
         """Deep-copy a full Motti4Trees buffer (fixed 1000-tree array)."""
-        ffi = self.ffi
+        ffi = cls.ffi
         yp2 = cast(Motti4Trees, ffi.new("Motti4Trees *"))
         ffi.memmove(cast(FFI.CData, yp2), cast(FFI.CData, yp), ffi.sizeof("Motti4Trees"))
         return yp2
 
+    @classmethod
     def grow_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -309,7 +373,7 @@ class Motti4DLL:
         step=0 performs a single zero-step Growth call, which is used to refresh
         derived fields after Python-side yp edits.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         rv = ffi.new("int *")
@@ -329,7 +393,7 @@ class Motti4DLL:
             current_step = remaining if remaining > 0 else 0
             step_p = cast(IntPtr, ffi.new("int *", current_step))
             rv[0] = 0
-            with _maybe_chdir(self.data_dir):
+            with _maybe_chdir(cls.data_dir):
                 lib.Motti4Growth(
                     yy, yp,
                     buffers.saplings,
@@ -386,8 +450,9 @@ class Motti4DLL:
             trees_age13=out_age13,
         )
 
+    @classmethod
     def update_after_import(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -396,11 +461,11 @@ class Motti4DLL:
         """
         Called after Motti4InitVer2
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4UpdateAfterImport(
                 yy,
                 yp,
@@ -416,8 +481,9 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    @classmethod
     def regenerate_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -439,7 +505,7 @@ class Motti4DLL:
         [6] seed tree species
         [7..9] unused, kept as 0.0
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         if len(method) > 10:
             raise ValueError("Motti4Regenerate method vector may contain at most 10 values")
@@ -451,7 +517,7 @@ class Motti4DLL:
         step_p = cast(IntPtr, ffi.new("int *", int(step)))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4Regenerate(
                 method_p,
                 yy,
@@ -470,7 +536,8 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def _normalize_remaining_n_array(self, remaining_n: list[int]) -> list[int]:
+    @staticmethod
+    def _normalize_remaining_n_array(remaining_n: list[int]) -> list[int]:
         """
         Normalize remainingN into a 10-slot int list where indices 1..9 are species.
         Index 0 is kept as 0 because Motti species slots are documented as 1..9.
@@ -495,8 +562,9 @@ class Motti4DLL:
             "or length 10 (slot 0 unused, species in 1..9)"
         )
 
+    @classmethod
     def pct_guidelines_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -506,13 +574,13 @@ class Motti4DLL:
         Call Motti4PCTGuidelines against persistent state buffers and return
         a 10-slot list where indices 1..9 correspond to remaining stem count for each species.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         remaining_n_p = cast(list[int], ffi.new("int[10]", [0] * 10))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4PCTGuidelines(
                 yy,
                 yp,
@@ -530,8 +598,9 @@ class Motti4DLL:
 
         return [int(remaining_n_p[i]) for i in range(10)]
 
+    @classmethod
     def earlycare_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -548,7 +617,7 @@ class Motti4DLL:
           info[2] = removed d13 (cm)
           info[3] = removed height (m)
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         if imode not in (0, 1):
             raise ValueError("imode must be 0 or 1")
@@ -558,7 +627,7 @@ class Motti4DLL:
         imode_p = cast(IntPtr, ffi.new("int *", int(imode)))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4EarlyCare(
                 yy,
                 yp,
@@ -577,8 +646,9 @@ class Motti4DLL:
 
         return [float(info_p[i]) for i in range(10)]
 
+    @classmethod
     def fillin_planting_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -600,7 +670,7 @@ class Motti4DLL:
         osite_id : int
             Identifier for the planted sapling cohort / stratum.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         rspe_p = cast(IntPtr, ffi.new("int *", int(rspe)))
@@ -608,7 +678,7 @@ class Motti4DLL:
         osite_id_p = cast(IntPtr, ffi.new("int *", int(osite_id)))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4FillinPlanting(
                 yy,
                 yp,
@@ -628,8 +698,9 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    @classmethod
     def after_seedtree_cutting_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -642,13 +713,13 @@ class Motti4DLL:
         in the YP vector before this function is called. If Motti creates
         natural regeneration, it is written to the persistent sapling buffer.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         ierror = cast(IntPtr, ffi.new("int *"))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4AfterSeedtreeCutting(
                 yy,
                 yp,
@@ -666,8 +737,9 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
+    @classmethod
     def seedling_delay_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         buffers: MottiStateBuffers,
         *,
@@ -680,12 +752,12 @@ class Motti4DLL:
         age 0 or 1 years are adjusted. Positive istep increases age, negative
         istep decreases age.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         rv = cast(IntPtr, ffi.new("int *"))
         istep_p = cast(IntPtr, ffi.new("int *", int(istep)))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4SeedingAgeShift(
                 yy,
                 buffers.saplings,
@@ -696,8 +768,9 @@ class Motti4DLL:
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SeedingAgeShift failed (rv={rv[0]})")
 
+    @classmethod
     def mineral_soils_fertilization_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Motti4Trees,
         numtrees: int,
@@ -724,7 +797,7 @@ class Motti4DLL:
         list[float]
             Raw 10-slot response vector returned by Motti.
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         ftype_p = cast(IntPtr, ffi.new("float *", float(ftype)))
@@ -732,7 +805,7 @@ class Motti4DLL:
         bool_phosphorus_p = cast(IntPtr, ffi.new("int *", int(bool(bool_phosphorus))))
         response_p = cast(list[float], ffi.new("float[10]", [0.0] * 10))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4MineralSoilsFertilization(
                 ftype_p,
                 amount_n_p,
@@ -751,8 +824,9 @@ class Motti4DLL:
 
         return [float(response_p[i]) for i in range(10)]
 
+    @classmethod
     def pct_with_state(
-        self,
+        cls,
         yy: Motti4Site,
         yp: Any,
         numtrees: int,
@@ -769,15 +843,15 @@ class Motti4DLL:
           - list/tuple length 9
           - list/tuple length 10 (slot 0 unused)
         """
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
-        remaining_arr = self._normalize_remaining_n_array(remaining_n)
+        remaining_arr = cls._normalize_remaining_n_array(remaining_n)
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         remaining_n_p = cast(list[int], ffi.new("int[10]", remaining_arr))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4PCT(
                 yy,
                 yp,
@@ -795,19 +869,20 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def initialize_with_state(self,
+    @classmethod
+    def initialize_with_state(cls,
                               yo: Motti4Strata,
                               yy: Motti4Site,
                               yp: Motti4Trees,
                               numtrees: int,
                               buffers: MottiStateBuffers) -> int:
-        ffi, lib = self.ffi, self.lib
+        ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         err = cast(IntPtr, ffi.new("int *"))
         rv = cast(IntPtr, ffi.new("int *"))
 
-        with _maybe_chdir(self.data_dir):
+        with _maybe_chdir(cls.data_dir):
             lib.Motti4InitVer2(
                 yo,
                 yy,
@@ -825,4 +900,4 @@ class Motti4DLL:
         if rv[0] != 0 or err[0] != 0:
             raise RuntimeError(f"Motti4InitVer2 failed (rv={rv[0]}, err={err[0]})")
 
-        return self.update_after_import(yy, yp, int(ntrees_p[0]), buffers)
+        return cls.update_after_import(yy, yp, int(ntrees_p[0]), buffers)

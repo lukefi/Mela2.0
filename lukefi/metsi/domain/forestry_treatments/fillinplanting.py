@@ -2,6 +2,7 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.util import next_osite_id
@@ -53,7 +54,7 @@ def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
 
     rspe = convert_species(species)
 
-    ms.ntrees = ms.dll.fillin_planting_with_state(
+    ms.ntrees = Motti4DLL.fillin_planting_with_state(
         ms.yy,
         ms.yp,
         int(ms.ntrees),

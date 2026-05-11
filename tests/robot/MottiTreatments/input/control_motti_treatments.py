@@ -1,4 +1,5 @@
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
     filter_stands,
@@ -22,6 +23,9 @@ from user_events import (
     SeedlingDelayMotti,
     SeedtreeCutting,
 )
+
+Motti4DLL.load()
+
 control_structure = {
     "app_configuration": {
         "state_format": "vmi13",

@@ -1,5 +1,6 @@
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -36,7 +37,7 @@ def earlycare_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     if imode not in (0, 1):
         raise MetsiException("EarlyCare parameter 'imode' must be 0 or 1")
 
-    _ = ms.dll.earlycare_with_state(
+    _ = Motti4DLL.earlycare_with_state(
         ms.yy,
         ms.yp,
         ms.ntrees,

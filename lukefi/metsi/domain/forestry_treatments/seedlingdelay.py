@@ -1,5 +1,6 @@
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -36,7 +37,7 @@ def seedlingdelay_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[
 
     istep = int(operation_parameters["istep"])
 
-    ms.dll.seedling_delay_with_state(
+    Motti4DLL.seedling_delay_with_state(
         ms.yy,
         ms.buffers,
         istep=istep,

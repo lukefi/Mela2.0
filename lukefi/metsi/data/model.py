@@ -400,30 +400,28 @@ class ForestStand(Finalizable, ComputationalUnit):
         retval.tree_strata = self.tree_strata.finalize()
 
         if self.motti_state is not None:
-            dll = self.motti_state.dll
             yy = self.motti_state.yy
             yp = self.motti_state.yp
             buffers = self.motti_state.buffers
             ntrees = self.motti_state.ntrees
             signature = self.motti_state.signature
 
-            if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
+            if yy is None or yp is None or buffers is None or ntrees is None:
                 retval.motti_state = None
                 return retval
             if signature is None:
                 retval.motti_state = None
                 return retval
             try:
-                yy2 = cast(Motti4Site, dll.clone_site(yy))
-                yp2 = cast(Motti4Trees, dll.clone_trees(yp))
-                buffers2 = dll.clone_state_buffers(buffers)
+                yy2 = cast(Motti4Site, Motti4DLL.clone_site(yy))
+                yp2 = cast(Motti4Trees, Motti4DLL.clone_trees(yp))
+                buffers2 = Motti4DLL.clone_state_buffers(buffers)
             except (AttributeError, TypeError, ValueError, RuntimeError):
                 # cloning failed -> drop state rather than share pointers
                 retval.motti_state = None
                 return retval
 
             retval.motti_state = MottiState(
-                dll=dll,
                 yy=yy2,
                 yp=yp2,
                 ntrees=ntrees,
@@ -618,7 +616,6 @@ def stand_as_internal_row(stand: ForestStand):
 
 @dataclass(eq=False, repr=False)
 class MottiState:
-    dll: Motti4DLL
     yy: Motti4Site              # "Motti4Site *"
     yp: Motti4Trees             # "Motti4Trees *"
     ntrees: int                 # current number of “active” trees in yp

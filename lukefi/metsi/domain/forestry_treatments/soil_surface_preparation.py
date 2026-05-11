@@ -28,6 +28,7 @@ def soil_surface_preparation_fn(
     """
 
     stand = op
+    _ = _operation_parameters
 
     sim_year: Optional[int] = stand.year
     stand.soil_surface_preparation_year = sim_year

@@ -1,5 +1,6 @@
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import (
@@ -43,7 +44,7 @@ def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameter
         operation_parameters.get("boolPhosporus", operation_parameters.get("phosphorus", 0)),
     )
 
-    _ = ms.dll.mineral_soils_fertilization_with_state(
+    _ = Motti4DLL.mineral_soils_fertilization_with_state(
         ms.yy,
         ms.yp,
         ms.ntrees,
