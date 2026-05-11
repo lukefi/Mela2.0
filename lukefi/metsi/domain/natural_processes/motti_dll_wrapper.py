@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from cffi import FFI
 
 from lukefi.metsi.data.motti.motti_types import (
+    FloatPtr,
     IntPtr,
     Motti4Ctrl,
     Motti4FerArray,
@@ -136,7 +137,7 @@ class Motti4DLL:
         yy = cast(Motti4Site, ffi.new("Motti4Site *"))
 
         # SiteInit with only Y,X,Z
-        rv = ffi.new("int *")
+        rv = cast(IntPtr, ffi.new("int *"))
         with _maybe_chdir(self.data_dir):
             lib.Motti4SiteInit(yy,
                                ffi.new("float *", Y),
@@ -182,8 +183,8 @@ class Motti4DLL:
             yy.spedom2 = spedom2
 
         # 3) Validate
-        nerr = ffi.new("int *")
-        err = ffi.new("int *")
+        nerr = cast(IntPtr, ffi.new("int *"))
+        err = cast(IntPtr, ffi.new("int *"))
         with _maybe_chdir(self.data_dir):
             lib.Motti4CheckYY(yy, nerr, err)
         if nerr[0] != 0:
@@ -191,25 +192,26 @@ class Motti4DLL:
 
         return yy
 
-    def new_trees(self, trees_py: list[dict]) -> Tuple[Any, int]:
+    def new_trees(self, trees_py: list[dict]) -> Tuple[Motti4Trees, int]:
         """
             fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
         """
-        yp = self.ffi.new("Motti4Trees *")
+        ypp = cast(Motti4Trees, self.ffi.new("Motti4Trees *"))
+        yp = ypp[0]
         for i, t in enumerate(trees_py):
-            yp[0][i].id = int(t.get("id", i + 1))
-            yp[0][i].sid = float(t.get("sid", 0))
-            yp[0][i].f = float(t.get("f", 0.0))
-            yp[0][i].d13 = float(t.get("d13", 0.0))
-            yp[0][i].h = float(t.get("h", 0.0))
-            yp[0][i].spe = float(t.get("spe", 1))
-            yp[0][i].age = float(t.get("age", 0.0))
-            yp[0][i].age13 = float(t.get("age13", 0.0))
-            yp[0][i].cr = float(t.get("cr", 0.0))
-            yp[0][i].snt = float(t.get("snt", 1))
-            yp[0][i].crerror = 0.0  # clear before growth
-            yp[0][i].storie = float(t.get("storie", 2.0))
-        return yp, len(trees_py)
+            yp[i].id = int(t.get("id", i + 1))
+            yp[i].sid = float(t.get("sid", 0))
+            yp[i].f = float(t.get("f", 0.0))
+            yp[i].d13 = float(t.get("d13", 0.0))
+            yp[i].h = float(t.get("h", 0.0))
+            yp[i].spe = float(t.get("spe", 1))
+            yp[i].age = float(t.get("age", 0.0))
+            yp[i].age13 = float(t.get("age13", 0.0))
+            yp[i].cr = float(t.get("cr", 0.0))
+            yp[i].snt = float(t.get("snt", 1))
+            yp[i].crerror = 0.0  # clear before growth
+            yp[i].storie = float(t.get("storie", 2.0))
+        return ypp, len(trees_py)
 
     def new_strata(self, strata_py: list[dict]) -> Motti4Strata:
         """
@@ -279,18 +281,18 @@ class Motti4DLL:
         out.numfer[0] = int(buffers.numfer[0])
         return out
 
-    def clone_site(self, yy: Motti4Site) -> Any:
+    def clone_site(self, yy: Motti4Site) -> Motti4Site:
         """Deep-copy a site struct (yy) for branching."""
         ffi = self.ffi
-        yy2 = ffi.new("Motti4Site *")
-        ffi.memmove(yy2, cast(FFI.CData, yy), ffi.sizeof("Motti4Site"))
+        yy2 = cast(Motti4Site, ffi.new("Motti4Site *"))
+        ffi.memmove(cast(FFI.CData, yy2), cast(FFI.CData, yy), ffi.sizeof("Motti4Site"))
         return yy2
 
-    def clone_trees(self, yp: Motti4Trees) -> Any:
+    def clone_trees(self, yp: Motti4Trees) -> Motti4Trees:
         """Deep-copy a full Motti4Trees buffer (fixed 1000-tree array)."""
         ffi = self.ffi
-        yp2 = ffi.new("Motti4Trees *")
-        ffi.memmove(yp2, cast(FFI.CData, yp), ffi.sizeof("Motti4Trees"))
+        yp2 = cast(Motti4Trees, ffi.new("Motti4Trees *"))
+        ffi.memmove(cast(FFI.CData, yp2), cast(FFI.CData, yp), ffi.sizeof("Motti4Trees"))
         return yp2
 
     def grow_with_state(
@@ -325,7 +327,7 @@ class Motti4DLL:
                 yp[0][i].crerror = 0.0
 
             current_step = remaining if remaining > 0 else 0
-            step_p = ffi.new("int *", current_step)
+            step_p = cast(IntPtr, ffi.new("int *", current_step))
             rv[0] = 0
             with _maybe_chdir(self.data_dir):
                 lib.Motti4Growth(
@@ -395,8 +397,8 @@ class Motti4DLL:
         Called after Motti4InitVer2
         """
         ffi, lib = self.ffi, self.lib
-        ntrees_p = ffi.new("int *", int(numtrees))
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4UpdateAfterImport(
@@ -443,11 +445,11 @@ class Motti4DLL:
             raise ValueError("Motti4Regenerate method vector may contain at most 10 values")
 
         method_vec = method + [0.0] * (10 - len(method))
-        method_p = ffi.new("float[10]", method_vec)
+        method_p = cast(list[float], ffi.new("float[10]", method_vec))
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        step_p = ffi.new("int *", int(step))
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        step_p = cast(IntPtr, ffi.new("int *", int(step)))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4Regenerate(
@@ -506,9 +508,9 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        remaining_n_p = ffi.new("int[10]", [0] * 10)
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        remaining_n_p = cast(list[int], ffi.new("int[10]", [0] * 10))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4PCTGuidelines(
@@ -551,10 +553,10 @@ class Motti4DLL:
         if imode not in (0, 1):
             raise ValueError("imode must be 0 or 1")
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        info_p = ffi.new("float[10]", [0.0] * 10)
-        imode_p = ffi.new("int *", int(imode))
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        info_p = cast(list[float], ffi.new("float[10]", [0.0] * 10))
+        imode_p = cast(IntPtr, ffi.new("int *", int(imode)))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4EarlyCare(
@@ -600,11 +602,11 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        rspe_p = ffi.new("int *", int(rspe))
-        num_p = ffi.new("float *", float(num))
-        osite_id_p = ffi.new("int *", int(osite_id))
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        rspe_p = cast(IntPtr, ffi.new("int *", int(rspe)))
+        num_p = cast(FloatPtr, ffi.new("float *", float(num)))
+        osite_id_p = cast(IntPtr, ffi.new("int *", int(osite_id)))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4FillinPlanting(
@@ -642,9 +644,9 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        ierror = ffi.new("int *")
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        ierror = cast(IntPtr, ffi.new("int *"))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4AfterSeedtreeCutting(
@@ -680,8 +682,8 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        rv = ffi.new("int *")
-        istep_p = ffi.new("int *", int(istep))
+        rv = cast(IntPtr, ffi.new("int *"))
+        istep_p = cast(IntPtr, ffi.new("int *", int(istep)))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4SeedingAgeShift(
@@ -724,11 +726,11 @@ class Motti4DLL:
         """
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        ftype_p = ffi.new("float *", float(ftype))
-        amount_n_p = ffi.new("float *", float(amount_n))
-        bool_phosphorus_p = ffi.new("int *", int(bool(bool_phosphorus)))
-        response_p = ffi.new("float[10]", [0.0] * 10)
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        ftype_p = cast(IntPtr, ffi.new("float *", float(ftype)))
+        amount_n_p = cast(FloatPtr, ffi.new("float *", float(amount_n)))
+        bool_phosphorus_p = cast(IntPtr, ffi.new("int *", int(bool(bool_phosphorus))))
+        response_p = cast(list[float], ffi.new("float[10]", [0.0] * 10))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4MineralSoilsFertilization(
@@ -771,9 +773,9 @@ class Motti4DLL:
 
         remaining_arr = self._normalize_remaining_n_array(remaining_n)
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        remaining_n_p = ffi.new("int[10]", remaining_arr)
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        remaining_n_p = cast(list[int], ffi.new("int[10]", remaining_arr))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4PCT(
@@ -801,9 +803,9 @@ class Motti4DLL:
                               buffers: MottiStateBuffers) -> int:
         ffi, lib = self.ffi, self.lib
 
-        ntrees_p = ffi.new("int *", int(numtrees))
-        err = ffi.new("int *")
-        rv = ffi.new("int *")
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
+        err = cast(IntPtr, ffi.new("int *"))
+        rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(self.data_dir):
             lib.Motti4InitVer2(
