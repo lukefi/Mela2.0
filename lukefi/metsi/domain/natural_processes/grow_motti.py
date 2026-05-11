@@ -3,7 +3,7 @@ import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
-from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import (
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
     Motti4DLL,
     GrowthDeltas,
 )

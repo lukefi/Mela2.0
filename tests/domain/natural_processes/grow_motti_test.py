@@ -6,10 +6,10 @@ from types import SimpleNamespace
 from typing import Any, Dict, List
 import numpy as np
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory
-from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
 import lukefi.metsi.domain.natural_processes.grow_motti as grow_motti
-from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import GrowthDeltas
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import GrowthDeltas
 from lukefi.metsi.data.enums.internal import DrainageCategory
 
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata

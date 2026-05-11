@@ -1,5 +1,5 @@
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.natural_processes.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
     filter_stands,
