@@ -1,50 +1,45 @@
 from abc import ABC, abstractmethod
+from copy import copy, deepcopy
 import os
+import sqlite3
 from typing import Any, Generic, Mapping, Optional, TypeVar, override
 from typing import Sequence as Sequence_
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.processor import processor
+from lukefi.metsi.domain.utils.file_io import output_node_to_db
+from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.treatment import PreparedTreatment, Treatment
+from lukefi.metsi.sim.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
-
-ProcessedTreatment = Callable[[SimulationPayload[T]], tuple[SimulationPayload[T], list[CollectedData]]]
 
 
 class EventGeneratorBase(ABC, Generic[T]):
     """Shared abstract base class for Generator and Event types."""
-    @abstractmethod
-    def unwrap(self, parents: list[EventTree[T]]) -> list[EventTree[T]]:
-        pass
 
     @abstractmethod
     def get_types_of_collected_data(self) -> CollectableDataTypes:
         pass
 
+    @abstractmethod
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: Optional[sqlite3.Connection] = None,
+                 node: int = 0
+                 ) -> Generator[SimulationPayload[T]]:
+        pass
+
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """Abstract base class for generator types."""
-    children: Sequence_[EventGeneratorBase]
+
+    children: Sequence_[EventGeneratorBase[T]]
 
     def __init__(self, children: Sequence_[EventGeneratorBase]):
         self.children = children
-
-    def compose_nested(self) -> list[EventTree[T]]:
-        """
-        Generate a list of partial EventTrees representing a single SimulationInstruction from the nested children
-        generators and Events.
-
-        :return: list of (local) root nodes of the generated partial EventTrees
-        """
-        root: EventTree[T] = EventTree()
-        self.unwrap([root])
-        return root.branches  # TODO: this is a dirty hack
 
     @override
     def get_types_of_collected_data(self) -> CollectableDataTypes:
@@ -58,27 +53,45 @@ class Sequence(EventGenerator[T]):
     """Generator for sequential events."""
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
-        current = parents
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: Optional[sqlite3.Connection] = None,
+                 node: int = 0
+                 ) -> Generator[SimulationPayload[T]]:
+
+        def wrapper(inputs: Generator[SimulationPayload[T]],
+                    generator: EventGeneratorBase[T],
+                    node: int):
+            for parent in inputs:
+                yield from generator.evaluate(parent, db, node)
+
+        chain = (unit for unit in [payload])
         for child in self.children:
-            current = child.unwrap(current)
-        return current
+            chain = wrapper(chain, child, node)
+            node = 0
+
+        yield from chain
 
 
 class Alternatives(EventGenerator[T]):
-    """Generator for branching events"""
+    """Generator for branching events."""
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
-        retval = []
-        for child in self.children:
-            retval.extend(child.unwrap(parents))
-        return retval
+    def evaluate(self, payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
+        for i, child in enumerate(self.children):
+            yield from child.evaluate(copy(payload), db, node + i)
+
+
+class First(EventGenerator[T]):
+    """Generator for non-branching alternatives where only the first possible path is executed."""
 
 
 class Event(EventGeneratorBase[T]):
     """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
     simulation state."""
+
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
     dynamic_parameters: Mapping[str, Callable[[T], Any]]
@@ -104,12 +117,11 @@ class Event(EventGeneratorBase[T]):
         else:
             self.static_parameters = {}
 
-        self.dynamic_parameters = dynamic_parameters or {}
-
         if file_parameters is not None:
-            self.file_parameters = file_parameters
-        else:
-            self.file_parameters = {}
+            self._check_file_params(file_parameters)
+            self.static_parameters = self._merge_params(self.static_parameters, file_parameters)
+
+        self.dynamic_parameters = dynamic_parameters or {}
 
         if preconditions is not None:
             self.preconditions = preconditions
@@ -129,59 +141,67 @@ class Event(EventGeneratorBase[T]):
         self.db_output = db_output
 
     @override
-    def unwrap(self, parents: list[EventTree]) -> list[EventTree]:
-        retval = []
-        for parent in parents:
-            branch = EventTree(
-                self._prepare_paremeterized_treatment(),
-                self.tags | self.treatment.default_tags,
-                self.db_output)
-            parent.add_branch(branch)
-            retval.append(branch)
-        return retval
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
+        for condition in self.preconditions:
+            if not condition(payload):
+                return
+
+        resolved_dynamic: dict[str, Any] = {
+            name: fn(payload.computational_unit) for name, fn in self.dynamic_parameters.items()
+        }
+
+        combined_params = {**self.static_parameters, **resolved_dynamic}
+
+        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit, **combined_params)
+        new_state.update_aggregates()
+
+        new_payload = SimulationPayload(
+            computational_unit=new_state,
+            operation_history=payload.operation_history,
+            node_id=deepcopy(payload.node_id)
+        )
+
+        for condition in self.postconditions:
+            if not condition(new_payload):
+                return
+
+        new_payload.operation_history.append(
+            (
+                payload.computational_unit.time,
+                self.treatment.name,
+                combined_params,
+                self.treatment.default_tags
+            )
+        )
+
+        new_payload.node_id.append(node)
+
+        if db is not None and self.db_output:
+            output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
+
+        if isinstance(new_payload.computational_unit, Finalizable):
+            new_payload.computational_unit.finalize()
+
+        yield new_payload
 
     @override
     def get_types_of_collected_data(self) -> set[type[CollectedData]]:
         return self.treatment.collected_data
 
-    def _prepare_paremeterized_treatment(self) -> ProcessedTreatment[T]:
-        self._check_file_params()
-        base_params = dict(self._merge_params())  # static + file
-
-        def _processed(payload: SimulationPayload[T]):
-            stand = payload.computational_unit
-
-            # Evaluate dynamic_parameters: name -> fn(stand)
-            resolved_dynamic: dict[str, Any] = {
-                name: fn(stand) for name, fn in self.dynamic_parameters.items()
-            }
-
-            # Static / file params overridden by dynamic ones if same key
-            combined_params = {**base_params, **resolved_dynamic}
-
-            # Prepare treatment with *this* call's parameters
-            treatment = PreparedTreatment(self.treatment, self.tags, **combined_params)
-
-            # Pass combined params to processor so they end up in operation_history
-            return processor(
-                payload,
-                treatment,
-                self.preconditions,
-                self.postconditions,
-                **combined_params,
-            )
-
-        return _processed
-
-    def _check_file_params(self):
-        for _, path in self.file_parameters.items():
+    @staticmethod
+    def _check_file_params(file_parameters: dict[str, str]):
+        for _, path in file_parameters.items():
             if not os.path.isfile(path):
                 raise FileNotFoundError(f"file {path} defined in operation_file_params was not found")
 
-    def _merge_params(self) -> dict[str, Any]:
-        common_keys = self.static_parameters.keys() & self.file_parameters.keys()
+    @staticmethod
+    def _merge_params(static_params: dict[str, Any], file_params: dict[str, str]) -> dict[str, Any]:
+        common_keys = static_params.keys() & file_params.keys()
         if common_keys:
             raise MetsiException(
                 f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
                 "in control.py. Please change the name of one of them.")
-        return self.static_parameters | self.file_parameters  # pipe is the merge operator
+        return static_params | file_params  # pipe is the merge operator

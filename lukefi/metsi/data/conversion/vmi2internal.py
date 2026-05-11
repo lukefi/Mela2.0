@@ -256,7 +256,11 @@ _TREE_TYPE_MAP = {
     VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA: TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA,
     VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE:
         TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_DUE_TO_DIAMETER_OR_DISTANCE,
-    VmiTreeType.OLD_CHECKED_TALLY_TREE: TreeType.OLD_CHECKED_TALLY_TREE
+    VmiTreeType.OLD_CHECKED_TALLY_TREE: TreeType.OLD_CHECKED_TALLY_TREE,
+    VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_PREVIOUSLY_ALIVE_NOW_DEAD:
+        TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_PREVIOUSLY_ALIVE_NOW_DEAD,
+    VmiTreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_PREVIOUSLY_DEAD:
+        TreeType.OLD_TALLY_TREE_NOW_OUT_OF_PLOT_AREA_PREVIOUSLY_DEAD
 }
 
 _TREE_CATEGORY_MAP = {
@@ -378,6 +382,7 @@ def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]
 
 @check_empty_vmi
 def convert_peatland_forest_type(code: str) -> Optional[PeatlandForestType]:
+    code = code.strip()
     if code == '0':
         return None
 

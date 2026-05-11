@@ -3,10 +3,12 @@ from collections.abc import Callable
 from pathlib import Path
 
 from lukefi.metsi.app import file_io
-from lukefi.metsi.data.formats.forest_builder import (
-    VMIBuilder, VMI13Builder, VMI12Builder,
-    VMI11Builder, VMI10Builder, VMI9Builder
-)
+from lukefi.metsi.data.formats.forest_builder_base import VMIBuilder
+from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
+from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
+from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
+from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
+from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
 
 
 class ConverterTestSuite(unittest.TestCase):

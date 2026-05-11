@@ -2,7 +2,7 @@ import numpy as np
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.domain.pre_ops import (
     area_ha_to_1000ha,
-    convert_coordinates,
+    # convert_coordinates,
     filter_trees,
     generate_reference_trees,
     filter_stands,
@@ -25,7 +25,7 @@ control_structure = {
         scale_basal_area_at_county_level,
         update_strata_to_match_trees,
         area_ha_to_1000ha,
-        convert_coordinates
+        # convert_coordinates
     ],
     "preprocessing_params": {
         filter_stands: [
@@ -71,11 +71,11 @@ control_structure = {
                 "rho": 1.6
             }
         ],
-        convert_coordinates: [
-            {
-                "target_system": "YKJ"
-            }
-        ],
+        # convert_coordinates: [
+        #     {
+        #         "target_system": "YKJ"
+        #     }
+        # ],
         scale_basal_area_at_county_level: [
             {
                 "nfi_iteration": VmiIteration.VMI13

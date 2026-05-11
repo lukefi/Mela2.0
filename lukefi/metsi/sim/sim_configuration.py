@@ -59,7 +59,11 @@ class Transition[T: ComputationalUnit]:
         if self.init_fn is not None:
             self.init_fn(unit, self.parameters)
 
-    def __call__(self, payload: SimulationPayload[T], db: Optional[sqlite3.Connection], time_step: int) -> OpTuple[T]:
+    def __call__(self,
+                 payload: SimulationPayload[T],
+                 db: Optional[sqlite3.Connection],
+                 time_step: int,
+                 transition_count: int = 1) -> OpTuple[T]:
         if self.max_step is not None:
             time_step = min(time_step, self.max_step)
         new_state, collected_data = self.transition_fn(payload.computational_unit, time_step, **self.parameters)
@@ -70,7 +74,7 @@ class Transition[T: ComputationalUnit]:
             ]
             transition_payload = SimulationPayload(new_state, temp_history, payload.node_id)
             output_node_to_db(db, transition_payload, collected_data, output_state=self.db_output_state,
-                              output_collected_data=self.db_output_cd, is_transition=True)
+                              output_collected_data=self.db_output_cd, transition_count=transition_count)
 
         return new_state, collected_data
 

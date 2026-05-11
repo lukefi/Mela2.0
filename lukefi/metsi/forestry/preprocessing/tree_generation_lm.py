@@ -6,7 +6,7 @@ from rpy2 import robjects
 
 from lukefi.metsi.data.enums.internal import DamageType, LandUseCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSpeciesNumeric, convert_vmi_numeric_to_species
-from lukefi.metsi.data.formats.vmi_util import get_stems_params
+from lukefi.metsi.data.formats.nfi.vmi_util import get_stems_params
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 from lukefi.metsi.forestry.preprocessing.pljak import get_spe_proportions

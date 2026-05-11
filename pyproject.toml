@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lukefi.mela2"
 description = "Mela2.0 forestry simulator."
-version = "0.7.5"
+version = "0.8.0"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
@@ -16,10 +16,10 @@ authors = [
     { name = "Juho-Petteri Yliuntinen" },
     { name = "Laura Jaakkola" },
     { name = "Urho Niemelä" },
+    { name = "Ari-Antti Tervonen" },
+    { name = "Tapani Stylman" }
 ]
 dependencies = [
-    "jsonpickle==4.1.1",
-    "lupa==2.5",
     "geopandas == 1.1.0",
     "pandas == 2.3.0",
     "rpy2==3.6.1",
@@ -36,7 +36,6 @@ tests = [
     "robotframework==7.3",
     "pylint==4.0.4",
     "mypy==1.19.1",
-    "types-lupa",
     "pandas-stubs",
     "types-shapely",
     "types-geopandas",
@@ -48,6 +47,7 @@ mela2 = "lukefi.metsi.app.metsi:main"
 
 [tool.setuptools.package-dir]
 lukefi = "lukefi"
+examples = "examples"
 
 [tool.setuptools.package-data]
 "lukefi.metsi.forestry.lua" = ["*"]

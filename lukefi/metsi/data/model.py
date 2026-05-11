@@ -27,23 +27,10 @@ from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
 
-# NOTE:
-# * the deepcopy methods here are roughly equivalent to
-#       def __deepcopy__(self, memo):
-#           return cls(**self.__dict__)
-#   but __new__ + update() is ~25% faster (tested on Python 3.10).
-#   dict.copy() vs dict(other) vs dict.update(other) are all equally fast.
-# * none of the ForestStand / ReferenceTree / TreeStratum have their __init__
-#   methods run when copied. don't add a (non-trivial) __init__ method to any class here.
-# * if you add any containers on any class here, you need to add a manual copy
-#   in the __deepcopy__ method. see ForestStand.__deepcopy__ for an example.
-
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
            slots=False, weakref_slot=False, eq=False)
 class ForestStand(Finalizable, ComputationalUnit):
-    # VMI data type 1
-    # SMK data type Stand
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     """
@@ -192,7 +179,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     NFI stand number > 1 (meaning sivukoeala, auxiliary stand).
     """
 
-    # TODO: Are these needed?
     sea_effect: Optional[float] = None
     """
     Sea effect.
@@ -410,6 +396,39 @@ class ForestStand(Finalizable, ComputationalUnit):
         retval = copy(self)
         retval.reference_trees = self.reference_trees.finalize()
         retval.tree_strata = self.tree_strata.finalize()
+
+        if self.motti_state is not None:
+            dll = self.motti_state.dll
+            yy = self.motti_state.yy
+            yp = self.motti_state.yp
+            buffers = self.motti_state.buffers
+            ntrees = self.motti_state.ntrees
+            signature = self.motti_state.signature
+
+            if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
+                retval.motti_state = None
+                return retval
+            if signature is None:
+                retval.motti_state = None
+                return retval
+            try:
+                yy2 = dll.clone_site(yy)
+                yp2 = dll.clone_trees(yp)
+                buffers2 = dll.clone_state_buffers(buffers)
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # cloning failed -> drop state rather than share pointers
+                retval.motti_state = None
+                return retval
+
+            retval.motti_state = MottiState(
+                dll=dll,
+                yy=yy2,
+                yp=yp2,
+                ntrees=int(ntrees),
+                buffers=buffers2,
+                signature=cast(tuple[int, ...], signature),
+            )
+
         return retval
 
     @override
@@ -446,6 +465,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
             insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
 
+    @override
     def update_aggregates(self):
         trees = self.reference_trees
         strata = self.tree_strata
@@ -499,50 +519,6 @@ class ForestStand(Finalizable, ComputationalUnit):
         denominator = min(100, sorted_cum_stems[i_100_largest])
 
         return (numerator_1 + numerator_2) / denominator
-
-    def __copy__(self):
-        """Make branch-safe copies: clone Motti CFFI buffers so branches don't share state."""
-        new_obj = self.__class__(**{k: copy(v) for k, v in self.__dict__.items() if k != "motti_state"})
-
-        ms = self.motti_state
-        if ms is None:
-            new_obj.motti_state = None
-            return new_obj
-
-        dll = getattr(ms, "dll", None)
-        yy = getattr(ms, "yy", None)
-        yp = getattr(ms, "yp", None)
-        buffers = getattr(ms, "buffers", None)
-        ntrees = getattr(ms, "ntrees", None)
-        signature = getattr(ms, "signature", None)
-
-        if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
-            new_obj.motti_state = None
-            return new_obj
-        if signature is None:
-            new_obj.motti_state = None
-            return new_obj
-        try:
-            yy2 = dll.clone_site(yy)
-            yp2 = dll.clone_trees(yp)
-            buffers2 = dll.clone_state_buffers(buffers)
-        except (AttributeError, TypeError, ValueError, RuntimeError):
-            # cloning failed -> drop state rather than share pointers
-            new_obj.motti_state = None
-            return new_obj
-
-        new_obj.motti_state = MottiState(
-            dll=dll,
-            yy=yy2,
-            yp=yp2,
-            ntrees=int(ntrees),
-            buffers=buffers2,
-            signature=cast(tuple[int, ...], signature),
-        )
-        return new_obj
-
-    def __deepcopy__(self, memo):
-        return self.__copy__()
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:

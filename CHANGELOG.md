@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.0] - 2026-05-11
+
+### Changed
+
+- Overhauled simulation algorithm with no pre-generation of event tree structures
+
+## [0.7.11] - 2026-05-08
+
+### Changed
+
+- Refactored and cleaned up forest builder classes
+
+## [0.7.10] - 2026-05-08
+
+### Fixed
+
+- Added examples directory to setuptools `package-dir` list for proper package discovery
+
+## [0.7.9] - 2026-05-08
+
+### Fixed
+
+- Repeated transitions now properly get unique node identifiers with multiple `-T`
+
+## [0.7.8] - 2026-04-24
+
+### Changed
+
+- Motti state copy logic relocated to `finalize`
+
+## [0.7.7] - 2026-04-22
+
+### Fixed
+
+- Added missing tree types 'B' and 'C'
+
+## [0.7.6] - 2026-04-22
+
+### Fixed
+
+- Added removal of extra whitespace in peatland forest type conversion
+
 ## [0.7.5] - 2026-04-22
 
 ### Added
