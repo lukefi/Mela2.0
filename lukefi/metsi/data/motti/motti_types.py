@@ -305,3 +305,18 @@ class Motti4Ctrl(MottiStub):
     _8: int
     calibrate: int
     _10: int
+
+class Motti4Stratum(MottiStub):
+    spe: float
+    age: float
+    ba: float
+    f: float
+    h: float
+    hw: float
+    d: float
+    dg: float
+    storey: float
+    st: float
+    sid: float
+
+type Motti4Strata = list[list[Motti4Stratum]]
