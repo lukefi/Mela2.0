@@ -168,6 +168,21 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso1_keskipituus_dm": slice(233, 236),        # keskipit (col 234-236)
     "jakso1_d13ika": slice(237, 240),                # d13ika (col 238-240)
     "jakso1_ikalisays": slice(241, 243),             # ikalis (col 242-243)
+    "metsikon_ika": slice(255, 258),  # metika (cols 256-258)
+    "hakkuu_tapa": slice(262, 263),
+    "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus_aika": slice(269, 270),
+    "viljely": slice(270, 271),
+    "viljely_aika": slice(271, 272),
+    "muu_toimenpide": slice(274, 275),
+    "muu_toimenpide_aika": slice(275, 276),
+    "hakkuuehdotus": slice(276, 277),  # hakehd1
+    "ppa1": slice(284, 287),
+    "ppa2": slice(288, 291),
+    "ppa3": slice(292, 295),
+    "ppa4": slice(296, 299),
+    "ppa5": slice(300, 303),
+    "basal_area": slice(305, 307),                  # kuvppa, kuvion ppa
     "jakso2_ppa": slice(307, 309),                   # j2ppa (cols 308-309)
     "jakso2_asema": slice(310, 311),                 # j2asema (col 311)
     "jakso2_syntytapa": slice(312, 313),             # j2syntapa (col 313)
@@ -184,21 +199,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso2_keskipituus_dm": slice(343, 346),        # j2keskipit (col 344-346)
     "jakso2_d13ika": slice(347, 350),                # j2d13ika (col 348-350)
     "jakso2_ikalisays": slice(351, 353),             # j2ikalis (col 352-353)
-    "metsikon_ika": slice(255, 258),  # metika (cols 256-258)
-    "hakkuu_tapa": slice(262, 263),
-    "hakkuu_aika": slice(263, 264),
-    "maanmuokkaus_aika": slice(269, 270),
-    "viljely": slice(270, 271),
-    "viljely_aika": slice(271, 272),
-    "muu_toimenpide": slice(274, 275),
-    "muu_toimenpide_aika": slice(275, 276),
-    "hakkuuehdotus": slice(276, 277),  # hakehd1
-    "ppa1": slice(284, 287),
-    "ppa2": slice(288, 291),
-    "ppa3": slice(292, 295),
-    "ppa4": slice(296, 299),
-    "ppa5": slice(300, 303),
-    "basal_area": slice(305, 307),                  # kuvppa, kuvion ppa
+    "koealan_kasittelyluokka": slice(413, 416)
 }
 
 VMI10_TREE_INDICES: dict[str, slice] = {
