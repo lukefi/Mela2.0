@@ -1,12 +1,11 @@
-from typing import Optional, TypeVar
+import sqlite3
+from typing import Generator, Optional
 from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.event_tree import EventTree
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
-
-T = TypeVar('T', bound=ComputationalUnit)  # T = ForestStand
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
 class SimulationInstruction[T: ComputationalUnit]:
@@ -26,10 +25,13 @@ class SimulationInstruction[T: ComputationalUnit]:
         else:
             self.conditions = []
 
-    def unwrap(self) -> list[EventTree[T]]:
-        return self.event_generator.compose_nested()
-
     def time_points(self, start_time: int) -> set[int]:
         return set().union(*[condition.time_points |
                              set(map(lambda t: t + start_time,
                                      condition.relative_time_points)) for condition in self.conditions])
+
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
+        yield from self.event_generator.evaluate(payload, db, node)

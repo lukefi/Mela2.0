@@ -27,23 +27,10 @@ from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
 
-# NOTE:
-# * the deepcopy methods here are roughly equivalent to
-#       def __deepcopy__(self, memo):
-#           return cls(**self.__dict__)
-#   but __new__ + update() is ~25% faster (tested on Python 3.10).
-#   dict.copy() vs dict(other) vs dict.update(other) are all equally fast.
-# * none of the ForestStand / ReferenceTree / TreeStratum have their __init__
-#   methods run when copied. don't add a (non-trivial) __init__ method to any class here.
-# * if you add any containers on any class here, you need to add a manual copy
-#   in the __deepcopy__ method. see ForestStand.__deepcopy__ for an example.
-
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
            slots=False, weakref_slot=False, eq=False)
 class ForestStand(Finalizable, ComputationalUnit):
-    # VMI data type 1
-    # SMK data type Stand
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
     """
@@ -192,7 +179,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     NFI stand number > 1 (meaning sivukoeala, auxiliary stand).
     """
 
-    # TODO: Are these needed?
     sea_effect: Optional[float] = None
     """
     Sea effect.
@@ -479,6 +465,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
             insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
 
+    @override
     def update_aggregates(self):
         trees = self.reference_trees
         strata = self.tree_strata
