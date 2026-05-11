@@ -76,27 +76,8 @@ def _default_data_dir() -> Path:
     env = os.environ.get("MOTTI_DATA_DIR")
     if env:
         return Path(os.path.expanduser(os.path.expandvars(env))).resolve()
-    repo = _find_repo_root(Path.cwd())
-    base = repo if repo else Path.cwd()
+    base = Path(__file__).parent.parent.parent.parent.parent
     return (base / "data" / "motti").resolve()
-
-
-def _find_repo_root(start: Path) -> Optional[Path]:
-    """
-    Walk up from 'start' to find a repository root by markers:
-    - a directory that contains 'data/motti'
-    - or has a '.git' directory
-    - or has a 'pyproject.toml' file
-    """
-    cur = start.resolve()
-    for p in [cur, *cur.parents]:
-        if (p / "data" / "motti").exists():
-            return p
-        if (p / ".git").exists():
-            return p
-        if (p / "pyproject.toml").exists():
-            return p
-    return None
 
 
 def _resolve_shared_object(p: str | Path) -> Path:
@@ -132,7 +113,6 @@ class Motti4DLL:
 
     @classmethod
     def load(cls, data_dir: str | Path | None = None):
-
         resolved_dir = _resolve_dir_or_file(data_dir)
         so_path = _resolve_shared_object(resolved_dir)
 
@@ -140,7 +120,6 @@ class Motti4DLL:
         cls.data_dir = Path(resolved_dir)
         ffi = FFI()
         ffi.cdef(cls._cdef_source())
-        # Add DLL search dirs once; keep handles alive
 
         if hasattr(os, "add_dll_directory"):
             for p in (lib_path.parent, cls.data_dir):
