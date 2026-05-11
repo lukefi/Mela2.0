@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.data.enums.internal import TreeManagementCategory
+from lukefi.metsi.data.enums.internal import SiteType, TreeManagementCategory
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
@@ -26,11 +26,11 @@ from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
 
-    if stand.site_type_category in (1, 2):
+    if stand.site_type_category in (SiteType.VERY_RICH_SITE, SiteType.RICH_SITE):
         return 28.0
-    if stand.site_type_category == 3:
+    if stand.site_type_category == SiteType.DAMP_SITE:
         return 26.0
-    if stand.site_type_category == 4:
+    if stand.site_type_category == SiteType.SUB_DRY_SITE:
         return 25.0
     # site >= 5 or unknown
     return 22.0
@@ -65,7 +65,6 @@ def _forest_categories_regeneration(payload: Any) -> bool:
 
     stand: ForestStand = payload.computational_unit  # SimulationPayload[ForestStand]
 
-    # Map R variables to Python model fields
     manag_cat = stand.forest_management_category
     site_idx = stand.site_type_category
     dgm = stand.ds_ba_weighted_mean_diameter
@@ -113,15 +112,15 @@ class MarkRetentionTrees(Event[ForestStand]):
         params = parameters or {}
 
         # trees older than 60 years
-        def s_age_gt_60(_stand: ForestStand, trees) -> np.ndarray:
+        def s_age_gt_60(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_age > 60
 
         # other species than pine, spruce or birches
-        def s_other_species(_stand: ForestStand, trees) -> np.ndarray:
+        def s_other_species(_: ForestStand, trees) -> np.ndarray:
             return trees.species > 4
 
         # trees with diameter > 15 cm
-        def s_large_diameter(_stand: ForestStand, trees) -> np.ndarray:
+        def s_large_diameter(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_diameter > 15
 
         tree_selection = {
@@ -345,7 +344,7 @@ class Tracks(Event[ForestStand]):
                  **kw) -> None:
         params = parameters or {}
 
-        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+        def s_all(_: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
         profile_x = [0, 1]
@@ -481,7 +480,7 @@ class SeedtreeCutting(Event[ForestStand]):
     ) -> None:
         params = parameters or {}
 
-        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+        def s_all(_: ForestStand, trees: ReferenceTrees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
         default_tree_selection = {
@@ -500,6 +499,7 @@ class SeedtreeCutting(Event[ForestStand]):
             ],
         }
 
+        # TODO: What are these???
         seedtree_method = getattr(MelaMethodOfTheLastCutting, "SEED_TREE_POSITION", None)
         if seedtree_method is None:
             seedtree_method = getattr(MelaMethodOfTheLastCutting, "SEED_TREE_CUTTING", None)

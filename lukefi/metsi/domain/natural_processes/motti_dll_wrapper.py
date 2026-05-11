@@ -13,6 +13,7 @@ from lukefi.metsi.data.motti.motti_types import (
     Motti4KorArray,
     Motti4Saplings,
     Motti4Site,
+    Motti4Strata,
     Motti4Trees,
     Motti4VcrArray
 )
@@ -210,11 +211,11 @@ class Motti4DLL:
             yp[0][i].storie = float(t.get("storie", 2.0))
         return yp, len(trees_py)
 
-    def new_strata(self, strata_py: list[dict]) -> Any:
+    def new_strata(self, strata_py: list[dict]) -> Motti4Strata:
         """
         Builds Motti4Strata from FDM strata.
         """
-        yo = self.ffi.new("Motti4Strata *")
+        yo = cast(Motti4Strata, self.ffi.new("Motti4Strata *"))
 
         max_n = min(len(strata_py), 10)
         for i in range(max_n):
@@ -628,7 +629,7 @@ class Motti4DLL:
     def after_seedtree_cutting_with_state(
         self,
         yy: Motti4Site,
-        yp: Any,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
     ) -> int:
@@ -792,7 +793,12 @@ class Motti4DLL:
 
         return int(ntrees_p[0])
 
-    def initialize_with_state(self, yo, yy: Motti4Site, yp, numtrees: int, buffers) -> int:
+    def initialize_with_state(self,
+                              yo: Motti4Strata,
+                              yy: Motti4Site,
+                              yp: Motti4Trees,
+                              numtrees: int,
+                              buffers: MottiStateBuffers) -> int:
         ffi, lib = self.ffi, self.lib
 
         ntrees_p = ffi.new("int *", int(numtrees))
