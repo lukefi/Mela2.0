@@ -292,7 +292,7 @@ class Motti4Fertilization(MottiStub):
 
 type Motti4FerArray = list[list[Motti4Fertilization]]
 type IntPtr = list[int]
-
+type FloatPtr = list[float]
 
 class Motti4Ctrl(MottiStub):
     death_forest: int
