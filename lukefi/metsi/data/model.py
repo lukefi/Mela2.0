@@ -2,7 +2,7 @@ from copy import copy
 from enum import Enum
 import dataclasses
 import sqlite3
-from typing import Optional, override, cast
+from typing import Optional, override
 from dataclasses import dataclass
 
 import numpy as np
@@ -22,7 +22,7 @@ from lukefi.metsi.data.enums.internal import (
     PeatlandForestType,
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
-from lukefi.metsi.data.motti.motti_types import Motti4Site, Motti4Trees, MottiState
+from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
@@ -42,7 +42,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Tree strata in the stand.
     """
-    motti_state: Optional["MottiState"] = None
+    motti_state: Optional[MottiState] = None
 
     time: int = 0
     """
@@ -409,8 +409,8 @@ class ForestStand(Finalizable, ComputationalUnit):
                 retval.motti_state = None
                 return retval
             try:
-                yy2 = cast(Motti4Site, Motti4DLL.clone_site(yy))
-                yp2 = cast(Motti4Trees, Motti4DLL.clone_trees(yp))
+                yy2 = Motti4DLL.clone_site(yy)
+                yp2 = Motti4DLL.clone_trees(yp)
                 buffers2 = Motti4DLL.clone_state_buffers(buffers)
             except (AttributeError, TypeError, ValueError, RuntimeError):
                 # cloning failed -> drop state rather than share pointers
