@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from copy import copy, deepcopy
 import os
 import sqlite3
-from typing import Any, Generic, Mapping, Optional, TypeVar, override
+from typing import Any, Generic, Mapping, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -10,6 +10,7 @@ from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
 from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
@@ -18,7 +19,9 @@ T = TypeVar("T", bound=ComputationalUnit)
 
 
 class EventGeneratorBase(ABC, Generic[T]):
-    """Shared abstract base class for Generator and Event types."""
+    """
+        Shared abstract base class for Generator and Event types.
+    """
 
     @abstractmethod
     def get_types_of_collected_data(self) -> CollectableDataTypes:
@@ -27,14 +30,16 @@ class EventGeneratorBase(ABC, Generic[T]):
     @abstractmethod
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None,
+                 db: sqlite3.Connection | None = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
         pass
 
 
 class EventGenerator(EventGeneratorBase[T], ABC):
-    """Abstract base class for generator types."""
+    """
+        Abstract base class for generator types.
+    """
 
     children: Sequence_[EventGeneratorBase[T]]
 
@@ -50,12 +55,14 @@ class EventGenerator(EventGeneratorBase[T], ABC):
 
 
 class Sequence(EventGenerator[T]):
-    """Generator for sequential events."""
+    """
+        Generator for sequential events.
+    """
 
     @override
     def evaluate(self,
                  payload: SimulationPayload[T],
-                 db: Optional[sqlite3.Connection] = None,
+                 db: sqlite3.Connection | None = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
 
@@ -74,7 +81,9 @@ class Sequence(EventGenerator[T]):
 
 
 class Alternatives(EventGenerator[T]):
-    """Generator for branching events."""
+    """
+        Generator for branching events.
+    """
 
     @override
     def evaluate(self, payload: SimulationPayload[T],
@@ -87,10 +96,48 @@ class Alternatives(EventGenerator[T]):
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
 
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        stop = False
+        for child in self.children:
+            gen = child.evaluate(payload, db, node)
+            for leaf in gen:
+                yield leaf
+                stop = True
+            if stop:
+                return
+
+
+class Optional(EventGenerator[T]):
+    """
+        Generator for continuing evaluation of child branches even if event conditions fail.
+        In such cases a `do_nothing` treatment is performed instead.
+    """
+    def __init__(self, child: EventGeneratorBase):
+        super().__init__(
+            [
+                First([
+                    child,
+                    Event(Treatment(do_nothing, "skip", {"skip"}))
+                ])
+            ]
+        )
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        yield from self.children[0].evaluate(payload, db, node)
 
 class Event(EventGeneratorBase[T]):
-    """Base class for events. Contains conditions and parameters and the actual treatment function that operates on the
-    simulation state."""
+    """
+        Base class for events.
+        Contains conditions and parameters and the actual treatment function that operates on the simulation state.
+    """
 
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
@@ -103,12 +150,12 @@ class Event(EventGeneratorBase[T]):
 
     def __init__(self,
                  treatment: Treatment[T],
-                 static_parameters: Optional[dict[str, Any]] = None,
-                 dynamic_parameters: Optional[Mapping[str, Callable[[T], Any]]] = None,
-                 preconditions: Optional[list[Condition[T]]] = None,
-                 postconditions: Optional[list[Condition[T]]] = None,
-                 file_parameters: Optional[dict[str, str]] = None,
-                 tags: Optional[set[str]] = None,
+                 static_parameters: dict[str, Any] | None = None,
+                 dynamic_parameters: Mapping[str, Callable[[T], Any]] | None = None,
+                 preconditions: list[Condition[T]] | None = None,
+                 postconditions: list[Condition[T]] | None = None,
+                 file_parameters: dict[str, str] | None = None,
+                 tags: set[str] | None = None,
                  db_output: bool = True) -> None:
         self.treatment = treatment
 
