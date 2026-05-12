@@ -251,7 +251,7 @@ class Motti4DLL:
         return ypp, len(trees_py)
 
     @classmethod
-    def new_strata(cls, strata_py: list[dict]) -> Motti4Strata:
+    def new_strata(cls, strata_py: list[dict[str, float]]) -> Motti4Strata:
         """
         Builds Motti4Strata from FDM strata.
         """
@@ -260,23 +260,23 @@ class Motti4DLL:
         max_n = min(len(strata_py), 10)
         for i in range(max_n):
             s = strata_py[i]
-            yo[0][i].spe = float(s.get("spe", 0.0))
-            yo[0][i].age = float(s.get("age", 0.0))
-            yo[0][i].ba = float(s.get("ba", 0.0))
-            yo[0][i].f = float(s.get("f", 0.0))
-            yo[0][i].h = float(s.get("h", 0.0))
-            yo[0][i].hw = float(s.get("hw", 0.0))
-            yo[0][i].d = float(s.get("d", 0.0))
-            yo[0][i].dg = float(s.get("dg", 0.0))
-            yo[0][i].storey = float(s.get("storey", 0.0))
-            yo[0][i].st = float(s.get("st", 0.0))
-            yo[0][i].sid = float(s.get("sid", 0.0))
+            yo[0][i].spe = s.get("spe", 0.0)
+            yo[0][i].age = s.get("age", 0.0)
+            yo[0][i].ba = s.get("ba", 0.0)
+            yo[0][i].f = s.get("f", 0.0)
+            yo[0][i].h = s.get("h", 0.0)
+            yo[0][i].hw = s.get("hw", 0.0)
+            yo[0][i].d = s.get("d", 0.0)
+            yo[0][i].dg = s.get("dg", 0.0)
+            yo[0][i].storey = s.get("storey", 0.0)
+            yo[0][i].st = s.get("st", 0.0)
+            yo[0][i].sid = s.get("sid", 0.0)
 
         return yo
     # ---------- persistent state buffers ----------
 
     @classmethod
-    def alloc_state_buffers(cls, ctrl: Optional[dict] = None) -> MottiStateBuffers:
+    def alloc_state_buffers(cls, ctrl: Optional[dict[str, bool]] = None) -> MottiStateBuffers:
         """Allocate persistent buffers that must be reused across Growth calls."""
         ffi = cls.ffi
         saplings = cast(Motti4Saplings, ffi.new("Motti4Saplings *"))
@@ -309,9 +309,9 @@ class Motti4DLL:
         """Deep-copy buffers for branching."""
         ffi = cls.ffi
         out = cls.alloc_state_buffers(ctrl={
-            "death_tree": int(bool(buffers.ctrl.death_tree)),
-            "death_forest": int(bool(buffers.ctrl.death_forest)),
-            "calibrate": int(bool(buffers.ctrl.calibrate)),
+            "death_tree": bool(buffers.ctrl.death_tree),
+            "death_forest": bool(buffers.ctrl.death_forest),
+            "calibrate": bool(buffers.ctrl.calibrate),
         })
         ffi.memmove(cast(FFI.CData, out.saplings), cast(FFI.CData, buffers.saplings), ffi.sizeof("Motti4Saplings"))
         ffi.memmove(cast(FFI.CData, out.kor_state), cast(FFI.CData, buffers.kor_state), ffi.sizeof("Motti4KorArray"))
@@ -807,7 +807,7 @@ class Motti4DLL:
     def pct_with_state(
         cls,
         yy: Motti4Site,
-        yp: Any,
+        yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
