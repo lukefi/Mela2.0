@@ -343,7 +343,7 @@ class Motti4DLL:
         ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        rv = ffi.new("int *")
+        rv = cast(IntPtr, ffi.new("int *"))
 
         acc_id: Dict[int, float] = {}
         acc_ih: Dict[int, float] = {}
