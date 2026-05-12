@@ -199,7 +199,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "jakso2_keskipituus_dm": slice(343, 346),        # j2keskipit (col 344-346)
     "jakso2_d13ika": slice(347, 350),                # j2d13ika (col 348-350)
     "jakso2_ikalisays": slice(351, 353),             # j2ikalis (col 352-353)
-    "koealan_kasittelyluokka": slice(413, 416)
+    "koealan_kasittelyluokka": slice(412, 415)
 }
 
 VMI10_TREE_INDICES: dict[str, slice] = {
