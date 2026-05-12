@@ -40,6 +40,10 @@ STAND_INTERNAL_COLUMNS: list[str] = [
     "dominant_storey_age",
     "main_tree_species_dominant_storey",
     "region",
+    "peatland_type",
+    "drained_peatland_type",
+    "under_storey",
+    "over_storey",
 ]
 
 
