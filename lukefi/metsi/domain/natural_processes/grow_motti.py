@@ -643,29 +643,6 @@ def ensure_state(stand: ForestStand,
     return stand.motti_state
 
 
-def evolve(stand: ForestStand, step: int = 5, sim_year: int = 0) -> GrowthDeltas:
-    state = ensure_state(stand, step=step, sim_year=sim_year)
-    if state is None:
-        return GrowthDeltas(tree_ids=[], tree_sids=[], trees_id=[], trees_ih=[], trees_if=[],
-                            trees_age=[], trees_age13=[]
-                            )
-
-    state.yy.year = sim_year
-    state.yy.step = step
-
-    growth = Motti4DLL.grow_with_state(
-        state.yy,
-        state.yp,
-        state.ntrees,
-        state.buffers,
-        step=step,
-    )
-
-    state.ntrees = len(growth.tree_ids)
-
-    return growth
-
-
 @natural_process_transition
 def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
@@ -690,7 +667,19 @@ def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters)
         update_stand_growth(stand, base_d, base_h, base_f, step, False)
         return stand, []
 
-    evolve(stand, step=step, sim_year=stand.relative_year)
+    state = ensure_state(stand, step=step, sim_year=stand.relative_year)
+    state.yy.year = stand.relative_year
+    state.yy.step = step
+
+    growth = Motti4DLL.grow_with_state(
+        state.yy,
+        state.yp,
+        state.ntrees,
+        state.buffers,
+        step=step
+    )
+
+    state.ntrees = len(growth.tree_ids)
     stand.year = (stand.year or 0) + step
 
     _reconcile_reference_trees_from_motti(stand, init_mode=False)
