@@ -17,6 +17,7 @@ from lukefi.metsi.data.motti.motti_types import (
     Motti4Strata,
     Motti4Trees,
     Motti4VcrArray,
+    MottiState,
     MottiStateBuffers
 )
 
@@ -265,7 +266,7 @@ class Motti4DLL:
     # ---------- persistent state buffers ----------
 
     @classmethod
-    def alloc_state_buffers(cls, ctrl: Optional[dict[str, bool]] = None) -> MottiStateBuffers:
+    def alloc_state_buffers(cls) -> MottiStateBuffers:
         """Allocate persistent buffers that must be reused across Growth calls."""
         ffi = cls.ffi
         saplings = cast(Motti4Saplings, ffi.new("Motti4Saplings *"))
@@ -275,14 +276,7 @@ class Motti4DLL:
         fert_array = cast(Motti4FerArray, ffi.new("Motti4FerArray *"))
         numfer = cast(IntPtr, ffi.new("int *", 0))
         motti_control = cast(Motti4Ctrl, ffi.new("Motti4Ctrl *"))
-        motti_control.death_tree = 1
-        if ctrl:
-            if "death_tree" in ctrl:
-                motti_control.death_tree = int(bool(ctrl["death_tree"]))
-            if "death_forest" in ctrl:
-                motti_control.death_forest = int(bool(ctrl["death_forest"]))
-            if "calibrate" in ctrl:
-                motti_control.calibrate = int(bool(ctrl["calibrate"]))
+
         return MottiStateBuffers(
             saplings=saplings,
             kor_state=kor_state,
@@ -294,37 +288,42 @@ class Motti4DLL:
         )
 
     @classmethod
-    def clone_state_buffers(cls, buffers: MottiStateBuffers) -> MottiStateBuffers:
-        """Deep-copy buffers for branching."""
+    def clone_state(cls, src: MottiState) -> MottiState:
         ffi = cls.ffi
-        out = cls.alloc_state_buffers(ctrl={
-            "death_tree": bool(buffers.ctrl.death_tree),
-            "death_forest": bool(buffers.ctrl.death_forest),
-            "calibrate": bool(buffers.ctrl.calibrate),
-        })
-        ffi.memmove(cast(FFI.CData, out.saplings), cast(FFI.CData, buffers.saplings), ffi.sizeof("Motti4Saplings"))
-        ffi.memmove(cast(FFI.CData, out.kor_state), cast(FFI.CData, buffers.kor_state), ffi.sizeof("Motti4KorArray"))
-        ffi.memmove(cast(FFI.CData, out.vcr_state), cast(FFI.CData, buffers.vcr_state), ffi.sizeof("Motti4VcrArray"))
-        ffi.memmove(cast(FFI.CData, out.apv_state), cast(FFI.CData, buffers.apv_state), ffi.sizeof("Motti4KorArray"))
-        ffi.memmove(cast(FFI.CData, out.fert_array), cast(FFI.CData, buffers.fert_array), ffi.sizeof("Motti4FerArray"))
-        out.numfer[0] = int(buffers.numfer[0])
-        return out
 
-    @classmethod
-    def clone_site(cls, yy: Motti4Site) -> Motti4Site:
-        """Deep-copy a site struct (yy) for branching."""
-        ffi = cls.ffi
-        yy2 = cast(Motti4Site, ffi.new("Motti4Site *"))
-        ffi.memmove(cast(FFI.CData, yy2), cast(FFI.CData, yy), ffi.sizeof("Motti4Site"))
-        return yy2
+        yy = cast(Motti4Site, ffi.new("Motti4Site *"))
+        yp = cast(Motti4Trees, ffi.new("Motti4Trees *"))
+        buffers = cls.alloc_state_buffers()
 
-    @classmethod
-    def clone_trees(cls, yp: Motti4Trees) -> Motti4Trees:
-        """Deep-copy a full Motti4Trees buffer (fixed 1000-tree array)."""
-        ffi = cls.ffi
-        yp2 = cast(Motti4Trees, ffi.new("Motti4Trees *"))
-        ffi.memmove(cast(FFI.CData, yp2), cast(FFI.CData, yp), ffi.sizeof("Motti4Trees"))
-        return yp2
+        ffi.memmove(cast(FFI.CData, yy),
+                    cast(FFI.CData, src.yy),
+                    ffi.sizeof("Motti4Site"))
+        ffi.memmove(cast(FFI.CData, yp),
+                    cast(FFI.CData, src.yp),
+                    ffi.sizeof("Motti4Trees"))
+
+        ffi.memmove(cast(FFI.CData, buffers.saplings),
+                    cast(FFI.CData, src.buffers.saplings),
+                    ffi.sizeof("Motti4Saplings"))
+        ffi.memmove(cast(FFI.CData, buffers.kor_state),
+                    cast(FFI.CData, src.buffers.kor_state),
+                    ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(cast(FFI.CData, buffers.vcr_state),
+                    cast(FFI.CData, src.buffers.vcr_state),
+                    ffi.sizeof("Motti4VcrArray"))
+        ffi.memmove(cast(FFI.CData, buffers.apv_state),
+                    cast(FFI.CData, src.buffers.apv_state),
+                    ffi.sizeof("Motti4KorArray"))
+        ffi.memmove(cast(FFI.CData, buffers.fert_array),
+                    cast(FFI.CData, src.buffers.fert_array),
+                    ffi.sizeof("Motti4FerArray"))
+        ffi.memmove(cast(FFI.CData, buffers.ctrl),
+                    cast(FFI.CData, src.buffers.ctrl),
+                    ffi.sizeof("Motti4Ctrl"))
+
+        buffers.numfer[0] = int(src.buffers.numfer[0])
+
+        return MottiState(yy, yp, src.ntrees, buffers)
 
     @classmethod
     def grow_with_state(

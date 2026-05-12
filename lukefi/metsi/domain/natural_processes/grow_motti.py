@@ -610,7 +610,8 @@ def ensure_state(stand: ForestStand,
 
     yo = Motti4DLL.new_strata(strata_py)
 
-    buffers = Motti4DLL.alloc_state_buffers(ctrl=None)
+    buffers = Motti4DLL.alloc_state_buffers()
+    buffers.ctrl.death_tree = 1
 
     ntrees = Motti4DLL.initialize_with_state(
         yo=yo,

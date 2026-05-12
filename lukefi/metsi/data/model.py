@@ -400,29 +400,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         retval.tree_strata = self.tree_strata.finalize()
 
         if self.motti_state is not None:
-            yy = self.motti_state.yy
-            yp = self.motti_state.yp
-            buffers = self.motti_state.buffers
-            ntrees = self.motti_state.ntrees
-
-            if yy is None or yp is None or buffers is None or ntrees is None:
-                retval.motti_state = None
-                return retval
-            try:
-                yy2 = Motti4DLL.clone_site(yy)
-                yp2 = Motti4DLL.clone_trees(yp)
-                buffers2 = Motti4DLL.clone_state_buffers(buffers)
-            except (AttributeError, TypeError, ValueError, RuntimeError):
-                # cloning failed -> drop state rather than share pointers
-                retval.motti_state = None
-                return retval
-
-            retval.motti_state = MottiState(
-                yy=yy2,
-                yp=yp2,
-                ntrees=ntrees,
-                buffers=buffers2,
-            )
+            retval.motti_state = Motti4DLL.clone_state(self.motti_state)
 
         return retval
 
