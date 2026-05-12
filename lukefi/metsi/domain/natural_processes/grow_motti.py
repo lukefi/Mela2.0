@@ -5,7 +5,6 @@ from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
     Motti4DLL,
-    GrowthDeltas,
 )
 from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
@@ -15,6 +14,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.util import (
+    auto_euref_km,
     update_stand_growth,
     UT_SPECIES_FIELDS,
     UT_CATEGORIES,
@@ -207,8 +207,7 @@ def _spedom(rt: ReferenceTrees) -> int:
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
     If trees are empty fall back to PINE, we need to give valid value for growth.
     """
-    n = rt.size
-    if n == 0:
+    if rt.size == 0:
         return TreeSpecies.PINE
 
     # Convert species to Motti codes (will raise if invalid)
@@ -220,26 +219,28 @@ def _spedom(rt: ReferenceTrees) -> int:
     ba_per_tree = f_ha * np.pi * (0.5 * d_cm * 0.01) ** 2  # m²/ha contribution
 
     # Sum BA per species code
-    per: dict[int, float] = {}
+    ba_per_species: dict[int, float] = {}
     for code, ba in zip(spe_codes, ba_per_tree.tolist()):
-        per[code] = per.get(code, 0.0) + float(ba)
+        ba_per_species[code] = ba_per_species.get(code, 0.0) + float(ba)
 
-    use_basal = any(v > 0.0 for v in per.values())
+    use_basal = any(v > 0.0 for v in ba_per_species.values())
     if not use_basal:
-        per.clear()
+        ba_per_species.clear()
         # Fallback: stems/ha totals per species
         for code, stems in zip(spe_codes, f_ha.tolist()):
-            per[code] = per.get(code, 0.0) + float(stems)
+            # TODO: Is this correct?
+            ba_per_species[code] = ba_per_species.get(code, 0.0) + float(stems)
 
-    if not per:
+    if not ba_per_species:
         return TreeSpecies.PINE
 
-    return max(per.items(), key=lambda kv: kv[1])[0]
+    return max(ba_per_species.items(), key=lambda kv: kv[1])[0]
 
 
+# TODO: Why is everything filled with zeroes instead of just deleting and setting size to zero?
 def _strip_tree_strata(stand: ForestStand):
     """
-    Clear tree information from  strata
+    Clear tree information from strata
     """
     if stand.tree_strata.size == 0:
         return
@@ -474,26 +475,6 @@ def _reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool
     prune_reference_trees_not_in_motti(stand)
 
 
-def _auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
-    """
-    Normalize to EUREF-FIN/TM35FIN kilometers.
-    Input is expected to be in meters
-    - Raise if values look like lat/long.
-    """
-    if not y1 or not x1:
-        raise ValueError("Stand is missing coordinates required by Motti")
-    abs_y, abs_x = abs(y1), abs(x1)
-
-    # Clear lat/long guard
-    if abs_y <= 90.0 and abs_x <= 180.0:
-        raise ValueError(
-            f"Coordinates look like lat/long (Y={y1}, X={x1}). "
-            "Expected EUREF-FIN/TM35 in kilometers."
-        )
-
-    return y1 / 1000.0, x1 / 1000.0
-
-
 def ensure_state(stand: ForestStand,
                  step: int,
                  sim_year: int,
@@ -508,8 +489,8 @@ def ensure_state(stand: ForestStand,
 
     spedom = _spedom(stand.reference_trees)
 
-    y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
-                                stand.geo_location[1] if stand.geo_location is not None else None)
+    y_km, x_km = auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
+                               stand.geo_location[1] if stand.geo_location is not None else None)
 
     if stand.geo_location is not None:
         z = stand.geo_location[2]
@@ -646,13 +627,9 @@ def ensure_state(stand: ForestStand,
 @natural_process_transition
 def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
-    Vector-only Motti grow:
-      - Requires stand.reference_trees
-      - Builds DLL input from SoA, runs growth, applies deltas vectorized
+    Motti grow:
+      - Builds DLL input from FDM and runs growth
       - Prunes trees with stems_per_ha < 1.0 after update
-    operation_parameters:
-      - data_dir: path to folder/file for the Motti DLL (required unless a predictor is injected)
-      - predictor: optional injected Motti4DLL wrapper (testing)
     """
 
     stand = input_
@@ -671,15 +648,8 @@ def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters)
     state.yy.year = stand.relative_year
     state.yy.step = step
 
-    growth = Motti4DLL.grow_with_state(
-        state.yy,
-        state.yp,
-        state.ntrees,
-        state.buffers,
-        step=step
-    )
+    Motti4DLL.grow_with_state(state, step=step)
 
-    state.ntrees = len(growth.tree_ids)
     stand.year = (stand.year or 0) + step
 
     _reconcile_reference_trees_from_motti(stand, init_mode=False)
@@ -696,14 +666,7 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
     if ms is None or ms.yp is None or ms.buffers is None:
         return
 
-    growth = Motti4DLL.grow_with_state(
-        ms.yy,
-        ms.yp,
-        int(ms.ntrees),
-        ms.buffers,
-        step=0,
-    )
-    ms.ntrees = len(growth.tree_ids)
+    Motti4DLL.grow_with_state(ms, step=0)
 
     _reconcile_reference_trees_from_motti(stand)
 

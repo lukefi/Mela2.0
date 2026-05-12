@@ -219,6 +219,7 @@ def safe_origin(raw: float | int) -> int:
     v = int(raw)
     return v if v >= 0 else int(Origin.UNSET)
 
+
 def next_reference_tree_number(rt: ReferenceTrees) -> int:
     vals = []
     for v in rt.tree_number.tolist():
@@ -292,3 +293,23 @@ def update_stand_growth(stand: ForestStand,
             trees.sapling)
 
     stand.year = (stand.year or 0) + step
+
+
+def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
+    """
+    Normalize to EUREF-FIN/TM35FIN kilometers.
+    Input is expected to be in meters
+    - Raise if values look like lat/long.
+    """
+    if not y1 or not x1:
+        raise ValueError("Stand is missing coordinates required by Motti")
+    abs_y, abs_x = abs(y1), abs(x1)
+
+    # Clear lat/long guard
+    if abs_y <= 90.0 and abs_x <= 180.0:
+        raise ValueError(
+            f"Coordinates look like lat/long (Y={y1}, X={x1}). "
+            "Expected EUREF-FIN/TM35 in kilometers."
+        )
+
+    return y1 / 1000.0, x1 / 1000.0

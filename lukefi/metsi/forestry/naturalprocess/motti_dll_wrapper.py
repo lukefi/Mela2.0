@@ -22,17 +22,6 @@ from lukefi.metsi.data.motti.motti_types import (
 )
 
 
-@dataclass
-class GrowthDeltas:
-    tree_ids: List[int]   # IDs of trees that survived in the DLL after growth
-    tree_sids: List[int | None]  # stratum ids
-    trees_id: List[float]   # diameter increments (xd)
-    trees_ih: List[float]   # height increments (xh)
-    trees_if: List[float]   # stems/ha delta (Δf)
-    trees_age: List[float]   # final biological age
-    trees_age13: List[float]  # final breast-height age
-
-
 @contextmanager
 def _maybe_chdir(tmp_dir: Optional[Path] = None):
     if tmp_dir is None:
@@ -328,12 +317,9 @@ class Motti4DLL:
     @classmethod
     def grow_with_state(
         cls,
-        yy: Motti4Site,
-        yp: Motti4Trees,
-        numtrees: int,
-        buffers: MottiStateBuffers,
+        state: MottiState,
         step: int = 5,
-    ) -> GrowthDeltas:
+    ):
         """
         Growth using persistent buffers that are carried across calls.
 
@@ -342,13 +328,13 @@ class Motti4DLL:
         """
         ffi, lib = cls.ffi, cls.lib
 
+        yy = state.yy
+        yp = state.yp
+        numtrees = state.ntrees
+        buffers = state.buffers
+
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
         rv = cast(IntPtr, ffi.new("int *"))
-
-        acc_id: Dict[int, float] = {}
-        acc_ih: Dict[int, float] = {}
-        acc_if: Dict[int, float] = {}
-        prev_f: Dict[int, float] = {int(yp[0][i].id): float(yp[0][i].f) for i in range(ntrees_p[0])}
 
         remaining = int(step)
         runs_left = 1 if remaining <= 0 else None
@@ -377,15 +363,6 @@ class Motti4DLL:
             if rv[0] != 0:
                 raise RuntimeError(f"Motti4Growth failed (rv={rv[0]})")
 
-            for i in range(ntrees_p[0]):
-                tid = int(yp[0][i].id)
-                acc_id[tid] = acc_id.get(tid, 0.0) + float(yp[0][i].xd)
-                acc_ih[tid] = acc_ih.get(tid, 0.0) + float(yp[0][i].xh)
-                nf = float(yp[0][i].f)
-                pf = prev_f.get(tid, nf)
-                acc_if[tid] = acc_if.get(tid, 0.0) + (nf - pf)
-                prev_f[tid] = nf
-
             if runs_left:
                 runs_left -= 1
                 continue
@@ -395,27 +372,7 @@ class Motti4DLL:
                 break
             remaining -= done
 
-        ids_now = [int(yp[0][i].id) for i in range(ntrees_p[0])]
-        sids_now = []
-        for i in range(ntrees_p[0]):
-            raw_sid = yp[0][i].sid
-            sid = int(raw_sid)
-            sids_now.append(sid if sid > 0 else None)
-        out_id = [acc_id.get(tid, 0.0) for tid in ids_now]
-        out_ih = [acc_ih.get(tid, 0.0) for tid in ids_now]
-        out_if = [acc_if.get(tid, 0.0) for tid in ids_now]
-        out_age = [float(yp[0][i].age) for i in range(ntrees_p[0])]
-        out_age13 = [float(yp[0][i].age13) for i in range(ntrees_p[0])]
-
-        return GrowthDeltas(
-            tree_ids=ids_now,
-            tree_sids=sids_now,
-            trees_id=out_id,
-            trees_ih=out_ih,
-            trees_if=out_if,
-            trees_age=out_age,
-            trees_age13=out_age13,
-        )
+        state.ntrees = ntrees_p[0]
 
     @classmethod
     def update_after_import(
