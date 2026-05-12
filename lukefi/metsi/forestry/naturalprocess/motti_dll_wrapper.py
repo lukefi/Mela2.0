@@ -16,20 +16,9 @@ from lukefi.metsi.data.motti.motti_types import (
     Motti4Site,
     Motti4Strata,
     Motti4Trees,
-    Motti4VcrArray
+    Motti4VcrArray,
+    MottiStateBuffers
 )
-
-
-@dataclass
-class MottiStateBuffers:
-    """Persistent Motti model state buffers that must be carried across Growth calls."""
-    saplings: Motti4Saplings        # "Motti4Saplings *"   (ut)
-    kor_state: Motti4KorArray       # "Motti4KorArray *"   (kor)
-    vcr_state: Motti4VcrArray       # "Motti4VcrArray *"   (vcr)
-    apv_state: Motti4KorArray       # "Motti4KorArray *"   (apv)
-    fert_array: Motti4FerArray      # "Motti4FerArray *"   (fer)
-    numfer: IntPtr                  # "int *"              (numfer)
-    ctrl: Motti4Ctrl                # "Motti4Ctrl *"       (o)
 
 
 @dataclass

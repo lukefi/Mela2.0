@@ -563,6 +563,7 @@ def ensure_state(stand: ForestStand,
     h = np.nan_to_num(rt.height, nan=0.0)
     age = np.nan_to_num(rt.biological_age, nan=0.0)
     age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
+
     # TODO: ReferenceTrees does not have this attribute; where did it come from?
     cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
     origin = rt.origin
@@ -627,7 +628,6 @@ def ensure_state(stand: ForestStand,
             yp=yp,
             ntrees=ntrees,
             buffers=buffers,
-            signature=tuple(ids.tolist()),
         )
     else:
         ms = MottiState()
@@ -635,7 +635,6 @@ def ensure_state(stand: ForestStand,
         ms.yp = yp
         ms.ntrees = ntrees
         ms.buffers = buffers
-        ms.signature = tuple(ids.tolist())
         stand.motti_state = ms
 
     _reconcile_reference_trees_from_motti(stand, init_mode=True)

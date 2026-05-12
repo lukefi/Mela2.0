@@ -22,9 +22,9 @@ from lukefi.metsi.data.enums.internal import (
     PeatlandForestType,
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
-from lukefi.metsi.data.motti.motti_types import Motti4Site, Motti4Trees
+from lukefi.metsi.data.motti.motti_types import Motti4Site, Motti4Trees, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL, MottiStateBuffers
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
@@ -404,12 +404,8 @@ class ForestStand(Finalizable, ComputationalUnit):
             yp = self.motti_state.yp
             buffers = self.motti_state.buffers
             ntrees = self.motti_state.ntrees
-            signature = self.motti_state.signature
 
             if yy is None or yp is None or buffers is None or ntrees is None:
-                retval.motti_state = None
-                return retval
-            if signature is None:
                 retval.motti_state = None
                 return retval
             try:
@@ -426,7 +422,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                 yp=yp2,
                 ntrees=ntrees,
                 buffers=buffers2,
-                signature=cast(tuple[int, ...], signature),
             )
 
         return retval
@@ -612,12 +607,3 @@ def stand_as_internal_row(stand: ForestStand):
         stand.under_storey,
         stand.over_storey,
     ]
-
-
-@dataclass(eq=False, repr=False)
-class MottiState:
-    yy: Motti4Site              # "Motti4Site *"
-    yp: Motti4Trees             # "Motti4Trees *"
-    ntrees: int                 # current number of “active” trees in yp
-    buffers: MottiStateBuffers  # MottiStateBuffers
-    signature: tuple[int, ...]

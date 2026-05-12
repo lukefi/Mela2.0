@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from lukefi.metsi.app.utils import MetsiException
 
 
@@ -294,6 +296,7 @@ type Motti4FerArray = list[list[Motti4Fertilization]]
 type IntPtr = list[int]
 type FloatPtr = list[float]
 
+
 class Motti4Ctrl(MottiStub):
     death_forest: int
     death_tree: int
@@ -305,6 +308,7 @@ class Motti4Ctrl(MottiStub):
     _8: int
     calibrate: int
     _10: int
+
 
 class Motti4Stratum(MottiStub):
     spe: float
@@ -319,4 +323,25 @@ class Motti4Stratum(MottiStub):
     st: float
     sid: float
 
+
 type Motti4Strata = list[list[Motti4Stratum]]
+
+
+@dataclass
+class MottiStateBuffers:
+    """Persistent Motti model state buffers that must be carried across Growth calls."""
+    saplings: Motti4Saplings        # "Motti4Saplings *"   (ut)
+    kor_state: Motti4KorArray       # "Motti4KorArray *"   (kor)
+    vcr_state: Motti4VcrArray       # "Motti4VcrArray *"   (vcr)
+    apv_state: Motti4KorArray       # "Motti4KorArray *"   (apv)
+    fert_array: Motti4FerArray      # "Motti4FerArray *"   (fer)
+    numfer: IntPtr                  # "int *"              (numfer)
+    ctrl: Motti4Ctrl                # "Motti4Ctrl *"       (o)
+
+
+@dataclass(eq=False, repr=False)
+class MottiState:
+    yy: Motti4Site              # "Motti4Site *"
+    yp: Motti4Trees             # "Motti4Trees *"
+    ntrees: int                 # current number of “active” trees in yp
+    buffers: MottiStateBuffers  # MottiStateBuffers
