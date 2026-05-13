@@ -221,7 +221,6 @@ class Mounding(Event[ForestStand]):
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         defaults = {
-            "method": "mounding",
             "intensity": 1200.0,
         }
         # Default preconditions: at least 20 years since this treatment last ran
