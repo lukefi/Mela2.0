@@ -10,7 +10,7 @@ from lukefi.metsi.domain.natural_processes.grow_motti import (
 )
 
 
-def earlycare_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
     """
     Motti-only early care treatment.
 
@@ -25,15 +25,12 @@ def earlycare_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Fore
     stand, []
         Stand is updated in-place and synchronized from Motti yp/ut vectors.
     """
-    stand = input_
-
     ms = stand.motti_state
     if ms is None or ms.buffers is None:
         raise MetsiException(
             "Motti EarlyCare requested but stand has no initialized motti_state. "
         )
 
-    imode = int(operation_parameters.get("imode", 0))
     if imode not in (0, 1):
         raise MetsiException("EarlyCare parameter 'imode' must be 0 or 1")
 

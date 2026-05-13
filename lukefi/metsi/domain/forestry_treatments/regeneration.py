@@ -5,7 +5,6 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.domain.natural_processes.grow_motti import (
@@ -56,11 +55,28 @@ def _regeneration_via_motti(stand: ForestStand,
     prune_reference_trees_not_in_motti(stand)
 
 
-def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def regeneration_fn(input_: ForestStand,
+                    /,
+                    origin: Origin | None = None,
+                    species: TreeSpecies | None = None,
+                    stems_per_ha: float | None = None,
+                    height: float | None = None,
+                    biological_age: float | None = None,
+                    regen_type: RegenerationType | None = None,
+                    method: MottiRegenerationMethod | None = None,
+                    breast_height_diameter: float | None = None,
+                    breast_height_age: float | None = None,
+                    ntrees: int = 10,
+                    istep: int = 0,
+                    survival_percent: float = 100.0,
+                    soil_preparation_type: int = 0,
+                    clearing: int = 0,
+                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
+                    ) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.
-    - Parameters (all via **operation_parameters):
+    - Parameters:
         origin: int                 # e.g. 2 (planted)
         method: Optional[int]       # accepted, unused
         species: int                # tree species code
@@ -77,18 +93,20 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
     """
     stand = input_
 
-    origin: Origin = req(operation_parameters, "origin")
-    species: TreeSpecies = req(operation_parameters, "species")
-    stems_per_ha = float(req(operation_parameters, "stems_per_ha"))
-    height = float(req(operation_parameters, "height"))
-    biological_age = float(req(operation_parameters, "biological_age"))
-    regen_type: RegenerationType = req(operation_parameters, "type")
+    if origin is None:
+        raise MetsiException("Origin missing")
+    if species is None:
+        raise MetsiException("Species is missing")
+    if stems_per_ha is None:
+        raise MetsiException("stems_per_ha is missing")
+    if height is None:
+        raise MetsiException("Height is missing")
+    if biological_age is None:
+        raise MetsiException("Biological age is missing")
+    if regen_type is None:
+        raise MetsiException("regen_type is missing")
 
     # ---- optional ----
-    method = cast(MottiRegenerationMethod | None, operation_parameters.get("method", None))
-    breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
-    breast_height_age = operation_parameters.get("breast_height_age", None)
-    ntrees = operation_parameters.get("ntrees", 10)
 
     if height <= 0:
         raise MetsiException("Regeneration: Height can not be negative or zero")
@@ -109,11 +127,11 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
             method=method,
             species=species,
             stems_per_ha=stems_per_ha,
-            step=int(operation_parameters.get("istep", 0)),
-            survival_percent=float(operation_parameters.get("survival_percent", 100.0)),
-            soil_preparation_type=int(operation_parameters.get("soil_preparation_type", 0)),
-            clearing=int(operation_parameters.get("clearing", 0)),
-            seed_tree_species=operation_parameters.get("seed_tree_species", TreeSpecies.UNKNOWN),
+            step=istep,
+            survival_percent=survival_percent,
+            soil_preparation_type=soil_preparation_type,
+            clearing=clearing,
+            seed_tree_species=seed_tree_species,
         )
         return stand, []
 

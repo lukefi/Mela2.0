@@ -40,7 +40,7 @@ def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
     )
 
 
-def _resolve_remaining_n(ms: MottiState, operation_parameters: dict[str, Any]) -> list[int]:
+def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int] | None) -> list[int]:
     """
     Preferred flow:
       1) ask Motti for guideline array
@@ -55,14 +55,14 @@ def _resolve_remaining_n(ms: MottiState, operation_parameters: dict[str, Any]) -
     )
 
     # New preferred parameter: explicit species-wise values
-    if "remaining_n" in operation_parameters:
-        return _normalize_species_array(operation_parameters["remaining_n"])
+    if remaining_n is not None:
+        return _normalize_species_array(remaining_n)
 
     # Default: use Motti recommendation directly
     return guidelines
 
 
-def pct_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def pct_fn(input_: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only sapling treatment.
 
@@ -81,7 +81,7 @@ def pct_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStan
             "Use Motti transition / bootstrap so state exists before this event."
         )
 
-    remaining_n = _resolve_remaining_n(ms, operation_parameters)
+    remaining_n = _resolve_remaining_n(ms, remaining_n)
 
     ms.ntrees = Motti4DLL.pct_with_state(
         ms.yy,

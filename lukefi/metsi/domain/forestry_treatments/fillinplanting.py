@@ -13,7 +13,11 @@ from lukefi.metsi.domain.natural_processes.grow_motti import (
 )
 
 
-def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def fillinplanting_fn(stand: ForestStand,
+                      /,
+                      species: TreeSpecies = TreeSpecies.TREELESS,
+                      stems_per_ha: float = 0.0,
+                      osite_id: int | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only fill-in planting treatment.
 
@@ -31,7 +35,6 @@ def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
     Motti DLL expects species in Motti coding (rspe), planting amount as a float
     (num), and the planted cohort id (ositeID).
     """
-    stand = input_
 
     ms = stand.motti_state
     if ms is None or ms.buffers is None:
@@ -40,15 +43,14 @@ def fillinplanting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple
             "Use Motti transition / bootstrap so state exists before this event."
         )
 
-    species: TreeSpecies = operation_parameters.get("species", operation_parameters.get("rspe", TreeSpecies.TREELESS))
     if species <= 0:
         raise MetsiException("FillinPlanting requires parameter 'species' (internal TreeSpecies code)")
 
-    stems_per_ha = float(operation_parameters.get("stems_per_ha", operation_parameters.get("num", 0.0)))
     if stems_per_ha <= 0.0:
         raise MetsiException("FillinPlanting parameter 'stems_per_ha' must be > 0")
 
-    osite_id = int(operation_parameters.get("osite_id", next_osite_id(stand)))
+    if osite_id is None:
+        osite_id = next_osite_id(stand)
     if osite_id <= 0:
         raise MetsiException("FillinPlanting parameter 'osite_id' must be > 0")
 

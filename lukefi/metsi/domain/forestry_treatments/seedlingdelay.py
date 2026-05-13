@@ -9,7 +9,10 @@ from lukefi.metsi.domain.natural_processes.grow_motti import (
 )
 
 
-def seedlingdelay_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def seedlingdelay_fn(input_: ForestStand,
+                     /,
+                     istep: int | None = None,
+                     ) -> OpTuple[ForestStand]:
     """
     Motti-only seedling delay treatment.
 
@@ -32,10 +35,8 @@ def seedlingdelay_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[
             "Motti SeedlingDelay requested but stand has no initialized motti_state. "
         )
 
-    if "istep" not in operation_parameters:
+    if istep is None:
         raise MetsiException("SeedlingDelay parameter 'istep' is required")
-
-    istep = int(operation_parameters["istep"])
 
     Motti4DLL.seedling_delay_with_state(
         ms.yy,

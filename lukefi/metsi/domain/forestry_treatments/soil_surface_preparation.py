@@ -6,8 +6,6 @@ from lukefi.metsi.sim.treatment import Treatment
 
 def soil_surface_preparation_fn(
     op: ForestStand,
-    /,
-    **_operation_parameters
 ) -> OpTuple[ForestStand]:
     """
     Simulate soil surface preparation on a stand (e.g., mounding).
@@ -28,7 +26,6 @@ def soil_surface_preparation_fn(
     """
 
     stand = op
-    _ = _operation_parameters
 
     sim_year: Optional[int] = stand.year
     stand.soil_surface_preparation_year = sim_year

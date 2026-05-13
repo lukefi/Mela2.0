@@ -10,7 +10,12 @@ from lukefi.metsi.domain.natural_processes.grow_motti import (
 )
 
 
-def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def mineral_soils_fertilization_fn(stand: ForestStand,
+                                   /,
+                                   ftype: int | None = None,
+                                   amount_n: float | None = None,
+                                   phosphorus: int = 0
+                               ) -> OpTuple[ForestStand]:
     """
     Motti-only mineral-soils fertilization treatment.
 
@@ -24,7 +29,6 @@ def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameter
         0/1 flag indicating whether phosphorus is included.
         Aliases: boolPhosporus, phosphorus
     """
-    stand = input_
 
     ms = stand.motti_state
     if ms is None or ms.buffers is None:
@@ -32,26 +36,20 @@ def mineral_soils_fertilization_fn(input_: ForestStand, /, **operation_parameter
             "Motti mineral-soils fertilization requested but stand has no initialized motti_state. "
         )
 
-    if "ftype" not in operation_parameters:
+    if ftype is None:
         raise MetsiException("Fertilization parameter 'ftype' is required")
 
-    amount_n: float | None = operation_parameters.get("amount_n", operation_parameters.get("amountN"))
     if amount_n is None:
         raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
-
-    bool_phosphorus: int = operation_parameters.get(
-        "bool_phosphorus",
-        operation_parameters.get("boolPhosporus", operation_parameters.get("phosphorus", 0)),
-    )
 
     _ = Motti4DLL.mineral_soils_fertilization_with_state(
         ms.yy,
         ms.yp,
         ms.ntrees,
         ms.buffers,
-        ftype=int(operation_parameters["ftype"]),
+        ftype=ftype,
         amount_n=amount_n,
-        bool_phosphorus=int(bool(bool_phosphorus)),
+        bool_phosphorus=int(bool(phosphorus)),
     )
 
     # Keep Python-side vectors aligned in case the DLL updated state immediately.
