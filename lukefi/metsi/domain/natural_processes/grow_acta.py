@@ -6,8 +6,7 @@ from lukefi.metsi.sim.collected_data import OpTuple
 
 
 @natural_process_transition
-def grow_acta_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
-    _ = operation_parameters
+def grow_acta_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
     stand = input_
     if stand.reference_trees.size == 0:
         stand.year += step

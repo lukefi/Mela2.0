@@ -6,8 +6,67 @@ from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
-
 )
+
+
+def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
+    """
+    Motti-only sapling treatment.
+
+    Preferred parameters:
+      remaining_n_by_species:
+          dict or list/tuple describing species-wise remaining stem counts
+          for species slots 1..9
+
+    """
+
+    ms = stand.motti_state
+    if ms is None or ms.buffers is None:
+        raise MetsiException(
+            "Motti PCT requested but stand has no initialized motti_state. "
+            "Use Motti transition / bootstrap so state exists before this event."
+        )
+
+    remaining_n = _resolve_remaining_n(ms, remaining_n)
+
+    ms.ntrees = Motti4DLL.pct_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        remaining_n=remaining_n,
+    )
+
+    # Keep Python-side vectors aligned with Motti after the treatment.
+    sync_yp_to_reference_trees(stand)
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
+
+    stand.young_stand_tending_year = stand.year
+
+    return stand, []
+
+
+def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int] | None) -> list[int]:
+    """
+    Preferred flow:
+      1) ask Motti for guideline array
+      2) optionally override or scale it
+      3) pass the resulting species-wise array to Motti4PCT
+    """
+    guidelines = Motti4DLL.pct_guidelines_with_state(
+        ms.yy,
+        ms.yp,
+        ms.ntrees,
+        ms.buffers,
+    )
+
+    # New preferred parameter: explicit species-wise values
+    if remaining_n is not None:
+        return _normalize_species_array(remaining_n)
+
+    # Default: use Motti recommendation directly
+    return guidelines
 
 
 def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
@@ -35,67 +94,6 @@ def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
     raise MetsiException(
         "remaining_n_by_species must be dict or list/tuple of length 9 or 10"
     )
-
-
-def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int] | None) -> list[int]:
-    """
-    Preferred flow:
-      1) ask Motti for guideline array
-      2) optionally override or scale it
-      3) pass the resulting species-wise array to Motti4PCT
-    """
-    guidelines = Motti4DLL.pct_guidelines_with_state(
-        ms.yy,
-        ms.yp,
-        ms.ntrees,
-        ms.buffers,
-    )
-
-    # New preferred parameter: explicit species-wise values
-    if remaining_n is not None:
-        return _normalize_species_array(remaining_n)
-
-    # Default: use Motti recommendation directly
-    return guidelines
-
-
-def pct_fn(input_: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
-    """
-    Motti-only sapling treatment.
-
-    Preferred parameters:
-      remaining_n_by_species:
-          dict or list/tuple describing species-wise remaining stem counts
-          for species slots 1..9
-
-    """
-    stand = input_
-
-    ms = stand.motti_state
-    if ms is None or ms.buffers is None:
-        raise MetsiException(
-            "Motti PCT requested but stand has no initialized motti_state. "
-            "Use Motti transition / bootstrap so state exists before this event."
-        )
-
-    remaining_n = _resolve_remaining_n(ms, remaining_n)
-
-    ms.ntrees = Motti4DLL.pct_with_state(
-        ms.yy,
-        ms.yp,
-        int(ms.ntrees),
-        ms.buffers,
-        remaining_n=remaining_n,
-    )
-
-    # Keep Python-side vectors aligned with Motti after the treatment.
-    sync_yp_to_reference_trees(stand)
-    sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand)
-
-    stand.young_stand_tending_year = stand.year
-
-    return stand, []
 
 
 pct = Treatment(pct_fn, "pct")

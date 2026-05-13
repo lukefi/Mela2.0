@@ -17,7 +17,7 @@ from lukefi.metsi.sim.collected_data import OpTuple
 
 
 @natural_process_transition
-def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
     """
     Motti grow:
       - Builds DLL input from FDM and runs growth
@@ -25,7 +25,6 @@ def grow_motti_fn(input_: ForestStand, step: int = 5, /, **operation_parameters)
     """
 
     stand = input_
-    _ = operation_parameters
 
     rt = stand.reference_trees
 

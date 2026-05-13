@@ -9,10 +9,9 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
 )
 
 
-def seedlingdelay_fn(input_: ForestStand,
+def seedlingdelay_fn(stand: ForestStand,
                      /,
-                     istep: int | None = None,
-                     ) -> OpTuple[ForestStand]:
+                     istep: int | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only seedling delay treatment.
 
@@ -27,7 +26,6 @@ def seedlingdelay_fn(input_: ForestStand,
     Motti applies the change only to the last sapling layer and only to
     sapling cohorts whose age is 0 or 1 years.
     """
-    stand = input_
 
     ms = stand.motti_state
     if ms is None or ms.buffers is None:

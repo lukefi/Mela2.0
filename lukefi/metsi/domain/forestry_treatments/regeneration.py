@@ -13,47 +13,6 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
 
 
-def _regeneration_via_motti(stand: ForestStand,
-                            *,
-                            method: MottiRegenerationMethod,
-                            species: TreeSpecies,
-                            stems_per_ha: float,
-                            step: int,
-                            survival_percent: float = 100.0,
-                            soil_preparation_type: int = 0,
-                            clearing: int = 0,
-                            seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
-                            ) -> None:
-    ms = stand.motti_state
-    if ms is None or ms.buffers is None:
-        raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
-
-    cultivated_species = convert_species(species)
-    seed_species = convert_species(seed_tree_species)
-
-    method_vec = [
-        float(method),
-        survival_percent,
-        float(cultivated_species),
-        stems_per_ha,
-        soil_preparation_type,
-        clearing,
-        float(seed_species),
-    ]
-
-    ms.ntrees = Motti4DLL.regenerate_with_state(
-        ms.yy,
-        ms.yp,
-        int(ms.ntrees),
-        ms.buffers,
-        method=method_vec,
-        step=int(step),
-    )
-
-    sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand)
-
-
 def regeneration_fn(input_: ForestStand,
                     /,
                     origin: Origin | None = None,
@@ -150,6 +109,47 @@ def regeneration_fn(input_: ForestStand,
         })
 
     return stand, []
+
+
+def _regeneration_via_motti(stand: ForestStand,
+                            *,
+                            method: MottiRegenerationMethod,
+                            species: TreeSpecies,
+                            stems_per_ha: float,
+                            step: int,
+                            survival_percent: float = 100.0,
+                            soil_preparation_type: int = 0,
+                            clearing: int = 0,
+                            seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
+                            ) -> None:
+    ms = stand.motti_state
+    if ms is None or ms.buffers is None:
+        raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
+
+    cultivated_species = convert_species(species)
+    seed_species = convert_species(seed_tree_species)
+
+    method_vec = [
+        float(method),
+        survival_percent,
+        float(cultivated_species),
+        stems_per_ha,
+        soil_preparation_type,
+        clearing,
+        float(seed_species),
+    ]
+
+    ms.ntrees = Motti4DLL.regenerate_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        method=method_vec,
+        step=int(step),
+    )
+
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
 
 
 regeneration = Treatment(regeneration_fn, "regeneration")
