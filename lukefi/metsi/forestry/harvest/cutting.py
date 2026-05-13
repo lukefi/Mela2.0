@@ -11,7 +11,7 @@ from lukefi.metsi.domain.natural_processes.grow_motti import (
 )
 
 
-def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def cutting_fn(stand: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
     """
     cutting treatment:
       - Requires operation_parameters['tree_selection'] with:
@@ -21,12 +21,9 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
       - Updates required stand.cutting_year and stand.method_of_last_cutting.
       - Applies removals to stand.reference_trees.stems_per_ha.
     """
-    stand = input_
 
     trees: ReferenceTrees = stand.reference_trees
-    if not isinstance(trees, ReferenceTrees):
-        raise MetsiException("cutting requires stand.reference_trees.")
-
+    
     if stand.reference_trees.size == 0:
         return stand, []
 
