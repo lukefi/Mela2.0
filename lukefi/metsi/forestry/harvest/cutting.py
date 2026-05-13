@@ -23,7 +23,7 @@ def cutting_fn(stand: ForestStand, /, **operation_parameters) -> OpTuple[ForestS
     """
 
     trees: ReferenceTrees = stand.reference_trees
-    
+
     if stand.reference_trees.size == 0:
         return stand, []
 
