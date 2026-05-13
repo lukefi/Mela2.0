@@ -1,13 +1,13 @@
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
-from lukefi.metsi.domain.natural_processes.grow_motti import (
-    sync_ut_to_reference_trees,
+from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod

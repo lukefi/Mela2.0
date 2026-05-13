@@ -6,11 +6,16 @@ from lukefi.metsi.sim.treatment import Treatment
 
 
 def update_to_year_fn(stand: ForestStand,
-                     /,
-                     **params
-                     ) -> OpTuple[ForestStand]:
-    transition: TransitionFn[ForestStand] = params["transition"]
-    target_year: int = params["target_year"]
+                      /,
+                      transition: TransitionFn | None = None,
+                      target_year: int | None = None
+                      ) -> OpTuple[ForestStand]:
+
+    if transition is None:
+        raise MetsiException("Required parameter `transition` missing")
+    if target_year is None:
+        raise MetsiException("Required parameter `target_year` missing")
+
     current_year = stand.year
     step = target_year - current_year
 

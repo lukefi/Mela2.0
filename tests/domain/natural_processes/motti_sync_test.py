@@ -13,11 +13,10 @@ from lukefi.metsi.data.enums.internal import (
     SoilPeatlandCategory,
     TreeSpecies,
 )
-from lukefi.metsi.domain.natural_processes.grow_motti import (
+from lukefi.metsi.domain.natural_processes.motti_util import (
     apply_motti_yp_reduction_from_removed_reference_trees,
-    sync_ut_to_reference_trees,
-    sync_yp_to_reference_trees,
 )
+from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees, sync_yp_to_reference_trees
 
 
 def _blank_species() -> SimpleNamespace:
