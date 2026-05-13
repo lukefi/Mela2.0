@@ -406,7 +406,7 @@ class PlantingPines(Event[ForestStand]):
             "stems_per_ha": 1500.0,
             "height": 0.7,
             "biological_age": 3.0,
-            "type": "artificial",
+            "regen_type": "artificial",
         }
 
         merged = default_params | (parameters or {})
