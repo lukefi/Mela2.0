@@ -70,8 +70,7 @@ def regeneration_fn(input_: ForestStand,
                     survival_percent: float = 100.0,
                     soil_preparation_type: int = 0,
                     clearing: int = 0,
-                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
-                    ) -> OpTuple[ForestStand]:
+                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.

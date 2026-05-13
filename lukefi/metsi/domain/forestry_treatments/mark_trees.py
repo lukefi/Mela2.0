@@ -13,8 +13,7 @@ def mark_trees_fn(input_: ForestStand,
                   tree_selection: dict[str, Any] | None = None,
                   select_from_all: bool = True,
                   mode: str = "odds_units",
-                  attributes: dict[str, Any] | None = None,
-              ) -> OpTuple[ForestStand]:
+                  attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
     """
     mark_trees treatment (Python equivalent of the R function `ftrt_mark_trees`):
 

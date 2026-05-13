@@ -13,8 +13,7 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
                                    /,
                                    ftype: int | None = None,
                                    amount_n: float | None = None,
-                                   phosphorus: int = 0
-                               ) -> OpTuple[ForestStand]:
+                                   phosphorus: int = 0) -> OpTuple[ForestStand]:
     """
     Motti-only mineral-soils fertilization treatment.
 
