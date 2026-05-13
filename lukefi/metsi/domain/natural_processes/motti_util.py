@@ -38,7 +38,7 @@ FDM_TO_MOTTI_STOREY = {
 }
 
 
-def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
+def _auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     """
     Normalize to EUREF-FIN/TM35FIN kilometers.
     Input is expected to be in meters
@@ -58,7 +58,7 @@ def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
     return y1 / 1000.0, x1 / 1000.0
 
 
-def safe_origin(raw: float | int) -> int:
+def _safe_origin(raw: float | int) -> int:
     v = int(raw)
     return v if v >= 0 else int(Origin.UNSET)
 
@@ -93,7 +93,7 @@ def next_osite_id(stand: ForestStand) -> int:
     return (max(used) + 1) if used else 1
 
 
-def reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int]:
+def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int]:
     target = str(int(osid))
     retval: list[int] = []
     for i, value in enumerate(rt.stratum.tolist()):
@@ -102,9 +102,9 @@ def reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int
     return retval
 
 
-def find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
+def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
     target_tree_number = int(tree_number)
-    for i in reference_tree_indices_by_stratum(rt, osid):
+    for i in _reference_tree_indices_by_stratum(rt, osid):
         if bool(rt.sapling[i]):
             continue
         try:
@@ -115,7 +115,7 @@ def find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_nu
     return None
 
 
-def storey_from_layer(stand: ForestStand, layer: int) -> int:
+def _storey_from_layer(stand: ForestStand, layer: int) -> int:
     strata = getattr(stand, "tree_strata", None)
     if strata is None or layer >= strata.size:
         return int(Storey.UNSET)
@@ -127,10 +127,10 @@ def storey_from_layer(stand: ForestStand, layer: int) -> int:
         return int(Storey.UNSET)
 
 
-def find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
+def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
     target_osid = int(osid)
 
-    for i in reference_tree_indices_by_stratum(rt, osid):
+    for i in _reference_tree_indices_by_stratum(rt, osid):
         if not bool(rt.sapling[i]):
             continue
         try:
@@ -142,7 +142,7 @@ def find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | No
     return None
 
 
-def storey_to_motti(
+def _storey_to_motti(
     stand: ForestStand,
     index: int,
     fdm_storey: Storey,
@@ -230,7 +230,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             idx = None
             storey = int(Storey.UNSET)
         else:
-            idx = find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
+            idx = _find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
 
             if idx is None:
                 identifier, tree_number = new_reference_tree_identity(stand)
@@ -289,7 +289,7 @@ def _build_reference_tree_update(*,
         "stratum": str(osid),
         "species": int(species),
         "stems_per_ha": stems_per_ha,
-        "origin": safe_origin(origin_raw),
+        "origin": _safe_origin(origin_raw),
         "height": height,
         "breast_height_diameter": diameter,
         "biological_age": age,
@@ -335,10 +335,10 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     next_osid += 1
                     setattr(s, f"osid_{cat_code}", float(osid))
 
-                idx = find_sapling_reference_tree_index(rt, osid)
+                idx = _find_sapling_reference_tree_index(rt, osid)
                 if idx is None:
                     identifier, tree_number = new_reference_tree_identity(stand)
-                    storey = storey_from_layer(stand, layer)
+                    storey = _storey_from_layer(stand, layer)
                 else:
                     identifier = str(rt.identifier[idx])
                     tree_number = int(rt.tree_number[idx])
@@ -347,7 +347,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     if existing_storey >= 0:
                         storey = existing_storey
                     else:
-                        storey = storey_from_layer(stand, layer)
+                        storey = _storey_from_layer(stand, layer)
 
                 row = _build_reference_tree_update(identifier=identifier,
                                                    tree_number=tree_number,
@@ -464,7 +464,7 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
         origin = float(strata.origin[i])
 
-        storey = storey_to_motti(
+        storey = _storey_to_motti(
             stand,
             i,
             Storey(int(strata.storey[i])),
@@ -661,7 +661,7 @@ def ensure_state(stand: ForestStand,
 
     spedom = _spedom(stand.reference_trees)
 
-    y_km, x_km = auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
+    y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
                                stand.geo_location[1] if stand.geo_location is not None else None)
 
     if stand.geo_location is not None:
@@ -726,7 +726,7 @@ def ensure_state(stand: ForestStand,
         int(v) if v > 0 else (stand.stand_id or (idx + 1))
         for idx, v in enumerate(rt.stratum)
     ]
-    storey_vec = [storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
+    storey_vec = [_storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
     trees_py = [
         {
             "id": int(i),
@@ -794,50 +794,6 @@ def ensure_state(stand: ForestStand,
     reconcile_reference_trees_from_motti(stand, init_mode=True)
 
     return stand.motti_state
-
-
-def _mark_motti_yp_as_seed_trees(stand: ForestStand, *, tree_class: int = 3) -> bool:
-    """Mark all currently live YP trees as seed trees for Motti.
-
-    Motti's YP vector field at documented index 38 is exposed in the
-    CFFI wrapper as ``storie``. For seed-tree cutting the remaining trees
-    must have puuluokka/tree class 3 before Motti4AfterSeedtreeCutting is
-    called.
-    """
-
-    ms = stand.motti_state
-    if ms is None or ms.yp is None:
-        return False
-
-    changed = False
-    for i in range(int(ms.ntrees)):
-        t = ms.yp[0][i]
-        if float(t.f) <= 0.0:
-            continue
-        if float(t.storie) != float(tree_class):
-            t.storie = float(tree_class)
-            changed = True
-
-    return changed
-
-
-def after_seedtree_cutting_in_motti(stand: ForestStand, *, tree_class: int = 3) -> None:
-    """Run Motti seed-tree cutting post-processing and sync Python vectors."""
-
-    ms = stand.motti_state
-    if ms is None or ms.yp is None or ms.buffers is None:
-        return
-
-    _mark_motti_yp_as_seed_trees(stand, tree_class=tree_class)
-
-    ms.ntrees = Motti4DLL.after_seedtree_cutting_with_state(
-        ms.yy,
-        ms.yp,
-        int(ms.ntrees),
-        ms.buffers,
-    )
-
-    reconcile_reference_trees_from_motti(stand)
 
 
 def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
