@@ -220,15 +220,12 @@ class Mounding(Event[ForestStand]):
         postconditions: Optional[list[ForestCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        defaults = {
-            "intensity": 1200.0,
-        }
         # Default preconditions: at least 20 years since this treatment last ran
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, soil_surface_preparation)
         ]
 
-        merged_params = defaults | (parameters or {})
+        merged_params = parameters or {}
         merged_preconds = default_preconds + (preconditions or [])
 
         super().__init__(
