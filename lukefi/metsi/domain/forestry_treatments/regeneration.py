@@ -1,4 +1,3 @@
-from typing import cast
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
 from lukefi.metsi.data.model import ForestStand

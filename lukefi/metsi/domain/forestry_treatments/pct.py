@@ -1,5 +1,3 @@
-from typing import Any
-
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
