@@ -11,7 +11,7 @@ def natural_process_transition(natural_process_func: TransitionFn[ForestStand]):
 
     Args:
         natural_process_func (TransitionFn[ForestStand]): A natural process transition function, e.g.
-            `grow_motti_dll_fn`.
+            `grow_motti_fn`.
     """
     def wrapper(computational_unit: ForestStand, step: int,  **params) -> tuple[ForestStand, list[CollectedData]]:
         np_info = NaturalProcessInfo()
