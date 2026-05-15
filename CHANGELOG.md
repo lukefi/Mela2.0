@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.3] - 2026-05-15
+
+### Fixed
+
+- `koealan_kasittelyluokka` is now properly read from VMI10 source data
+
 ## [0.8.2] - 2026-05-12
 
 ### Fixed
