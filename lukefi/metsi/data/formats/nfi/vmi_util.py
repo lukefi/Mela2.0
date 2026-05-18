@@ -11,6 +11,11 @@ from lukefi.metsi.app.utils import MetsiException
 
 
 def generate_source_data(indices: dict[str, slice], row: str) -> dict[str, str]:
+    """
+        Create a dictionary of source data values from raw data row and index description.
+        If the data row does not contain an index (i.e. the row is cut short)
+        an empty string is returned natively when indexing by the slice.
+    """
     return {key: row[index] for key, index in indices.items()}
 
 

@@ -167,7 +167,7 @@ class VMI10Builder(VMIBuilder):
                 row["muut_arvot"],
                 row["suojametsakoodi"],
                 row["ahvenanmaan_markkinahakkuualue"],
-                ""
+                row["koealan_kasittelyluokka"]
             )
         else:
             result.forest_management_category = 1
