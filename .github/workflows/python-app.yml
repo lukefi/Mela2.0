@@ -24,8 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.13.5"]
-        r-version: ["4.5.0"]
+        python-version: ["3.13.13"]
+        r-version: ["4.6.0"]
 
     runs-on: ubuntu-latest
 
