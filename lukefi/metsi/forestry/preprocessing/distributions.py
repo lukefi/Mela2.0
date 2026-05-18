@@ -66,7 +66,7 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 
         f = 1 - math.exp(-math.pow(((xx - a) / b), c))
 
-        if xx >= ax:
+        if i == n_samples - 1:
             f = 1.0
 
         p = f - f1  # precentual ratio of stems in sample i
