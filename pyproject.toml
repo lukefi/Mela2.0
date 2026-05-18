@@ -7,7 +7,7 @@ name = "lukefi.mela2"
 description = "Mela2.0 forestry simulator."
 version = "0.8.5"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "~=3.13"
 authors = [
     { name = "Daniel Melander", email = "daniel.melander@luke.fi" },
     { name = "Reetta Lempinen", email = "reetta.lempinen@luke.fi" },
