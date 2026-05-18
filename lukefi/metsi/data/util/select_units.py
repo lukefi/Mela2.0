@@ -248,7 +248,7 @@ def select_units[T, V: VectorData](context: T,
 
             a: npt.NDArray[np.float64] = prof_y[1:] - b * prof_x[1:]
             bounds_x: npt.NDArray[np.float64] = np.insert([-np.inf, np.inf], [1], prof_x[1:-1])
-            interval_func = np.vectorize(lambda x: np.arange(b.size)[(x >= bounds_x[:-1]) & (x < bounds_x[1:])])
+            interval_func = np.vectorize(lambda x: np.arange(b.size)[(x >= bounds_x[:-1]) & (x < bounds_x[1:])][0])
             interval_id: npt.NDArray[np.integer] = interval_func(data[cur_set_order_var][cur_set_idx][cur_set_idx_ord])
 
             # shares at starting per row
