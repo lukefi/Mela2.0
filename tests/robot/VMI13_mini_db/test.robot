@@ -2,6 +2,7 @@
 Library           ../DatabaseCompareLibrary.py
 Resource          ../simulation.resource
 Suite Setup       Run Simulation    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}
+Test Tags         vmi13
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/VMI13_source_mini.dat

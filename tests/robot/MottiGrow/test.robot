@@ -6,6 +6,7 @@ Library           String
 Library           ${CURDIR}/../DatabaseCompareLibrary.py
 Resource          ${CURDIR}/../simulation.resource
 Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
+Test Tags         motti    smk
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/data.xml
@@ -18,17 +19,17 @@ ${TOLERANCE}        1e-4
 
 *** Test Cases ***
 Node Table Should Match Reference
-    [Tags]    simulation    motti
+    [Tags]    simulation
     Node Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}
 
 Stand Table Should Match Reference
-    [Tags]    simulation    motti
+    [Tags]    simulation
     Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Stratum Table Should Match Reference
-    [Tags]    simulation    motti
+    [Tags]    simulation
     Stratum Tables Should Be Equal   ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Tree Table Should Match Reference
-    [Tags]    simulation    motti
+    [Tags]    simulation
     Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
