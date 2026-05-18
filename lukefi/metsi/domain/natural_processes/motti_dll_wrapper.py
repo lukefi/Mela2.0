@@ -230,7 +230,7 @@ class Motti4DLL:
 
         void Motti4AfterSeedtreeCutting(Motti4Site *yy, Motti4Trees *yp, Motti4Saplings *ut,
                                         Motti4KorArray *kor, Motti4VcrArray *vcr, Motti4KorArray *apv,
-                                        int *numtrees, int *rv);
+                                        int *numtrees, int *ierror, int *rv);
 
         void Motti4SeedingAgeShift(Motti4Site *yy, Motti4Saplings *ut, int *istep, int *rv);
 
@@ -898,6 +898,7 @@ class Motti4DLL:
         ffi, lib = self.ffi, self.lib
 
         ntrees_p = ffi.new("int *", int(numtrees))
+        ierror = ffi.new("int *")
         rv = ffi.new("int *")
 
         with _maybe_chdir(self.data_dir):
@@ -909,6 +910,7 @@ class Motti4DLL:
                 buffers.vcr_state,
                 buffers.apv_state,
                 ntrees_p,
+                ierror,
                 rv,
             )
 
