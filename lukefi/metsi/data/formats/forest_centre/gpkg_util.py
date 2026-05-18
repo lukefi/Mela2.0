@@ -2,7 +2,6 @@ from typing import Any, TypedDict
 import sqlite3
 import pandas as pd
 import geopandas
-from shapely.geometry.polygon import Polygon
 import numpy as np
 
 
