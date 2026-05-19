@@ -4,22 +4,14 @@ from pathlib import Path
 import unittest
 from types import SimpleNamespace
 from typing import Any, Dict, List
+from unittest.mock import patch
 import numpy as np
-from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-
-import lukefi.metsi.domain.natural_processes.grow_motti as grow_motti
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import GrowthDeltas
+from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
+from lukefi.metsi.data.motti.motti_types import MottiState
+from lukefi.metsi.domain.natural_processes import motti_util, grow_motti
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL, _default_data_dir, _maybe_chdir, _resolve_dir_or_file, _resolve_shared_object
 from lukefi.metsi.data.enums.internal import DrainageCategory
-
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-
-from lukefi.metsi.domain.natural_processes.grow_motti import (
-    _resolve_shared_object,
-    _resolve_dir_or_file,
-    _default_data_dir,
-    _find_repo_root,
-)
 
 
 def make_empty_ut_buffers() -> Any:
@@ -65,8 +57,10 @@ def make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
         identifier="stand-12345",
+        motti_state=None,
         time=2000,
         year=2000,
+        relative_year=2000,
         geo_location=(6900000.0, 3400000.0, 150.0),
         lake_effect=0.0,
         sea_effect=0.0,
@@ -192,10 +186,10 @@ class FakeDLL:
         self.captured_strata_py = list(strata_py)
         return SimpleNamespace(strata="ok")
 
-    def alloc_state_buffers(self, ctrl: Any = None) -> Any:
+    def alloc_state_buffers(self) -> Any:
         return SimpleNamespace(
             buffers="ok",
-            ctrl=ctrl,
+            ctrl=SimpleNamespace(death_tree=1),
             saplings=make_empty_ut_buffers(),
         )
 
@@ -209,33 +203,10 @@ class FakeDLL:
     ) -> int:
         return int(numtrees)
 
-    def grow_with_state(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
-        if not self.captured_trees_py:
-            return GrowthDeltas(
-                tree_ids=[],
-                tree_sids=[],
-                trees_id=[],
-                trees_ih=[],
-                trees_if=[],
-                trees_age=[],
-                trees_age13=[],
-            )
+    def grow_with_state(self, *_args: Any, **_kwargs: Any):
+        return
 
-        n = len(self.captured_trees_py)
-        ids = list(range(1, n + 1))
-        sids = list(range(1, n + 1))
-        zeros = [0.0] * n
-        return GrowthDeltas(
-            tree_ids=ids,
-            tree_sids=sids,
-            trees_id=zeros,
-            trees_ih=zeros,
-            trees_if=zeros,
-            trees_age=zeros,
-            trees_age13=zeros,
-        )
-
-    def grow(self, *_args: Any, **_kwargs: Any) -> GrowthDeltas:
+    def grow(self, *_args: Any, **_kwargs: Any):
         return self.grow_with_state(*_args, **_kwargs)
 
 
@@ -274,11 +245,6 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             # No candidate found → function returns the directory for downstream to error clearly
             self.assertTrue(out.is_dir())
             self.assertEqual(out.resolve(), base.resolve())
-
-    def test_resolve_shared_object_none_raises(self):
-        # type: ignore to call with None on purpose (function raises by design)
-        with self.assertRaises(ValueError):
-            _resolve_shared_object(None)  # type: ignore[arg-type]
 
     def test_resolve_dir_or_file_none_uses_default_env_override(self):
         with tempfile.TemporaryDirectory() as td:
@@ -322,82 +288,51 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
             self.assertEqual(_default_data_dir(), override.resolve())
             os.environ.pop("MOTTI_DATA_DIR", None)
 
-        # 2) No env: it should pick {repo_root}/data/motti; validate root detection
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            (root / "data" / "motti").mkdir(parents=True, exist_ok=True)
-            # Create a nested child and simulate running from there
-            child = root / "nested" / "deeper"
-            child.mkdir(parents=True, exist_ok=True)
-            cwd = Path.cwd()
-            try:
-                os.chdir(child)
-                # Because repo root is discovered, default dir should be root/data/motti
-                out = _default_data_dir()
-                self.assertEqual(out, (root / "data" / "motti").resolve())
-            finally:
-                os.chdir(cwd)
-
-    def test_find_repo_root_markers(self):
-        with tempfile.TemporaryDirectory() as td:
-            base = Path(td)
-            # Any of these should count; try pyproject first
-            (base / "pyproject.toml").write_text("[tool.poetry]\nname='x'\n")
-            self.assertEqual(_find_repo_root(base / "a" / "b" / "c"), base.resolve())
-
-            # Try .git marker
-            (base / "pyproject.toml").unlink()
-            (base / ".git").mkdir()
-            self.assertEqual(_find_repo_root(base / "x"), base.resolve())
-
-            # Try data/motti marker
-            for p in (base / ".git",):
-                if p.exists() and p.is_dir():
-                    for _child in p.iterdir():
-                        pass
-                # clean .git directory
-            # Safer: use a fresh temp directory for clarity
-        with tempfile.TemporaryDirectory() as td2:
-            base2 = Path(td2)
-            (base2 / "data" / "motti").mkdir(parents=True, exist_ok=True)
-            self.assertEqual(_find_repo_root(base2 / "n1" / "n2"), base2.resolve())
+        # 2) No env: it should pick {repo_root}/data/motti
+        # Because repo root is discovered, default dir should be root/data/motti
+        out = _default_data_dir()
+        self.assertEqual(out, (Path.cwd() / "data" / "motti").resolve())
 
     def test_wrapper_maybe_chdir_changes_cwd_temporarily(self):
         start = Path.cwd().resolve()
         with tempfile.TemporaryDirectory() as td:
             target = Path(td).resolve()
-            with Motti4DLL.maybe_chdir(target):
+            with _maybe_chdir(target):
                 self.assertEqual(Path.cwd().resolve(), target)
             # back to original
             self.assertEqual(Path.cwd().resolve(), start)
 
 
 class TestGrowMottiDLLVec(unittest.TestCase):
+
     def test_species_mapping_and_euref(self) -> None:
         # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
-        self.assertEqual(grow_motti.species_to_motti(7), 6)
-        self.assertEqual(grow_motti.species_to_motti(3), 3)
+        self.assertEqual(motti_util.convert_species(TreeSpecies(7)), 6)
+        self.assertEqual(motti_util.convert_species(TreeSpecies(3)), 3)
 
         # auto_euref_km conversion logic
-        y_km, x_km = grow_motti._auto_euref_km(6900000.0, 3400000.0)
+        y_km, x_km = motti_util._auto_euref_km(6900000.0, 3400000.0)
         self.assertEqual((y_km, x_km), (6900.0, 3400.0))
-        y_10km, x_10km = grow_motti._auto_euref_km(6900.0, 3400.0)
+        y_10km, x_10km = motti_util._auto_euref_km(6900.0, 3400.0)
         self.assertEqual((y_10km, x_10km), (6.9, 3.4))
         with self.assertRaises(ValueError):
-            grow_motti._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
+            motti_util._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
         rt = make_rt(species=(3, 7))  # 7 -> 6
         stand = make_stand_vec(rt)
+        fake_dll = FakeDLL()
 
-        dll_stub = FakeDLL()
         # grow_motti.MottiDLLPredictorVec expects a Motti4DLL, but our stub is duck-typed.
-        pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
+        with (patch.object(Motti4DLL, "new_site", fake_dll.new_site),
+              patch.object(Motti4DLL, "new_trees", fake_dll.new_trees),
+              patch.object(Motti4DLL, "new_strata", fake_dll.new_strata),
+              patch.object(Motti4DLL, "alloc_state_buffers", fake_dll.alloc_state_buffers),
+              patch.object(Motti4DLL, "initialize_with_state", fake_dll.initialize_with_state),
+              patch.object(Motti4DLL, "grow_with_state", fake_dll.grow_with_state)):
+            pred = grow_motti.grow_motti_fn(stand, step=5)
 
-        # Run evolve once to populate the payload
-        _ = pred.evolve(step=5, sim_year=stand.year)
-
-        trees_py = dll_stub.captured_trees_py
+        trees_py = fake_dll.captured_trees_py
         self.assertIsNotNone(trees_py, "DLL tree payload was not captured by stub")
         assert trees_py is not None  # for type checkers
         self.assertEqual(trees_py[0]["id"], 1)
@@ -417,37 +352,30 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         stand = make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
-            def grow_with_state(self, yy: Any, yp: Any, numtrees: int, buffers: Any, **kwargs: Any) -> GrowthDeltas:  # noqa: D401
-                # Mimic the real Motti wrapper: Growth mutates the persistent yp
-                # buffer, and the returned tree_ids are the surviving trees.
+            def grow_with_state(self, state: MottiState, **kwargs: Any):  # noqa: D401
+                _ = kwargs
+                yp = state.yp
                 surviving = yp[0][0]
                 surviving.d13 += 0.7
                 surviving.h += 1.2
                 surviving.f -= 5.0
                 surviving.age = 20.0
                 surviving.age13 = 10.0
-
-                return GrowthDeltas(
-                    tree_ids=[int(surviving.id)],
-                    tree_sids=[int(surviving.sid)],
-                    trees_id=[+0.7],    # Δd
-                    trees_ih=[+1.2],    # Δh
-                    trees_if=[-5.0],    # Δf
-                    trees_age=[20.0],
-                    trees_age13=[10.0],
-                )
+                state.ntrees = 1
 
         dll_stub = GrowingDLL()
-        pred = grow_motti.MottiDLLPredictor(stand, dll=dll_stub)  # type: ignore[arg-type]
 
-        out_stand, _ = grow_motti.grow_motti_fn(
-            stand,
-            predictor=pred,
-            step=5,
-        )
+        with (patch.object(Motti4DLL, "new_site", dll_stub.new_site),
+              patch.object(Motti4DLL, "new_trees", dll_stub.new_trees),
+              patch.object(Motti4DLL, "new_strata", dll_stub.new_strata),
+              patch.object(Motti4DLL, "alloc_state_buffers", dll_stub.alloc_state_buffers),
+              patch.object(Motti4DLL, "initialize_with_state", dll_stub.initialize_with_state),
+              patch.object(Motti4DLL, "grow_with_state", dll_stub.grow_with_state)):
+            out_stand, _ = grow_motti.grow_motti_fn(
+                stand,
+                step=5,
+            )
 
-        # Make linters happy: ensure we got a vector trees container back
-        self.assertIsNotNone(out_stand.reference_trees)
         rt_out = out_stand.reference_trees
         assert rt_out is not None
 

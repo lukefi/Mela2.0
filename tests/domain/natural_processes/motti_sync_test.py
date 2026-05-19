@@ -161,12 +161,10 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
             ),
         ]]
         stand.motti_state = MottiState(
-            dll=dll,
             yy=SimpleNamespace(year=2025.0, step=0.0),
             yp=yp,
             ntrees=2,
             buffers=SimpleNamespace(saplings=_empty_ut_buffers()),
-            signature=(1, 2),
         )
         return dll
 
