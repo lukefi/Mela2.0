@@ -120,7 +120,7 @@ class Motti4DLL:
     # ---------- FFI ----------
     @classmethod
     def _cdef_source(cls) -> str:
-        with open(cls.data_dir.joinpath("motti.h"), "r", encoding="utf-8") as header:
+        with open(Path(__file__).parent / "motti.h", "r", encoding="utf-8") as header:
             return header.read()
 
     # ---------- site + trees ----------
