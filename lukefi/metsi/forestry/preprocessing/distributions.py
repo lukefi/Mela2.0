@@ -13,7 +13,8 @@ from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 
 # ---- Weibull distribution model ----
 
-def weibull_coeffs(diameter: float, basal_area: float, min_diameter: Optional[float] = None) -> tuple:
+def weibull_coeffs(diameter: float, basal_area: float,
+                   min_diameter: Optional[float] = None) -> tuple[float, float, float]:
     """ Weight parameter calcualtions for Weibull distribution formula.
 
     Notice that min_diameter can be used to override the formulation of weight (a).
@@ -65,7 +66,7 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 
         f = 1 - math.exp(-math.pow(((xx - a) / b), c))
 
-        if xx >= ax:
+        if i == n_samples - 1:
             f = 1.0
 
         p = f - f1  # precentual ratio of stems in sample i

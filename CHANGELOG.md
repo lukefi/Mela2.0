@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.4] - 2026-05-19
+
+### Fixed
+
+- Modified last interval check in `distributions.weibull` so that it is no longer sensitive to floating point
+imprecision
+
 ## [0.8.3] - 2026-05-15
 
 ### Fixed
