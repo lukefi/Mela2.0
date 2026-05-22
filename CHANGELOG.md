@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.5] - 2026-05-22
+
+### Fixed
+
+- Event tags are now inserted to operation history in addition to default treatment tags
+
 ## [0.8.4] - 2026-05-19
 
 ### Fixed
@@ -217,7 +223,7 @@ in CSV output
         - `StratumRank`
 
 ### Changed
-    
+
 - Renamed FDM attributes:
     - `tuhon_ilmiasu` -> `damage_type`
     - `latvuskerros` -> `crown_class`
@@ -357,7 +363,7 @@ in CSV output
 
 ### Added
 
-- VMI9, VMI10 and VMI11 input support 
+- VMI9, VMI10 and VMI11 input support
 
 ## [0.5.0] - 2026-03-02
 
@@ -526,7 +532,7 @@ in CSV output
 
 ### Changed
 
-- Treatments utilizing select_units now receive their target and set parameters as SelectionTarget and SelectionSet 
+- Treatments utilizing select_units now receive their target and set parameters as SelectionTarget and SelectionSet
 objects
 
 ## [0.2.7] - 2025-11-19
@@ -578,7 +584,7 @@ objects
 
 ### Added
 
-- Aggregate variable calculation after treatments are performed 
+- Aggregate variable calculation after treatments are performed
 
 ## [0.1.4] - 2025-11-05
 
