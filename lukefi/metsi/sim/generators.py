@@ -220,7 +220,7 @@ class Event(EventGeneratorBase[T]):
                 payload.computational_unit.time,
                 self.treatment.name,
                 combined_params,
-                self.treatment.default_tags
+                self.treatment.default_tags | self.tags
             )
         )
 
