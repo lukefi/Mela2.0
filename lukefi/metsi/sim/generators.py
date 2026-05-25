@@ -212,7 +212,7 @@ class Event(EventGeneratorBase[T]):
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
 
-        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit, **combined_params)
+        new_state, new_collected_data = self.treatment(payload.computational_unit, **combined_params)
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
