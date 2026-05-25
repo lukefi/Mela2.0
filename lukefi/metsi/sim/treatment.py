@@ -67,5 +67,8 @@ class Treatment(Generic[T_contra]):
         else:
             self.name = name
 
+    def __call__(self, unit: T_contra, **params) -> Any:
+        return self.treatment_fn(unit, **params)
+
 
 do_nothing = Treatment[ComputationalUnit](do_nothing_, "do_nothing", {"nothing"})
