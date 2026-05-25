@@ -2,7 +2,6 @@ from typing import Any, TypedDict
 import sqlite3
 import pandas as pd
 import geopandas
-from shapely.geometry.polygon import Polygon
 import numpy as np
 
 
@@ -32,11 +31,11 @@ class Centroid(TypedDict):
     crs: str
 
 
-def _extract_centroid(geometry: Polygon) -> Centroid:
+def _extract_centroid(geometry:geopandas.geoseries.GeoSeries) -> Centroid:
     """ Extracts centroid information from polygon coordinates """
     cid = geometry.centroid
-    latitude = round(float(cid.y), 2)
-    longitude = round(float(cid.x), 2)
+    latitude = round(float(cid.y.iloc[0]), 2)
+    longitude = round(float(cid.x.iloc[0]), 2)
     return {"centroid": (longitude, latitude), "crs": getattr(cid, "crs").srs.upper()}
 
 

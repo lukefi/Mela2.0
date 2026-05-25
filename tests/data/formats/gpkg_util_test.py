@@ -52,7 +52,7 @@ class TestGeoPackageConversion(test_util.ConverterTestSuite):
         conn = sqlite3.connect(self.GPKG_DB_PATH)
         args = dict(query=query, conn=conn)
         df = gpkg_util._read_from_gpkg(**args)
-        self.assertEqual(int(df.standid), 41784529)
+        self.assertEqual(int(df.standid.iloc[0]), 41784529)
 
     def test_extract_nan(self):
         df = pd.DataFrame(dict(a=[pd.NA, np.nan], b=[1, 2]))
