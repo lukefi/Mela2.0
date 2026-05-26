@@ -499,13 +499,19 @@ class ForestStand(Finalizable, ComputationalUnit):
         if len(self.reference_trees) == 0:
             return None
         trees = self.reference_trees
-        non_saved_trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
-        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[non_saved_trees_indices]))
-        sorted_cum_stems = np.cumsum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices])
+
+        # Use only non-retention trees by default
+        trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
+        if len(trees_indices) == 0:
+            # Fallback to using all trees if all are retention trees
+            trees_indices = np.arange(len(trees))
+
+        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[trees_indices]))
+        sorted_cum_stems = np.cumsum(trees.stems_per_ha[trees_indices][sorted_trees_indices])
         i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
         if len(i_100_largest_arr) == 0:
-            stems_smallest: float = trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][-1]
-            i_100_largest: int = len(non_saved_trees_indices) - 1
+            stems_smallest: float = trees.stems_per_ha[trees_indices][sorted_trees_indices][-1]
+            i_100_largest: int = len(trees_indices) - 1
         elif i_100_largest_arr[0] == 0:
             stems_smallest = 100.0
             i_100_largest = 0
@@ -513,9 +519,9 @@ class ForestStand(Finalizable, ComputationalUnit):
             i_100_largest = i_100_largest_arr[0]
             stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
 
-        numerator_1 = np.sum(trees.stems_per_ha[non_saved_trees_indices][sorted_trees_indices][:i_100_largest] *
-                             trees.height[non_saved_trees_indices][sorted_trees_indices][:i_100_largest])
-        numerator_2: float = stems_smallest * trees.height[non_saved_trees_indices][sorted_trees_indices][i_100_largest]
+        numerator_1 = np.sum(trees.stems_per_ha[trees_indices][sorted_trees_indices][:i_100_largest] *
+                             trees.height[trees_indices][sorted_trees_indices][:i_100_largest])
+        numerator_2: float = stems_smallest * trees.height[trees_indices][sorted_trees_indices][i_100_largest]
         denominator = min(100, sorted_cum_stems[i_100_largest])
 
         return (numerator_1 + numerator_2) / denominator
