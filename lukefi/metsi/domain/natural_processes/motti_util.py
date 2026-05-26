@@ -85,7 +85,7 @@ def next_osite_id(stand: ForestStand) -> int:
                         used.append(x)
 
     if ms is not None and ms.yp is not None:
-        for i in range(int(ms.ntrees or 0)):
+        for i in range(ms.ntrees or 0):
             x = int(ms.yp[0][i].sid)
             if x > 0:
                 used.append(x)
@@ -94,7 +94,7 @@ def next_osite_id(stand: ForestStand) -> int:
 
 
 def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int]:
-    target = str(int(osid))
+    target = str(osid)
     retval: list[int] = []
     for i, value in enumerate(rt.stratum.tolist()):
         if str(value) == target:
@@ -103,7 +103,7 @@ def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[in
 
 
 def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
-    target_tree_number = int(tree_number)
+    target_tree_number = tree_number
     for i in _reference_tree_indices_by_stratum(rt, osid):
         if bool(rt.sapling[i]):
             continue
@@ -128,7 +128,7 @@ def _storey_from_layer(stand: ForestStand, layer: int) -> int:
 
 
 def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
-    target_osid = int(osid)
+    target_osid = osid
 
     for i in _reference_tree_indices_by_stratum(rt, osid):
         if not bool(rt.sapling[i]):
@@ -215,7 +215,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     yp = ms.yp
     rt = stand.reference_trees
 
-    for i in range(int(ms.ntrees)):
+    for i in range(ms.ntrees):
         t = yp[0][i]
 
         sid = int(t.sid)
@@ -244,21 +244,21 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
 
         row = {
             "identifier": identifier,
-            "tree_number": int(yp_tree_id),
-            "stratum": str(int(sid)),
+            "tree_number": yp_tree_id,
+            "stratum": str(sid),
             "species": int(t.spe),
-            "stems_per_ha": float(t.f),
+            "stems_per_ha": t.f,
             "origin": int(t.snt) - 1,
-            "height": float(t.h),
-            "breast_height_diameter": float(t.d13),
-            "biological_age": float(t.age),
-            "breast_height_age": float(t.age13),
+            "height": t.h,
+            "breast_height_diameter": t.d13,
+            "biological_age": t.age,
+            "breast_height_age": t.age13,
             "sapling": False,
             "tree_category": "",
             "management_category": 1,
-            "storey": int(storey),
-            "basal_area": (float(t.ba) / 10000.0) if getattr(t, "ba", None) is not None else 0.0,
-            "volume": float(t.vol) if getattr(t, "vol", None) is not None else 0.0,
+            "storey": storey,
+            "basal_area": (t.ba / 10000.0) if getattr(t, "ba", None) is not None else 0.0,
+            "volume": t.vol if getattr(t, "vol", None) is not None else 0.0,
         }
 
         if idx is None:
@@ -579,7 +579,7 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
         return
 
     yp_strata: set[int] = set()
-    for i in range(int(ms.ntrees)):
+    for i in range(ms.ntrees):
         t = ms.yp[0][i]
         sid = int(t.sid)
         if sid > 0:
@@ -614,7 +614,7 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
 
     live_yp: set[tuple[int, int]] = set()
     if ms is not None and ms.yp is not None:
-        for i in range(int(ms.ntrees)):
+        for i in range(ms.ntrees):
             t = ms.yp[0][i]
             sid = int(t.sid)
             tree_id = int(t.id)
@@ -662,7 +662,7 @@ def ensure_state(stand: ForestStand,
     spedom = _spedom(stand.reference_trees)
 
     y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
-                               stand.geo_location[1] if stand.geo_location is not None else None)
+                                stand.geo_location[1] if stand.geo_location is not None else None)
 
     if stand.geo_location is not None:
         z = stand.geo_location[2]
@@ -776,20 +776,7 @@ def ensure_state(stand: ForestStand,
 
     _strip_tree_strata(stand)
 
-    if MottiState is not None:
-        stand.motti_state = MottiState(
-            yy=yy,
-            yp=yp,
-            ntrees=ntrees,
-            buffers=buffers,
-        )
-    else:
-        ms = MottiState()
-        ms.yy = yy
-        ms.yp = yp
-        ms.ntrees = ntrees
-        ms.buffers = buffers
-        stand.motti_state = ms
+    stand.motti_state = MottiState(yy=yy, yp=yp, ntrees=ntrees, buffers=buffers, )
 
     reconcile_reference_trees_from_motti(stand, init_mode=True)
 
@@ -831,16 +818,16 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
         if tree_number <= 0:
             continue
 
-        for i in range(int(ms.ntrees)):
+        for i in range(ms.ntrees):
             t = ms.yp[0][i]
             if int(t.sid) != sid:
                 continue
             if int(t.id) != tree_number:
                 continue
 
-            new_f = max(float(t.f) - float(delta), 0.0)
-            if new_f != float(t.f):
-                t.f = float(new_f)
+            new_f = max(t.f - delta, 0.0)
+            if new_f != t.f:
+                t.f = new_f
                 changed = True
             break
 
@@ -872,7 +859,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
         return live
 
     if ms.yp is not None:
-        for i in range(int(ms.ntrees)):
+        for i in range(ms.ntrees):
             t = ms.yp[0][i]
 
             sid = int(t.sid)
