@@ -37,11 +37,11 @@ def update_to_year_fn(stand: ForestStand,
 def _get_next_step_and_treatments(stand: ForestStand,
                                   target_year: int,
                                   ) -> tuple[int, list[PredeterminedTreatment[ForestStand]]]:
-    if stand.predetermined_events is not None:
-        for treatment in stand.predetermined_events:
+    if stand.predetermined_treatments is not None:
+        for treatment in stand.predetermined_treatments:
             if stand.year < treatment.time <= target_year:
                 return (treatment.time - stand.year,
-                        [treatment_ for treatment_ in stand.predetermined_events if treatment_.time == treatment.time])
+                        [treatment_ for treatment_ in stand.predetermined_treatments if treatment_.time == treatment.time])
 
     return target_year - stand.year, []
 

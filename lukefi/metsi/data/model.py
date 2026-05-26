@@ -240,7 +240,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     Declarations for SQLite output database columns.
     """
 
-    predetermined_events: list[PredeterminedTreatment["ForestStand"]] | None = None
+    predetermined_treatments: list[PredeterminedTreatment["ForestStand"]] | None = None
 
     def __eq__(self, other):
         return id(self) == id(other)
