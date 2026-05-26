@@ -1,5 +1,4 @@
 from unittest.mock import ANY
-from unittest.mock import PropertyMock
 from unittest.mock import call
 from lukefi.metsi.domain.natural_processes.updating import update_to_year_fn
 from unittest.mock import Mock
