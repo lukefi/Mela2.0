@@ -1,12 +1,12 @@
 from unittest.mock import ANY
 from unittest.mock import call
-from lukefi.metsi.domain.natural_processes.updating import update_to_year_fn
 from unittest.mock import Mock
+import unittest
+from lukefi.metsi.domain.natural_processes.updating import update_to_year_fn
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.domain.natural_processes.updating import _get_step_and_treatments
 from lukefi.metsi.data.model import ForestStand
-import unittest
 
 
 class TestUpdating(unittest.TestCase):
