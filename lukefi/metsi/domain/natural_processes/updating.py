@@ -11,6 +11,14 @@ def update_to_year_fn(stand: ForestStand,
                       transition: TransitionFn[ForestStand] | None = None,
                       target_year: int | None = None
                       ) -> OpTuple[ForestStand]:
+    """
+        Apply a transition function to update the stand to target year.
+
+        If the stand has predetermined treatments, they will be applied at the appropriate time points.
+        In such a case the transition can take place in several discrete steps (i.e. the time intervals between
+        the treatments).
+    """
+
     assert transition is not None
     assert target_year is not None
 
