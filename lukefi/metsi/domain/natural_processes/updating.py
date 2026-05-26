@@ -28,7 +28,7 @@ def update_to_year_fn(stand: ForestStand,
 
     current = stand
     while current.year < target_year:
-        step, treatments = _get_next_step_and_treatments(current, target_year)
+        step, treatments = _get_step_and_treatments(current, target_year)
 
         if step > 0:
             current, _ = transition(current, step)
@@ -42,9 +42,9 @@ def update_to_year_fn(stand: ForestStand,
     return current, []
 
 
-def _get_next_step_and_treatments(stand: ForestStand,
-                                  target_year: int,
-                                  ) -> tuple[int, list[PredeterminedTreatment[ForestStand]]]:
+def _get_step_and_treatments(stand: ForestStand,
+                             target_year: int,
+                             ) -> tuple[int, list[PredeterminedTreatment[ForestStand]]]:
     if stand.predetermined_treatments is not None:
         for treatment in stand.predetermined_treatments:
             if stand.year < treatment.time <= target_year:
