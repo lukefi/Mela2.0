@@ -468,29 +468,21 @@ class ForestStand(Finalizable, ComputationalUnit):
     @override
     def update_aggregates(self):
         trees = self.reference_trees
-        strata = self.tree_strata
 
         # ReferenceTrees
         trees.basal_area = np.pi * (trees.breast_height_diameter / 200) ** 2
         trees.volume = tree_volumes(trees, self.degree_days or 0.0)
 
         # ForestStand
-        self.stems_per_ha = np.sum(trees.stems_per_ha) + np.sum(strata.stems_per_ha)
-        self.basal_area = np.sum(trees.stems_per_ha *
-                                 trees.basal_area) + np.sum(strata.basal_area)
+        self.stems_per_ha = np.sum(trees.stems_per_ha)
+        self.basal_area = np.sum(trees.stems_per_ha * trees.basal_area)
         self.ds_ba_weighted_mean_diameter = (
             (np.sum(
                 trees.stems_per_ha *
                 trees.basal_area *
-                trees.breast_height_diameter) +
-                np.sum(
-                strata.basal_area *
-                strata.mean_diameter)) /
-            self.basal_area) if (
-                self.basal_area > 0) else None
+                trees.breast_height_diameter)) / self.basal_area) if (self.basal_area > 0) else None
 
-        self.ds_ba_weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height) +
-                                            np.sum(strata.basal_area * strata.mean_height)) /
+        self.ds_ba_weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height)) /
                                            self.basal_area) if (self.basal_area > 0) else None
 
         self.ds_dominant_height = self._calculate_dominant_height()
