@@ -7,6 +7,7 @@ Library           ${CURDIR}/../DatabaseCompareLibrary.py
 Library           ${CURDIR}/../CustomCompareLibrary.py
 Resource          ${CURDIR}/../simulation.resource
 Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
+Test Tags         vmi13
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/VMI13_source_mini.dat
@@ -40,6 +41,7 @@ Removed_tree Table Should Match Reference
     Removed_tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 		
 Preprocessed Data Exported As CSV Should Match Reference
+    [Tags]    preprocessing
     Compare Files With Numeric In Text
     ...    ${OUTPUT_PATH}/preprocessing_result.csv
     ...    ${REFERENCE_DIR}/preprocessing_result.csv
@@ -47,6 +49,7 @@ Preprocessed Data Exported As CSV Should Match Reference
     ...    ${RELATIVE_TOLERANCE}
 
 Preprocessed Data Exported As RST Should Match Reference
+    [Tags]    preprocessing
     Compare Files With Numeric In Text
     ...    ${OUTPUT_PATH}/preprocessing_result.rst
     ...    ${REFERENCE_DIR}/preprocessing_result.rst

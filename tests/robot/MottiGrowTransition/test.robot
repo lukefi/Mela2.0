@@ -6,6 +6,7 @@ Library           String
 Library           ${CURDIR}/../DatabaseCompareLibrary.py
 Resource          ${CURDIR}/../simulation.resource
 Suite Setup       Run Simulation Check Upd    ${INPUT_DATA}    ${OUTPUT_PATH}    ${CONTROL_SCRIPT}    ${REFERENCE_DIR}
+Test Tags         motti    smk
 
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/data.xml

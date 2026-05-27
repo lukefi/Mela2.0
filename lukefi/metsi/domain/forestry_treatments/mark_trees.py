@@ -79,7 +79,7 @@ def mark_trees_fn(input_: ForestStand,
     # 1) Rows where ALL stems are marked: set attributes in-place
     all_idxs = np.nonzero(all_stems_mask)[0]
     for idx in all_idxs:
-        stand.reference_trees.update(attributes, index=idx)
+        stand.reference_trees.update(attributes, index=int(idx))
 
     # 2) Rows where PARTIAL stems are marked: split
     split_idxs = np.nonzero(to_split_mask)[0]

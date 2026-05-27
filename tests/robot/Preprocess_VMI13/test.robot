@@ -2,6 +2,7 @@
 Library        ../CustomCompareLibrary.py
 Resource       ../simulation.resource
 Suite Setup    Run Simulation Check Upd    ${INPUT_PATH}    ${OUTPUT_PATH}    ${CONTROL_PATH}        ${REFERENCE_PATH}
+Test Tags      preprocessing    vmi13
 
 *** Variables ***
 ${INPUT_PATH}            ${CURDIR}/input/VMI13_source_mini.dat
