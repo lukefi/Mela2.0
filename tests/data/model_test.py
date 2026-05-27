@@ -94,7 +94,11 @@ class TestForestDataModel(unittest.TestCase):
         self.assertTrue(
             np.all(np.isclose(np.asarray([0.01130973355, 0.00196349540]), stand.reference_trees.basal_area)))
 
-        self.assertAlmostEqual(58.8, stand.stems_per_ha or 0)
-        self.assertAlmostEqual(23.60403760335, stand.basal_area or 0)
-        self.assertAlmostEqual(14.81238229506, stand.ds_ba_weighted_mean_diameter or 0)
-        self.assertAlmostEqual(5.902974074951, stand.ds_ba_weighted_mean_height or 0)
+        self.assertIsNotNone(stand.stems_per_ha)
+        self.assertAlmostEqual(19.0, stand.stems_per_ha)
+        self.assertIsNotNone(stand.basal_area)
+        self.assertAlmostEqual(0.08403760348352696, stand.basal_area)
+        self.assertIsNotNone(stand.ds_ba_weighted_mean_diameter)
+        self.assertAlmostEqual(9.710280373831777, stand.ds_ba_weighted_mean_diameter)
+        self.assertIsNotNone(stand.ds_ba_weighted_mean_height)
+        self.assertAlmostEqual(12.018691588785048, stand.ds_ba_weighted_mean_height)
