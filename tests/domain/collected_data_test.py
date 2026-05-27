@@ -21,6 +21,7 @@ class NaturalProcessInfoTest(unittest.TestCase):
             }
         )
 
+        # tree2 has been split into two trees, tree3 and tree4
         cls.after = ReferenceTrees()
         cls.after.vectorize(
             {
