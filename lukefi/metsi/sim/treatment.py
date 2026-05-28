@@ -80,6 +80,7 @@ class PredeterminedTreatment(Generic[T_contra]):
     static_parameters: dict[str, Any]
     file_parameters: dict[str, str]
     dynamic_parameters: Mapping[str, Callable[[T_contra], Any]]
+    evaluated_params: dict[str, Any]
 
     def __init__(self,
                  time: int,
@@ -120,7 +121,8 @@ class PredeterminedTreatment(Generic[T_contra]):
         # TODO: Check file parameter validity
         # TODO: Check parameter name collisions
         evaluated_dynamic = {name: expression(unit) for name, expression in self.dynamic_parameters.items()}
-        return self.static_parameters | self.file_parameters | evaluated_dynamic
+        self.evaluated_params = self.static_parameters | self.file_parameters | evaluated_dynamic
+        return self.evaluated_params
 
 
 do_nothing = Treatment[ComputationalUnit](do_nothing_, "do_nothing", {"nothing"})
