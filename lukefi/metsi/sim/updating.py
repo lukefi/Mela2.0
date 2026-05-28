@@ -2,6 +2,7 @@
 import sqlite3
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
@@ -12,6 +13,10 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                                        db: sqlite3.Connection | None = None) -> list[SimulationPayload[T]]:
     target_time = updating_instructions.target_time
     transition = updating_instructions.transition
+    output_transition_state = updating_instructions.output_transition_state
+    output_transition_cd = updating_instructions.output_transition_cd
+    output_treatment_state = updating_instructions.output_treatment_state
+    output_treatment_cd = updating_instructions.output_treatment_cd
 
     retval = []
     for unit in units:
@@ -24,10 +29,35 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
             step, treatments = get_step_and_treatments(current.computational_unit, target_time)
 
             if step > 0:
-                current = SimulationPayload(transition(current.computational_unit, step)[0])
+                current.computational_unit, cd = transition(current.computational_unit, step)
+                if db is not None:
+                    output_node_to_db(
+                        db,
+                        current.node_id,
+                        transition.__name__,
+                        {},
+                        current.computational_unit,
+                        cd,
+                        tags=None,
+                        output_state=output_transition_state,
+                        output_collected_data=output_transition_cd,
+                        transition_count=1)
 
             for treatment in treatments:
-                current = SimulationPayload(treatment(current.computational_unit)[0])
+                current.computational_unit, cd = treatment(current.computational_unit)
+                current.node_id.append(0)
+                if db is not None:
+                    output_node_to_db(
+                        db,
+                        current.node_id,
+                        treatment.name,
+                        treatment.evaluated_params,
+                        current.computational_unit,
+                        cd,
+                        treatment.tags,
+                        output_state=output_treatment_state,
+                        output_collected_data=output_treatment_cd
+                    )
 
         # Update starting time for relative timepoints
         current.computational_unit.start_time = current.computational_unit.time
