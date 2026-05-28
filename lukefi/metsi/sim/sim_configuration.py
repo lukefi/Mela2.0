@@ -68,22 +68,25 @@ class Transition[T: ComputationalUnit]:
         new_state, collected_data = self.transition_fn(payload.computational_unit, time_step, **self.parameters)
 
         if db is not None and self.db_output:
-            temp_history: OperationHistory = [
-                (payload.computational_unit.time, self.name, self.parameters, set())
-            ]
-            transition_payload = SimulationPayload(new_state, temp_history, payload.node_id)
-            output_node_to_db(db, transition_payload, collected_data, output_state=self.db_output_state,
-                              output_collected_data=self.db_output_cd, transition_count=transition_count)
+            output_node_to_db(db,
+                              payload.node_id,
+                              self.name,
+                              self.parameters,
+                              new_state,
+                              collected_data,
+                              output_state=self.db_output_state,
+                              output_collected_data=self.db_output_cd,
+                              transition_count=transition_count)
 
         return new_state, collected_data
 
     def __str__(self) -> str:
         return f"{{transition_fn: {self.transition_fn.__name__}, " \
-               f"max_step: {self.max_step}, parameters: {self.parameters}}}"
+            f"max_step: {self.max_step}, parameters: {self.parameters}}}"
 
     def __repr__(self) -> str:
         return f"{{transition_fn: {self.transition_fn.__name__}, " \
-               f"max_step: {self.max_step}, parameters: {self.parameters}}}"
+            f"max_step: {self.max_step}, parameters: {self.parameters}}}"
 
 
 class SimConfiguration[T: ComputationalUnit]:
@@ -129,3 +132,8 @@ class SimConfiguration[T: ComputationalUnit]:
         for instruction in self.instructions:
             collected_data.update(instruction.event_generator.get_types_of_collected_data())
         self.collected_data = collected_data
+
+
+class UpdatingInstructions[T: ComputationalUnit]:
+    target_time: int
+    transition: TransitionFn[T]

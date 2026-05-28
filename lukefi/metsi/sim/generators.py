@@ -236,7 +236,14 @@ class Event(EventGeneratorBase[T]):
 
         new_payload.node_id.append(node)
         if db is not None and self.db_output:
-            output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
+            output_node_to_db(
+                db,
+                new_payload.node_id,
+                self.treatment.name,
+                combined_params,
+                new_state,
+                new_collected_data,
+                self.tags | self.treatment.default_tags)
 
         if isinstance(new_payload.computational_unit, Finalizable):
             new_payload.computational_unit.finalize()

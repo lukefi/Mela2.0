@@ -5,16 +5,25 @@ from typing import Any, Callable, Optional
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.file_io import write_stands_to_file, determine_file_path
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.runners import evaluate_sequence
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
-def export_preprocessed(target_directory: str, decl: dict[str, Any], stands: StandList,
+def export_preprocessed(target_directory: str, decl: dict[str, Any],
+                        units: StandList | list[SimulationPayload[ForestStand]],
                         base_name: str = "preprocessing_result",
                         app_configuration: Optional[dict[str, Any]] = None,) -> None:
     output_formats = list(decl.keys())
     print_logline(f"Writing all preprocessed data to directory '{target_directory}'")
+    stands: list[ForestStand] = []
+    for unit in units:
+        if isinstance(unit, SimulationPayload):
+            stands.append(unit.computational_unit)
+        else:
+            stands.append(unit)
     for output_format in output_formats:
         operations: Optional[list[Callable[[StandList], StandList]]] = decl[output_format].get('operations', None)
         operation_params: Optional[dict[Callable, Any]] = decl[output_format].get('operation_params', None)
