@@ -137,3 +137,8 @@ class SimConfiguration[T: ComputationalUnit]:
 class UpdatingInstructions[T: ComputationalUnit]:
     target_time: int
     transition: TransitionFn[T]
+
+    output_transition_state: bool
+    output_transition_cd: bool
+    output_treatment_state: bool
+    output_treatment_cd: bool
