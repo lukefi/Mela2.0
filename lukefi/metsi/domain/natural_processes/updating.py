@@ -1,9 +1,9 @@
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.transition import TransitionFn
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.sim.updating import get_step_and_treatments
 
 
 def update_to_year_fn(stand: ForestStand,
@@ -22,13 +22,13 @@ def update_to_year_fn(stand: ForestStand,
     assert transition is not None
     assert target_year is not None
 
-    if stand.year > target_year:
+    if stand.time > target_year:
         raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}: "
-                             f"already at {stand.year}")
+                             f"already at {stand.time}")
 
     current = stand
-    while current.year < target_year:
-        step, treatments = _get_step_and_treatments(current, target_year)
+    while current.time < target_year:
+        step, treatments = get_step_and_treatments(current, target_year)
 
         if step > 0:
             current, _ = transition(current, step)
@@ -37,22 +37,9 @@ def update_to_year_fn(stand: ForestStand,
             current, _ = treatment(current)
 
     # Update starting year for relative timepoints
-    current.start_time = current.year
+    current.start_time = current.time
 
     return current, []
-
-
-def _get_step_and_treatments(stand: ForestStand,
-                             target_year: int,
-                             ) -> tuple[int, list[PredeterminedTreatment[ForestStand]]]:
-    if stand.predetermined_treatments is not None:
-        for time, _ in stand.predetermined_treatments:
-            if stand.year < time <= target_year:
-                return (time - stand.year,
-                        [treatment_ for time_, treatment_ in stand.predetermined_treatments
-                         if time_ == time])
-
-    return target_year - stand.year, []
 
 
 update_to_year = Treatment(update_to_year_fn, "update_to_year", default_tags={"initial", "update_to_year"})
