@@ -3,7 +3,7 @@ from copy import copy
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.sim_configuration import TransitionFn
+from lukefi.metsi.sim.transition import TransitionFn
 
 
 def natural_process_transition(natural_process_func: TransitionFn[ForestStand]):

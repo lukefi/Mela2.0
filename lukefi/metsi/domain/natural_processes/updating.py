@@ -1,8 +1,8 @@
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.transition import TransitionFn
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.sim_configuration import TransitionFn
 from lukefi.metsi.sim.treatment import Treatment
 
 

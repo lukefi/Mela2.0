@@ -1,10 +1,8 @@
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.domain.events import GrowActa
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.forestry_types import ForestOpPayload

@@ -8,7 +8,7 @@ from lukefi.metsi.domain.pre_ops import (
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
 from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti

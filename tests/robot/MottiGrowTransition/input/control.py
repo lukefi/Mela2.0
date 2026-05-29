@@ -10,7 +10,7 @@ from lukefi.metsi.domain.pre_ops import (
     scale_area_weight)
 from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 
 
