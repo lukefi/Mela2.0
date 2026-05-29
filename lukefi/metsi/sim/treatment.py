@@ -73,7 +73,6 @@ class Treatment(Generic[T_contra]):
 
 class PredeterminedTreatment(Generic[T_contra]):
 
-    time: int
     name: str
     treatment_fn: TreatmentFn[T_contra]
     tags: set[str]
@@ -83,14 +82,12 @@ class PredeterminedTreatment(Generic[T_contra]):
     evaluated_params: dict[str, Any]
 
     def __init__(self,
-                 time: int,
                  name: str,
                  treatment_fn: TreatmentFn[T_contra],
                  tags: set[str] | None = None,
                  static_parameters: dict[str, Any] | None = None,
                  file_parameters: dict[str, str] | None = None,
                  dynamic_parameters: Mapping[str, Callable[[T_contra], Any]] | None = None):
-        self.time = time
         self.name = name
         self.treatment_fn = treatment_fn
 

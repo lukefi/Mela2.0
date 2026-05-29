@@ -69,9 +69,9 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 def get_step_and_treatments[T: ComputationalUnit](unit: T,
                                                   target_time: int) -> tuple[int, list[PredeterminedTreatment[T]]]:
     if unit.predetermined_treatments is not None:
-        for treatment in unit.predetermined_treatments:
-            if unit.time < treatment.time <= target_time:
-                return (treatment.time - unit.time,
-                        [treatment_ for treatment_ in unit.predetermined_treatments
-                         if treatment_.time == treatment.time])
+        for time, _ in unit.predetermined_treatments:
+            if unit.time < time <= target_time:
+                return (time - unit.time,
+                        [treatment_ for time_, treatment_ in unit.predetermined_treatments
+                         if time_ == time])
     return target_time - unit.time, []

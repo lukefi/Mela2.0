@@ -46,11 +46,11 @@ def _get_step_and_treatments(stand: ForestStand,
                              target_year: int,
                              ) -> tuple[int, list[PredeterminedTreatment[ForestStand]]]:
     if stand.predetermined_treatments is not None:
-        for treatment in stand.predetermined_treatments:
-            if stand.year < treatment.time <= target_year:
-                return (treatment.time - stand.year,
-                        [treatment_ for treatment_ in stand.predetermined_treatments
-                         if treatment_.time == treatment.time])
+        for time, _ in stand.predetermined_treatments:
+            if stand.year < time <= target_year:
+                return (time - stand.year,
+                        [treatment_ for time_, treatment_ in stand.predetermined_treatments
+                         if time_ == time])
 
     return target_year - stand.year, []
 

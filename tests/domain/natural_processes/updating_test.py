@@ -20,9 +20,9 @@ class TestUpdating(unittest.TestCase):
         stand = ForestStand(
             time=2020,
             predetermined_treatments=[
-                PredeterminedTreatment(2022, "do_something", do_nothing),
-                PredeterminedTreatment(2022, "do_another_thing", do_nothing),
-                PredeterminedTreatment(2023, "do_final_thing", do_nothing)
+                (2022, PredeterminedTreatment("do_something", do_nothing)),
+                (2022, PredeterminedTreatment("do_another_thing", do_nothing)),
+                (2023, PredeterminedTreatment("do_final_thing", do_nothing))
             ]
         )
 
@@ -43,11 +43,11 @@ class TestUpdating(unittest.TestCase):
         self.assertListEqual([], [treatment.name for treatment in treatments])
 
     def test_updating(self):
-        treatment1 = Mock(time=2022)
+        treatment1 = Mock()
         treatment1.side_effect = lambda x: (x, [])
-        treatment2 = Mock(time=2023)
+        treatment2 = Mock()
         treatment2.side_effect = lambda x: (x, [])
-        stand = Mock(year=2020, predetermined_treatments=[treatment1, treatment2])
+        stand = Mock(year=2020, predetermined_treatments=[(2022, treatment1), (2023, treatment2)])
         transition = Mock()
 
         def transition_side(stand, step):
@@ -57,6 +57,6 @@ class TestUpdating(unittest.TestCase):
         update_to_year_fn(stand, transition=transition, target_year=2025)
 
         self.assertEqual(2025, stand.year)
-        treatment1.assert_called()
-        treatment2.assert_called()
+        treatment1.assert_called_once()
+        treatment2.assert_called_once()
         transition.assert_has_calls([call(ANY, 2), call(ANY, 1), call(ANY, 2)])

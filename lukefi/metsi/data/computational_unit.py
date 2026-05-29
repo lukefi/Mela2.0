@@ -10,7 +10,7 @@ class ComputationalUnit(ABC):
     identifier: str
     time: int = 0
     start_time: int = 0
-    predetermined_treatments: list["PredeterminedTreatment"] | None
+    predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
 
     @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
