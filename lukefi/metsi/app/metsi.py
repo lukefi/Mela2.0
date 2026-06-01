@@ -1,7 +1,7 @@
 import os
 import sys
 import sqlite3
-from typing import Optional, cast
+from typing import Any, Optional, cast
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
 )
@@ -18,6 +18,7 @@ from lukefi.metsi.app.file_io import (
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.instructions import UpdatingInstructions
+from lukefi.metsi.sim.resimulation import resimulate_schedules
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
@@ -25,15 +26,16 @@ from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.updating import update_units
 
 
-def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
-    _ = config
+def _preprocess(control: dict[str, Any],
+                stands: StandList) -> StandList:
     print_logline("Preprocessing...")
     result = preprocess_stands(stands, control)
     return result
 
 
-def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList |
-                   list[SimulationPayload[ForestStand]]) -> None:
+def _export_prepro(config: MetsiConfiguration,
+                   control: dict[str, Any],
+                   data: StandList | list[SimulationPayload[ForestStand]]) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data,
@@ -44,8 +46,10 @@ def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList |
         print_logline("Skipping export of preprocessing results.")
 
 
-def _update(control: dict, stands: StandList, db: sqlite3.Connection |
-            None) -> tuple[StandList | list[SimulationPayload[ForestStand]], CollectableDataTypes | None]:
+def _update(control: dict[str, Any],
+            stands: StandList,
+            db: sqlite3.Connection | None
+            ) -> tuple[StandList | list[SimulationPayload[ForestStand]], CollectableDataTypes | None]:
     updating_instructions: UpdatingInstructions[ForestStand] | None = control.get("updating", None)
     if updating_instructions is not None:
         print_logline(f"Updating stands to year {updating_instructions.target_time}...")
@@ -54,7 +58,7 @@ def _update(control: dict, stands: StandList, db: sqlite3.Connection |
     raise MetsiException("Declaration for 'updating' not found from control.")
 
 
-def _simulate(control: dict,
+def _simulate(control: dict[str, Any],
               stands: StandList | list[SimulationPayload[ForestStand]],
               db: Optional[sqlite3.Connection],
               existing_data_types: CollectableDataTypes | None = None) -> None:
@@ -62,12 +66,18 @@ def _simulate(control: dict,
     simulate_alternatives(control, stands, db, existing_data_types)
 
 
+def _resimulate(control: dict[str, Any],
+                in_db: sqlite3.Connection,
+                out_db: sqlite3.Connection) -> None:
+    print_logline("Resimulating schedules...")
+    resimulate_schedules(control, in_db, out_db)
+
+
 def main() -> int:
     cli_arguments = parse_cli_arguments(sys.argv[1:])
     force_delete = bool(cli_arguments.pop("delete", False))
 
-    control_file = (MetsiConfiguration.control_file
-                    if cli_arguments["control_file"] is None else cli_arguments['control_file'])
+    control_file = cli_arguments.get("control_file", MetsiConfiguration.control_file)
 
     try:
         control_structure = read_control_module(control_file)
@@ -80,6 +90,7 @@ def main() -> int:
     prepare_target_directory(app_config.target_directory)
 
     print_logline("Reading input...")
+
     should_continue = delete_existing_export_files(
         target_directory=app_config.target_directory,
         export_prepro=control_structure.get("export_prepro"),
@@ -88,18 +99,19 @@ def main() -> int:
         force_delete=force_delete,
     )
 
+
     if not should_continue:
         return 0
 
-    db: sqlite3.Connection | None = None
+    out_db: sqlite3.Connection | None = None
 
-    if RunMode.SIMULATE in app_config.run_modes or RunMode.UPDATE in app_config.run_modes:
+    if any(run_mode in app_config.run_modes for run_mode in [RunMode.UPDATE, RunMode.SIMULATE, RunMode.RESIMULATE]):
         print_logline("Initializing output database")
         db_base = app_config.simulation_output_file or "simulation_results"
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
-        db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
+        out_db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
         sqlite_decl = control_structure['app_configuration'].get("sqlite_decl")
-        create_database_tables(db, sqlite_decl=sqlite_decl)
+        create_database_tables(out_db, sqlite_decl=sqlite_decl)
         ForestStand.set_sqlite_decl(sqlite_decl)
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:
@@ -113,17 +125,23 @@ def main() -> int:
     current: list[ForestStand] | list[SimulationPayload[ForestStand]] = input_data
 
     if RunMode.PREPROCESS in app_config.run_modes:
-        current = _preprocess(app_config, control_structure, cast(list[ForestStand], current))
+        current = _preprocess(control_structure, cast(list[ForestStand], current))
     if RunMode.UPDATE in app_config.run_modes:
-        current, cd_types_from_updating = _update(control_structure, cast(list[ForestStand], current), db)
+        current, cd_types_from_updating = _update(control_structure, cast(list[ForestStand], current), out_db)
     if RunMode.EXPORT_PREPRO in app_config.run_modes:
         _export_prepro(app_config, control_structure, current)
     if RunMode.SIMULATE in app_config.run_modes:
-        _simulate(control_structure, current, db, cd_types_from_updating)
+        _simulate(control_structure, current, out_db, cd_types_from_updating)
 
-    if db is not None:
-        db.commit()
-        db.close()
+    if RunMode.RESIMULATE in app_config.run_modes:
+        assert out_db is not None
+        in_db = sqlite3.Connection(app_config.input_path)
+        _resimulate(control_structure, in_db, out_db)
+        pass
+
+    if out_db is not None:
+        out_db.commit()
+        out_db.close()
 
     _, dirs, files = next(os.walk(app_config.target_directory))
     if len(dirs) == 0 and len(files) == 0:
