@@ -42,8 +42,6 @@ class StringConfigEnum(Enum):
     @classmethod
     def from_str(cls, name: str):
         """Convert a string to an enum value."""
-        if name is None:
-            return None
         try:
             return cls[name.upper()]
         except KeyError as e:
