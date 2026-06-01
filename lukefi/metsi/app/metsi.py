@@ -134,8 +134,8 @@ def main() -> int:
 
     if RunMode.RESIMULATE in app_config.run_modes:
         assert out_db is not None
-        in_db = sqlite3.Connection(app_config.input_path)
-        _resimulate(control_structure, in_db, out_db)
+        with sqlite3.connect(app_config.input_path) as in_db:
+            _resimulate(control_structure, in_db, out_db)
 
     if out_db is not None:
         out_db.commit()
