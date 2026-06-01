@@ -99,7 +99,6 @@ def main() -> int:
         force_delete=force_delete,
     )
 
-
     if not should_continue:
         return 0
 
@@ -137,7 +136,6 @@ def main() -> int:
         assert out_db is not None
         in_db = sqlite3.Connection(app_config.input_path)
         _resimulate(control_structure, in_db, out_db)
-        pass
 
     if out_db is not None:
         out_db.commit()
