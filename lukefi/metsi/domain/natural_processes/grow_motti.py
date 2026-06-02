@@ -1,17 +1,9 @@
 import numpy as np
-from lukefi.metsi.domain.natural_processes.motti_util import (
-    reconcile_reference_trees_from_motti,
-    ensure_state)
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
-    Motti4DLL,
-)
-from lukefi.metsi.data.enums.internal import (
-    LandUseCategory,
-)
+from lukefi.metsi.domain.natural_processes.motti_util import reconcile_reference_trees_from_motti, ensure_state
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.data.enums.internal import LandUseCategory
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.natural_processes.util import (
-    update_stand_growth
-)
+from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.sim.collected_data import OpTuple
 
