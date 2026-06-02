@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Any
+from typing import Any, Generator
 
 
 def resimulate_schedules(control: dict[str, Any],
@@ -19,3 +19,12 @@ def resimulate_schedules(control: dict[str, Any],
     # TODO: building simulation instructions (or equivalent) from declared leaf nodes/schedules
     # TODO: recreating dynamic parameters and other complex structures from original control file
     #           - possible quick hack - declare LUT in resim control?
+
+    for schedule in _recreate_schedules(control, in_db):
+        # resimulate schedule
+        _ = schedule
+
+def _recreate_schedules(control, in_db) -> Generator:
+    _ = control
+    _ = in_db
+    yield from []
