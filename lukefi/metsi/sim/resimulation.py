@@ -1,12 +1,28 @@
+import csv
 import sqlite3
-from typing import Any, Generator
+from typing import Any, Set
+
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.sim.treatment import PredeterminedTreatment, TreatmentFn
+
+type Schedule = list[list[tuple[int, PredeterminedTreatment[ForestStand]]]]
+type Schedules = list[Schedule]
+
+
+class ResimulationInstructions:
+    initial_state: ForestStand
+    schedules: Schedules
+
+    def __init__(self,
+                 initial_state: ForestStand,
+                 schedules: Schedules) -> None:
+        self.initial_state = initial_state
+        self.schedules = schedules
 
 
 def resimulate_schedules(control: dict[str, Any],
                          in_db: sqlite3.Connection,
                          out_db: sqlite3.Connection):
-    _ = control
-    _ = in_db
     _ = out_db
 
     # TODO: how to reconstruct initial state if and when original simulation db has incomplete attributes?
@@ -21,11 +37,104 @@ def resimulate_schedules(control: dict[str, Any],
     #           - possible quick hack - declare LUT in resim control?
     #           - no need initially - dynamic parameters needed only in Monte-Carlo
 
-    for schedule in _recreate_schedules(control, in_db):
-        # resimulate schedule
-        _ = schedule
+    schedules_file_path = control["selected_schedules_file"]
+    treatment_map = control["treatment_map"]
 
-def _recreate_schedules(control, in_db) -> Generator:
-    _ = control
+    instructions_per_stand = _recreate_instructions(schedules_file_path, treatment_map, in_db)
+
+
+def _recreate_instructions(sched_file_path: str,
+                           treatment_map: dict[str, TreatmentFn],
+                           in_db: sqlite3.Connection) -> dict[str, ResimulationInstructions]:
+    instructions_per_stand: dict[str, ResimulationInstructions] = {}
+    with open(sched_file_path, "r", encoding="utf-8") as sched_file:
+        sched_reader = csv.reader(sched_file)
+        for schedule_row in sched_reader:
+            stand_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
+            instructions_per_stand.setdefault(
+                stand_id,
+                ResimulationInstructions(_reconstruct_initial_state(stand_id, in_db), [])
+            ).schedules.append(treatments)
+    return instructions_per_stand
+
+
+def _recreate_schedule(schedule_row: list[str],
+                       treatment_map: dict[str, TreatmentFn],
+                       in_db: sqlite3.Connection) -> tuple[str, Schedule]:
+    stand_id, leaf_node_id = _parse_schedule_row(schedule_row)
+    cur = in_db.cursor()
+    cur.execute(
+        """--sql
+        WITH RECURSIVE schedule(node, stand, leaf_node) AS (
+            SELECT identifier, stand, identifier FROM nodes
+            WHERE leaf = 1
+            UNION
+            SELECT
+                nodes.identifier,
+                nodes.stand,
+                schedule.leaf_node
+            FROM nodes, schedule
+            WHERE
+                schedule.node LIKE nodes.identifier || '%' AND
+                nodes.stand = schedule.stand
+        )
+        SELECT
+            --nodes.identifier,
+            --nodes.stand,
+            stands.year,
+            nodes.done_treatment,
+            nodes.treatment_params,
+            nodes.tags
+            --nodes.leaf,
+            --schedule.leaf_node
+        FROM schedule, nodes, stands
+        WHERE
+            nodes.identifier = schedule.node AND
+            nodes.stand = schedule.stand AND
+            nodes.stand = stands.identifier AND
+            nodes.identifier = stands.node AND
+            nodes.stand = ? AND
+            schedule.leaf_node = ?
+        ORDER BY leaf_node, schedule.node;
+        """,
+        (
+            stand_id,
+            leaf_node_id
+        )
+    )
+    retval = []
+    for step in cur:
+        retval.append(
+            (
+                step["year"],
+                PredeterminedTreatment(
+                    name=step["done_treatment"],
+                    treatment_fn=treatment_map[step["done_treatment"]],
+                    tags=_parse_tags(step["tags"]),
+                    # Evaluate all parameters as static for now
+                    static_parameters=_parse_params(step["treatment_params"])
+                )
+            )
+        )
+
+    return stand_id, retval
+
+
+def _parse_schedule_row(schedule_row: list[str]) -> tuple[str, str]:
+    return schedule_row[0], schedule_row[1]
+
+
+def _parse_tags(tags_str: str) -> Set[str]:
+    _ = tags_str
+    assert False, "_parse_tags not implemented"
+
+
+def _parse_params(params_str: str) -> dict[str, Any]:
+    _ = params_str
+    assert False, "_parse_params not implemented"
+
+
+def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> ForestStand:
+    _ = stand_id
     _ = in_db
-    yield from []
+    assert False, "_reconstruct_initial_state not implemented"
