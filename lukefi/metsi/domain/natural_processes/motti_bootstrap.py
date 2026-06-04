@@ -8,6 +8,4 @@ def initialize_motti(stand: ForestStand, parameters: dict[str, Any]) -> None:
     if stand.motti_state is not None:
         return
 
-    # TODO: Why is step=5 when just initializing?
-    # TODO: In fact, why does ensure_state even take step as parameter?
-    ensure_state(stand, step=5, sim_year=int(stand.year))
+    ensure_state(stand, sim_year=int(stand.year))

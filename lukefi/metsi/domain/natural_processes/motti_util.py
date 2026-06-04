@@ -648,7 +648,6 @@ def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool 
 
 
 def ensure_state(stand: ForestStand,
-                 step: int,
                  sim_year: int,
                  use_dll_site_convert: bool = True):
     """Initialize and attach persistent MottiState to stand if missing."""
@@ -699,7 +698,6 @@ def ensure_state(stand: ForestStand,
                    if stand.drainage_year is not None else stand.start_time),
         alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
         year=sim_year - stand.start_year,
-        step=step,
         convert_mela_site=use_dll_site_convert,
         spedom=spedom,
         spedom2=spedom,

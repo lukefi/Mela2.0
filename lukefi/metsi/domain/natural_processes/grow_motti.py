@@ -27,7 +27,7 @@ def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
         update_stand_growth(stand, base_d, base_h, base_f, step, False)
         return stand, []
 
-    state = ensure_state(stand, step=step, sim_year=stand.relative_year)
+    state = ensure_state(stand, sim_year=stand.relative_year)
     state.yy.year = stand.relative_year
     state.yy.step = step
 

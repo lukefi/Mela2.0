@@ -136,7 +136,6 @@ class Motti4DLL:
         xt_thoit: int = 1, drain: int = 1, xt_ndrain: int = 1,
         alr: int = 1,
         year: Optional[float] = 2010.0,   # safe default if caller does not provide
-        step: float = 5.0,
         convert_mela_site: bool = True,
         spedom: Optional[int] = None,
         spedom2: Optional[int] = None,
@@ -174,21 +173,17 @@ class Motti4DLL:
         yy.xt_muok = xt_muok
         yy.xt_raiv = xt_raiv
         yy.sid = sid
-
         yy.fthin = fthin
         yy.xt_thin = xt_thin
         yy.xt_fert = xt_fert
         yy.xt_thoit = xt_thoit
         yy.drain = drain
         yy.xt_ndrain = xt_ndrain
-
         yy.alr = alr
         if year is not None:
             yy.year = year
-        yy.step = step
         yy.nstorey = 1.0
         yy.gstorey = 1.0
-
         yy.nstorey = nstorey
         yy.gstorey = gstorey
         if spedom is not None:
