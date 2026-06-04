@@ -19,6 +19,7 @@ def resimulate_schedules(control: dict[str, Any],
     # TODO: building simulation instructions (or equivalent) from declared leaf nodes/schedules
     # TODO: recreating dynamic parameters and other complex structures from original control file
     #           - possible quick hack - declare LUT in resim control?
+    #           - no need initially - dynamic parameters needed only in Monte-Carlo
 
     for schedule in _recreate_schedules(control, in_db):
         # resimulate schedule
