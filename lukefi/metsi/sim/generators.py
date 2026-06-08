@@ -35,6 +35,9 @@ class EventGeneratorBase(ABC, Generic[T]):
                  ) -> Generator[SimulationPayload[T]]:
         pass
 
+    def width(self) -> int:
+        return 1
+
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """
@@ -65,7 +68,6 @@ class Sequence(EventGenerator[T]):
                  db: sqlite3.Connection | None = None,
                  node: int = 0
                  ) -> Generator[SimulationPayload[T]]:
-
         def wrapper(inputs: Generator[SimulationPayload[T]],
                     generator: EventGeneratorBase[T],
                     node: int):
@@ -89,9 +91,14 @@ class Alternatives(EventGenerator[T]):
     def evaluate(self, payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T]]:
-        for i, child in enumerate(self.children):
-            yield from child.evaluate(copy(payload), db, node + i)
+        offset = 0
+        for child in self.children:
+            yield from child.evaluate(copy(payload), db, node + offset)
+            offset += child.width()
 
+    @override
+    def width(self) -> int:
+        return sum(child.width() for child in self.children)
 
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
@@ -116,6 +123,7 @@ class Optional(EventGenerator[T]):
         Generator for continuing evaluation of child branches even if event conditions fail.
         In such cases a `do_nothing` treatment is performed instead.
     """
+
     def __init__(self, child: EventGeneratorBase):
         super().__init__(
             [
@@ -132,6 +140,7 @@ class Optional(EventGenerator[T]):
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
         yield from self.children[0].evaluate(payload, db, node)
+
 
 class Event(EventGeneratorBase[T]):
     """
@@ -225,7 +234,7 @@ class Event(EventGeneratorBase[T]):
         )
 
         new_payload.node_id.append(node)
-
+        print(f"node id {new_payload.node_id}")
         if db is not None and self.db_output:
             output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
 
