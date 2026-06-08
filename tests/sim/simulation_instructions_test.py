@@ -1,5 +1,7 @@
+import sqlite3
 import unittest
 
+from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
@@ -40,19 +42,37 @@ class SimulationInstructionsTest(unittest.TestCase):
 
         config = SimConfiguration[ToyModel](**declaration)
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
+        db = sqlite3.connect(":memory:")
+        ToyModel.init_db_tables(db)
+        _simulate_unit(payload, config, db)
 
-        results = _simulate_unit(payload, config)
+        cur = db.cursor()
+        cur.execute(
+            """--sql
+                SELECT COUNT(*) FROM nodes WHERE leaf == 1;
+            """)
+        leaf_count = cur.fetchone()[0]
 
-        self.assertEqual(27, len(results))
-        self.assertListEqual(
-            [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 2], [0, 0, 1, 0], [0, 0, 1, 1], [0, 0, 1, 2],
-             [0, 0, 2, 0], [0, 0, 2, 1], [0, 0, 2, 2], [0, 1, 0, 0], [0, 1, 0, 1], [0, 1, 0, 2],
-             [0, 1, 1, 0], [0, 1, 1, 1], [0, 1, 1, 2], [0, 1, 2, 0], [0, 1, 2, 1], [0, 1, 2, 2],
-             [0, 2, 0, 0], [0, 2, 0, 1], [0, 2, 0, 2], [0, 2, 1, 0], [0, 2, 1, 1], [0, 2, 1, 2],
-             [0, 2, 2, 0], [0, 2, 2, 1], [0, 2, 2, 2],],
-            [result.node_id for result in results]
+        self.assertEqual(27, leaf_count)
+        cur.execute(
+            """--sql
+                SELECT identifier FROM nodes WHERE leaf == 1;
+            """
+        )
+        leaf_node_ids_expected = ["0-0-0-0", "0-0-0-1", "0-0-0-2", "0-0-1-0", "0-0-1-1", "0-0-1-2",
+             "0-0-2-0", "0-0-2-1", "0-0-2-2", "0-1-0-0", "0-1-0-1", "0-1-0-2",
+             "0-1-1-0", "0-1-1-1", "0-1-1-2", "0-1-2-0", "0-1-2-1", "0-1-2-2",
+             "0-2-0-0", "0-2-0-1", "0-2-0-2", "0-2-1-0", "0-2-1-1", "0-2-1-2",
+             "0-2-2-0", "0-2-2-1", "0-2-2-2",]
+
+        self.assertListEqual(leaf_node_ids_expected, [res[0] for res in cur])
+
+        cur.execute(
+            """--sql
+                SELECT value FROM toys, nodes WHERE nodes.stand = toys.identifier AND nodes.identifier = toys.node AND nodes.leaf = 1
+            """
         )
         self.assertListEqual(
             [3, 4, 5, 4, 5, 6, 5, 6, 7, 4, 5, 6, 5, 6, 7, 6, 7, 8, 5, 6, 7, 6, 7, 8, 7, 8, 9],
-            [result.computational_unit.value for result in results]
+            [res[0] for res in cur]
         )

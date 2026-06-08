@@ -17,11 +17,51 @@ class ToyModel(ComputationalUnit):
 
     @override
     def output_to_db(self, db: Connection, node: str):
-        pass
+        cur = db.cursor()
+        cur.execute(
+            """--sql
+                INSERT INTO toys
+                VALUES (?, ?, ?, ?)
+            """,
+            (
+                node,
+                self.identifier,
+                self.value,
+                self.time
+            )
+        )
 
     @override
     def update_aggregates(self):
         pass
+
+    @staticmethod
+    def init_db_tables(db: Connection):
+        cur = db.cursor()
+        cur.execute(
+        """--sql
+            CREATE TABLE nodes(
+                identifier TEXT,
+                stand TEXT,
+                done_treatment TEXT,
+                treatment_params TEXT,
+                tags TEXT,
+                leaf INTEGER(1) DEFAULT(0),
+                PRIMARY KEY(identifier, stand))
+        """
+        )
+        cur.execute(
+            """--sql
+                CREATE TABLE toys (
+                    node TEXT,
+                    identifier TEXT,
+                    value INTEGER,
+                    time INTEGER,
+                    PRIMARY KEY(node, identifier),
+                    FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand)
+                )
+            """
+        )
 
 
 class ToyTransition(Transition[ToyModel]):
