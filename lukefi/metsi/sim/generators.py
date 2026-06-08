@@ -234,7 +234,6 @@ class Event(EventGeneratorBase[T]):
         )
 
         new_payload.node_id.append(node)
-        print(f"node id {new_payload.node_id}")
         if db is not None and self.db_output:
             output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
 
