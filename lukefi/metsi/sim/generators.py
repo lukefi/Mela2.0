@@ -100,6 +100,7 @@ class Alternatives(EventGenerator[T]):
     def width(self) -> int:
         return sum(child.width() for child in self.children)
 
+
 class First(EventGenerator[T]):
     """Generator for non-branching alternatives where only the first possible path is executed."""
 
