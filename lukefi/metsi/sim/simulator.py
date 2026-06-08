@@ -48,7 +48,7 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                     new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
                     new_branch.computational_unit.update_aggregates()
                     retval.extend(_simulate_unit(new_branch, config, db, 1))
-                offset += 1
+                offset += instruction.event_generator.width()
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
             time_step = _find_next_time_step(
