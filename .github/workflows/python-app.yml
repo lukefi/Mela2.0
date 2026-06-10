@@ -57,7 +57,7 @@ jobs:
       continue-on-error: true
       run: |
         pylint lukefi --output-format=github --disable=all --enable=fixme --fail-under=0
-  
+
     - name: Run mypy
       run: |
         mypy -p lukefi
@@ -143,7 +143,7 @@ jobs:
       run: |
         rm -rf ./data/motti || true
 
-  
+
   publish-test-results:
     name: "Publish Test Results"
     needs: run-tests
@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -182,7 +182,7 @@ jobs:
           thresholds: '60 80'
 
       - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         if: github.event_name == 'pull_request'
         with:
           path: code-coverage-results.md
