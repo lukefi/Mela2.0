@@ -231,7 +231,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     Whether the stand contains an over storey.
     """
 
-    sqlite_decl: Optional[dict] = None
+    sqlite_decl: Optional[dict[str, str]] = None
     """
     Declarations for SQLite output database columns.
     """
@@ -464,6 +464,61 @@ class ForestStand(Finalizable, ComputationalUnit):
         cols = cls._strata_cols()
         return f"INSERT INTO strata ({', '.join(["node", "stand", "identifier"] + cols)})"\
             f"VALUES({', '.join(['?'] * (len(cols) + 3))})"
+
+    @override
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        cur = db.cursor()
+        cur.execute(
+            """--sql
+                INSERT INTO initial_stands
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+            """,
+            (
+                self.identifier,
+                self.year,
+                self.stand_id,
+                self.area,
+                self.area_weight,
+                self.geo_location,
+                self.degree_days,
+                self.owner_category,
+                self.land_use_category,
+                self.soil_peatland_category,
+                self.site_type_category,
+                self.tax_class_reduction,
+                self.tax_class,
+                self.drainage_category,
+                self.drainage_year,
+                self.fertilization_year,
+                self.soil_surface_preparation_year,
+                self.regeneration_area_cleaning_year,
+                self.development_class,
+                self.artificial_regeneration_year,
+                self.young_stand_tending_year,
+                self.cutting_year,
+                self.forestry_centre_id,
+                self.forest_management_category,
+                self.method_of_last_cutting,
+                self.municipality_id,
+                self.ds_main_tree_species_biological_age,
+                self.area_weight_factors,
+                self.fra_category,
+                self.auxiliary_stand,
+                self.sea_effect,
+                self.lake_effect,
+                self.basal_area,
+                self.main_tree_species_dominant_storey,
+                self.ds_dominant_height,
+                self.region,
+                self.peatland_type,
+                self.drained_peatland_type,
+                self.under_storey,
+                self.over_storey
+            )
+        )
 
     @override
     def output_to_db(self, db: sqlite3.Connection, node: str):

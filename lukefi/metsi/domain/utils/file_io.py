@@ -110,6 +110,8 @@ def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
 
 def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] = None):
     cur = db.cursor()
+
+    # nodes
     cur.execute(
         """--sql
         CREATE TABLE nodes(
@@ -120,6 +122,84 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
             tags TEXT,
             node_type INTEGER DEFAULT(0),
             PRIMARY KEY(identifier, stand))
+        """
+    )
+
+    # initial_stands
+    cur.execute(
+        """--sql
+            CREATE TABLE initial_stands(
+                identifier TEXT,
+                year INTEGER,
+                stand_id INTEGER,
+                area REAL,
+                area_weight REAL,
+                geo_location TEXT,
+                degree_days REAL,
+                owner_category INTEGER,
+                land_use_category INTEGER,
+                soil_peatland_category INTEGER,
+                site_type_category INTEGER,
+                tax_class_reduction INTEGER,
+                tax_class INTEGER,
+                drainage_category INTEGER,
+                drainage_year INTEGER,
+                fertilization_year INTEGER,
+                soil_surface_preparation_year INTEGER,
+                regeneration_area_cleaning_year INTEGER,
+                development_class INTEGER,
+                artificial_regeneration_year INTEGER,
+                young_stand_tending_year INTEGER,
+                cutting_year INTEGER,
+                forestry_centre_id INTEGER,
+                forest_management_category REAL,
+                method_of_last_cutting INTEGER,
+                municipality_id INTEGER,
+                ds_main_tree_species_biological_age REAL,
+                area_weight_factors TEXT,
+                fra_category TEXT,
+                auxiliary_stand INTEGER,
+                sea_effect REAL,
+                lake_effect REAL,
+                basal_area REAL,
+                main_tree_species_dominant_storey INTEGER,
+                ds_dominant_height REAL,
+                region INTEGER,
+                peatland_type INTEGER,
+                drained_peatland_type INTEGER,
+                under_storey INTEGER,
+                over_storey INTEGER,
+                PRIMARY KEY(identifier)
+            );
+        """
+    )
+
+    # initial_trees
+    cur.execute(
+        """--sql
+            CREATE TABLE initial_trees(
+                identifier TEXT,
+                stand: TEXT,
+                tree_number INTEGER,
+                species INTEGER,
+                breast_height_diameter REAL,
+                height REAL,
+                measured_height REAL,
+                breast_height_age REAL,
+                biological_age REAL,
+                stems_per_ha REAL,
+                origin INTEGER,
+                management_category INTEGER,
+                tree_category TEXT,
+                storey INTEGER,
+                sapling INTEGER,
+                tree_type TEXT,
+                damage_type TEXT,
+                basal_area REAL,
+                volume REAL,
+                stratum INTEGER,
+                PRIMARY KEY(identifier)
+            );
         """
     )
 

@@ -13,6 +13,10 @@ class ComputationalUnit(ABC):
     predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
 
     @abstractmethod
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        pass
+
+    @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
         pass
 

@@ -157,7 +157,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
     # TODO: how to reconstruct initial state if and when original simulation db has incomplete attributes?
     #           - always complete output for initial state?
     #               - would lead to lots of mostly empty columns...
-    #               - unless we add new tables specifically for the initial state?
+    #               - unless we add new tables specifically for the initial state? <- THIS
     #           - require original source data or preprocessed csv?
     #               - how to deal with potential updating?
     _ = stand_id
