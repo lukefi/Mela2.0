@@ -9,7 +9,12 @@ import numpy as np
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.domain.natural_processes import motti_util, grow_motti
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL, _default_data_dir, _maybe_chdir, _resolve_dir_or_file, _resolve_shared_object
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
+    Motti4DLL,
+    _default_data_dir,
+    _maybe_chdir,
+    _resolve_dir_or_file,
+    _resolve_shared_object)
 from lukefi.metsi.data.enums.internal import DrainageCategory
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
@@ -53,7 +58,7 @@ def make_empty_sapling() -> SimpleNamespace:
     )
 
 
-def make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
+def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
     sap = make_empty_sapling()
     return SimpleNamespace(
         identifier="stand-12345",
@@ -88,7 +93,7 @@ def make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
     )
 
 
-def make_rt(
+def _make_rt(
     stems=(100.0, 120.0),
     d=(10.0, 12.0),
     h=(12.0, 14.0),
@@ -319,8 +324,8 @@ class TestGrowMottiDLLVec(unittest.TestCase):
             motti_util._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
-        rt = make_rt(species=(3, 7))  # 7 -> 6
-        stand = make_stand_vec(rt)
+        rt = _make_rt(species=(3, 7))  # 7 -> 6
+        stand = _make_stand_vec(rt)
         fake_dll = FakeDLL()
 
         # grow_motti.MottiDLLPredictorVec expects a Motti4DLL, but our stub is duck-typed.
@@ -330,6 +335,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", fake_dll.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", fake_dll.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", fake_dll.grow_with_state)):
+            stand.motti_state = motti_util.ensure_state(stand, stand.relative_year)
             pred = grow_motti.grow_motti_fn(stand, step=5)
 
         trees_py = fake_dll.captured_trees_py
@@ -342,14 +348,14 @@ class TestGrowMottiDLLVec(unittest.TestCase):
 
     def test_vector_grow_applies_deltas_and_handles_deaths(self) -> None:
         # Two trees; DLL returns growth only for tree 1; tree 2 "dies" (missing -> stems=0)
-        rt = make_rt(
+        rt = _make_rt(
             stems=(100.0, 80.0),
             d=(10.0, 12.0),
             h=(12.0, 14.0),
             species=(2, 3),
             origin=(2, 2),
         )
-        stand = make_stand_vec(rt)
+        stand = _make_stand_vec(rt)
 
         class GrowingDLL(FakeDLL):
             def grow_with_state(self, state: MottiState, **kwargs: Any):  # noqa: D401
@@ -371,6 +377,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", dll_stub.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", dll_stub.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", dll_stub.grow_with_state)):
+            stand.motti_state = motti_util.ensure_state(stand, stand.relative_year)
             out_stand, _ = grow_motti.grow_motti_fn(
                 stand,
                 step=5,

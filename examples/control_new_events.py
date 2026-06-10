@@ -1,9 +1,10 @@
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
+from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.sim_configuration import Initialization, Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from examples.declarations.sqlite import sqlite_decl
 
@@ -37,6 +38,7 @@ control_structure = {
             events=[Mounding()]
         ),
     ],
+    "initialization": Initialization(initialize_motti),
     "transition": Transition(grow_motti_fn, db_output=False),
     "end_condition": ForestCondition(lambda payload: payload.computational_unit.time > 2050)
 }

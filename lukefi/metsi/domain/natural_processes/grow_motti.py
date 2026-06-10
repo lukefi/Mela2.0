@@ -1,11 +1,12 @@
 import numpy as np
-from lukefi.metsi.domain.natural_processes.motti_util import reconcile_reference_trees_from_motti, ensure_state
+from lukefi.metsi.domain.natural_processes.motti_util import reconcile_reference_trees_from_motti
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.data.enums.internal import LandUseCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.app.utils import MetsiException
 
 
 @natural_process_transition
@@ -18,6 +19,9 @@ def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
 
     stand = input_
 
+    if stand.motti_state is None:
+        raise MetsiException("Missing Motti state initialization.")
+
     rt = stand.reference_trees
 
     if stand.land_use_category is not None and stand.land_use_category >= LandUseCategory.WASTE_LAND:
@@ -27,7 +31,7 @@ def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
         update_stand_growth(stand, base_d, base_h, base_f, step, False)
         return stand, []
 
-    state = ensure_state(stand, sim_year=stand.relative_year)
+    state = stand.motti_state
     state.yy.year = stand.relative_year
     state.yy.step = step
 

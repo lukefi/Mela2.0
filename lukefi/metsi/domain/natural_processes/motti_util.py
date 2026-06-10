@@ -651,8 +651,6 @@ def ensure_state(stand: ForestStand,
                  sim_year: int,
                  use_dll_site_convert: bool = True):
     """Initialize and attach persistent MottiState to stand if missing."""
-    if stand.motti_state is not None:
-        return stand.motti_state
 
     rt = stand.reference_trees
 
