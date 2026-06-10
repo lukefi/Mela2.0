@@ -30,12 +30,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -87,7 +87,7 @@ jobs:
 
     - name: Log in to GHCR
       if: steps.ghcr_access.outputs.can_pull == 'true'
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -127,7 +127,7 @@ jobs:
 
     - name: Upload testing results
       if: (!cancelled())
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Test Results (Python ${{ matrix.python-version }}, R ${{ matrix.r-version}})
         path: |
