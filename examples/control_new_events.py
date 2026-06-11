@@ -1,7 +1,7 @@
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
-from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.sim.sim_configuration import Initialization, Transition

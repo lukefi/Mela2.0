@@ -8,7 +8,7 @@ from unittest.mock import patch
 import numpy as np
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.motti.motti_types import MottiState
-from lukefi.metsi.domain.natural_processes import motti_util, grow_motti
+from lukefi.metsi.domain.natural_processes import motti_util, grow_motti, motti_initialization
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
     Motti4DLL,
     _default_data_dir,
@@ -311,17 +311,18 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
 class TestGrowMottiDLLVec(unittest.TestCase):
 
     def test_species_mapping_and_euref(self) -> None:
+        # NOTE: Siis eikö tämän kannattas olla jossain tests\...\enum hakemistossa?
         # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
-        self.assertEqual(motti_util.convert_species(TreeSpecies(7)), 6)
-        self.assertEqual(motti_util.convert_species(TreeSpecies(3)), 3)
+        self.assertEqual(motti_initialization.convert_species(TreeSpecies(7)), 6)
+        self.assertEqual(motti_initialization.convert_species(TreeSpecies(3)), 3)
 
         # auto_euref_km conversion logic
-        y_km, x_km = motti_util._auto_euref_km(6900000.0, 3400000.0)
+        y_km, x_km = motti_initialization._auto_euref_km(6900000.0, 3400000.0)
         self.assertEqual((y_km, x_km), (6900.0, 3400.0))
-        y_10km, x_10km = motti_util._auto_euref_km(6900.0, 3400.0)
+        y_10km, x_10km = motti_initialization._auto_euref_km(6900.0, 3400.0)
         self.assertEqual((y_10km, x_10km), (6.9, 3.4))
         with self.assertRaises(ValueError):
-            motti_util._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
+            motti_initialization._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
         rt = _make_rt(species=(3, 7))  # 7 -> 6
@@ -335,7 +336,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", fake_dll.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", fake_dll.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", fake_dll.grow_with_state)):
-            stand.motti_state = motti_util.ensure_state(stand, stand.relative_year)
+            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year)
             pred = grow_motti.grow_motti_fn(stand, step=5)
 
         trees_py = fake_dll.captured_trees_py
@@ -377,7 +378,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", dll_stub.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", dll_stub.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", dll_stub.grow_with_state)):
-            stand.motti_state = motti_util.ensure_state(stand, stand.relative_year)
+            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year)
             out_stand, _ = grow_motti.grow_motti_fn(
                 stand,
                 step=5,

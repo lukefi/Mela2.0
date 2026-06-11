@@ -9,7 +9,7 @@ from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T, int], OpTuple[T]]
-type InitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None]
+type InitFn[T: ComputationalUnit] = Callable[[T], None]
 
 
 class Transition[T: ComputationalUnit]:
@@ -87,7 +87,7 @@ class Initialization[T: ComputationalUnit]:
         self.params = init_params or {}
 
     def __call__(self, unit: T):
-        self.init_fn(unit, self.params)
+        self.init_fn(unit, **self.params)
 
 
 class SimConfiguration[T: ComputationalUnit]:

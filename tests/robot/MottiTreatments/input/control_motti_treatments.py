@@ -11,7 +11,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Initialization, Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
 from lukefi.metsi.sim.treatment import do_nothing
 from user_events import (
     Harvest20percent,

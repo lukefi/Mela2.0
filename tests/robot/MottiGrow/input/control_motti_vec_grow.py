@@ -12,7 +12,7 @@ from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import Initialization, Transition
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
-from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
 
 Motti4DLL.load()
 
