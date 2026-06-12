@@ -50,15 +50,17 @@ def resimulate_schedules(control: dict[str, Any],
 
                 if step > 0:
                     current.computational_unit, cd = transition(current.computational_unit, step)
-
+                    _ = cd
                 for treatment in treatments:
                     current.computational_unit, cd = treatment(current.computational_unit)
+                    _ = cd
 
 
 def _determine_transition(control: dict[str, Any], in_db: sqlite3.Connection) -> TransitionFn[ForestStand]:
     _ = control
     _ = in_db
     assert False, "_determine_transition not implemented"
+    return control["transition"]
 
 
 def _recreate_instructions(sched_file_path: str,
