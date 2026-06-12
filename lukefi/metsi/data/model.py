@@ -230,10 +230,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Whether the stand contains an over storey.
     """
-    ds_main_tree_species: Optional[TreeSpecies] = None
-    """
-    Main tree species in the dominant storey.
-    """
 
     sqlite_decl: Optional[dict] = None
     """
