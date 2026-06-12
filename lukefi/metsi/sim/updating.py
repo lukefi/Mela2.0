@@ -35,6 +35,7 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 
             if step > 0:
                 current.computational_unit, cd = transition(current.computational_unit, step)
+                current.computational_unit.update_aggregates()
                 if db is not None:
                     output_node_to_db(
                         db,
@@ -50,6 +51,7 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 
             for treatment in treatments:
                 current.computational_unit, cd = treatment(current.computational_unit)
+                current.computational_unit.update_aggregates()
                 current.node_id.append(0)
                 if db is not None:
                     output_node_to_db(
