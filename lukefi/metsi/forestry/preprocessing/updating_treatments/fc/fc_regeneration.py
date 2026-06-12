@@ -39,6 +39,7 @@ seeding = PredeterminedTreatment(
         "height": 0,
         "biological_age": 0,
         "ntrees": 1,
+        "type": "artificial"
     },
     dynamic_parameters={
         "species": _regeneration_species_fn,
@@ -56,6 +57,7 @@ seedingPine = PredeterminedTreatment(
         "ntrees": 1,
         "species": TreeSpecies.PINE,
         "stems_per_ha": 4500,
+        "type": "artificial"
     },
 )
 
@@ -69,6 +71,7 @@ seedingSpruce = PredeterminedTreatment(
         "ntrees": 1,
         "species": TreeSpecies.SPRUCE,
         "stems_per_ha": 4000,
+        "type": "artificial"
     },
 )
 
@@ -82,6 +85,7 @@ seedingSilverBirch = PredeterminedTreatment(
         "ntrees": 1,
         "species": TreeSpecies.SILVER_BIRCH,
         "stems_per_ha": 5000,
+        "type": "artificial"
     },
 )
 
@@ -95,6 +99,7 @@ seedingDownyBirch = PredeterminedTreatment(
         "ntrees": 1,
         "species": TreeSpecies.DOWNY_BIRCH,
         "stems_per_ha": 5000,
+        "type": "artificial"
     },
 )
 
@@ -116,6 +121,7 @@ planting = PredeterminedTreatment(
         "height": 0,
         "biological_age": 0,
         "ntrees": 10,
+        "type": "artificial"
     },
     dynamic_parameters={
         "species": _regeneration_species_fn,
@@ -133,6 +139,7 @@ plantingPine = PredeterminedTreatment(
         "ntrees": 10,
         "species": TreeSpecies.PINE,
         "stems_per_ha": 4500,
+        "type": "artificial"
     },
 )
 
@@ -146,6 +153,7 @@ plantingSpruce = PredeterminedTreatment(
         "ntrees": 10,
         "species": TreeSpecies.SPRUCE,
         "stems_per_ha": 4000,
+        "type": "artificial"
     },
 )
 
@@ -159,6 +167,7 @@ plantingSilverBirch = PredeterminedTreatment(
         "ntrees": 10,
         "species": TreeSpecies.SILVER_BIRCH,
         "stems_per_ha": 1600,
+        "type": "artificial"
     },
 )
 
@@ -172,5 +181,6 @@ plantingDownyBirch = PredeterminedTreatment(
         "ntrees": 1,
         "species": TreeSpecies.DOWNY_BIRCH,
         "stems_per_ha": 1600,
+        "type": "artificial"
     },
 )
