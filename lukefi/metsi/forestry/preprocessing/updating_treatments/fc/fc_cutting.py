@@ -33,7 +33,7 @@ _osc_tree_selection = {
     ],
 }
 
-overStoreyCutting = PredeterminedTreatment(
+over_storey_cutting = PredeterminedTreatment(
     name="fc_over_storey_cutting",
     treatment_fn=cutting_fn,
     static_parameters={
@@ -117,7 +117,7 @@ def _ft_tree_selection_fn(stand: ForestStand):
     }
 
 
-firstThinning = PredeterminedTreatment(
+first_thinning = PredeterminedTreatment(
     name="fc_first_thinning",
     treatment_fn=cutting_fn,
     static_parameters={
@@ -149,32 +149,26 @@ def _ba_after_thinning_below(stand: ForestStand, _: ReferenceTrees | None = None
                 return 15.3
             if _spe == TreeSpecies.SILVER_BIRCH:
                 return 8.5
-            else:
-                return 10.4
-        else:
-            if _spe == TreeSpecies.PINE:
-                return 19.0
-            if _spe == TreeSpecies.SPRUCE:
-                return 20.0
-            if _spe == TreeSpecies.SILVER_BIRCH:
-                return 14.0
-            else:
-                return 13.4
-    else:
-        if _hdom <= 12:
-            if _spe == TreeSpecies.PINE:
-                return 14.0
-            if _spe == TreeSpecies.SPRUCE:
-                return 12.0
-            else:
-                return 10.4
-        else:
-            if _spe == TreeSpecies.PINE:
-                return 16.0
-            if _spe == TreeSpecies.SPRUCE:
-                return 17.0
-            else:
-                return 13.4
+            return 10.4
+        if _spe == TreeSpecies.PINE:
+            return 19.0
+        if _spe == TreeSpecies.SPRUCE:
+            return 20.0
+        if _spe == TreeSpecies.SILVER_BIRCH:
+            return 14.0
+        return 13.4
+
+    if _hdom <= 12:
+        if _spe == TreeSpecies.PINE:
+            return 14.0
+        if _spe == TreeSpecies.SPRUCE:
+            return 12.0
+        return 10.4
+    if _spe == TreeSpecies.PINE:
+        return 16.0
+    if _spe == TreeSpecies.SPRUCE:
+        return 17.0
+    return 13.4
 
 
 def _thin_tree_base_set_fn(_: ForestStand, trees: ReferenceTrees) -> np.ndarray:
@@ -250,7 +244,7 @@ _cc_tree_selection = {
     ],
 }
 
-clearCutting = PredeterminedTreatment(
+clearcutting = PredeterminedTreatment(
     name="fc_clear_cutting",
     treatment_fn=cutting_fn,
     static_parameters={

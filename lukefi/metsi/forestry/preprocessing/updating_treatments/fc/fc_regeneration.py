@@ -17,8 +17,7 @@ def _regeneration_species_fn(stand: ForestStand) -> TreeSpecies:
     if stand.site_type_category == SiteType.DAMP_SITE:
         if stand.soil_peatland_category == SoilPeatlandCategory.MINERAL_SOIL:
             return TreeSpecies.SILVER_BIRCH
-        else:
-            return TreeSpecies.DOWNY_BIRCH
+        return TreeSpecies.DOWNY_BIRCH
     return TreeSpecies.PINE
 
 
@@ -47,7 +46,7 @@ seeding = PredeterminedTreatment(
     }
 )
 
-seedingPine = PredeterminedTreatment(
+seeding_pine = PredeterminedTreatment(
     name="fc_seedingPine",
     treatment_fn=regeneration_fn,
     static_parameters={
@@ -61,8 +60,8 @@ seedingPine = PredeterminedTreatment(
     },
 )
 
-seedingSpruce = PredeterminedTreatment(
-    name="fc_seedingSpruce",
+seeding_spruce = PredeterminedTreatment(
+    name="fc_seeding_spruce",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
@@ -75,8 +74,8 @@ seedingSpruce = PredeterminedTreatment(
     },
 )
 
-seedingSilverBirch = PredeterminedTreatment(
-    name="fc_seedingSilverBirch",
+seeding_silver_birch = PredeterminedTreatment(
+    name="fc_seeding_silver_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
@@ -89,8 +88,8 @@ seedingSilverBirch = PredeterminedTreatment(
     },
 )
 
-seedingDownyBirch = PredeterminedTreatment(
-    name="fc_seedingDownyBirch",
+seeding_downy_birch = PredeterminedTreatment(
+    name="fc_seeding_downy_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
@@ -129,8 +128,8 @@ planting = PredeterminedTreatment(
     }
 )
 
-plantingPine = PredeterminedTreatment(
-    name="fc_plantingPine",
+planting_pine = PredeterminedTreatment(
+    name="fc_planting_pine",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
@@ -143,8 +142,8 @@ plantingPine = PredeterminedTreatment(
     },
 )
 
-plantingSpruce = PredeterminedTreatment(
-    name="fc_plantingSpruce",
+planting_spruce = PredeterminedTreatment(
+    name="fc_planting_spruce",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
@@ -157,8 +156,8 @@ plantingSpruce = PredeterminedTreatment(
     },
 )
 
-plantingSilverBirch = PredeterminedTreatment(
-    name="fc_plantingSilverBirch",
+planting_silver_birch = PredeterminedTreatment(
+    name="fc_planting_silver_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
@@ -171,7 +170,7 @@ plantingSilverBirch = PredeterminedTreatment(
     },
 )
 
-plantingDownyBirch = PredeterminedTreatment(
+planting_downy_birch = PredeterminedTreatment(
     name="fc_plantingDownyBirch",
     treatment_fn=regeneration_fn,
     static_parameters={
