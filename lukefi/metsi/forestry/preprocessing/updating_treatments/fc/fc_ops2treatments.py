@@ -1,10 +1,10 @@
-from fc_cutting import (
+from .fc_cutting import (
     overStoreyCutting,
     firstThinning,
     thinning,
     clearCutting
 )
-from fc_regeneration import (
+from .fc_regeneration import (
     seeding,
     seedingPine,
     seedingSpruce,
@@ -16,7 +16,7 @@ from fc_regeneration import (
     plantingSilverBirch,
     plantingDownyBirch
 )
-from fc_young_stand import (
+from .fc_young_stand import (
     mechanicalClearing,
     earlyTending,
 )
