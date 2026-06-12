@@ -20,8 +20,10 @@ from fc_young_stand import (
     mechanicalClearing,
     earlyTending,
 )
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
-FORESTRY_CENTER_TREATMENTS = {
+FORESTRY_CENTER_TREATMENTS: dict[int, PredeterminedTreatment[ForestStand]] = {
     1: overStoreyCutting,      # Ylispuiden poisto
     2: firstThinning,          # Ensiharvennus
     3: thinning,               # Harvennus

@@ -1,14 +1,12 @@
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     SiteType,
     SoilPeatlandCategory,
     Origin
 )
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration_fn
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
-from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
 
 
 def _regeneration_species_fn(stand: ForestStand) -> TreeSpecies:
@@ -17,7 +15,7 @@ def _regeneration_species_fn(stand: ForestStand) -> TreeSpecies:
                                     ):
         return TreeSpecies.SPRUCE
     if stand.site_type_category == SiteType.DAMP_SITE:
-        if stand.soil_and_peatland_category == SoilPeatlandCategory.MINERAL_SOIL:
+        if stand.soil_peatland_category == SoilPeatlandCategory.MINERAL_SOIL:
             return TreeSpecies.SILVER_BIRCH
         else:
             return TreeSpecies.DOWNY_BIRCH
@@ -35,7 +33,7 @@ def _seeded_stems_fn(stand: ForestStand) -> int:
 
 seeding = PredeterminedTreatment(
     name="fc_seeding",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
         "height": 0,
@@ -50,7 +48,7 @@ seeding = PredeterminedTreatment(
 
 seedingPine = PredeterminedTreatment(
     name="fc_seedingPine",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
         "height": 0,
@@ -63,7 +61,7 @@ seedingPine = PredeterminedTreatment(
 
 seedingSpruce = PredeterminedTreatment(
     name="fc_seedingPine",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
         "height": 0,
@@ -76,7 +74,7 @@ seedingSpruce = PredeterminedTreatment(
 
 seedingSilverBirch = PredeterminedTreatment(
     name="fc_seedingPine",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
         "height": 0,
@@ -89,7 +87,7 @@ seedingSilverBirch = PredeterminedTreatment(
 
 seedingDownyBirch = PredeterminedTreatment(
     name="fc_seedingPine",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
         "height": 0,
@@ -112,7 +110,7 @@ def _planted_stems_fn(stand: ForestStand) -> int:
 
 planting = PredeterminedTreatment(
     name="fc_planting",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
         "height": 0,
@@ -127,7 +125,7 @@ planting = PredeterminedTreatment(
 
 plantingPine = PredeterminedTreatment(
     name="fc_plantingPine",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
         "height": 0,
@@ -140,7 +138,7 @@ plantingPine = PredeterminedTreatment(
 
 plantingSpruce = PredeterminedTreatment(
     name="fc_plantingSpruce",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
         "height": 0,
@@ -153,7 +151,7 @@ plantingSpruce = PredeterminedTreatment(
 
 plantingSilverBirch = PredeterminedTreatment(
     name="fc_plantingSilverBirch",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
         "height": 0,
@@ -166,7 +164,7 @@ plantingSilverBirch = PredeterminedTreatment(
 
 plantingDownyBirch = PredeterminedTreatment(
     name="fc_plantingDownyBirch",
-    treatment_fn=regeneration,
+    treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
         "height": 0,

@@ -1,16 +1,15 @@
 import numpy as np
+from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies, SiteType
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
-from lukefi.metsi.forestry.harvest.cutting import cutting
+from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 
 
-def _osc_tree_set1_fn(stand: ForestStand, trees) -> np.ndarray:
-    treesinset = (trees.storey == Storey.OVER) & \
-        (trees.managementcategory <= 1)
-    return treesinset
+def _osc_tree_set1_fn(_: ForestStand, trees) -> np.ndarray:
+    return (trees.storey == Storey.OVER) & (trees.managementcategory <= 1)
 
 
 _osc_tree_selection = {
@@ -35,7 +34,7 @@ _osc_tree_selection = {
 
 overStoreyCutting = PredeterminedTreatment(
     name="fc_over_storey_cutting",
-    treatment_fn=cutting,
+    treatment_fn=cutting_fn,
     static_parameters={
         "cutting_season": "random",
         "cutting_method": "cost_minimized",
@@ -65,8 +64,10 @@ def _ft_remaining_stems(stand: ForestStand) -> float:
     if stand.ds_main_tree_species == TreeSpecies.DOWNY_BIRCH:
         return 1200
 
+    raise MetsiException(f"Unsupported ds_main_tree_species {stand.ds_main_tree_species}")
 
-def _ft_tree_base_set_fn(stand: ForestStand) -> np.ndarray:
+
+def _ft_tree_base_set_fn(stand: ForestStand, _: ReferenceTrees | None = None) -> np.ndarray:
     return np.logical_and(stand.reference_trees.breast_height_diameter >= 5,
                           stand.reference_trees.management_category <= 1)
 
@@ -76,7 +77,7 @@ def _ft_nstems_not_included(stand: ForestStand) -> float:
     return np.sum(stand.reference_trees.stems_per_ha[trees_not_included])
 
 
-def _ft_tree_set1_fn(stand: ForestStand, trees) -> np.ndarray:
+def _ft_tree_set1_fn(stand: ForestStand, trees: ReferenceTrees) -> np.ndarray:
     trees_in_set = np.logical_and(trees.species != stand.ds_main_tree_species,
                                   _ft_tree_base_set_fn(stand))
     return trees_in_set
@@ -87,7 +88,7 @@ def _ft_tree_selection_fn(stand: ForestStand):
         "target": SelectionTarget(
             type_="absolute_remain",
             var="stems_per_ha",
-            amount=ft_remaining_stems(stand) + _ft_nstems_not_included(stand),
+            amount=_ft_remaining_stems(stand) + _ft_nstems_not_included(stand),
         ),
         "sets": [
             SelectionSet[ForestStand, ReferenceTrees](
@@ -105,7 +106,7 @@ def _ft_tree_selection_fn(stand: ForestStand):
                 order_var="breast_height_diameter",
                 target_var="stems_per_ha",
                 target_type="absolute_remain",
-                target_amount=ft_remaining_stems(stand),
+                target_amount=_ft_remaining_stems(stand),
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
                 profile_xmode="relative"
@@ -116,7 +117,7 @@ def _ft_tree_selection_fn(stand: ForestStand):
 
 firstThinning = PredeterminedTreatment(
     name="fc_first_thinning",
-    treatment_fn=cutting,
+    treatment_fn=cutting_fn,
     static_parameters={
         "cutting_season": "random",
         "cutting_method": "cost_minimized",
@@ -130,10 +131,12 @@ firstThinning = PredeterminedTreatment(
 # Dummy, will be replaced with real substance parameter function
 
 
-def BA_AFTER_THINNING_BELOW(stand: ForestStand, trees) -> float:
+def _ba_after_thinning_below(stand: ForestStand, _: ReferenceTrees | None = None) -> float:
     _site = stand.site_type_category
     _hdom = stand.ds_dominant_height
     _spe = stand.ds_main_tree_species
+
+    assert _hdom is not None
 
     if _site in (SiteType.VERY_RICH_SITE, SiteType.RICH_SITE, SiteType.DAMP_SITE):
         if _hdom <= 12:
@@ -171,12 +174,12 @@ def BA_AFTER_THINNING_BELOW(stand: ForestStand, trees) -> float:
                 return 13.4
 
 
-def _thin_tree_base_set_fn(stand: ForestStand, trees) -> np.ndarray:
+def _thin_tree_base_set_fn(_: ForestStand, trees: ReferenceTrees) -> np.ndarray:
     return np.logical_and(trees.breast_height_diameter >= 6,
                           trees.management_category <= 1)
 
 
-def _thin_ba_not_included(stand: ForestStand) -> float:
+def _thin_ba_not_included(stand: ForestStand, _: ReferenceTrees | None = None) -> float:
     trees_not_included = np.where(np.logical_not(_thin_tree_base_set_fn(stand)))
     return np.sum(stand.reference_trees.basal_area[trees_not_included])
 
@@ -186,7 +189,7 @@ def _thin_tree_selection_fn(stand: ForestStand):
         "target": SelectionTarget(
             type_="absolute_remain",
             var="basal_area",
-            amount=BA_AFTER_THINNING_BELOW(stand) + _thin_ba_not_included(stand),
+            amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand),
         ),
         "sets": [
             SelectionSet[ForestStand, ReferenceTrees](
@@ -194,7 +197,7 @@ def _thin_tree_selection_fn(stand: ForestStand):
                 order_var="breast_height_diameter",
                 target_var="basal_area",
                 target_type="absolute_remain",
-                target_amount=BA_AFTER_THINNING_BELOW(stand) + _thin_ba_not_included(stand),
+                target_amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand),
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
                 profile_xmode="relative"
@@ -205,7 +208,7 @@ def _thin_tree_selection_fn(stand: ForestStand):
 
 thinning = PredeterminedTreatment(
     name="fc_thinning",
-    treatment_fn=cutting,
+    treatment_fn=cutting_fn,
     static_parameters={
         "cutting_season": "random",
         "cutting_method": "cost_minimized",
@@ -217,7 +220,7 @@ thinning = PredeterminedTreatment(
 )
 
 
-def _cc_tree_set1_fn(stand: ForestStand, trees) -> np.ndarray:
+def _cc_tree_set1_fn(_: ForestStand, trees) -> np.ndarray:
     trees_in_set = (trees.breast_height_diameter >= 6) & \
                    (trees.management_category <= 1)
     return trees_in_set
@@ -245,7 +248,7 @@ _cc_tree_selection = {
 
 clearCutting = PredeterminedTreatment(
     name="fc_clear_cutting",
-    treatment_fn=cutting,
+    treatment_fn=cutting_fn,
     static_parameters={
         "cutting_season": "random",
         "cutting_method": "cost_minimized",
