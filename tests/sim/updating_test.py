@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import ANY, Mock, call
 
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim import updating
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
@@ -57,13 +56,12 @@ class UpdatingTest(unittest.TestCase):
             return stand, []
 
         transition.side_effect = transition_side
-        instructions = UpdatingInstructions()
-        instructions.transition = transition
-        instructions.target_time = 2025
-        instructions.output_transition_state = False
-        instructions.output_transition_cd = False
-        instructions.output_treatment_state = False
-        instructions.output_treatment_cd = False
+        instructions = UpdatingInstructions(target_time=2025,
+                                            transition=transition,
+                                            output_transition_state=False,
+                                            output_transition_cd=False,
+                                            output_treatment_state=False,
+                                            output_treatment_cd=False)
         update_units(instructions, stands)
 
         self.assertEqual(2025, stand1.time)
@@ -72,9 +70,9 @@ class UpdatingTest(unittest.TestCase):
         treatment1.assert_has_calls([call(ANY), call(ANY)])
         treatment2.assert_has_calls([call(ANY), call(ANY)])
 
-        transition.assert_has_calls([call(ANY, 2), # stand1
+        transition.assert_has_calls([call(ANY, 2),  # stand1
                                      call(ANY, 1),
                                      call(ANY, 2),
-                                     call(ANY, 4), # stand2
+                                     call(ANY, 4),  # stand2
                                      call(ANY, 1),
                                      call(ANY, 2)])
