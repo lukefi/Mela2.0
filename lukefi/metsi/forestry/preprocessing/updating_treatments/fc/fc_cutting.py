@@ -182,8 +182,8 @@ def _thin_tree_base_set_fn(_: ForestStand, trees: ReferenceTrees) -> np.ndarray:
                           trees.management_category <= 1)
 
 
-def _thin_ba_not_included(stand: ForestStand, _: ReferenceTrees | None = None) -> float:
-    trees_not_included = np.where(np.logical_not(_thin_tree_base_set_fn(stand)))
+def _thin_ba_not_included(stand: ForestStand, trees: ReferenceTrees) -> float:
+    trees_not_included = np.where(np.logical_not(_thin_tree_base_set_fn(stand, trees)))
     return np.sum(stand.reference_trees.basal_area[trees_not_included])
 
 
@@ -192,7 +192,7 @@ def _thin_tree_selection_fn(stand: ForestStand):
         "target": SelectionTarget(
             type_="absolute_remain",
             var="basal_area",
-            amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand),
+            amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand, stand.reference_trees),
         ),
         "sets": [
             SelectionSet[ForestStand, ReferenceTrees](
@@ -200,7 +200,7 @@ def _thin_tree_selection_fn(stand: ForestStand):
                 order_var="breast_height_diameter",
                 target_var="basal_area",
                 target_type="absolute_remain",
-                target_amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand),
+                target_amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand, stand.reference_trees),
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
                 profile_xmode="relative"
