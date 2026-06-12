@@ -349,20 +349,10 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     @staticmethod
     def _sql_value(v):
-        # if v is None:
-            # return None
-        # if isinstance(v, Enum):
-            # return v.value
-        # numpy scalar -> python scalar
         if isinstance(v, (np.generic,)):
             return v.item()
-        # tuples / arrays that is store as TEXT
         if isinstance(v, (tuple, list, np.ndarray)):
             return str(v)
-        # numpy array row [x,y,z] -> (x, y, z)
-        # if isinstance(v, np.ndarray):
-            # return str(tuple(v.tolist()))
-        # for bool as bool
         return v
 
     @classmethod
@@ -481,30 +471,11 @@ class ForestStand(Finalizable, ComputationalUnit):
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
 
-        # def insert(table: str, cols: list[str], values: list):
-        # cur.execute(
-        # f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join(['?'] * len(cols))})",
-        # tuple(values),
-        # )
-
         # ---- stands ----
-        # stand_cols = self._decl_cols("stands", list(STANDS_TYPES.keys()))
-        # insert(
-        # "stands",
-        # ["node", "identifier"] + stand_cols,
-        # [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in stand_cols],
-        # )
-
         cur.execute(self.stands_insert_statement(), [node, self.identifier] +
                     [self._sql_value(getattr(self, c)) for c in self._stands_cols()])
 
         # ---- trees ----
-        # tree_cols = self._decl_cols("trees", list(TREES_TYPES.keys()))
-        # tree_insert_cols = ["node", "stand", "identifier"] + tree_cols
-        # trees = self.reference_trees
-        # for i in range(trees.size):
-        # row = [self._sql_value(getattr(trees, c)[i]) for c in tree_cols]
-        # insert("trees", tree_insert_cols, [node, self.identifier, trees.identifier[i]] + row)
         trees = self.reference_trees
         tree_attrs = [trees.identifier] + [getattr(trees, c) for c in self._trees_cols()]
         cur.executemany(
@@ -518,12 +489,6 @@ class ForestStand(Finalizable, ComputationalUnit):
         )
 
         # ---- strata ----
-        # strata_cols = self._decl_cols("strata", list(STRATA_TYPES.keys()))
-        # strata_insert_cols = ["node", "stand", "identifier"] + strata_cols
-        # strata = self.tree_strata
-        # for i in range(strata.size):
-        # row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
-        # insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
         strata = self.tree_strata
         stratum_attrs = [strata.identifier] + [getattr(strata, c) for c in self._strata_cols()]
         cur.executemany(
