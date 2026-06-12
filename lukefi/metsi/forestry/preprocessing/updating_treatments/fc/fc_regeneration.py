@@ -62,7 +62,7 @@ seedingPine = PredeterminedTreatment(
 )
 
 seedingSpruce = PredeterminedTreatment(
-    name="fc_seedingPine",
+    name="fc_seedingSpruce",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
@@ -76,7 +76,7 @@ seedingSpruce = PredeterminedTreatment(
 )
 
 seedingSilverBirch = PredeterminedTreatment(
-    name="fc_seedingPine",
+    name="fc_seedingSilverBirch",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
@@ -90,7 +90,7 @@ seedingSilverBirch = PredeterminedTreatment(
 )
 
 seedingDownyBirch = PredeterminedTreatment(
-    name="fc_seedingPine",
+    name="fc_seedingDownyBirch",
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.SEEDED,
