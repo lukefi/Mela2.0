@@ -90,7 +90,7 @@ def main() -> int:
     if not should_continue:
         return 0
     db: sqlite3.Connection | None = None
-    if RunMode.SIMULATE in app_config.run_modes:
+    if RunMode.SIMULATE in app_config.run_modes or RunMode.UPDATE in app_config.run_modes:
         print_logline("Initializing output database")
         db_base = app_config.simulation_output_file or "simulation_results"
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
