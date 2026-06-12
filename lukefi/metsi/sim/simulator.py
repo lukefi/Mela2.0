@@ -2,7 +2,7 @@ from copy import copy
 import sqlite3
 from typing import Any, Optional, cast
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.utils.file_io import NodeType, output_initial_state_to_db, output_node_to_db, update_leaf_node
+from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db, update_leaf_node
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.instructions import SimulationInstruction
@@ -29,7 +29,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
         if db is not None:
             # Write initial state to database
-            output_initial_state_to_db(db, payload.computational_unit)
+            payload.computational_unit.output_initial_state_to_db(db)
             output_node_to_db(db,
                               payload.node_id,
                               "do_nothing",

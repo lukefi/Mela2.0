@@ -179,7 +179,7 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
         """--sql
             CREATE TABLE initial_trees(
                 identifier TEXT,
-                stand: TEXT,
+                stand TEXT,
                 tree_number INTEGER,
                 species INTEGER,
                 breast_height_diameter REAL,

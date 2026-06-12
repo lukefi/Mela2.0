@@ -1,4 +1,5 @@
 from sqlite3 import Connection
+import sqlite3
 from typing import override
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
@@ -35,11 +36,16 @@ class ToyModel(ComputationalUnit):
     def update_aggregates(self):
         pass
 
+    @override
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        _ = db
+        pass
+
     @staticmethod
     def init_db_tables(db: Connection):
         cur = db.cursor()
         cur.execute(
-        """--sql
+            """--sql
             CREATE TABLE nodes(
                 identifier TEXT,
                 stand TEXT,
