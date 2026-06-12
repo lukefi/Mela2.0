@@ -118,7 +118,7 @@ planting = PredeterminedTreatment(
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
-        "height": 0,
+        "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
         "type": "artificial"
@@ -134,7 +134,7 @@ plantingPine = PredeterminedTreatment(
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
-        "height": 0,
+        "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
         "species": TreeSpecies.PINE,
@@ -148,7 +148,7 @@ plantingSpruce = PredeterminedTreatment(
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
-        "height": 0,
+        "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
         "species": TreeSpecies.SPRUCE,
@@ -162,7 +162,7 @@ plantingSilverBirch = PredeterminedTreatment(
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
-        "height": 0,
+        "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
         "species": TreeSpecies.SILVER_BIRCH,
@@ -176,7 +176,7 @@ plantingDownyBirch = PredeterminedTreatment(
     treatment_fn=regeneration_fn,
     static_parameters={
         "origin": Origin.PLANTED,
-        "height": 0,
+        "height": 0.4,
         "biological_age": 0,
         "ntrees": 1,
         "species": TreeSpecies.DOWNY_BIRCH,
