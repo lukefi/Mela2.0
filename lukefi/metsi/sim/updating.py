@@ -2,9 +2,12 @@
 import sqlite3
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.utils.file_io import output_node_to_db
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.sim.transition import TransitionFn
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
 
@@ -18,6 +21,8 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
     output_treatment_state = updating_instructions.output_treatment_state
     output_treatment_cd = updating_instructions.output_treatment_cd
 
+    if db is not None:
+        init_collected_data_tables(db, _get_collected_data_types(units))
     retval = []
     for unit in units:
         if unit.time > target_time:
@@ -63,6 +68,15 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
         current.computational_unit.start_time = current.computational_unit.time
         retval.append(current)
 
+    return retval
+
+
+def _get_collected_data_types[T: ComputationalUnit](units: list[T]) -> CollectableDataTypes:
+    retval: CollectableDataTypes = {NaturalProcessInfo}
+    for unit in units:
+        if unit.predetermined_treatments is not None:
+            for _, treatment in unit.predetermined_treatments:
+                retval |= treatment.collected_data
     return retval
 
 
