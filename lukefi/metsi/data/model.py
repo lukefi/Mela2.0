@@ -1,5 +1,4 @@
 from copy import copy
-from enum import Enum
 import dataclasses
 from functools import lru_cache
 import sqlite3
