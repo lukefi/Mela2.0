@@ -80,6 +80,7 @@ class PredeterminedTreatment(Generic[T_contra]):
     file_parameters: dict[str, str]
     dynamic_parameters: Mapping[str, Callable[[T_contra], Any]]
     evaluated_params: dict[str, Any]
+    collected_data: CollectableDataTypes
 
     def __init__(self,
                  name: str,
@@ -87,7 +88,8 @@ class PredeterminedTreatment(Generic[T_contra]):
                  tags: set[str] | None = None,
                  static_parameters: dict[str, Any] | None = None,
                  file_parameters: dict[str, str] | None = None,
-                 dynamic_parameters: Mapping[str, Callable[[T_contra], Any]] | None = None):
+                 dynamic_parameters: Mapping[str, Callable[[T_contra], Any]] | None = None,
+                 collected_data: CollectableDataTypes | None = None):
         self.name = name
         self.treatment_fn = treatment_fn
 
@@ -110,6 +112,11 @@ class PredeterminedTreatment(Generic[T_contra]):
             self.dynamic_parameters = {}
         else:
             self.dynamic_parameters = dynamic_parameters
+
+        if collected_data is None:
+            self.collected_data = set()
+        else:
+            self.collected_data = collected_data
 
     def __call__(self, unit: T_contra) -> OpTuple[T_contra]:
         return self.treatment_fn(unit, **self._evaluate_parameters(unit))
