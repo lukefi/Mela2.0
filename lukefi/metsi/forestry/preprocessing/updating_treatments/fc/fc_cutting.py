@@ -4,6 +4,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies, SiteType
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 
@@ -41,6 +42,7 @@ overStoreyCutting = PredeterminedTreatment(
         "cutting_skills": "professional",
         "tree_selection": _osc_tree_selection
     },
+    collected_data={RemovedTrees}
 )
 
 
@@ -125,7 +127,8 @@ firstThinning = PredeterminedTreatment(
     },
     dynamic_parameters={
         "tree_selection": _ft_tree_selection_fn
-    }
+    },
+    collected_data={RemovedTrees}
 )
 
 # Dummy, will be replaced with real substance parameter function
@@ -216,7 +219,8 @@ thinning = PredeterminedTreatment(
     },
     dynamic_parameters={
         "tree_selection": _thin_tree_selection_fn
-    }
+    },
+    collected_data={RemovedTrees}
 )
 
 
@@ -255,4 +259,5 @@ clearCutting = PredeterminedTreatment(
         "cutting_skills": "professional",
         "tree_selection": _cc_tree_selection
     },
+    collected_data={RemovedTrees}
 )
