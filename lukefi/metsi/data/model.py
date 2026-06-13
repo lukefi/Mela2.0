@@ -362,7 +362,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return decl.get(table, default)
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def _stands_cols(cls) -> list[str]:
         decl = cls.sqlite_decl
         if not decl:
@@ -370,7 +370,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return decl.get("stands", list(STANDS_TYPES.keys()))
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def _trees_cols(cls) -> list[str]:
         decl = cls.sqlite_decl
         if not decl:
@@ -378,7 +378,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         return decl.get("trees", list(TREES_TYPES.keys()))
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def _strata_cols(cls) -> list[str]:
         decl = cls.sqlite_decl
         if not decl:
@@ -446,21 +446,21 @@ class ForestStand(Finalizable, ComputationalUnit):
         return retval
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def stands_insert_statement(cls):
         cols = cls._stands_cols()
         return f"INSERT INTO stands ({', '.join(["node", "identifier"] + cols)})"\
             f"VALUES({', '.join(['?'] * (len(cols) + 2))})"
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def trees_insert_statement(cls):
         cols = cls._trees_cols()
         return f"INSERT INTO trees ({', '.join(["node", "stand", "identifier"] + cols)})"\
             f"VALUES({', '.join(['?'] * (len(cols) + 3))})"
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=1)
     def strata_insert_statement(cls):
         cols = cls._strata_cols()
         return f"INSERT INTO strata ({', '.join(["node", "stand", "identifier"] + cols)})"\
@@ -471,8 +471,10 @@ class ForestStand(Finalizable, ComputationalUnit):
         cur = db.cursor()
 
         # ---- stands ----
-        cur.execute(self.stands_insert_statement(), [node, self.identifier] +
-                    [self._sql_value(getattr(self, c)) for c in self._stands_cols()])
+        cur.execute(
+            self.stands_insert_statement(),
+            [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in self._stands_cols()]
+        )
 
         # ---- trees ----
         trees = self.reference_trees
