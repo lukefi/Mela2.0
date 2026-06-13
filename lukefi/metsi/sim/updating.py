@@ -86,7 +86,7 @@ def _get_collected_data_types[T: ComputationalUnit](
     if updating_instructions.output_transition_cd:
         retval: CollectableDataTypes = {NaturalProcessInfo}
     else:
-        retval: CollectableDataTypes = set()
+        retval = set()
 
     if updating_instructions.output_treatment_cd:
         for unit in units:
