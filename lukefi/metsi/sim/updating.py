@@ -1,4 +1,3 @@
-
 import sqlite3
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -12,17 +11,21 @@ from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
 def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructions[T],
                                        units: list[T],
-                                       db: sqlite3.Connection | None = None) -> list[SimulationPayload[T]]:
+                                       db: sqlite3.Connection | None = None) -> tuple[list[SimulationPayload[T]],
+                                                                                      CollectableDataTypes | None]:
     target_time = updating_instructions.target_time
     transition = updating_instructions.transition
     output_transition_state = updating_instructions.output_transition_state
     output_transition_cd = updating_instructions.output_transition_cd
     output_treatment_state = updating_instructions.output_treatment_state
     output_treatment_cd = updating_instructions.output_treatment_cd
+    cd_types: CollectableDataTypes | None = None
 
     if db is not None:
-        init_collected_data_tables(db, _get_collected_data_types(units))
-    retval = []
+        cd_types = _get_collected_data_types(units, updating_instructions)
+        init_collected_data_tables(db, cd_types)
+
+    retval: list[SimulationPayload[T]] = []
     for unit in units:
         if unit.time > target_time:
             raise MetsiException(f"Unable to update unit {unit.identifier} to time {target_time}: "
@@ -64,20 +67,33 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                         output_state=output_treatment_state,
                         output_collected_data=output_treatment_cd
                     )
+        # TODO: delete current.comptutaional_unit.predetermined_treatments?
 
         # Update starting time for relative timepoints
         current.computational_unit.start_time = current.computational_unit.time
+
+        # TODO: update initial state tables in db?
+
         retval.append(current)
 
-    return retval
+    return retval, cd_types
 
 
-def _get_collected_data_types[T: ComputationalUnit](units: list[T]) -> CollectableDataTypes:
-    retval: CollectableDataTypes = {NaturalProcessInfo}
-    for unit in units:
-        if unit.predetermined_treatments is not None:
-            for _, treatment in unit.predetermined_treatments:
-                retval |= treatment.collected_data
+def _get_collected_data_types[T: ComputationalUnit](
+        units: list[T],
+        updating_instructions: UpdatingInstructions) -> CollectableDataTypes:
+
+    if updating_instructions.output_transition_cd:
+        retval: CollectableDataTypes = {NaturalProcessInfo}
+    else:
+        retval: CollectableDataTypes = set()
+
+    if updating_instructions.output_treatment_cd:
+        for unit in units:
+            if unit.predetermined_treatments is not None:
+                for _, treatment in unit.predetermined_treatments:
+                    retval |= treatment.collected_data
+
     return retval
 
 

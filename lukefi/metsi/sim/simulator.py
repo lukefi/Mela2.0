@@ -3,7 +3,7 @@ import sqlite3
 from typing import Any, Optional, cast
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
-from lukefi.metsi.sim.collected_data import init_collected_data_tables
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
 from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -11,11 +11,12 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
                                                 units: list[T] | list[SimulationPayload[T]],
-                                                db: Optional[sqlite3.Connection] = None):
+                                                db: Optional[sqlite3.Connection] = None,
+                                                existing_data_types: CollectableDataTypes | None = None):
     simconfig = SimConfiguration[T](control["simulation_instructions"], control["transition"], control["end_condition"])
 
     if db is not None:
-        init_collected_data_tables(db, simconfig.collected_data)
+        init_collected_data_tables(db, simconfig.collected_data, existing_data_types)
 
     for i, unit in enumerate(units, 1):
         if not isinstance(unit, SimulationPayload):
