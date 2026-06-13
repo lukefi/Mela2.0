@@ -53,9 +53,7 @@ def _update(control: dict, stands: StandList, db: sqlite3.Connection |
         print_logline(f"Updating stands to year {updating_instructions.target_time}...")
         return update_units(updating_instructions, stands, db)
 
-    print_logline("Declaration for 'updating' not found from control.")
-    print_logline("Skipping updating of stands.")
-    return stands
+    raise MetsiException("Declaration for 'updating' not found from control.")
 
 
 def _simulate(control: dict,
