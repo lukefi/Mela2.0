@@ -19,8 +19,8 @@ def update_to_year_fn(stand: ForestStand,
         the treatments).
     """
 
-    assert transition is not None
-    assert target_year is not None
+    assert transition is not None, "required parameter `transition` missing "
+    assert target_year is not None, "required parameter `target_year` missing"
 
     if stand.time > target_year:
         raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}: "
