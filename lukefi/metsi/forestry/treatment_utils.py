@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Mapping, Any
 import numpy as np
 from lukefi.metsi.app.utils import MetsiException
@@ -17,6 +18,7 @@ def req(params: Mapping[str, Any], name: str) -> Any:
 
 
 def prune_zero_stems_treatment(func: TreatmentFn[ForestStand]) -> TreatmentFn[ForestStand]:
+    @wraps(func)
     def prune_zero_stems_treatment_wrapper(stand: ForestStand, **parameters) -> OpTuple[ForestStand]:
         new_stand, collected_data = func(stand, **parameters)
         trees = new_stand.reference_trees
@@ -29,6 +31,7 @@ def prune_zero_stems_treatment(func: TreatmentFn[ForestStand]) -> TreatmentFn[Fo
 
 
 def prune_zero_stems_transition(func: TransitionFn[ForestStand]) -> TransitionFn[ForestStand]:
+    @wraps(func)
     def prune_zero_stems_transition_wrapper(stand: ForestStand, step: int, **parameters) -> OpTuple[ForestStand]:
         new_stand, collected_data = func(stand, step, **parameters)
         trees = new_stand.reference_trees
