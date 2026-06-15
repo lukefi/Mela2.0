@@ -2,7 +2,7 @@ import sqlite3
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
-from lukefi.metsi.domain.utils.file_io import output_node_to_db
+from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -49,7 +49,9 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                         tags=None,
                         output_state=output_transition_state,
                         output_collected_data=output_transition_cd,
-                        transition_count=1)
+                        transition_count=1,
+                        node_type=NodeType.UPDATING_TRANSITION
+                    )
 
             for treatment in treatments:
                 current.computational_unit, cd = treatment(current.computational_unit)
@@ -65,7 +67,8 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                         cd,
                         treatment.tags,
                         output_state=output_treatment_state,
-                        output_collected_data=output_treatment_cd
+                        output_collected_data=output_treatment_cd,
+                        node_type=NodeType.UPDATING_TREATMENT
                     )
         # TODO: delete current.comptutaional_unit.predetermined_treatments?
 

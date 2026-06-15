@@ -2,7 +2,7 @@
 import sqlite3
 from typing import Any, Callable, Optional
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.utils.file_io import output_node_to_db
+from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
@@ -75,7 +75,8 @@ class Transition[T: ComputationalUnit]:
                               collected_data,
                               output_state=self.db_output_state,
                               output_collected_data=self.db_output_cd,
-                              transition_count=transition_count)
+                              transition_count=transition_count,
+                              node_type=NodeType.TRANSITION)
 
         return new_state, collected_data
 
