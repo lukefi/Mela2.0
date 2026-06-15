@@ -46,7 +46,7 @@ class ToyModel(ComputationalUnit):
                 done_treatment TEXT,
                 treatment_params TEXT,
                 tags TEXT,
-                leaf INTEGER(1) DEFAULT(0),
+                node_type INTEGER DEFAULT(0),
                 PRIMARY KEY(identifier, stand))
         """
         )

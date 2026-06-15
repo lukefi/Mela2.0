@@ -49,14 +49,14 @@ class SimulationInstructionsTest(unittest.TestCase):
         cur = db.cursor()
         cur.execute(
             """--sql
-                SELECT COUNT(*) FROM nodes WHERE leaf == 1;
+                SELECT COUNT(*) FROM nodes WHERE node_type == 3;
             """)
         leaf_count = cur.fetchone()[0]
 
         self.assertEqual(27, leaf_count)
         cur.execute(
             """--sql
-                SELECT identifier FROM nodes WHERE leaf == 1;
+                SELECT identifier FROM nodes WHERE node_type == 3;
             """
         )
         leaf_node_ids_expected = ["0-0-0-0", "0-0-0-1", "0-0-0-2", "0-0-1-0", "0-0-1-1", "0-0-1-2",
@@ -69,7 +69,7 @@ class SimulationInstructionsTest(unittest.TestCase):
 
         cur.execute(
             """--sql
-                SELECT value FROM toys, nodes WHERE nodes.stand = toys.identifier AND nodes.identifier = toys.node AND nodes.leaf = 1
+                SELECT value FROM toys, nodes WHERE nodes.stand = toys.identifier AND nodes.identifier = toys.node AND nodes.node_type = 3
             """
         )
         self.assertListEqual(
