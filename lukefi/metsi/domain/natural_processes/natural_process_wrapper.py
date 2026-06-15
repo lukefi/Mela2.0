@@ -1,4 +1,5 @@
 from copy import copy
+from functools import wraps
 
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
@@ -13,6 +14,7 @@ def natural_process_transition(natural_process_func: TransitionFn[ForestStand]):
         natural_process_func (TransitionFn[ForestStand]): A natural process transition function, e.g.
             `grow_motti_dll_fn`.
     """
+    @wraps(natural_process_func)
     def wrapper(computational_unit: ForestStand, step: int,  **params) -> tuple[ForestStand, list[CollectedData]]:
         np_info = NaturalProcessInfo()
         np_info.start_year = computational_unit.year
