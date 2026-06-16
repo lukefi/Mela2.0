@@ -336,8 +336,8 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", fake_dll.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", fake_dll.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", fake_dll.grow_with_state)):
-            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year)
-            pred = grow_motti.grow_motti_fn(stand, step=5)
+            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year) # pylint: disable=protected-access
+            grow_motti.grow_motti_fn(stand, step=5)
 
         trees_py = fake_dll.captured_trees_py
         self.assertIsNotNone(trees_py, "DLL tree payload was not captured by stub")
@@ -378,7 +378,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
               patch.object(Motti4DLL, "alloc_state_buffers", dll_stub.alloc_state_buffers),
               patch.object(Motti4DLL, "initialize_with_state", dll_stub.initialize_with_state),
               patch.object(Motti4DLL, "grow_with_state", dll_stub.grow_with_state)):
-            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year)
+            stand.motti_state = motti_initialization._init_motti_state(stand, stand.relative_year)  # pylint: disable=protected-access
             out_stand, _ = grow_motti.grow_motti_fn(
                 stand,
                 step=5,
