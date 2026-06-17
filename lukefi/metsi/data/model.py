@@ -231,7 +231,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     Whether the stand contains an over storey.
     """
 
-    sqlite_decl: Optional[dict[str, str]] = None
+    sqlite_decl: Optional[dict[str, list[str]]] = None
     """
     Declarations for SQLite output database columns.
     """
