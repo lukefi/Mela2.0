@@ -2,7 +2,7 @@ from typing import Any
 
 import numpy as np
 from lukefi.metsi.data.conversion.internal2motti import convert_species
-from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
@@ -48,7 +48,7 @@ def _storey_to_motti(
         Otherwise it is assumed to be a reference_trees row index, and the
         matching stratum row is resolved through rt.stratum -> strata.stratum_number.
     """
-    if fdm_storey in FDM_TO_MOTTI_STOREY: # NOTE: FDM_TO_MOTTI_STOREY vois vaihtaa interl2motti.py
+    if fdm_storey in FDM_TO_MOTTI_STOREY:  # NOTE: FDM_TO_MOTTI_STOREY vois vaihtaa interl2motti.py
         return FDM_TO_MOTTI_STOREY[fdm_storey]
 
     strata = stand.tree_strata
@@ -110,15 +110,18 @@ def _strip_tree_strata(stand: ForestStand):
     stand.tree_strata = stripped
 
 # kutsujärjestys 1. _init_motti_state
+
+
 def _spedom(rt: ReferenceTrees) -> int:
     """
     NOTE: pitäskö tää laskea uudestaan joka stepissä, jos puulajijakauma muuttuu merkittävästi?
      - Vaikuttaako Mottiin jos ei päivitetä?
-    NOTE: onko tämä vähän epäluotettava, koska riippuu siitä että reference_trees on kunnossa ja että siellä on lajikoodit.
+    NOTE: onko tämä vähän epäluotettava, koska riippuu siitä että reference_trees on kunnossa ja 
+        että siellä on lajikoodit.
     - Ehkä vois olla parempi hakea suoraan Mottista dominantti laji ja laskea spedom siitä?
         - NOTE: laskeeko mottiInit itse spedom vai onko tää hyvä antaa tätä kautta?
         - Returns dominant species from Motti species.
-    NOTE: onko tämän oikea paikka tälle vai pitäskö olla conversion/interl2motti.py:ssä? Tai jopa motti_util.py:ssä? 
+    NOTE: onko tämän oikea paikka tälle vai pitäskö olla conversion/interl2motti.py:ssä? Tai jopa motti_util.py:ssä?
 
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
     If trees are empty fall back to PINE, we need to give valid value for growth.
@@ -197,11 +200,11 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
 
     for i in range(min(strata.size, 10)):
         species = TreeSpecies(int(strata.species[i]))
-        if species <= TreeSpecies.TREELESS: # TODO: parempi olisi käyttää enumeja. + species.TREELESS
+        if species <= TreeSpecies.TREELESS:  # TODO: parempi olisi käyttää enumeja. + species.TREELESS
             continue
 
         biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
-        basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0)) # TODO: lisää ehto - jos ppa < 0.001 --> 0.0
+        basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))  # TODO: lisää ehto - jos ppa < 0.001 --> 0.0
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
@@ -224,9 +227,10 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
             "age": biological_age,
             "ba": basal_area,
             "f": stems_main,
-            "h": mean_height, # nää on aritmeettisia ei keskiarvoja. TODO: Mitä tehdään - tyhjänä, nollana vai lasketaan (kuka laskee)?
+            # nää on aritmeettisia ei keskiarvoja. TODO: Mitä tehdään - tyhjänä, nollana vai lasketaan (kuka laskee)?
+            "h": mean_height,
             "hw": mean_height,
-            "d": mean_diameter, # nää on aritmeettisia ei keskiarvoja.
+            "d": mean_diameter,  # nää on aritmeettisia ei keskiarvoja.
             "dg": mean_diameter,
             "storey": storey,
             "st": origin,
@@ -262,13 +266,13 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
     # Iso kuva:
     # KPG_lukupuille(luku_puu) -> säästöpuu_osite, jolla (tunnistusehto) n_gen=1 ja storey=SPARE *1
-    # - compress siis tiivistää vain KPG:n generoimia säästöpuu 
+    # - compress siis tiivistää vain KPG:n generoimia säästöpuu
     # - alkuperäisiin ositteisiin ei kosketa, KPG:n generoima säästöpuu "ylivuoto" on tarkoitus tiivistää. ***
-    # säästöpuu 
+    # säästöpuu
     # ongelmadomain: motti ei tue kuin 10 ositetta max., joten ylimääräiset ei mahdu mukaan.
     # - säästöpuu spesifi UC (kuvaupuiden generoinnissa tehdään säästöpuut)
     # Tässä vaiheessa ositteissa on datassa luetut (oikeat) ositteet + KPG luomat säästöpuuositteet
-    candidate_idx: list[int] = [] # tähän KPG:n generoimat säästöpuu ositteet
+    candidate_idx: list[int] = []  # tähän KPG:n generoimat säästöpuu ositteet
     for i in range(strata.size):
         # KPG on lukenut lukupuun ja muodostanut siitä säästöpuuositteen. Siksi n_gen == 1 *1
         n_gen = int(np.nan_to_num(strata.number_of_generated_trees[i], nan=0))
@@ -294,7 +298,7 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
     # choose base row as first row of the major species
     base_idx = next(i for i in merge_idx if int(strata.species[i]) == base_species)
-    rest_idx = [i for i in merge_idx if i != base_idx] # TODO: rest_idx osittelle pitää vaihtaa base_idx osite_id
+    rest_idx = [i for i in merge_idx if i != base_idx]  # TODO: rest_idx osittelle pitää vaihtaa base_idx osite_id
 
     out = strata[:]
 
@@ -321,15 +325,15 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
 
 def _init_motti_state(stand: ForestStand,
-                 sim_year: int,
-                 use_dll_site_convert: bool = True) -> MottiState:
+                      sim_year: int,
+                      use_dll_site_convert: bool = True) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
     rt = stand.reference_trees
 
     n = rt.size
 
-    ### TÄSTÄ poikki stand.
+    # TÄSTÄ poikki stand.
 
     spedom = _spedom(stand.reference_trees)
 
@@ -342,10 +346,9 @@ def _init_motti_state(stand: ForestStand,
             z = -1.0
     else:
         z = -1.0
-    
+
     # NOTE: Pitäisikö tämä sijoittaa uudelleen koodin esim. omaan funktioon, jotta parantaisi koodin luettavuutta?
-    # yy = init_motti_stand = Motti4DLL.new_stand( ... 
-    yy = Motti4DLL.new_site(   
+    yy = Motti4DLL.new_site(
         Y=y_km,
         X=x_km,
         Z=z,
@@ -355,17 +358,21 @@ def _init_motti_state(stand: ForestStand,
         mty=stand.site_type_category.value if stand.site_type_category is not None else 0,
         verl=stand.tax_class if stand.tax_class is not None else 0,
         verlt=stand.tax_class_reduction if stand.tax_class_reduction is not None else 0,
-        # näissä kans *1; defaultti = -9999
-        xt_regen=((stand.start_time - stand.artificial_regeneration_year)
-                  if stand.artificial_regeneration_year is not None else stand.start_time), 
-        xt_muok=((stand.start_time - stand.soil_surface_preparation_year)
-                 if stand.soil_surface_preparation_year is not None else stand.start_time),
-        xt_raiv=((stand.start_time - stand.regeneration_area_cleaning_year)
-                 if stand.regeneration_area_cleaning_year is not None else stand.start_time),
+        xt_regen=((stand.year - stand.artificial_regeneration_year)
+                  if stand.artificial_regeneration_year is not None
+                  else -9999),
+        xt_muok=((stand.year - stand.soil_surface_preparation_year)
+                 if stand.soil_surface_preparation_year is not None
+                 else -9999),
+        xt_raiv=((stand.year - stand.regeneration_area_cleaning_year)
+                 if stand.regeneration_area_cleaning_year is not None
+                 else -9999),
         sid=stand.stand_id or 0,
         fthin=bool(stand.method_of_last_cutting),
-        # harvennusten osalta. !avohakkuu.
-        xt_thin=stand.method_of_last_cutting or stand.cutting_year or 0, # aika harvennuksesta vuosissa eg. harvennus 2000 -> 2025 == 5v *1
+        xt_thin=((stand.year - stand.cutting_year)
+                    if stand.cutting_year is not None and
+                       stand.method_of_last_cutting not in (CuttingMethod.CLEARCUTTING, CuttingMethod.NO_CUTTING)
+                    else -9999),
         xt_fert=((stand.start_time - stand.fertilization_year)
                  if stand.fertilization_year is not None else stand.start_time),
         xt_thoit=((stand.start_time - stand.young_stand_tending_year)
@@ -376,8 +383,8 @@ def _init_motti_state(stand: ForestStand,
         alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
         year=sim_year - stand.start_year,
         convert_mela_site=use_dll_site_convert,
-        spedom=spedom, # OK
-        spedom2=spedom, # OK pääpuulajimetsikkö
+        spedom=spedom,  # OK
+        spedom2=spedom,  # OK pääpuulajimetsikkö
         nstorey=1.0,
         gstorey=1.0,
     )
@@ -386,7 +393,9 @@ def _init_motti_state(stand: ForestStand,
 
     # START TREES
 
-    # TODO: Is this right? yp <--> rt yhteys, tää pitää tarkastella onko validi näin; eg. menetetäänkö alkuperäiset ja miten strata päivitys vaikuttaa.
+    # TODO: Is this right? yp <--> rt yhteys, tää pitää tarkastella onko
+    # validi näin; eg. menetetäänkö alkuperäiset ja miten strata päivitys
+    # vaikuttaa.
     rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
     ids = rt.tree_number.astype(int).copy()
 
@@ -402,7 +411,8 @@ def _init_motti_state(stand: ForestStand,
     spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
 
     stratum_ids = [
-        int(v) if v > 0 else (stand.stand_id or (idx + 1)) # Miksi? else osassa otetaan kuviolta id? eikö stratum_id:t mene sekaisin? 
+        # Miksi? else osassa otetaan kuviolta id? eikö stratum_id:t mene sekaisin?
+        int(v) if v > 0 else (stand.stand_id or (idx + 1))
         for idx, v in enumerate(rt.stratum)
     ]
     storey_vec = [_storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
@@ -423,7 +433,7 @@ def _init_motti_state(stand: ForestStand,
         }
         for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
             ids,
-            stratum_ids, # original osite_id
+            stratum_ids,  # original osite_id
             stems,
             d13,
             h,
@@ -437,15 +447,16 @@ def _init_motti_state(stand: ForestStand,
     ]
     yp, ntrees = Motti4DLL.new_trees(trees_py)
 
-    ### END TREES
+    # END TREES
 
-    ### START STRATA
+    # START STRATA
 
     # puut on jo yp:ssä ja niiden osite id:t muuttu. eli hävikääkö puut joiden pitäisi siirtyä yp vektoriin?
     # _compress* == jos liikaa ositteita, niin tiivistetään s.e. jää vain 10 ositetta.
     #   - ylimääräisistä siirretään puut yhteen ositteeseen eg. 5 ositetta --> jäljelle jäävään
-    #    
-    compressed_strata = _compress_strata_for_motti(stand.tree_strata, max_strata=10) # Tää pitäs tehdä ennen yp:n alustusta. Rikkoo osite_id eheyden.
+    #
+    # Tää pitäs tehdä ennen yp:n alustusta. Rikkoo osite_id eheyden.
+    compressed_strata = _compress_strata_for_motti(stand.tree_strata, max_strata=10)
     strata_py = _build_motti_strata_py(stand, compressed_strata)
 
     yo = Motti4DLL.new_strata(strata_py)
@@ -463,7 +474,7 @@ def _init_motti_state(stand: ForestStand,
 
     _strip_tree_strata(stand)
 
-    ### END STRATA
+    # END STRATA
 
     return MottiState(yy=yy, yp=yp, ntrees=ntrees, buffers=buffers, )
 

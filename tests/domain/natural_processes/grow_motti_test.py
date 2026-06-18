@@ -83,6 +83,7 @@ def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
         soil_surface_preparation_year=2,
         regeneration_area_cleaning_year=3,
         stand_id=12345,
+        cutting_year=1999,
         method_of_last_cutting=5,
         fertilization_year=100,
         young_stand_tending_year=200,
