@@ -30,12 +30,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: recursive
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -57,7 +57,7 @@ jobs:
       continue-on-error: true
       run: |
         pylint lukefi --output-format=github --disable=all --enable=fixme --fail-under=0
-  
+
     - name: Run mypy
       run: |
         mypy -p lukefi
@@ -87,7 +87,7 @@ jobs:
 
     - name: Log in to GHCR
       if: steps.ghcr_access.outputs.can_pull == 'true'
-      uses: docker/login-action@v3
+      uses: docker/login-action@v4
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
@@ -127,7 +127,7 @@ jobs:
 
     - name: Upload testing results
       if: (!cancelled())
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: Test Results (Python ${{ matrix.python-version }}, R ${{ matrix.r-version}})
         path: |
@@ -143,7 +143,7 @@ jobs:
       run: |
         rm -rf ./data/motti || true
 
-  
+
   publish-test-results:
     name: "Publish Test Results"
     needs: run-tests
@@ -157,7 +157,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -182,7 +182,7 @@ jobs:
           thresholds: '60 80'
 
       - name: Add Coverage PR Comment
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         if: github.event_name == 'pull_request'
         with:
           path: code-coverage-results.md

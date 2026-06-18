@@ -37,24 +37,22 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                                          config: SimConfiguration[T],
                                          db: Optional[sqlite3.Connection] = None,
-                                         transition_count: int = 0) -> list[SimulationPayload[T]]:
-    retval = []
-
+                                         transition_count: int = 0):
     if not config.end_condition(payload):
         offset = 0
         all_instructions_failed = True
         for instruction in config.instructions:
             if all(condition(payload) for condition in instruction.conditions):
                 all_instructions_failed = False
-                for new_branch in instruction.evaluate(copy(payload), db, node = offset):
+                for new_branch in instruction.evaluate(copy(payload), db, node=offset):
                     time_step = _find_next_time_step(
                         new_branch,
                         config.instructions,
                         config.transition.max_step)
                     new_branch.computational_unit, _ = config.transition(new_branch, db, time_step)
                     new_branch.computational_unit.update_aggregates()
-                    retval.extend(_simulate_unit(new_branch, config, db, 1))
-                offset += 1
+                    _simulate_unit(new_branch, config, db, 1)
+                offset += instruction.event_generator.width()
         if all_instructions_failed:
             # All instructions had failed conditions. Create one branch to carry on with transition.
             time_step = _find_next_time_step(
@@ -64,14 +62,11 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
             transition_count += 1
             payload.computational_unit, _ = config.transition(payload, db, time_step, transition_count)
             payload.computational_unit.update_aggregates()
-            retval.extend(_simulate_unit(payload, config, db, transition_count))
+            _simulate_unit(payload, config, db, transition_count)
     else:
         # End condition met, update `leaf` column
         if db is not None:
             update_leaf_node(db, payload, transition_count)
-        retval = [payload]
-
-    return retval
 
 
 def _find_next_time_step[T: ComputationalUnit](payload: SimulationPayload[T],

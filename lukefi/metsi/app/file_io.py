@@ -240,7 +240,7 @@ def init_sqlite_database(file_path: str | Path) -> sqlite3.Connection:
             os.remove(file_path)
         except OSError as e:
             raise MetsiException(f"Unable to delete existing database file {file_path}") from e
-    db = sqlite3.connect(file_path)
+    db = sqlite3.connect(file_path, autocommit=False)
     return db
 
 

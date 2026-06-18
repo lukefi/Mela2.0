@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.9] - 2026-06-17
+
+### Changed
+
+- Reduced database output performance overhead
+
+## [0.8.8] - 2026-06-08
+
+### Fixed
+
+- Fixed node id calcuation for nested `Alternatives` generators
+
 ## [0.8.7] - 2026-05-26
 
 ### Fixed

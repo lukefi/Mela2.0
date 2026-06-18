@@ -1,6 +1,6 @@
 from copy import copy
-from enum import Enum
 import dataclasses
+from functools import lru_cache
 import sqlite3
 from typing import Optional, override
 from dataclasses import dataclass
@@ -350,20 +350,10 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     @staticmethod
     def _sql_value(v):
-        if v is None:
-            return None
-        if isinstance(v, Enum):
-            return v.value
-        # numpy scalar -> python scalar
         if isinstance(v, (np.generic,)):
             return v.item()
-        # tuples / arrays that is store as TEXT
-        if isinstance(v, (tuple, list)):
-            return str(tuple(v))
-        # numpy array row [x,y,z] -> (x, y, z)
-        if isinstance(v, np.ndarray):
-            return str(tuple(v.tolist()))
-        # for bool as bool
+        if isinstance(v, (tuple, list, np.ndarray)):
+            return str(v)
         return v
 
     @classmethod
@@ -371,7 +361,31 @@ class ForestStand(Finalizable, ComputationalUnit):
         decl = cls.sqlite_decl
         if not decl:
             return default
-        return list(decl.get(table, default))
+        return decl.get(table, default)
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def _stands_cols(cls) -> list[str]:
+        decl = cls.sqlite_decl
+        if not decl:
+            return list(STANDS_TYPES.keys())
+        return decl.get("stands", list(STANDS_TYPES.keys()))
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def _trees_cols(cls) -> list[str]:
+        decl = cls.sqlite_decl
+        if not decl:
+            return list(TREES_TYPES.keys())
+        return decl.get("trees", list(TREES_TYPES.keys()))
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def _strata_cols(cls) -> list[str]:
+        decl = cls.sqlite_decl
+        if not decl:
+            return list(STRATA_TYPES.keys())
+        return decl.get("strata", list(STRATA_TYPES.keys()))
 
     @classmethod
     def set_sqlite_decl(cls, decl: Optional[dict]) -> None:
@@ -404,39 +418,62 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         return retval
 
+    @classmethod
+    @lru_cache(maxsize=1)
+    def stands_insert_statement(cls):
+        cols = cls._stands_cols()
+        return f"INSERT INTO stands ({', '.join(["node", "identifier"] + cols)})"\
+            f"VALUES({', '.join(['?'] * (len(cols) + 2))})"
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def trees_insert_statement(cls):
+        cols = cls._trees_cols()
+        return f"INSERT INTO trees ({', '.join(["node", "stand", "identifier"] + cols)})"\
+            f"VALUES({', '.join(['?'] * (len(cols) + 3))})"
+
+    @classmethod
+    @lru_cache(maxsize=1)
+    def strata_insert_statement(cls):
+        cols = cls._strata_cols()
+        return f"INSERT INTO strata ({', '.join(["node", "stand", "identifier"] + cols)})"\
+            f"VALUES({', '.join(['?'] * (len(cols) + 3))})"
+
     @override
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
 
-        def insert(table: str, cols: list[str], values: list):
-            cur.execute(
-                f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({', '.join(['?'] * len(cols))})",
-                tuple(values),
-            )
-
         # ---- stands ----
-        stand_cols = self._decl_cols("stands", list(STANDS_TYPES.keys()))
-        insert(
-            "stands",
-            ["node", "identifier"] + stand_cols,
-            [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in stand_cols],
+        cur.execute(
+            self.stands_insert_statement(),
+            [node, self.identifier] + [self._sql_value(getattr(self, c)) for c in self._stands_cols()]
         )
 
         # ---- trees ----
-        tree_cols = self._decl_cols("trees", list(TREES_TYPES.keys()))
-        tree_insert_cols = ["node", "stand", "identifier"] + tree_cols
         trees = self.reference_trees
-        for i in range(trees.size):
-            row = [self._sql_value(getattr(trees, c)[i]) for c in tree_cols]
-            insert("trees", tree_insert_cols, [node, self.identifier, trees.identifier[i]] + row)
+        tree_attrs = [trees.identifier] + [getattr(trees, c) for c in self._trees_cols()]
+        cur.executemany(
+            self.trees_insert_statement(),
+            (
+                (
+                    [node, self.identifier] + [self._sql_value(tree_attr[i]) for tree_attr in tree_attrs]
+                )
+                for i in range(trees.size)
+            )
+        )
 
         # ---- strata ----
-        strata_cols = self._decl_cols("strata", list(STRATA_TYPES.keys()))
-        strata_insert_cols = ["node", "stand", "identifier"] + strata_cols
         strata = self.tree_strata
-        for i in range(strata.size):
-            row = [self._sql_value(getattr(strata, c)[i]) for c in strata_cols]
-            insert("strata", strata_insert_cols, [node, self.identifier, strata.identifier[i]] + row)
+        stratum_attrs = [strata.identifier] + [getattr(strata, c) for c in self._strata_cols()]
+        cur.executemany(
+            self.strata_insert_statement(),
+            (
+                (
+                    [node, self.identifier] + [self._sql_value(stratum_attr[i]) for stratum_attr in stratum_attrs]
+                )
+                for i in range(strata.size)
+            )
+        )
 
     @override
     def update_aggregates(self):
