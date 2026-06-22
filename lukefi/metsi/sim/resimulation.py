@@ -289,7 +289,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
 
 def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
     _ = src
-
+    return (None, None, None, None)
 
 def _fetch_initial_trees_col(stand: str, col: str, cur: sqlite3.Cursor) -> list[Any]:
     cur.execute(
