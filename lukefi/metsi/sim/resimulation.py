@@ -1,9 +1,8 @@
 from copy import deepcopy
 import csv
-import numpy as np
-import numpy.typing as npt
 import sqlite3
 from typing import Any, Set
+import numpy as np
 
 from lukefi.metsi.data.enums.internal import (
     CuttingMethod,
@@ -70,6 +69,7 @@ def resimulate_schedules(control: dict[str, Any],
 
 
 def _determine_transition(control: dict[str, Any], in_db: sqlite3.Connection) -> TransitionFn[ForestStand]:
+    _ = in_db
     return control["transition"]
 
 
@@ -289,7 +289,6 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
 
 def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
     _ = src
-    return None
 
 
 def _fetch_initial_trees_col(stand: str, col: str, cur: sqlite3.Cursor) -> list[Any]:
