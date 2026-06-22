@@ -520,6 +520,41 @@ class ForestStand(Finalizable, ComputationalUnit):
             )
         )
 
+        trees = self.reference_trees
+        cur.executemany(
+            """--sql
+                INSERT INTO initial_trees
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                );
+            """,
+            (
+                (
+                    trees.identifier[i],
+                    self.identifier,
+                    int(trees.tree_number[i]),
+                    int(trees.species[i]),
+                    trees.breast_height_diameter[i],
+                    trees.height[i],
+                    trees.measured_height[i],
+                    trees.breast_height_age[i],
+                    trees.biological_age[i],
+                    trees.stems_per_ha[i],
+                    int(trees.origin[i]),
+                    int(trees.management_category[i]),
+                    trees.tree_category[i],
+                    int(trees.storey[i]),
+                    int(trees.sapling[i]),
+                    trees.tree_type[i],
+                    trees.damage_type[i],
+                    trees.basal_area[i],
+                    trees.volume[i],
+                    int(trees.stratum[i])
+                )
+                for i in range(trees.size)
+            )
+        )
+
     @override
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
