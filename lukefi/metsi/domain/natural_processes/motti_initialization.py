@@ -373,10 +373,13 @@ def _init_motti_state(stand: ForestStand,
                     if stand.cutting_year is not None and
                        stand.method_of_last_cutting not in (CuttingMethod.CLEARCUTTING, CuttingMethod.NO_CUTTING)
                     else -9999),
-        xt_fert=((stand.start_time - stand.fertilization_year)
-                 if stand.fertilization_year is not None else stand.start_time),
-        xt_thoit=((stand.start_time - stand.young_stand_tending_year)
-                  if stand.young_stand_tending_year is not None else stand.start_time),
+        xt_fert=((stand.year - stand.fertilization_year)
+                 if stand.fertilization_year is not None
+                 else -9999),
+        xt_thoit=((stand.year - stand.young_stand_tending_year)
+                  if stand.young_stand_tending_year is not None
+                  else -9999),
+        # NOTE: pitääkö tälle joku fdm2motti conv tehdä?
         drain=stand.drainage_category.value if stand.drainage_category is not None else 0,
         xt_ndrain=((stand.start_time - stand.drainage_year)
                    if stand.drainage_year is not None else stand.start_time),
