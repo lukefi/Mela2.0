@@ -5,7 +5,16 @@ import numpy.typing as npt
 import sqlite3
 from typing import Any, Set
 
-from lukefi.metsi.data.enums.internal import CuttingMethod, DevelopmentClass, DrainageCategory, DrainedPeatlandForestType, FraLandUseClass, OwnerCategory, PeatlandForestType, SiteType, SoilPeatlandCategory
+from lukefi.metsi.data.enums.internal import (
+    CuttingMethod,
+    DevelopmentClass,
+    DrainageCategory,
+    DrainedPeatlandForestType,
+    FraLandUseClass,
+    OwnerCategory,
+    PeatlandForestType,
+    SiteType,
+    SoilPeatlandCategory)
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
