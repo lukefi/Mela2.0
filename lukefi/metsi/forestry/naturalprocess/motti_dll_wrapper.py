@@ -111,10 +111,6 @@ class Motti4DLL:
     # ---------- helpers ----------
     @classmethod
     def _convert_site_index(cls, mty: int | float) -> int:
-        # Prefer DLL helper; otherwise cap <= 6 (matches their Convert_Site policy)
-        if hasattr(cls.lib, "Convert_Site"):
-            return int(round(float(cls.lib.Convert_Site(float(mty)))))
-
         return min(int(mty), 6)
 
     # ---------- FFI ----------

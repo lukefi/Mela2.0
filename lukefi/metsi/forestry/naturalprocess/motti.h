@@ -263,8 +263,3 @@ void Motti4MineralSoilsFertilization(int* ftype,
                                      Motti4FerArray* fer,
                                      int* numfer,
                                      int* rv);
-
-/* Optional helpers (best-effort) */
-double Convert_Tree_Spec(double Mela_tree_spec_in);
-float Convert_Site(int Mela_site);
-void Pack_Tree_Matrix(void);
