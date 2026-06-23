@@ -24,3 +24,13 @@ class MottiRegenerationMethod(IntEnum):
     NATURAL = 1
     SOWING = 2
     PLANTING = 3
+
+
+class MottiDrainageCategory(IntEnum):
+    # NOTE: What are these in eng?
+    OJITTAMATON_KANGAS = 0
+    OJITETTU_KANGAS = 1
+    OJITTAMATON_SUO = 2
+    OJIKKO = 3
+    MUUTTUMA = 4
+    TURVEKANGAS = 5

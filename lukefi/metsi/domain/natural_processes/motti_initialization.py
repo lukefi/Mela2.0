@@ -1,7 +1,7 @@
 from typing import Any
 
 import numpy as np
-from lukefi.metsi.data.conversion.internal2motti import convert_species
+from lukefi.metsi.data.conversion.internal2motti import convert_species, convert_drainage_category
 from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
@@ -329,12 +329,6 @@ def _init_motti_state(stand: ForestStand,
                       use_dll_site_convert: bool = True) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
-    rt = stand.reference_trees
-
-    n = rt.size
-
-    # TÄSTÄ poikki stand.
-
     spedom = _spedom(stand.reference_trees)
 
     y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
@@ -347,7 +341,6 @@ def _init_motti_state(stand: ForestStand,
     else:
         z = -1.0
 
-    # NOTE: Pitäisikö tämä sijoittaa uudelleen koodin esim. omaan funktioon, jotta parantaisi koodin luettavuutta?
     yy = Motti4DLL.new_site(
         Y=y_km,
         X=x_km,
@@ -379,8 +372,7 @@ def _init_motti_state(stand: ForestStand,
         xt_thoit=((stand.year - stand.young_stand_tending_year)
                   if stand.young_stand_tending_year is not None
                   else -9999),
-        # NOTE: pitääkö tälle joku fdm2motti conv tehdä?
-        drain=stand.drainage_category.value if stand.drainage_category is not None else 0,
+        drain=convert_drainage_category(stand.drainage_category),
         xt_ndrain=((stand.start_time - stand.drainage_year)
                    if stand.drainage_year is not None else stand.start_time),
         alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
@@ -392,10 +384,8 @@ def _init_motti_state(stand: ForestStand,
         gstorey=1.0,
     )
 
-    # end STAND
-
-    # START TREES
-
+    rt = stand.reference_trees
+    n = rt.size
     # TODO: Is this right? yp <--> rt yhteys, tää pitää tarkastella onko
     # validi näin; eg. menetetäänkö alkuperäiset ja miten strata päivitys
     # vaikuttaa.
@@ -450,10 +440,6 @@ def _init_motti_state(stand: ForestStand,
     ]
     yp, ntrees = Motti4DLL.new_trees(trees_py)
 
-    # END TREES
-
-    # START STRATA
-
     # puut on jo yp:ssä ja niiden osite id:t muuttu. eli hävikääkö puut joiden pitäisi siirtyä yp vektoriin?
     # _compress* == jos liikaa ositteita, niin tiivistetään s.e. jää vain 10 ositetta.
     #   - ylimääräisistä siirretään puut yhteen ositteeseen eg. 5 ositetta --> jäljelle jäävään
@@ -476,8 +462,6 @@ def _init_motti_state(stand: ForestStand,
     )
 
     _strip_tree_strata(stand)
-
-    # END STRATA
 
     return MottiState(yy=yy, yp=yp, ntrees=ntrees, buffers=buffers, )
 
