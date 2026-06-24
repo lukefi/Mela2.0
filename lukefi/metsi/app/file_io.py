@@ -128,6 +128,9 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
             strata=app_config.strata,
             measured_trees=app_config.measured_trees,
             strata_origin=app_config.strata_origin)(app_config.input_path)
+    if app_config.state_format == "db":
+        # TODO: Should this be supported?
+        pass
     raise MetsiException(f"Unsupported state format '{app_config.state_format}'")
 
 
