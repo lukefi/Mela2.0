@@ -16,6 +16,7 @@ from lukefi.metsi.data.enums.internal import (
     SoilPeatlandCategory)
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.transition import TransitionFn
 from lukefi.metsi.sim.treatment import PredeterminedTreatment, TreatmentFn
@@ -62,10 +63,37 @@ def resimulate_schedules(control: dict[str, Any],
 
                 if step > 0:
                     current.computational_unit, cd = transition(current.computational_unit, step)
-                    _ = cd
+                    current.computational_unit.update_aggregates()
+                    output_node_to_db(
+                        out_db,
+                        current.node_id,
+                        transition.__name__,
+                        {},
+                        current.computational_unit,
+                        cd,
+                        tags=None,
+                        output_state=True,
+                        output_collected_data=True,
+                        transition_count=1,
+                        node_type=NodeType.RESIMULATION_TRANSITION
+                    )
+
                 for treatment in treatments:
                     current.computational_unit, cd = treatment(current.computational_unit)
-                    _ = cd
+                    current.computational_unit.update_aggregates()
+                    current.node_id.append(0)
+                    output_node_to_db(
+                        out_db,
+                        current.node_id,
+                        treatment.name,
+                        treatment.evaluated_params,
+                        current.computational_unit,
+                        cd,
+                        treatment.tags,
+                        output_state=True,
+                        output_collected_data=True,
+                        node_type=NodeType.RESIMULATION_TREATMENT
+                    )
 
 
 def _determine_transition(control: dict[str, Any], in_db: sqlite3.Connection) -> TransitionFn[ForestStand]:
