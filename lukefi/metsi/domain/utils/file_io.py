@@ -199,6 +199,7 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
                 sapling INTEGER,
                 tree_type TEXT,
                 damage_type TEXT,
+                crown_class INTEGER,
                 basal_area REAL,
                 volume REAL,
                 stratum INTEGER,

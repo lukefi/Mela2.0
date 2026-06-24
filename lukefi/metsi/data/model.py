@@ -525,7 +525,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             """--sql
                 INSERT INTO initial_trees
                 VALUES (
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 );
             """,
             (
@@ -547,6 +547,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     int(trees.sapling[i]),
                     trees.tree_type[i],
                     trees.damage_type[i],
+                    trees.crown_class[i],
                     trees.basal_area[i],
                     trees.volume[i],
                     int(trees.stratum[i])
