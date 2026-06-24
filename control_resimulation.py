@@ -12,7 +12,7 @@ control_structure = {
         "sqlite_decl": sqlite_decl,
     },
     # tarvitaanko? kannassa pitää olla vähintään nodet
-    "transition": do_nothing,
+    "transition": grow_acta_fn,
     # schedulet?
     "selected_schedules_file": "selected_schedules.csv",
     "treatment_map": {
