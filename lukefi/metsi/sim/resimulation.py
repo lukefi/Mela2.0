@@ -41,8 +41,6 @@ class ResimulationInstructions:
 def resimulate_schedules(control: dict[str, Any],
                          in_db: sqlite3.Connection,
                          out_db: sqlite3.Connection):
-    _ = out_db
-
     # TODO: exact format of schedules csv not fully specified
     schedules_file_path = control["selected_schedules_file"]
 
@@ -54,15 +52,20 @@ def resimulate_schedules(control: dict[str, Any],
     transition = _determine_transition(control, in_db)
     instructions_per_stand = _recreate_instructions(schedules_file_path, treatment_map, in_db)
 
-    for instructions in instructions_per_stand.values():
-        for schedule in instructions.schedules:
+    for stand, instructions in instructions_per_stand.items():
+        print(f"Resimulating stand {stand}")
+        for i, schedule in enumerate(instructions.schedules):
+            print(f"Schedule {i}:")
             current = SimulationPayload(deepcopy(instructions.initial_state))
             current.computational_unit.predetermined_treatments = schedule
-            time_points = set(time_point for time_point, _ in schedule)
+            time_points = list(set(time_point for time_point, _ in schedule))
+            time_points.sort()
             for time_point in time_points:
+                print(f"Time point {time_point}")
                 step, treatments = get_step_and_treatments(current.computational_unit, time_point)
-
+                print(f"treatments: {treatments}")
                 if step > 0:
+                    print(f"Transition to {time_point}, step {step}")
                     current.computational_unit, cd = transition(current.computational_unit, step)
                     current.computational_unit.update_aggregates()
                     output_node_to_db(
@@ -80,6 +83,7 @@ def resimulate_schedules(control: dict[str, Any],
                     )
 
                 for treatment in treatments:
+                    print(f"Perform treatment {treatment.name}")
                     current.computational_unit, cd = treatment(current.computational_unit)
                     current.computational_unit.update_aggregates()
                     current.node_id.append(0)
@@ -108,7 +112,7 @@ def _recreate_instructions(sched_file_path: str,
     # TODO: building simulation instructions (or equivalent) from declared leaf nodes/schedules
     instructions_per_stand: dict[str, ResimulationInstructions] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
-        sched_reader = csv.reader(sched_file)
+        sched_reader = csv.reader(sched_file, delimiter=",")
         for schedule_row in sched_reader:
             stand_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
             instructions_per_stand.setdefault(
@@ -122,12 +126,14 @@ def _recreate_schedule(schedule_row: list[str],
                        treatment_map: dict[str, TreatmentFn],
                        in_db: sqlite3.Connection) -> tuple[str, Schedule]:
     stand_id, leaf_node_id = _parse_schedule_row(schedule_row)
+    print(f"Recreating schedule for {stand_id}: {leaf_node_id}")
     cur = in_db.cursor()
+    cur.row_factory = sqlite3.Row
     cur.execute(
         """--sql
         WITH RECURSIVE schedule(node, stand, leaf_node) AS (
             SELECT identifier, stand, identifier FROM nodes
-            WHERE leaf = 1
+            WHERE node_type = 3
             UNION
             SELECT
                 nodes.identifier,
@@ -162,6 +168,7 @@ def _recreate_schedule(schedule_row: list[str],
             leaf_node_id
         )
     )
+
     retval: Schedule = []
     for step in cur:
         retval.append(
@@ -176,7 +183,7 @@ def _recreate_schedule(schedule_row: list[str],
                 )
             )
         )
-
+        print(f"{step['year']}: {step['done_treatment']} ({step['tags']})")
     return stand_id, retval
 
 
@@ -202,7 +209,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
                 identifier = ?;
         """,
         (
-            stand_id
+            stand_id,
         )
     )
     stand_row = cur.fetchone()
@@ -215,7 +222,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
                 stand = ?;
         """,
         (
-            stand_id
+            stand_id,
         )
     )
     tree_count = cur.fetchone()[0]
@@ -305,8 +312,9 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         main_tree_species_dominant_storey=stand_row["main_tree_species_dominant_storey"],
         ds_dominant_height=stand_row["ds_dominant_height"],
         region=stand_row["region"],
-        peatland_type=PeatlandForestType(stand_row["peatland_type"]),
-        drained_peatland_type=DrainedPeatlandForestType(stand_row["drained_peatland_type"]),
+        peatland_type=PeatlandForestType(stand_row["peatland_type"]) if stand_row["peatland_type"] is not None else None,
+        drained_peatland_type=(DrainedPeatlandForestType(stand_row["drained_peatland_type"])
+            if stand_row["drained_peatland_type"] is not None else None),
         under_storey=bool(stand_row["under_storey"]),
         over_storey=bool(stand_row["over_storey"])
     )
