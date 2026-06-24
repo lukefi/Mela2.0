@@ -1,7 +1,7 @@
 from typing import Any
 
 import numpy as np
-from lukefi.metsi.data.conversion.internal2motti import convert_species, convert_drainage_category
+from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
@@ -130,7 +130,7 @@ def _spedom(rt: ReferenceTrees) -> int:
         return TreeSpecies.PINE
 
     # Convert species to Motti codes (will raise if invalid)
-    spe_codes = [convert_species(TreeSpecies(int(s))) for s in rt.species]
+    spe_codes = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
 
     # Basal area per tree: stems_per_ha * π * (0.5 * d_cm * 0.01 m/cm)^2
     d_cm = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
@@ -221,7 +221,7 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         if stratum_sid <= 0:
             stratum_sid = i + 1
 
-        spe = float(convert_species(species))
+        spe = float(internal2motti.convert_species(species))
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -325,8 +325,7 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
 
 def _init_motti_state(stand: ForestStand,
-                      sim_year: int,
-                      use_dll_site_convert: bool = True) -> MottiState:
+                      sim_year: int) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
     spedom = _spedom(stand.reference_trees)
@@ -348,7 +347,9 @@ def _init_motti_state(stand: ForestStand,
         lake=stand.lake_effect if stand.lake_effect is not None else 0.0,
         sea=stand.sea_effect if stand.sea_effect is not None else 0.0,
         mal=stand.land_use_category.value if stand.land_use_category is not None else 0,
-        mty=stand.site_type_category.value if stand.site_type_category is not None else 0,
+        mty=internal2motti.resolve_site_type(
+            stand.drained_peatland_type,
+            stand.site_type_category),
         verl=stand.tax_class if stand.tax_class is not None else 0,
         verlt=stand.tax_class_reduction if stand.tax_class_reduction is not None else 0,
         xt_regen=((stand.year - stand.artificial_regeneration_year)
@@ -361,7 +362,7 @@ def _init_motti_state(stand: ForestStand,
                  if stand.regeneration_area_cleaning_year is not None
                  else -9999),
         sid=stand.stand_id or 0,
-        fthin=bool(stand.method_of_last_cutting),
+        fthin=stand.method_of_last_cutting in (CuttingMethod.THINNING, CuttingMethod.FIRST_THINNING),
         xt_thin=((stand.year - stand.cutting_year)
                     if stand.cutting_year is not None and
                        stand.method_of_last_cutting not in (CuttingMethod.CLEARCUTTING, CuttingMethod.NO_CUTTING)
@@ -372,12 +373,12 @@ def _init_motti_state(stand: ForestStand,
         xt_thoit=((stand.year - stand.young_stand_tending_year)
                   if stand.young_stand_tending_year is not None
                   else -9999),
-        drain=convert_drainage_category(stand.drainage_category),
-        xt_ndrain=((stand.start_time - stand.drainage_year)
-                   if stand.drainage_year is not None else stand.start_time),
+        drain=internal2motti.convert_drainage_category(stand.drainage_category),
+        xt_ndrain=((stand.year - stand.drainage_year)
+                   if stand.drainage_year is not None
+                   else -9999),
         alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
         year=sim_year - stand.start_year,
-        convert_mela_site=use_dll_site_convert,
         spedom=spedom,  # OK
         spedom2=spedom,  # OK pääpuulajimetsikkö
         nstorey=1.0,
@@ -401,7 +402,7 @@ def _init_motti_state(stand: ForestStand,
     # TODO: ReferenceTrees does not have this attribute; where did it come from?
     cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
     origin = rt.origin
-    spe_vec = [convert_species(TreeSpecies(int(s))) for s in rt.species]
+    spe_vec = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
 
     stratum_ids = [
         # Miksi? else osassa otetaan kuviolta id? eikö stratum_id:t mene sekaisin?

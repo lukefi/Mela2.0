@@ -6,16 +6,22 @@ from types import SimpleNamespace
 from typing import Any, Dict, List
 from unittest.mock import patch
 import numpy as np
-from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import (
+    DrainedPeatlandForestType,
+    LandUseCategory,
+    SiteType,
+    SoilPeatlandCategory,
+    TreeSpecies,
+    DrainageCategory)
+from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.motti.motti_types import MottiState
-from lukefi.metsi.domain.natural_processes import motti_util, grow_motti, motti_initialization
+from lukefi.metsi.domain.natural_processes import grow_motti, motti_initialization
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import (
     Motti4DLL,
     _default_data_dir,
     _maybe_chdir,
     _resolve_dir_or_file,
     _resolve_shared_object)
-from lukefi.metsi.data.enums.internal import DrainageCategory
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 
 
@@ -88,6 +94,7 @@ def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
         fertilization_year=100,
         young_stand_tending_year=200,
         drainage_category=DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE,
+        drained_peatland_type=None,
         drainage_year=3,
         stratum="123",
         start_year=2025,
@@ -314,8 +321,8 @@ class TestGrowMottiDLLVec(unittest.TestCase):
     def test_species_mapping_and_euref(self) -> None:
         # NOTE: Siis eikö tämän kannattas olla jossain tests\...\enum hakemistossa?
         # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
-        self.assertEqual(motti_initialization.convert_species(TreeSpecies(7)), 6)
-        self.assertEqual(motti_initialization.convert_species(TreeSpecies(3)), 3)
+        self.assertEqual(internal2motti.convert_species(TreeSpecies(7)), 6)
+        self.assertEqual(internal2motti.convert_species(TreeSpecies(3)), 3)
 
         # auto_euref_km conversion logic
         y_km, x_km = motti_initialization._auto_euref_km(6900000.0, 3400000.0)

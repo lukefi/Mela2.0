@@ -108,11 +108,6 @@ class Motti4DLL:
         lib = ffi.dlopen(str(lib_path))
         cls.ffi, cls.lib = ffi, lib
 
-    # ---------- helpers ----------
-    @classmethod
-    def _convert_site_index(cls, mty: int | float) -> int:
-        return min(int(mty), 6)
-
     # ---------- FFI ----------
     @classmethod
     def _cdef_source(cls) -> str:
@@ -132,7 +127,6 @@ class Motti4DLL:
         xt_thoit: int = 1, drain: int = 1, xt_ndrain: int = 1,
         alr: int = 1,
         year: Optional[float] = 2010.0,   # safe default if caller does not provide
-        convert_mela_site: bool = True,
         spedom: Optional[int] = None,
         spedom2: Optional[int] = None,
         nstorey: float = 1.0,
@@ -162,7 +156,7 @@ class Motti4DLL:
         yy.lake = lake
         yy.sea = sea
         yy.mal = mal
-        yy.mty = cls._convert_site_index(mty) if convert_mela_site else mty
+        yy.mty = mty
         yy.verl = verl
         yy.verlt = verlt
         yy.xt_regen = xt_regen
