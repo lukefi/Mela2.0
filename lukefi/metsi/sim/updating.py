@@ -32,26 +32,9 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                                  f"unit already at {unit.time}.")
 
         current = SimulationPayload(unit)
-        while current.computational_unit.time < target_time:
+        keep_running = True
+        while keep_running:
             step, treatments = get_step_and_treatments(current.computational_unit, target_time)
-
-            if step > 0:
-                current.computational_unit, cd = transition(current.computational_unit, step)
-                current.computational_unit.update_aggregates()
-                if db is not None:
-                    output_node_to_db(
-                        db,
-                        current.node_id,
-                        transition.__name__,
-                        {},
-                        current.computational_unit,
-                        cd,
-                        tags=None,
-                        output_state=output_transition_state,
-                        output_collected_data=output_transition_cd,
-                        transition_count=1,
-                        node_type=NodeType.UPDATING_TRANSITION
-                    )
 
             for treatment in treatments:
                 current.computational_unit, cd = treatment(current.computational_unit)
@@ -70,6 +53,27 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                         output_collected_data=output_treatment_cd,
                         node_type=NodeType.UPDATING_TREATMENT
                     )
+
+            if step > 0:
+                current.computational_unit, cd = transition(current.computational_unit, step)
+                current.computational_unit.update_aggregates()
+                if db is not None:
+                    output_node_to_db(
+                        db,
+                        current.node_id,
+                        transition.__name__,
+                        {},
+                        current.computational_unit,
+                        cd,
+                        tags=None,
+                        output_state=output_transition_state,
+                        output_collected_data=output_transition_cd,
+                        transition_count=1,
+                        node_type=NodeType.UPDATING_TRANSITION
+                    )
+            else:
+                keep_running = False
+
         # TODO: delete current.comptutaional_unit.predetermined_treatments?
 
         # Update starting time for relative timepoints
@@ -103,9 +107,9 @@ def _get_collected_data_types[T: ComputationalUnit](
 def get_step_and_treatments[T: ComputationalUnit](unit: T,
                                                   target_time: int) -> tuple[int, list[PredeterminedTreatment[T]]]:
     if unit.predetermined_treatments is not None:
+        treatments = [treatment for time, treatment in unit.predetermined_treatments if time == unit.time]
         for time, _ in unit.predetermined_treatments:
             if unit.time < time <= target_time:
-                return (time - unit.time,
-                        [treatment_ for time_, treatment_ in unit.predetermined_treatments
-                         if time_ == time])
+                return time - unit.time, treatments
+        return target_time - unit.time, treatments
     return target_time - unit.time, []

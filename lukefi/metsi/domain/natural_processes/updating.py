@@ -27,14 +27,17 @@ def update_to_year_fn(stand: ForestStand,
                              f"already at {stand.time}")
 
     current = stand
-    while current.time < target_year:
+    keep_running = True
+    while keep_running:
         step, treatments = get_step_and_treatments(current, target_year)
-
-        if step > 0:
-            current, _ = transition(current, step)
 
         for treatment in treatments:
             current, _ = treatment(current)
+
+        if step > 0:
+            current, _ = transition(current, step)
+        else:
+            keep_running = False
 
     # Update starting year for relative timepoints
     current.start_time = current.time
