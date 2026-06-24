@@ -59,7 +59,7 @@ def resimulate_schedules(control: dict[str, Any],
             current = SimulationPayload(deepcopy(instructions.initial_state))
             current.node_id[0] = i
             current.computational_unit.predetermined_treatments = schedule
-            target_time = max([time for time, _ in schedule])
+            target_time = max(time for time, _ in schedule)
             should_run = True
             while should_run:
                 step, treatments = get_step_and_treatments(current.computational_unit, target_time)
@@ -315,7 +315,8 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         main_tree_species_dominant_storey=stand_row["main_tree_species_dominant_storey"],
         ds_dominant_height=stand_row["ds_dominant_height"],
         region=stand_row["region"],
-        peatland_type=PeatlandForestType(stand_row["peatland_type"]) if stand_row["peatland_type"] is not None else None,
+        peatland_type=(PeatlandForestType(stand_row["peatland_type"])
+            if stand_row["peatland_type"] is not None else None),
         drained_peatland_type=(DrainedPeatlandForestType(stand_row["drained_peatland_type"])
             if stand_row["drained_peatland_type"] is not None else None),
         under_storey=bool(stand_row["under_storey"]),
