@@ -27,19 +27,26 @@ class UpdatingTest(unittest.TestCase):
 
         step, treatments = get_step_and_treatments(stand, 2025)
         self.assertEqual(2, step)
-        self.assertListEqual(["do_something", "do_another_thing"], [treatment.name for treatment in treatments])
+        self.assertListEqual([], [treatment.name for treatment in treatments])
 
         stand.time = 2022
 
         step, treatments = get_step_and_treatments(stand, 2025)
         self.assertEqual(1, step)
-        self.assertListEqual(["do_final_thing"], [treatment.name for treatment in treatments])
+        self.assertListEqual(["do_something", "do_another_thing"], [treatment.name for treatment in treatments])
 
         stand.time = 2023
 
         step, treatments = get_step_and_treatments(stand, 2025)
         self.assertEqual(2, step)
+        self.assertListEqual(["do_final_thing"], [treatment.name for treatment in treatments])
+
+        stand.time = 2025
+
+        step, treatments = get_step_and_treatments(stand, 2025)
+        self.assertEqual(0, step)
         self.assertListEqual([], [treatment.name for treatment in treatments])
+
 
     def test_updating_run_mode(self):
         treatment1 = Mock()
