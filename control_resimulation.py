@@ -1,6 +1,4 @@
-from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
-from lukefi.metsi.sim.transition import Transition
 from examples.declarations.sqlite import sqlite_decl
 
 
@@ -13,9 +11,9 @@ control_structure = {
         "sqlite_decl": sqlite_decl,
     },
     # tarvitaanko? kannassa pitää olla vähintään nodet
-    "transition": Transition(grow_acta_fn, 50, {NaturalProcessInfo}),
+    "transition": grow_acta_fn,
     # schedulet?
-    "selected_schedules_file": "path_to_file.csv",
+    "selected_schedules_file": "selected_schedules.csv",
 }
 
 __all__ = ['control_structure']
