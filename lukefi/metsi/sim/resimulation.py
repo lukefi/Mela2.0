@@ -328,14 +328,13 @@ def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | N
 
 def _fetch_initial_trees_col(stand: str, col: str, cur: sqlite3.Cursor) -> list[Any]:
     cur.execute(
-        """--sql
-            SELECT ? FROM initial_trees
+        f"""--sql
+            SELECT {col} FROM initial_trees
             WHERE
                 stand = ?;
         """,
         (
-            col,
-            stand
+            stand,
         )
     )
-    return cur.fetchall()
+    return [row[0] for row in cur.fetchall()]
