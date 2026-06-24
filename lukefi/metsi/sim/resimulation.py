@@ -292,7 +292,8 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         site_type_category=SiteType(stand_row["site_type_category"]),
         tax_class_reduction=stand_row["tax_class_reduction"],
         tax_class=stand_row["tax_class"],
-        drainage_category=DrainageCategory(stand_row["drainage_category"]),
+        drainage_category=(DrainageCategory(stand_row["drainage_category"])
+            if stand_row["drainage_category"] is not None else None),
         drainage_year=stand_row["drainage_year"],
         fertilization_year=stand_row["fertilization_year"],
         soil_surface_preparation_year=stand_row["soil_surface_preparation_year"],
@@ -303,7 +304,8 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         cutting_year=stand_row["cutting_year"],
         forestry_centre_id=stand_row["forestry_centre_id"],
         forest_management_category=stand_row["forest_management_category"],
-        method_of_last_cutting=CuttingMethod(stand_row["method_of_last_cutting"]),
+        method_of_last_cutting=(CuttingMethod(stand_row["method_of_last_cutting"])
+            if stand_row["method_of_last_cutting"] is not None else None),
         municipality_id=stand_row["municipality_id"],
         ds_main_tree_species_biological_age=stand_row["ds_main_tree_species_biological_age"],
         area_weight_factors=stand_row["area_weight_factors"],
