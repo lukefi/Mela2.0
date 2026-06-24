@@ -1,3 +1,4 @@
+import ast
 from copy import deepcopy
 import csv
 import sqlite3
@@ -184,13 +185,11 @@ def _parse_schedule_row(schedule_row: list[str]) -> tuple[str, str]:
 
 
 def _parse_tags(tags_str: str) -> Set[str]:
-    _ = tags_str
-    assert False, "_parse_tags not implemented"
+    return ast.literal_eval(tags_str)
 
 
 def _parse_params(params_str: str) -> dict[str, Any]:
-    _ = params_str
-    assert False, "_parse_params not implemented"
+    return ast.literal_eval(params_str)
 
 
 def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> ForestStand:
@@ -316,8 +315,8 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
 
 
 def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
-    _ = src
-    return (None, None, None, None)
+    return ast.literal_eval(src)
+
 
 def _fetch_initial_trees_col(stand: str, col: str, cur: sqlite3.Cursor) -> list[Any]:
     cur.execute(
