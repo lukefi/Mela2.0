@@ -1,5 +1,6 @@
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
 from examples.declarations.sqlite import sqlite_decl
 
 
@@ -11,11 +12,13 @@ control_structure = {
         "sqlite_decl": sqlite_decl,
     },
     # tarvitaanko? kannassa pitää olla vähintään nodet
-    "transition": grow_acta_fn,
+    "transition": do_nothing,
     # schedulet?
     "selected_schedules_file": "selected_schedules.csv",
     "treatment_map": {
-        "do_nothing": do_nothing
+        "do_nothing": do_nothing,
+        "grow_acta": grow_acta_fn,
+        "grow_metsi": grow_metsi_fn
     }
 }
 
