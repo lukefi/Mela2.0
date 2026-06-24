@@ -115,6 +115,8 @@ def main() -> int:
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:
         input_data = read_stands_from_file(app_config, control_structure.get('conversions', {}))
+    elif app_config.run_modes[0] == RunMode.RESIMULATE:
+        input_data = []
     else:
         raise MetsiException("Can not determine input data for unknown run mode")
 
