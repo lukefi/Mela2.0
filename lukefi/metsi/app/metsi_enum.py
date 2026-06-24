@@ -84,6 +84,7 @@ class StateFormat(StringConfigEnum):
     VMI13 = 'vmi13'
     XML = 'xml'
     GPKG = 'gpkg'
+    DB = 'db'
 
 
 # Expose public API
