@@ -93,6 +93,8 @@ class NodeType(IntEnum):
     TRANSITION_LEAF = 4
     UPDATING_TREATMENT = 5
     UPDATING_TRANSITION = 6
+    RESIMULATION_TREATMENT = 7
+    RESIMULATION_TRANSITION = 8
 
 
 def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
