@@ -53,34 +53,18 @@ def resimulate_schedules(control: dict[str, Any],
     instructions_per_stand = _recreate_instructions(schedules_file_path, treatment_map, in_db)
 
     for stand, instructions in instructions_per_stand.items():
-        print(f"Resimulating stand {stand}")
+        print(f"Resimulating stand {stand}, start year {instructions.initial_state.time}")
         for i, schedule in enumerate(instructions.schedules):
             print(f"Schedule {i}:")
             current = SimulationPayload(deepcopy(instructions.initial_state))
+            current.node_id[0] = i
             current.computational_unit.predetermined_treatments = schedule
-            time_points = list(set(time_point for time_point, _ in schedule))
-            time_points.sort()
-            for time_point in time_points:
-                print(f"Time point {time_point}")
-                step, treatments = get_step_and_treatments(current.computational_unit, time_point)
-                print(f"treatments: {treatments}")
-                if step > 0:
-                    print(f"Transition to {time_point}, step {step}")
-                    current.computational_unit, cd = transition(current.computational_unit, step)
-                    current.computational_unit.update_aggregates()
-                    output_node_to_db(
-                        out_db,
-                        current.node_id,
-                        transition.__name__,
-                        {},
-                        current.computational_unit,
-                        cd,
-                        tags=None,
-                        output_state=True,
-                        output_collected_data=True,
-                        transition_count=1,
-                        node_type=NodeType.RESIMULATION_TRANSITION
-                    )
+            target_time = max([time for time, _ in schedule])
+            should_run = True
+            while should_run:
+                step, treatments = get_step_and_treatments(current.computational_unit, target_time)
+                print(f"Year {current.computational_unit.time}")
+                print(f"treatments: {[treatment.name for treatment in treatments]}")
 
                 for treatment in treatments:
                     print(f"Perform treatment {treatment.name}")
@@ -97,9 +81,28 @@ def resimulate_schedules(control: dict[str, Any],
                         treatment.tags,
                         output_state=True,
                         output_collected_data=True,
-                        node_type=NodeType.RESIMULATION_TREATMENT
+                        node_type=NodeType.RESIMULATION_TREATMENT if step > 0 else NodeType.RESIMULATION_TREATMENT_LEAF
                     )
 
+                if step > 0:
+                    print(f"Transition to {current.computational_unit.time + step}, step {step}")
+                    current.computational_unit, cd = transition(current.computational_unit, step)
+                    current.computational_unit.update_aggregates()
+                    output_node_to_db(
+                        out_db,
+                        current.node_id,
+                        transition.__name__,
+                        {},
+                        current.computational_unit,
+                        cd,
+                        tags=None,
+                        output_state=True,
+                        output_collected_data=False,
+                        transition_count=1,
+                        node_type=NodeType.RESIMULATION_TRANSITION
+                    )
+                else:
+                    should_run = False
 
 def _determine_transition(control: dict[str, Any], in_db: sqlite3.Connection) -> TransitionFn[ForestStand]:
     _ = in_db
