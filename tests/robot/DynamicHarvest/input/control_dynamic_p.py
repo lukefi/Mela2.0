@@ -1,6 +1,6 @@
 from user_events import Harvest20percent, FirstThinningMineralSoils
 from lukefi.metsi.sim.treatment import do_nothing
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.data.model import ForestStand

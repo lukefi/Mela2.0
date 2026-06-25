@@ -20,7 +20,7 @@ from lukefi.metsi.app.file_io import (
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
+from lukefi.metsi.sim.instructions import UpdatingInstructions
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline

@@ -7,7 +7,7 @@ from lukefi.metsi.domain.conditions import TimeSinceTreatment, RelativeTimePoint
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
 from lukefi.metsi.sim.treatment import Treatment

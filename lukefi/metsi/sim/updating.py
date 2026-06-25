@@ -4,7 +4,7 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
-from lukefi.metsi.sim.sim_configuration import UpdatingInstructions
+from lukefi.metsi.sim.instructions import UpdatingInstructions
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 

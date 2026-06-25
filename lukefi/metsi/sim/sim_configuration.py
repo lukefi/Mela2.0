@@ -1,8 +1,8 @@
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.sim.transition import Transition, TransitionFn
+from lukefi.metsi.sim.instructions import SimulationInstruction
+from lukefi.metsi.sim.transition import Transition
 
 
 class SimConfiguration[T: ComputationalUnit]:
@@ -47,27 +47,3 @@ class SimConfiguration[T: ComputationalUnit]:
         for instruction in self.instructions:
             collected_data.update(instruction.event_generator.get_types_of_collected_data())
         self.collected_data = collected_data
-
-
-class UpdatingInstructions[T: ComputationalUnit]:
-    target_time: int
-    transition: TransitionFn[T]
-
-    output_transition_state: bool
-    output_transition_cd: bool
-    output_treatment_state: bool
-    output_treatment_cd: bool
-
-    def __init__(self,
-                 target_time: int,
-                 transition: TransitionFn[T],
-                 output_transition_state: bool,
-                 output_transition_cd: bool,
-                 output_treatment_state: bool,
-                 output_treatment_cd: bool) -> None:
-        self.target_time = target_time
-        self.transition = transition
-        self.output_transition_state = output_transition_state
-        self.output_transition_cd = output_transition_cd
-        self.output_treatment_state = output_treatment_state
-        self.output_treatment_cd = output_treatment_cd

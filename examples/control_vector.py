@@ -4,7 +4,7 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees
 from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.generators import Sequence
 from examples.declarations.sqlite import sqlite_decl
 

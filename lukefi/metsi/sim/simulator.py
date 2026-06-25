@@ -5,7 +5,7 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db, update_leaf_node
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 

@@ -6,7 +6,7 @@ from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 
 
 control_structure = {
