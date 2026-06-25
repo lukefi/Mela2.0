@@ -41,10 +41,10 @@ control_structure = {
     "updating": UpdatingInstructions(
         2026,
         grow_acta_fn,
-        True,
-        True,
-        True,
-        True
+        output_transition_state=True,
+        output_transition_cd=True,
+        output_treatment_state=True,
+        output_treatment_cd=True
     ),
     'export_prepro': {
         'csv': {},

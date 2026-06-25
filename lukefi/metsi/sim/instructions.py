@@ -50,10 +50,11 @@ class UpdatingInstructions[T: ComputationalUnit]:
     def __init__(self,
                  target_time: int,
                  transition: TransitionFn[T],
-                 output_transition_state: bool,
-                 output_transition_cd: bool,
-                 output_treatment_state: bool,
-                 output_treatment_cd: bool) -> None:
+                 *,
+                 output_transition_state: bool = True,
+                 output_transition_cd: bool = True,
+                 output_treatment_state: bool = True,
+                 output_treatment_cd: bool = True) -> None:
         self.target_time = target_time
         self.transition = transition
         self.output_transition_state = output_transition_state
