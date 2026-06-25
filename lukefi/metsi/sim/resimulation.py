@@ -115,7 +115,7 @@ def _recreate_instructions(sched_file_path: str,
     # TODO: building simulation instructions (or equivalent) from declared leaf nodes/schedules
     instructions_per_stand: dict[str, ResimulationInstructions] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
-        sched_reader = csv.reader(sched_file, delimiter=",")
+        sched_reader = csv.DictReader(sched_file, delimiter=";")
         for schedule_row in sched_reader:
             stand_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
             instructions_per_stand.setdefault(
@@ -125,7 +125,7 @@ def _recreate_instructions(sched_file_path: str,
     return instructions_per_stand
 
 
-def _recreate_schedule(schedule_row: list[str],
+def _recreate_schedule(schedule_row: dict[str, str],
                        treatment_map: dict[str, TreatmentFn],
                        in_db: sqlite3.Connection) -> tuple[str, Schedule]:
     stand_id, leaf_node_id = _parse_schedule_row(schedule_row)
@@ -190,8 +190,8 @@ def _recreate_schedule(schedule_row: list[str],
     return stand_id, retval
 
 
-def _parse_schedule_row(schedule_row: list[str]) -> tuple[str, str]:
-    return schedule_row[0], schedule_row[1]
+def _parse_schedule_row(schedule_row: dict[str, str]) -> tuple[str, str]:
+    return schedule_row["standId"], schedule_row["schedId"]
 
 
 def _parse_tags(tags_str: str) -> Set[str]:
