@@ -8,7 +8,7 @@ from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
+from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -251,7 +251,7 @@ class Event(EventGeneratorBase[T]):
         yield new_payload
 
     @override
-    def get_types_of_collected_data(self) -> set[type[CollectedData]]:
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
         return self.treatment.collected_data
 
     @staticmethod
