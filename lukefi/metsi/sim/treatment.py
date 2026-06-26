@@ -67,7 +67,7 @@ class Treatment(Generic[T_contra]):
         else:
             self.name = name
 
-    def __call__(self, unit: T_contra, **params) -> Any:
+    def __call__(self, unit: T_contra, **params) -> OpTuple[T_contra]:
         return self.treatment_fn(unit, **params)
 
 
