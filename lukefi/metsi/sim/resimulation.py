@@ -18,6 +18,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.transition import TransitionFn
 from lukefi.metsi.sim.treatment import PredeterminedTreatment, TreatmentFn
@@ -44,7 +45,8 @@ def resimulate_schedules(control: dict[str, Any],
     schedules_file_path = control["selected_schedules_file"]
 
     treatment_map = control["treatment_map"]
-
+    collected_data_types: CollectableDataTypes = control["collected_data"]
+    init_collected_data_tables(out_db, collected_data_types)
     transition = _determine_transition(control)
     instructions_per_stand = _recreate_instructions(schedules_file_path, treatment_map, in_db)
 
@@ -93,7 +95,7 @@ def resimulate_schedules(control: dict[str, Any],
                         cd,
                         tags=None,
                         output_state=True,
-                        output_collected_data=False,
+                        output_collected_data=True,
                         transition_count=1,
                         node_type=NodeType.RESIMULATION_TRANSITION
                     )

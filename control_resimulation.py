@@ -1,5 +1,6 @@
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.sim.operations import do_nothing
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
 from examples.declarations.sqlite import sqlite_decl
 
@@ -19,6 +20,9 @@ control_structure = {
         "do_nothing": do_nothing,
         "grow_acta": grow_acta_fn,
         "grow_metsi": grow_metsi_fn
+    },
+    "collected_data": {
+        NaturalProcessInfo
     }
 }
 
