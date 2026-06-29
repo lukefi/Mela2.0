@@ -1,12 +1,12 @@
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
-from .fc_cutting import (
+from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_cutting import (
     over_storey_cutting,
     first_thinning,
     thinning,
     clearcutting
 )
-from .fc_regeneration import (
+from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_regeneration import (
     seeding,
     seeding_pine,
     seeding_spruce,
@@ -18,7 +18,7 @@ from .fc_regeneration import (
     planting_silver_birch,
     planting_downy_birch
 )
-from .fc_young_stand import (
+from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_young_stand import (
     mechanical_clearing,
     early_tending,
 )
