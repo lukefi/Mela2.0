@@ -41,15 +41,11 @@ class ResimulationInstructions:
 def resimulate_schedules(control: dict[str, Any],
                          in_db: sqlite3.Connection,
                          out_db: sqlite3.Connection):
-    # TODO: exact format of schedules csv not fully specified
     schedules_file_path = control["selected_schedules_file"]
 
-    # TODO: recreating dynamic parameters and other complex structures from original control file
-    #           - possible quick hack - declare LUT in resim control?
-    #           - no need initially - dynamic parameters needed only in Monte-Carlo
     treatment_map = control["treatment_map"]
 
-    transition = _determine_transition(control, in_db)
+    transition = _determine_transition(control)
     instructions_per_stand = _recreate_instructions(schedules_file_path, treatment_map, in_db)
 
     for stand, instructions in instructions_per_stand.items():
@@ -104,15 +100,14 @@ def resimulate_schedules(control: dict[str, Any],
                 else:
                     should_run = False
 
-def _determine_transition(control: dict[str, Any], in_db: sqlite3.Connection) -> TransitionFn[ForestStand]:
-    _ = in_db
+
+def _determine_transition(control: dict[str, Any]) -> TransitionFn[ForestStand]:
     return control["transition"]
 
 
 def _recreate_instructions(sched_file_path: str,
                            treatment_map: dict[str, TreatmentFn],
                            in_db: sqlite3.Connection) -> dict[str, ResimulationInstructions]:
-    # TODO: building simulation instructions (or equivalent) from declared leaf nodes/schedules
     instructions_per_stand: dict[str, ResimulationInstructions] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
         sched_reader = csv.DictReader(sched_file, delimiter=";")
@@ -148,14 +143,10 @@ def _recreate_schedule(schedule_row: dict[str, str],
                 nodes.stand = schedule.stand
         )
         SELECT
-            --nodes.identifier,
-            --nodes.stand,
             stands.year,
             nodes.done_treatment,
             nodes.treatment_params,
             nodes.tags
-            --nodes.leaf,
-            --schedule.leaf_node
         FROM schedule, nodes, stands
         WHERE
             nodes.identifier = schedule.node AND
@@ -293,7 +284,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         tax_class_reduction=stand_row["tax_class_reduction"],
         tax_class=stand_row["tax_class"],
         drainage_category=(DrainageCategory(stand_row["drainage_category"])
-            if stand_row["drainage_category"] is not None else None),
+                           if stand_row["drainage_category"] is not None else None),
         drainage_year=stand_row["drainage_year"],
         fertilization_year=stand_row["fertilization_year"],
         soil_surface_preparation_year=stand_row["soil_surface_preparation_year"],
@@ -305,7 +296,7 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         forestry_centre_id=stand_row["forestry_centre_id"],
         forest_management_category=stand_row["forest_management_category"],
         method_of_last_cutting=(CuttingMethod(stand_row["method_of_last_cutting"])
-            if stand_row["method_of_last_cutting"] is not None else None),
+                                if stand_row["method_of_last_cutting"] is not None else None),
         municipality_id=stand_row["municipality_id"],
         ds_main_tree_species_biological_age=stand_row["ds_main_tree_species_biological_age"],
         area_weight_factors=stand_row["area_weight_factors"],
@@ -318,9 +309,9 @@ def _reconstruct_initial_state(stand_id: str, in_db: sqlite3.Connection) -> Fore
         ds_dominant_height=stand_row["ds_dominant_height"],
         region=stand_row["region"],
         peatland_type=(PeatlandForestType(stand_row["peatland_type"])
-            if stand_row["peatland_type"] is not None else None),
+                       if stand_row["peatland_type"] is not None else None),
         drained_peatland_type=(DrainedPeatlandForestType(stand_row["drained_peatland_type"])
-            if stand_row["drained_peatland_type"] is not None else None),
+                               if stand_row["drained_peatland_type"] is not None else None),
         under_storey=bool(stand_row["under_storey"]),
         over_storey=bool(stand_row["over_storey"])
     )
