@@ -23,7 +23,7 @@ from .fc_young_stand import (
     early_tending,
 )
 
-FORESTRY_CENTER_TREATMENTS: dict[int, PredeterminedTreatment[ForestStand]] = {
+IMPLEMENTED_FC_TREATMENTS: dict[int, PredeterminedTreatment[ForestStand]] = {
     1: over_storey_cutting,      # Ylispuiden poisto
     2: first_thinning,           # Ensiharvennus
     3: thinning,                 # Harvennus
