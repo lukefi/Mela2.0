@@ -47,7 +47,7 @@ def filter_stands(stands: StandList,
     return stands
 
 
-def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter reference trees for each stand in list based on given predicate.
 
     Args:
@@ -58,6 +58,7 @@ def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.ND
     Returns:
         StandList: the list of stands with the trees filtered (also modified in-place)
     """
+    assert predicate is not None
     stands = filter_trees_(stands, predicate)
     return stands
 
@@ -126,7 +127,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
-def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
+def generate_reference_trees(stands: StandList, /, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
     # oletusarvo true vai false?
@@ -405,7 +406,7 @@ def update_strata_to_match_trees(stands: StandList, **operation_params) -> Stand
     return stands
 
 
-def scale_area_weight(stands: StandList, **operation_params):
+def scale_area_weight(stands: StandList, /, **operation_params):
     """ Scales area weight of a stand.
 
         Especially necessary for VMI tree generation cases.
