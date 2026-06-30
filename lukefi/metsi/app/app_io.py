@@ -92,12 +92,6 @@ class MetsiConfiguration(SimpleNamespace):
             raise ConfigurationException(
                 f"Error: Run mode {RunMode.EXPORT_PREPRO} cannot be without {RunMode.PREPROCESS}")
 
-        if RunMode.EXPORT in sorted_modes and not any(p in sorted_modes for p in [RunMode.SIMULATE,
-                                                                                  RunMode.POSTPROCESS]):
-            raise ConfigurationException(
-                f"Error: Run mode {RunMode.EXPORT} is possible only when {RunMode.SIMULATE} or "
-                f"{RunMode.POSTPROCESS} is included")
-
         return sorted_modes
 
 
