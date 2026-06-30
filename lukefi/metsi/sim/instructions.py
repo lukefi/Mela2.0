@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import sqlite3
 from typing import Generator, Optional
 from typing import Sequence as Sequence_
