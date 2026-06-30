@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 import sqlite3
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type, TypeVar
 
 if TYPE_CHECKING:
     from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
+T = TypeVar("T", bound='ComputationalUnit')
 
 class ComputationalUnit(ABC):
     identifier: str
@@ -27,3 +28,8 @@ class ComputationalUnit(ABC):
     @property
     def relative_time(self):
         return self.time - self.start_time
+
+    @classmethod
+    @abstractmethod
+    def reconstruct_initial_state(cls: Type[T], identifier: str, db: sqlite3.Connection) -> T:
+        pass

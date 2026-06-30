@@ -17,7 +17,7 @@ from lukefi.metsi.app.file_io import (
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.instructions import UpdatingInstructions
+from lukefi.metsi.sim.instructions import ResimulationInstructions, UpdatingInstructions
 from lukefi.metsi.sim.resimulation import resimulate_schedules
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
@@ -69,8 +69,12 @@ def _simulate(control: dict[str, Any],
 def _resimulate(control: dict[str, Any],
                 in_db: sqlite3.Connection,
                 out_db: sqlite3.Connection) -> None:
-    print_logline("Resimulating schedules...")
-    resimulate_schedules(control, in_db, out_db)
+    resimulation_instructions: ResimulationInstructions[ForestStand] | None = control.get("resimulation", None)
+    if resimulation_instructions is not None:
+        print_logline("Resimulating schedules...")
+        return resimulate_schedules(resimulation_instructions, in_db, out_db)
+
+    raise MetsiException("Declaration for 'resimulation' not found from control")
 
 
 def main() -> int:
