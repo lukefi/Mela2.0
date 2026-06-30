@@ -34,7 +34,7 @@ class AppConfiguration:
                  slice_size: int | None = None,
                  state_format: StateFormat,
                  run_modes: list[RunMode],
-                 preprocessing_output_file: str = "preprocessing_results",
+                 preprocessing_output_file: str = "preprocessing_result",
                  simulation_output_file: str = "simulation_results",
                  sqlite_decl: dict[str, list[str]] | None = None,
                  measured_trees: bool = False,
