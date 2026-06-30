@@ -1,4 +1,4 @@
-from typing import Callable, Generic, Optional, TypeVar
+from typing import Any, Callable, Generic, Mapping, Optional, TypeVar
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
 from lukefi.metsi.sim.operations import do_nothing as do_nothing_
@@ -66,6 +66,67 @@ class Treatment(Generic[T_contra]):
             self.name = treatment_fn.__name__
         else:
             self.name = name
+
+    def __call__(self, unit: T_contra, **params) -> OpTuple[T_contra]:
+        return self.treatment_fn(unit, **params)
+
+
+class PredeterminedTreatment(Generic[T_contra]):
+
+    name: str
+    treatment_fn: TreatmentFn[T_contra]
+    tags: set[str]
+    static_parameters: dict[str, Any]
+    file_parameters: dict[str, str]
+    dynamic_parameters: Mapping[str, Callable[[T_contra], Any]]
+    evaluated_params: dict[str, Any]
+    collected_data: CollectableDataTypes
+
+    def __init__(self,
+                 name: str,
+                 treatment_fn: TreatmentFn[T_contra],
+                 tags: set[str] | None = None,
+                 static_parameters: dict[str, Any] | None = None,
+                 file_parameters: dict[str, str] | None = None,
+                 dynamic_parameters: Mapping[str, Callable[[T_contra], Any]] | None = None,
+                 collected_data: CollectableDataTypes | None = None):
+        self.name = name
+        self.treatment_fn = treatment_fn
+
+        if tags is None:
+            self.tags = set()
+        else:
+            self.tags = tags
+
+        if static_parameters is None:
+            self.static_parameters = {}
+        else:
+            self.static_parameters = static_parameters
+
+        if file_parameters is None:
+            self.file_parameters = {}
+        else:
+            self.file_parameters = file_parameters
+
+        if dynamic_parameters is None:
+            self.dynamic_parameters = {}
+        else:
+            self.dynamic_parameters = dynamic_parameters
+
+        if collected_data is None:
+            self.collected_data = set()
+        else:
+            self.collected_data = collected_data
+
+    def __call__(self, unit: T_contra) -> OpTuple[T_contra]:
+        return self.treatment_fn(unit, **self._evaluate_parameters(unit))
+
+    def _evaluate_parameters(self, unit: T_contra) -> dict[str, Any]:
+        # TODO: Check file parameter validity
+        # TODO: Check parameter name collisions
+        evaluated_dynamic = {name: expression(unit) for name, expression in self.dynamic_parameters.items()}
+        self.evaluated_params = self.static_parameters | self.file_parameters | evaluated_dynamic
+        return self.evaluated_params
 
 
 do_nothing = Treatment[ComputationalUnit](do_nothing_, "do_nothing", {"nothing"})

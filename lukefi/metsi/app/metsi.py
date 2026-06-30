@@ -2,7 +2,7 @@ import os
 import sys
 import copy
 import sqlite3
-from typing import Optional
+from typing import Optional, cast
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
     slice_list_by_percentage,
@@ -19,9 +19,13 @@ from lukefi.metsi.app.file_io import (
     delete_existing_export_files,
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
+from lukefi.metsi.sim.collected_data import CollectableDataTypes
+from lukefi.metsi.sim.instructions import UpdatingInstructions
+from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.updating import update_units
 
 
 def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) -> StandList:
@@ -31,7 +35,8 @@ def _preprocess(config: MetsiConfiguration, control: dict, stands: StandList) ->
     return result
 
 
-def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -> None:
+def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList |
+                   list[SimulationPayload[ForestStand]]) -> None:
     print_logline("Exporting preprocessing results...")
     if control.get('export_prepro', None):
         export_preprocessed(config.target_directory, control['export_prepro'], data,
@@ -42,9 +47,22 @@ def _export_prepro(config: MetsiConfiguration, control: dict, data: StandList) -
         print_logline("Skipping export of preprocessing results.")
 
 
-def _simulate(control: dict, stands: StandList, db: Optional[sqlite3.Connection]) -> None:
+def _update(control: dict, stands: StandList, db: sqlite3.Connection |
+            None) -> tuple[StandList | list[SimulationPayload[ForestStand]], CollectableDataTypes | None]:
+    updating_instructions: UpdatingInstructions[ForestStand] | None = control.get("updating", None)
+    if updating_instructions is not None:
+        print_logline(f"Updating stands to year {updating_instructions.target_time}...")
+        return update_units(updating_instructions, stands, db)
+
+    raise MetsiException("Declaration for 'updating' not found from control.")
+
+
+def _simulate(control: dict,
+              stands: StandList | list[SimulationPayload[ForestStand]],
+              db: Optional[sqlite3.Connection],
+              existing_data_types: CollectableDataTypes | None = None) -> None:
     print_logline("Simulating alternatives...")
-    simulate_alternatives(control, stands, db)
+    simulate_alternatives(control, stands, db, existing_data_types)
 
 
 def main() -> int:
@@ -72,7 +90,7 @@ def main() -> int:
     if not should_continue:
         return 0
     db: sqlite3.Connection | None = None
-    if RunMode.SIMULATE in app_config.run_modes:
+    if RunMode.SIMULATE in app_config.run_modes or RunMode.UPDATE in app_config.run_modes:
         print_logline("Initializing output database")
         db_base = app_config.simulation_output_file or "simulation_results"
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
@@ -81,7 +99,7 @@ def main() -> int:
         create_database_tables(db, sqlite_decl=sqlite_decl)
         ForestStand.set_sqlite_decl(sqlite_decl)
 
-    if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.SIMULATE]:
+    if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:
         # 1) read full stand list
         full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
 
@@ -117,13 +135,16 @@ def main() -> int:
         cfg.target_directory = app_config.target_directory
 
         # feed this sub‐list of stands through the normal run_modes
-        current = stands
+        current: list[ForestStand] | list[SimulationPayload[ForestStand]] = stands
+        cd_types_from_updating: CollectableDataTypes | None = None
         if RunMode.PREPROCESS in cfg.run_modes:
-            current = _preprocess(cfg, control_structure, current)
+            current = _preprocess(cfg, control_structure, cast(list[ForestStand], current))
+        if RunMode.UPDATE in cfg.run_modes:
+            current, cd_types_from_updating = _update(control_structure, cast(list[ForestStand], current), db)
         if RunMode.EXPORT_PREPRO in cfg.run_modes:
             _export_prepro(cfg, control_structure, current)
         if RunMode.SIMULATE in cfg.run_modes:
-            _simulate(control_structure, current, db)
+            _simulate(control_structure, current, db, cd_types_from_updating)
 
     if db is not None:
         db.commit()

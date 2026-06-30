@@ -15,9 +15,12 @@ class CollectedData(ABC):
         pass
 
 
-def init_collected_data_tables(db: sqlite3.Connection, data_types: "CollectableDataTypes"):
+def init_collected_data_tables(db: sqlite3.Connection,
+                               data_types: "CollectableDataTypes",
+                               existing_data_types: "CollectableDataTypes | None" = None):
     for data_type in data_types:
-        data_type.init_db_table(db)
+        if existing_data_types is None or data_type not in existing_data_types:
+            data_type.init_db_table(db)
 
 
 T = TypeVar("T")

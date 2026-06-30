@@ -12,6 +12,7 @@ from lukefi.metsi.data.formats.forest_centre import gpkg_util, smk_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import DTYPES_STRATA, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
+from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_ops2treatments import IMPLEMENTED_FC_TREATMENTS
 
 
 class ForestCentreBuilder(ForestBuilder):
@@ -38,8 +39,12 @@ class XMLBuilder(ForestCentreBuilder):
         self.declared_conversions = declared_conversions  # NOTE: not in use
 
     def set_stand_operations(self, stand: ForestStand, operations: dict[int, tuple[int, int]]) -> ForestStand:
+        stand.predetermined_treatments = []
         for oper in operations.values():
             (oper_type, oper_year) = oper
+            if oper_type in IMPLEMENTED_FC_TREATMENTS:
+                treatment = IMPLEMENTED_FC_TREATMENTS[oper_type]
+                stand.predetermined_treatments.append((oper_year, treatment))
             if oper_type in (1,):
                 stand.cutting_year = oper_year  # RST record 28
                 stand.method_of_last_cutting = CuttingMethod.OVER_STORY_REMOVAL  # RST record 31

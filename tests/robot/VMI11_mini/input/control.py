@@ -2,8 +2,8 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, scale_area_weight
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.sim_configuration import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.transition import Transition
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing
 from examples.declarations.export_prepro import mela_decl
 

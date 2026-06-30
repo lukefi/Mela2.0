@@ -1,31 +1,42 @@
 from copy import copy
 import sqlite3
-from typing import Any, Optional
+from typing import Any, Optional, cast
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.utils.file_io import output_node_to_db, update_leaf_node
-from lukefi.metsi.sim.collected_data import init_collected_data_tables
+from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db, update_leaf_node
+from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
 def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
-                                                units: list[T],
-                                                db: Optional[sqlite3.Connection] = None):
+                                                units: list[T] | list[SimulationPayload[T]],
+                                                db: Optional[sqlite3.Connection] = None,
+                                                existing_data_types: CollectableDataTypes | None = None):
     simconfig = SimConfiguration[T](control["simulation_instructions"], control["transition"], control["end_condition"])
 
     if db is not None:
-        init_collected_data_tables(db, simconfig.collected_data)
+        init_collected_data_tables(db, simconfig.collected_data, existing_data_types)
 
     for i, unit in enumerate(units, 1):
-        print(f"Simulating stand {unit.identifier} ({i} of {len(units)})...")
-        payload = SimulationPayload(unit)
+        if not isinstance(unit, SimulationPayload):
+            payload = cast(SimulationPayload[T], SimulationPayload(unit))
+        else:
+            payload = unit
+        print(f"Simulating unit {payload.computational_unit.identifier} ({i} of {len(units)})...")
         payload.computational_unit.update_aggregates()
         simconfig.transition.initialize(payload.computational_unit)
 
         if db is not None:
             # Write initial state to database
-            output_node_to_db(db, payload, [], {"initial"})
+            output_node_to_db(db,
+                              payload.node_id,
+                              "do_nothing",
+                              {},
+                              payload.computational_unit,
+                              [],
+                              {"initial"},
+                              node_type=NodeType.INITIAL)
         _simulate_unit(payload, simconfig, db)
 
 

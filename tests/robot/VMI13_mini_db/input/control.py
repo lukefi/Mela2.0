@@ -5,8 +5,8 @@ from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_re
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_configuration import Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.transition import Transition
+from lukefi.metsi.sim.instructions import SimulationInstruction
 
 
 control_structure = {

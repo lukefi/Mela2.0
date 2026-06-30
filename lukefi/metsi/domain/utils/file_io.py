@@ -1,5 +1,6 @@
+from enum import IntEnum
 import sqlite3
-from typing import Optional
+from typing import Any, Optional
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData
@@ -84,6 +85,16 @@ STRATA_TYPES = {
 }
 
 
+class NodeType(IntEnum):
+    INITIAL = 0
+    TREATMENT = 1
+    TRANSITION = 2
+    TREATMENT_LEAF = 3
+    TRANSITION_LEAF = 4
+    UPDATING_TREATMENT = 5
+    UPDATING_TRANSITION = 6
+
+
 def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
     if not decl:
         # default = all fields
@@ -107,7 +118,7 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
             done_treatment TEXT,
             treatment_params TEXT,
             tags TEXT,
-            leaf INTEGER(1) DEFAULT(0),
+            node_type INTEGER DEFAULT(0),
             PRIMARY KEY(identifier, stand))
         """
     )
@@ -154,13 +165,18 @@ def create_database_tables(db: sqlite3.Connection, sqlite_decl: Optional[dict] =
     )
 
 
-def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
-                                            current: SimulationPayload[T],
-                                            collected_data: list[CollectedData],
-                                            tags: Optional[set[str]] = None,
-                                            output_state: bool = True,
-                                            output_collected_data: bool = True,
-                                            transition_count: int = 0):
+def output_node_to_db(db: sqlite3.Connection,
+                      node_id: list[int],
+                      operation: str,
+                      params: dict[str, Any],
+                      computational_unit: ComputationalUnit,
+                      collected_data: list[CollectedData],
+                      tags: Optional[set[str]] = None,
+                      output_state: bool = True,
+                      output_collected_data: bool = True,
+                      transition_count: int = 0,
+                      node_type: NodeType = NodeType.TREATMENT,
+                      ):
     """
     Writes current simulation state and collected data to database.
 
@@ -170,30 +186,28 @@ def output_node_to_db[T: ComputationalUnit](db: sqlite3.Connection,
     """
     if tags is None:
         tags = set()
-    node_str = "-".join(map(str, current.node_id))
+    node_str = "-".join(map(str, node_id))
     if transition_count:
         node_str += "-T" * transition_count
-
-    operation = current.operation_history[-1][1] if len(current.operation_history) > 0 else "do_nothing"
-    params = str(current.operation_history[-1][2]) if len(current.operation_history) > 0 else "{}"
 
     cur = db.cursor()
     cur.execute(
         """--sql
-        INSERT INTO nodes (identifier, stand, done_treatment, treatment_params, tags)
+        INSERT INTO nodes (identifier, stand, done_treatment, treatment_params, tags, node_type)
         VALUES
-            (?, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?)
         """,
         (node_str,
-         current.computational_unit.identifier,
+         computational_unit.identifier,
          operation,
-         params,
-         str(tags) if len(tags) > 0 else "{}"))
+         str(params),
+         str(tags) if len(tags) > 0 else "{}",
+         node_type))
     if output_state:
-        current.computational_unit.output_to_db(db, node_str)
+        computational_unit.output_to_db(db, node_str)
     if output_collected_data:
         for datum in collected_data:
-            datum.output_to_db(db, node_str, current.computational_unit.identifier)
+            datum.output_to_db(db, node_str, computational_unit.identifier)
 
 
 def update_leaf_node[T: ComputationalUnit](
@@ -205,12 +219,13 @@ def update_leaf_node[T: ComputationalUnit](
     cur.execute(
         """--sql
         UPDATE nodes
-        SET leaf = 1
+        SET node_type = ?
         WHERE
             identifier = ?
             AND stand = ?;
         """,
         (
+            NodeType.TREATMENT_LEAF,
             node_id,
             leaf_node.computational_unit.identifier
         )
@@ -218,12 +233,13 @@ def update_leaf_node[T: ComputationalUnit](
     cur.execute(
         """--sql
         UPDATE nodes
-        SET leaf = 2
+        SET node_type = ?
         WHERE
             identifier = ?
             AND stand = ?;
         """,
         (
+            NodeType.TRANSITION_LEAF,
             node_id + ("-T" * transition_count),
             leaf_node.computational_unit.identifier
         )

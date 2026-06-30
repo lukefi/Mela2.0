@@ -8,7 +8,7 @@ from collections.abc import Callable, Generator
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import output_node_to_db
 from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, CollectedData
+from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
@@ -212,7 +212,7 @@ class Event(EventGeneratorBase[T]):
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
 
-        new_state, new_collected_data = self.treatment.treatment_fn(payload.computational_unit, **combined_params)
+        new_state, new_collected_data = self.treatment(payload.computational_unit, **combined_params)
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
@@ -236,7 +236,14 @@ class Event(EventGeneratorBase[T]):
 
         new_payload.node_id.append(node)
         if db is not None and self.db_output:
-            output_node_to_db(db, new_payload, new_collected_data, self.tags | self.treatment.default_tags)
+            output_node_to_db(
+                db,
+                new_payload.node_id,
+                self.treatment.name,
+                combined_params,
+                new_state,
+                new_collected_data,
+                self.tags | self.treatment.default_tags)
 
         if isinstance(new_payload.computational_unit, Finalizable):
             new_payload.computational_unit.finalize()
@@ -244,7 +251,7 @@ class Event(EventGeneratorBase[T]):
         yield new_payload
 
     @override
-    def get_types_of_collected_data(self) -> set[type[CollectedData]]:
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
         return self.treatment.collected_data
 
     @staticmethod
