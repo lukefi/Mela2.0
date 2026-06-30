@@ -2,7 +2,7 @@ import ast
 from copy import deepcopy
 import csv
 import sqlite3
-from typing import Any, Set
+from typing import Any, Set, TypeVar
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
@@ -12,8 +12,9 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import PredeterminedTreatment, TreatmentFn
 from lukefi.metsi.sim.updating import get_step_and_treatments
 
-type Schedule[T: ComputationalUnit] = list[tuple[int, PredeterminedTreatment[T]]]
-type Schedules[T:ComputationalUnit] = list[Schedule[T]]
+T = TypeVar("T", bound=ComputationalUnit)
+Schedule = list[tuple[int, PredeterminedTreatment[T]]]
+Schedules = list[Schedule[T]]
 
 
 class UnitInstructions[T: ComputationalUnit]:
@@ -26,9 +27,9 @@ class UnitInstructions[T: ComputationalUnit]:
         self.schedules = []
 
 
-def resimulate_schedules[T: ComputationalUnit](resim_instructions: ResimulationInstructions[T],
-                                               in_db: sqlite3.Connection,
-                                               out_db: sqlite3.Connection):
+def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
+                         in_db: sqlite3.Connection,
+                         out_db: sqlite3.Connection):
     schedules_file_path = resim_instructions.schedules_file
 
     treatment_map = resim_instructions.treatment_map
@@ -91,10 +92,10 @@ def resimulate_schedules[T: ComputationalUnit](resim_instructions: ResimulationI
                     should_run = False
 
 
-def _recreate_instructions[T: ComputationalUnit](sched_file_path: str,
-                                                 treatment_map: dict[str, TreatmentFn[T]],
-                                                 in_db: sqlite3.Connection,
-                                                 data_type: type[T]) -> dict[str, UnitInstructions[T]]:
+def _recreate_instructions(sched_file_path: str,
+                           treatment_map: dict[str, TreatmentFn[T]],
+                           in_db: sqlite3.Connection,
+                           data_type: type[T]) -> dict[str, UnitInstructions[T]]:
     instructions_per_stand: dict[str, UnitInstructions[T]] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
         sched_reader = csv.DictReader(sched_file, delimiter=";")
