@@ -1,17 +1,11 @@
 from enum import IntEnum
-from typing import Optional, Any, Union
+from typing import Any
 from lukefi.metsi.data.enums.internal import (
-    DrainageCategory,
-    FraLandUseClass,
-    LandUseCategory,
-    OwnerCategory,
-    SiteType,
-    SoilPeatlandCategory,
-    TreeSpecies,
+    MetsiEnum,
 )
 
 
-def parse_type[T:Union[int, float, str]](source, *ts: type[T]):
+def parse_type[T:int | float | str](source, *ts: type[T]):
     ''' Generic version of  parse_int and parse_float utilities'''
     ts_ = list(ts)
     try:
@@ -24,7 +18,7 @@ def parse_type[T:Union[int, float, str]](source, *ts: type[T]):
         return None
 
 
-def parse_int(source: str | None) -> Optional[int]:
+def parse_int(source: str | None) -> int | None:
     if source is None:
         return None
     try:
@@ -33,7 +27,7 @@ def parse_int(source: str | None) -> Optional[int]:
         return None
 
 
-def parse_float(source: str | None) -> Optional[float]:
+def parse_float(source: str | None) -> float | None:
     if source is None:
         return None
     try:
@@ -42,23 +36,18 @@ def parse_float(source: str | None) -> Optional[float]:
         return None
 
 
-def get_or_default(maybe: Optional[Any], default: Any = None) -> Any:
+def get_or_default(maybe: Any | None, default: Any = None) -> Any:
     return default if maybe is None else maybe
 
 
-def convert_str_to_type[T:(int,
-                           float,
-                           str,
-                           OwnerCategory,
-                           LandUseCategory,
-                           SoilPeatlandCategory,
-                           SiteType,
-                           DrainageCategory,
-                           TreeSpecies,
-                           FraLandUseClass)](value: str,
-                                             ret_type: type[T]) -> Optional[T]:
-    if value == "None":
+def convert_str_to_type[T: MetsiEnum | int | float | str](value: str | None,
+                                                          ret_type: type[T]) -> T | None:
+    if value is None or value == "None":
         return None
     if issubclass(ret_type, IntEnum):
         return ret_type(int(value))
+    if issubclass(ret_type, int):
+        return ret_type(value)
+    if issubclass(ret_type, float):
+        return ret_type(value)
     return ret_type(value)
