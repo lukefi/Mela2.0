@@ -1,4 +1,5 @@
 import sqlite3
+from typing import Sequence
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
@@ -10,7 +11,7 @@ from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
 
 def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructions[T],
-                                       units: list[T],
+                                       units: Sequence[T],
                                        db: sqlite3.Connection | None = None) -> tuple[list[SimulationPayload[T]],
                                                                                       CollectableDataTypes | None]:
     target_time = updating_instructions.target_time
@@ -87,7 +88,7 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 
 
 def _get_collected_data_types[T: ComputationalUnit](
-        units: list[T],
+        units: Sequence[T],
         updating_instructions: UpdatingInstructions) -> CollectableDataTypes:
 
     if updating_instructions.output_transition_cd:
