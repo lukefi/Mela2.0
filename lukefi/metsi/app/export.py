@@ -1,6 +1,6 @@
 import copy
 import json
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Sequence
 
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.console_logging import print_logline
@@ -14,7 +14,7 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
 def export_preprocessed(target_directory: str, decl: dict[str, Any],
-                        units: StandList | list[SimulationPayload[ForestStand]],
+                        units: StandList | Sequence[SimulationPayload[ForestStand]],
                         app_configuration: AppConfiguration,
                         base_name: str = "preprocessing_result",
                         ) -> None:
