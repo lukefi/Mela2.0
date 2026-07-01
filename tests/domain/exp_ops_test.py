@@ -52,7 +52,7 @@ class TestExpOps(unittest.TestCase):
             has_strata=Mock(return_value=False),
         )
 
-        self.stands = StandList([self.stand1, self.stand2])
+        self.stands = [self.stand1, self.stand2]
 
     def test_prepare_rst_output(self):
         result = prepare_rst_output(self.stands)
