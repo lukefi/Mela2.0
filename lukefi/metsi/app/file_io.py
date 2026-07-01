@@ -109,7 +109,8 @@ def source_data_reader(state_format: str, conversions, **builder_flags) -> Stand
     raise MetsiException(f"Unsupported state format '{state_format}'")
 
 
-def read_stands_from_file(app_config: AppConfiguration, conversions: dict[str, Conversion] | None = None) -> StandList:
+def read_stands_from_file(app_config: AppConfiguration,
+                          conversions: dict[str, dict[str, Conversion]] | None = None) -> StandList:
     """
     Read a list of ForestStands from given file with given configuration. Directly reads CSV format data. Utilizes
     FDM ForestBuilder utilities to transform VMI12, VMI13 or Forest Centre data into CSV ForestStand format.

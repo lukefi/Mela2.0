@@ -94,7 +94,7 @@ class Simulation[T: ComputationalUnit]:
 @dataclass
 class MetsiControl[T: ComputationalUnit]:
     app_configuration: AppConfiguration
-    conversions: dict[str, Conversion] | None = None
+    conversions: dict[str, dict[str, Conversion]] | None = None
     preprocessing: Preprocessing[T] | None = None
     updating: UpdatingInstructions | None = None
     export_prepro: dict[str, dict[str, Any]] | None = None
