@@ -47,7 +47,10 @@ def filter_stands(stands: StandList,
     return stands
 
 
-def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]] | None = None) -> StandList:
+def filter_trees(stands: StandList,
+                 *,
+                 predicate: Callable[[ForestStand],
+                                     npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter reference trees for each stand in list based on given predicate.
 
     Args:
