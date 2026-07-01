@@ -36,7 +36,7 @@ def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandL
 
 
 def _export_prepro(control: MetsiControl[ForestStand], data: StandList |
-                   list[SimulationPayload[ForestStand]]) -> None:
+                   Sequence[SimulationPayload[ForestStand]]) -> None:
     print_logline("Exporting preprocessing results...")
     if control.export_prepro is not None:
         return export_preprocessed(control.app_configuration.target_directory,
@@ -58,7 +58,7 @@ def _update(control: MetsiControl[ForestStand], stands: StandList, db: sqlite3.C
 
 
 def _simulate(control: MetsiControl[ForestStand],
-              stands: StandList | list[SimulationPayload[ForestStand]],
+              stands: StandList | Sequence[SimulationPayload[ForestStand]],
               db: Optional[sqlite3.Connection],
               existing_data_types: CollectableDataTypes | None = None) -> None:
     simulation = control.simulation
