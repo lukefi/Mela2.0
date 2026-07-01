@@ -39,11 +39,12 @@ def _export_prepro(control: MetsiControl[ForestStand], data: StandList |
                    Sequence[SimulationPayload[ForestStand]]) -> None:
     print_logline("Exporting preprocessing results...")
     if control.export_prepro is not None:
-        return export_preprocessed(control.app_configuration.target_directory,
-                                   control.export_prepro,
-                                   data,
-                                   base_name=control.app_configuration.preprocessing_output_file,
-                                   app_configuration=control.app_configuration)
+        export_preprocessed(control.app_configuration.target_directory,
+                            control.export_prepro,
+                            data,
+                            base_name=control.app_configuration.preprocessing_output_file,
+                            app_configuration=control.app_configuration)
+        return
     print_logline("Declaration for 'export_prerocessed' not found from control.")
     print_logline("Skipping export of preprocessing results.")
 
