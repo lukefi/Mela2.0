@@ -2,7 +2,7 @@ from sqlite3 import Connection
 from typing import override
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.sim_configuration import Transition
+from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.treatment import Treatment
 
 
@@ -46,7 +46,7 @@ class ToyModel(ComputationalUnit):
                 done_treatment TEXT,
                 treatment_params TEXT,
                 tags TEXT,
-                leaf INTEGER(1) DEFAULT(0),
+                node_type INTEGER DEFAULT(0),
                 PRIMARY KEY(identifier, stand))
         """
         )

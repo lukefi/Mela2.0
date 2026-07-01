@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] - 2026-06-30
+
+### Added
+
+- Added `updating` run mode for updating units to given time point and performing predetermined treatments at specific time points along the way
+- Added mechanism for parsing performed operations into predetermined treatments from FC source data
+
+### Changed
+
+- Removed the `leaf` column in the output database `nodes` table and added a more generic `node_type` column instead
+- The treatment `update_to_year` now also performs the predetermined treatments just like the new run mode
+
 ## [0.8.9] - 2026-06-17
 
 ### Changed

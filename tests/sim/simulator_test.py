@@ -7,7 +7,7 @@ from lukefi.metsi.domain.conditions import TimeSinceTreatment, RelativeTimePoint
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.sim_configuration import SimConfiguration
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
+from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
 from lukefi.metsi.sim.treatment import Treatment
@@ -43,7 +43,7 @@ class SimulatorTest(unittest.TestCase):
         cur = db.cursor()
         cur.execute(
             """--sql
-                SELECT COUNT(*) FROM nodes WHERE leaf=1;
+                SELECT COUNT(*) FROM nodes WHERE node_type=3;
             """
         )
         self.assertEqual(1, cur.fetchone()[0])
@@ -83,7 +83,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
         self.assertEqual(2, cur.fetchone()[0])
@@ -122,7 +122,7 @@ class SimulatorTest(unittest.TestCase):
         cur = db.cursor()
         cur.execute(
             """--sql
-                SELECT COUNT(*) FROM nodes WHERE leaf=1;
+                SELECT COUNT(*) FROM nodes WHERE node_type=3;
             """
         )
         self.assertEqual(0, cur.fetchone()[0])
@@ -162,7 +162,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
         self.assertEqual(2, cur.fetchone()[0])
@@ -225,7 +225,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
 
@@ -292,7 +292,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
         self.assertListEqual([3, 4, 5], [row[0] for row in cur])
@@ -388,7 +388,7 @@ class SimulatorTest(unittest.TestCase):
             WHERE
                 toys.node = nodes.identifier AND
                 toys.identifier = nodes.stand AND
-                nodes.leaf = 1;
+                nodes.node_type = 3;
         """
 
         cur1 = db1.cursor()
@@ -425,7 +425,7 @@ class SimulatorTest(unittest.TestCase):
         cur = db.cursor()
         cur.execute(
             """--sql
-                SELECT COUNT(*) FROM nodes WHERE leaf = 1;
+                SELECT COUNT(*) FROM nodes WHERE node_type = 3;
             """
         )
 
@@ -452,7 +452,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    leaf = 1;
+                    node_type = 3;
             """
         )
         self.assertEqual(5, cur.fetchone()[0])
@@ -478,7 +478,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    leaf = 1;
+                    node_type = 3;
             """
         )
         self.assertEqual(9, cur.fetchone()[0])
@@ -504,7 +504,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
         results = [row[0] for row in cur]
@@ -560,7 +560,7 @@ class SimulatorTest(unittest.TestCase):
                 WHERE
                     toys.identifier = nodes.stand AND
                     toys.node = nodes.identifier AND
-                    nodes.leaf = 1;
+                    nodes.node_type = 3;
             """
         )
         results = cur.fetchall()

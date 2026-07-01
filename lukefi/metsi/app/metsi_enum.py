@@ -42,8 +42,6 @@ class StringConfigEnum(Enum):
     @classmethod
     def from_str(cls, name: str):
         """Convert a string to an enum value."""
-        if name is None:
-            return None
         try:
             return cls[name.upper()]
         except KeyError as e:
@@ -64,10 +62,11 @@ class StringConfigEnum(Enum):
 # Enums for valid app-level configuration values
 class RunMode(IntConfigEnum):
     PREPROCESS = 1
-    EXPORT_PREPRO = 2
-    SIMULATE = 3
-    POSTPROCESS = 4
-    EXPORT = 5
+    UPDATE = 2
+    EXPORT_PREPRO = 3
+    SIMULATE = 4
+    POSTPROCESS = 5
+    EXPORT = 6
 
 
 class StrataOrigin(IntConfigEnum):

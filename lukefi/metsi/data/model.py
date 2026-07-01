@@ -28,6 +28,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.sim.finalizable import Finalizable
+from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
@@ -231,15 +232,13 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Whether the stand contains an over storey.
     """
-    ds_main_tree_species: Optional[TreeSpecies] = None
-    """
-    Main tree species in the dominant storey.
-    """
 
     sqlite_decl: Optional[dict] = None
     """
     Declarations for SQLite output database columns.
     """
+
+    predetermined_treatments: list[tuple[int, PredeterminedTreatment["ForestStand"]]] | None = None
 
     def __eq__(self, other):
         return id(self) == id(other)

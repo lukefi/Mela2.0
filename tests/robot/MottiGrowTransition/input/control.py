@@ -2,6 +2,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
+from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
@@ -11,9 +12,8 @@ from lukefi.metsi.domain.pre_ops import (
     scale_area_weight)
 from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.sim_configuration import Initialization, Transition
-from lukefi.metsi.sim.simulation_instruction import SimulationInstruction
-from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
+from lukefi.metsi.sim.transition import Transition, Initialization
+from lukefi.metsi.sim.instructions import SimulationInstruction
 
 Motti4DLL.load()
 

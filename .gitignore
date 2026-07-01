@@ -14,6 +14,9 @@ tests/robot/**/output/test/
 output.xml
 log.html
 report.html
+# Parallel runner output
+.pabotsuitenames
+pabot_results/
 
 # Pytest coverage output
 .coverage
