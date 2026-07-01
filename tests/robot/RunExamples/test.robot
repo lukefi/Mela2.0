@@ -44,6 +44,13 @@ Updating example should run
     ...    ${OUT_DIR}/updating
     ...    ${EXAMPLES_DIR}/control_updating.py
 
+Updating run mode example should run
+    [Tags]    simulation    smk
+    Run Simulation
+    ...    ${INPUT_DIR}/data.xml
+    ...    ${OUT_DIR}/updating_run_mode
+    ...    ${EXAMPLES_DIR}/control_updating_treatments.py
+
 Vector example should run
     [Tags]    simulation    vmi13
     Run Simulation
@@ -71,3 +78,17 @@ VMI13 tree generation example should run
     ...    ${INPUT_DIR}/VMI13_source_mini.dat
     ...    ${OUT_DIR}/vmi13_tree_generation
     ...    ${EXAMPLES_DIR}/vmi13_gen_trees.py
+
+First generator example should run
+    [Tags]    simulation    vmi13
+    Run Simulation
+    ...    ${INPUT_DIR}/VMI13_source_mini.dat
+    ...    ${OUT_DIR}/first_generator
+    ...    ${EXAMPLES_DIR}/first_generator.py
+
+Optional generator example should run
+    [Tags]    simulation    vmi13
+    Run Simulation
+    ...    ${INPUT_DIR}/VMI13_source_mini.dat
+    ...    ${OUT_DIR}/optional_generator
+    ...    ${EXAMPLES_DIR}/optional_generator.py
