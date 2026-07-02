@@ -7,7 +7,7 @@ from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.transition import TransitionFn
+from lukefi.metsi.sim.transition import Transition, TransitionFn
 from lukefi.metsi.sim.treatment import TreatmentFn
 
 
@@ -66,7 +66,7 @@ class UpdatingInstructions[T: ComputationalUnit]:
 
 
 class ResimulationInstructions[T: ComputationalUnit]:
-    transition: TransitionFn[T]
+    transition: Transition[T]
     selected_schedules_file: str
     treatment_map: dict[str, TreatmentFn[T]]
     collected_data: CollectableDataTypes
@@ -77,7 +77,7 @@ class ResimulationInstructions[T: ComputationalUnit]:
 
     def __init__(self,
                  *,
-                 transition: TransitionFn[T],
+                 transition: Transition[T],
                  schedules_file: str,
                  treatment_map: dict[str, TreatmentFn[T]],
                  collected_data: CollectableDataTypes | None = None,

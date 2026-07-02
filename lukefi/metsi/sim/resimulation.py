@@ -33,9 +33,9 @@ def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
                          unit_type: type[T]):
     schedules_file_path = resim_instructions.schedules_file
     treatment_map = resim_instructions.treatment_map
-    collected_data_types = resim_instructions.collected_data
-    init_collected_data_tables(out_db, collected_data_types)
     transition = resim_instructions.transition
+    collected_data_types = resim_instructions.collected_data | transition.collected_data
+    init_collected_data_tables(out_db, collected_data_types)
     instructions_per_unit = _recreate_instructions(schedules_file_path,
                                                    treatment_map,
                                                    in_db,
@@ -75,18 +75,20 @@ def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
 
                 if step > 0:
                     print(f"Transition to {current.computational_unit.time + step}, step {step}")
-                    current.computational_unit, cd = transition(current.computational_unit, step)
+                    # TODO: This is a bit of a hack. DB stuff should be refactored into the (re)simulation
+                    # control object once that branch is merged.
+                    current.computational_unit, cd = transition(current, None, step)
                     current.computational_unit.update_aggregates()
                     output_node_to_db(
                         out_db,
                         current.node_id,
-                        transition.__name__,
-                        {},
+                        transition.name,
+                        transition.parameters,
                         current.computational_unit,
                         cd,
                         tags=None,
-                        output_state=True,
-                        output_collected_data=True,
+                        output_state=transition.db_output_state,
+                        output_collected_data=transition.db_output_cd,
                         transition_count=1,
                         node_type=NodeType.RESIMULATION_TRANSITION
                     )
