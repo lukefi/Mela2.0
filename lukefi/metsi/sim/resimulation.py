@@ -68,8 +68,8 @@ def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
                         current.computational_unit,
                         cd,
                         treatment.tags,
-                        output_state=True,
-                        output_collected_data=True,
+                        output_state=resim_instructions.output_treatment_state,
+                        output_collected_data=resim_instructions.output_treatment_cd,
                         node_type=NodeType.RESIMULATION_TREATMENT if step > 0 else NodeType.RESIMULATION_TREATMENT_LEAF
                     )
 
