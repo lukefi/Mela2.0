@@ -1,6 +1,4 @@
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.natural_processes import grow_motti_dll
-from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.sim.instructions import ResimulationInstructions
 from lukefi.metsi.sim.operations import do_nothing
@@ -17,13 +15,13 @@ control_structure = {
         "sqlite_decl": sqlite_decl,
     },
     "resimulation": ResimulationInstructions[ForestStand](
-        transition=Transition(grow_motti_dll_fn, max_step=5, collected_data={NaturalProcessInfo}, name="grow_motti"),
+        transition=Transition(grow_motti_dll_fn,
+                              max_step=5,
+                              collected_data={NaturalProcessInfo},
+                              name="grow_motti"),
         schedules_file="selected_schedules.csv",
         treatment_map={
             "do_nothing": do_nothing,
-        },
-        collected_data={
-            NaturalProcessInfo
         }
     )
 }
