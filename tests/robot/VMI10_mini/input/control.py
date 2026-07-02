@@ -45,7 +45,7 @@ control_structure = {
             ]
         )
     ],
-    "transition": Transition(grow_acta_fn, db_output=False),
+    "transition": Transition(grow_acta_fn, db_output_state=False, db_output_cd=False),
     "end_condition": ForestCondition(lambda x: x.computational_unit.year >= 2050),
     "post_processing": {
         "operation_params": {
