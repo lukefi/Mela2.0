@@ -90,8 +90,8 @@ def _get_collected_data_types[T: ComputationalUnit](
         units: list[T],
         updating_instructions: UpdatingInstructions) -> CollectableDataTypes:
 
-    if updating_instructions.output_transition_cd:
-        retval: CollectableDataTypes = {NaturalProcessInfo}
+    if updating_instructions.transition.db_output_cd:
+        retval = updating_instructions.transition.collected_data
     else:
         retval = set()
 
