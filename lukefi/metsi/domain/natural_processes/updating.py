@@ -9,7 +9,8 @@ from lukefi.metsi.sim.updating import get_step_and_treatments
 def update_to_year_fn(stand: ForestStand,
                       /,
                       transition: TransitionFn[ForestStand] | None = None,
-                      target_year: int | None = None
+                      target_year: int | None = None,
+                      **transition_params
                       ) -> OpTuple[ForestStand]:
     """
         Apply a transition function to update the stand to target year.
@@ -35,7 +36,7 @@ def update_to_year_fn(stand: ForestStand,
             current, _ = treatment(current)
 
         if step > 0:
-            current, _ = transition(current, step)
+            current, _ = transition(current, step, **transition_params)
         else:
             keep_running = False
 
