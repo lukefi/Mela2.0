@@ -80,7 +80,7 @@ class ResimulationInstructions[T: ComputationalUnit]:
                  transition: TransitionFn[T],
                  schedules_file: str,
                  treatment_map: dict[str, TreatmentFn[T]],
-                 collected_data: CollectableDataTypes,
+                 collected_data: CollectableDataTypes | None = None,
                  output_transition_state: bool = True,
                  output_transition_cd: bool = True,
                  output_treatment_state: bool = True,
@@ -88,7 +88,10 @@ class ResimulationInstructions[T: ComputationalUnit]:
         self.transition = transition
         self.schedules_file = schedules_file
         self.treatment_map = treatment_map
-        self.collected_data = collected_data
+        if collected_data is None:
+            self.collected_data = set()
+        else:
+            self.collected_data = collected_data
         self.output_transition_state = output_transition_state
         self.output_transition_cd = output_transition_cd
         self.output_treatment_state = output_treatment_state
