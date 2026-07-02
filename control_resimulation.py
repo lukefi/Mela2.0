@@ -13,7 +13,7 @@ control_structure = {
         "simulation_output_file": "resimulation_results",
         "sqlite_decl": sqlite_decl,
     },
-    "resimulation": ResimulationInstructions(
+    "resimulation": ResimulationInstructions[ForestStand](
         transition=grow_acta_fn,
         schedules_file="selected_schedules.csv",
         treatment_map={
@@ -21,8 +21,7 @@ control_structure = {
         },
         collected_data={
             NaturalProcessInfo
-        },
-        data_type=ForestStand
+        }
     )
 }
 

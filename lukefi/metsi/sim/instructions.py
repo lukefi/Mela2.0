@@ -70,19 +70,17 @@ class ResimulationInstructions[T: ComputationalUnit]:
     selected_schedules_file: str
     treatment_map: dict[str, TreatmentFn[T]]
     collected_data: CollectableDataTypes
-    data_type: type[T]
     output_transition_state: bool
     output_transition_cd: bool
     output_treatment_state: bool
     output_treatment_cd: bool
 
     def __init__(self,
+                 *,
                  transition: TransitionFn[T],
                  schedules_file: str,
                  treatment_map: dict[str, TreatmentFn[T]],
                  collected_data: CollectableDataTypes,
-                 data_type: type[T],
-                 *,
                  output_transition_state: bool = True,
                  output_transition_cd: bool = True,
                  output_treatment_state: bool = True,
@@ -91,7 +89,6 @@ class ResimulationInstructions[T: ComputationalUnit]:
         self.schedules_file = schedules_file
         self.treatment_map = treatment_map
         self.collected_data = collected_data
-        self.data_type = data_type
         self.output_transition_state = output_transition_state
         self.output_transition_cd = output_transition_cd
         self.output_treatment_state = output_treatment_state

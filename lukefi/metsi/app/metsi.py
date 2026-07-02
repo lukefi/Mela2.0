@@ -5,7 +5,11 @@ from typing import Any, Optional, cast
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
 )
-from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
+from lukefi.metsi.app.app_io import (
+    parse_cli_arguments,
+    MetsiConfiguration,
+    generate_application_configuration,
+    RunMode)
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.app.export import export_preprocessed
@@ -72,7 +76,7 @@ def _resimulate(control: dict[str, Any],
     resimulation_instructions: ResimulationInstructions[ForestStand] | None = control.get("resimulation", None)
     if resimulation_instructions is not None:
         print_logline("Resimulating schedules...")
-        return resimulate_schedules(resimulation_instructions, in_db, out_db)
+        return resimulate_schedules(resimulation_instructions, in_db, out_db, ForestStand)
 
     raise MetsiException("Declaration for 'resimulation' not found from control")
 

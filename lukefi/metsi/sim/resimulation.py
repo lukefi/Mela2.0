@@ -29,18 +29,20 @@ class UnitInstructions[T: ComputationalUnit]:
 
 def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
                          in_db: sqlite3.Connection,
-                         out_db: sqlite3.Connection):
+                         out_db: sqlite3.Connection,
+                         unit_type: type[T]):
     schedules_file_path = resim_instructions.schedules_file
-
     treatment_map = resim_instructions.treatment_map
     collected_data_types = resim_instructions.collected_data
     init_collected_data_tables(out_db, collected_data_types)
     transition = resim_instructions.transition
-    instructions_per_stand = _recreate_instructions(
-        schedules_file_path, treatment_map, in_db, resim_instructions.data_type)
+    instructions_per_unit = _recreate_instructions(schedules_file_path,
+                                                   treatment_map,
+                                                   in_db,
+                                                   unit_type)
 
-    for stand, instructions in instructions_per_stand.items():
-        print(f"Resimulating stand {stand}, start year {instructions.initial_state.time}")
+    for unit, instructions in instructions_per_unit.items():
+        print(f"Resimulating unit {unit}, start time {instructions.initial_state.time}")
         for i, schedule in enumerate(instructions.schedules):
             print(f"Schedule {i}:")
             current = SimulationPayload(deepcopy(instructions.initial_state))
@@ -95,17 +97,17 @@ def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
 def _recreate_instructions(sched_file_path: str,
                            treatment_map: dict[str, TreatmentFn[T]],
                            in_db: sqlite3.Connection,
-                           data_type: type[T]) -> dict[str, UnitInstructions[T]]:
-    instructions_per_stand: dict[str, UnitInstructions[T]] = {}
+                           unit_type: type[T]) -> dict[str, UnitInstructions[T]]:
+    instructions_per_unit: dict[str, UnitInstructions[T]] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
         sched_reader = csv.DictReader(sched_file, delimiter=";")
         for schedule_row in sched_reader:
-            stand_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
-            instructions_per_stand.setdefault(
-                stand_id,
-                UnitInstructions(data_type.reconstruct_initial_state(stand_id, in_db))
+            unit_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
+            instructions_per_unit.setdefault(
+                unit_id,
+                UnitInstructions(unit_type.reconstruct_initial_state(unit_id, in_db))
             ).schedules.append(treatments)
-    return instructions_per_stand
+    return instructions_per_unit
 
 
 def _recreate_schedule(schedule_row: dict[str, str],
