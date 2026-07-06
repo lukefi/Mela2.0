@@ -9,7 +9,6 @@ from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.treatment import TreatmentFn
 
 
-
 type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
 
 

@@ -5,7 +5,7 @@ from typing import Optional, Sequence, cast
 
 from lukefi.metsi.app.metsi_enum import RunMode
 from lukefi.metsi.app.preprocessor import (
-    preprocess_stands,
+    preprocess_units
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments
 from lukefi.metsi.core.sim_control import Resimulation
@@ -33,7 +33,7 @@ def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandL
     print_logline("Preprocessing...")
     preprocess_control = control.preprocessing
     if preprocess_control is not None:
-        result = preprocess_stands(stands, preprocess_control)
+        result = preprocess_units(stands, preprocess_control)
         return result
     raise MetsiException("Declaration of preprocess control missing")
 
