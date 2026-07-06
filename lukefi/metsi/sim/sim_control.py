@@ -88,5 +88,5 @@ class Simulation[T: ComputationalUnit]:
     def _determine_collected_data_types(self):
         collected_data = self.transition.collected_data
         for instruction in self.instructions:
-            collected_data.update(instruction.event_generator.get_types_of_collected_data())
+            collected_data.update(instruction.events.get_types_of_collected_data())
         self.collected_data = collected_data

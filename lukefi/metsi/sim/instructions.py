@@ -10,16 +10,16 @@ from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 class SimulationInstruction[T: ComputationalUnit]:
     conditions: Sequence_[Condition[T]]
-    event_generator: EventGenerator[T]
+    events: EventGenerator[T]
 
     def __init__(self, events: EventGenerator[T] | list[EventGeneratorBase] | set[EventGeneratorBase],
                  conditions: Optional[Sequence_[Condition[T]]] = None) -> None:
         if isinstance(events, EventGenerator):
-            self.event_generator = events
+            self.events = events
         elif isinstance(events, list):
-            self.event_generator = Sequence(events)
+            self.events = Sequence(events)
         elif isinstance(events, set):
-            self.event_generator = Alternatives(list(events))
+            self.events = Alternatives(list(events))
         if conditions is not None:
             self.conditions = conditions
         else:
@@ -34,4 +34,4 @@ class SimulationInstruction[T: ComputationalUnit]:
                  payload: SimulationPayload[T],
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T]]:
-        yield from self.event_generator.evaluate(payload, db, node)
+        yield from self.events.evaluate(payload, db, node)
