@@ -14,12 +14,11 @@ from lukefi.metsi.sim.updating import get_step_and_treatments
 
 T = TypeVar("T", bound=ComputationalUnit)
 Schedule = list[tuple[int, PredeterminedTreatment[T]]]
-Schedules = list[Schedule[T]]
 
 
-class UnitInstructions[T: ComputationalUnit]:
+class _UnitInstructions[T: ComputationalUnit]:
     initial_state: T
-    schedules: Schedules[T]
+    schedules: list[Schedule[T]]
 
     def __init__(self,
                  initial_state: T) -> None:
@@ -99,15 +98,15 @@ def resimulate_schedules(resim_instructions: Resimulation[T],
 def _recreate_instructions(sched_file_path: str,
                            treatment_map: dict[str, TreatmentFn[T]],
                            in_db: sqlite3.Connection,
-                           unit_type: type[T]) -> dict[str, UnitInstructions[T]]:
-    instructions_per_unit: dict[str, UnitInstructions[T]] = {}
+                           unit_type: type[T]) -> dict[str, _UnitInstructions[T]]:
+    instructions_per_unit: dict[str, _UnitInstructions[T]] = {}
     with open(sched_file_path, "r", encoding="utf-8") as sched_file:
         sched_reader = csv.DictReader(sched_file, delimiter=";")
         for schedule_row in sched_reader:
             unit_id, treatments = _recreate_schedule(schedule_row, treatment_map, in_db)
             instructions_per_unit.setdefault(
                 unit_id,
-                UnitInstructions(unit_type.reconstruct_initial_state(unit_id, in_db))
+                _UnitInstructions(unit_type.reconstruct_initial_state(unit_id, in_db))
             ).schedules.append(treatments)
     return instructions_per_unit
 
