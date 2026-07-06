@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import sqlite3
-from typing import TypeVar
 
 
 class CollectedData(ABC):
@@ -23,6 +22,5 @@ def init_collected_data_tables(db: sqlite3.Connection,
             data_type.init_db_table(db)
 
 
-T = TypeVar("T")
-OpTuple = tuple[T, list[CollectedData]]
-CollectableDataTypes = set[type[CollectedData]]
+type OpTuple[T] = tuple[T, list[CollectedData]]
+type CollectableDataTypes = set[type[CollectedData]]

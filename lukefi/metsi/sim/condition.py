@@ -1,12 +1,11 @@
 from collections.abc import Callable
-from typing import Optional, TypeVar
+from typing import Optional
 
 from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
-T = TypeVar("T")
-Predicate = Callable[[T], bool]
+type Predicate[T] = Callable[[T], bool]
 
 
 class Condition[T: ComputationalUnit]:
