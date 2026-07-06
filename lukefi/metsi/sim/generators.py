@@ -207,12 +207,12 @@ class Event(EventGeneratorBase[T]):
                 return
 
         resolved_dynamic: dict[str, Any] = {
-            name: fn(payload.computational_unit) for name, fn in self.dynamic_parameters.items()
+            name: fn(payload.unit) for name, fn in self.dynamic_parameters.items()
         }
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
 
-        new_state, new_collected_data = self.treatment(payload.computational_unit, **combined_params)
+        new_state, new_collected_data = self.treatment(payload.unit, **combined_params)
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
@@ -227,7 +227,7 @@ class Event(EventGeneratorBase[T]):
 
         new_payload.operation_history.append(
             (
-                payload.computational_unit.time,
+                payload.unit.time,
                 self.treatment.name,
                 combined_params,
                 self.treatment.default_tags | self.tags
@@ -245,8 +245,8 @@ class Event(EventGeneratorBase[T]):
                 new_collected_data,
                 self.tags | self.treatment.default_tags)
 
-        if isinstance(new_payload.computational_unit, Finalizable):
-            new_payload.computational_unit.finalize()
+        if isinstance(new_payload.unit, Finalizable):
+            new_payload.unit.finalize()
 
         yield new_payload
 

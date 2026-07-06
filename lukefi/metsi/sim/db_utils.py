@@ -107,7 +107,7 @@ def update_leaf_node[T: ComputationalUnit](
         (
             NodeType.TREATMENT_LEAF,
             node_id,
-            leaf_node.computational_unit.identifier
+            leaf_node.unit.identifier
         )
     )
     cur.execute(
@@ -121,6 +121,6 @@ def update_leaf_node[T: ComputationalUnit](
         (
             NodeType.TRANSITION_LEAF,
             node_id + ("-T" * transition_count),
-            leaf_node.computational_unit.identifier
+            leaf_node.unit.identifier
         )
     )

@@ -47,48 +47,48 @@ def resimulate_schedules(resim_instructions: Resimulation[T],
             print(f"Schedule {i}:")
             current = SimulationPayload(deepcopy(instructions.initial_state))
             current.node_id[0] = i
-            current.computational_unit.predetermined_treatments = schedule
+            current.unit.predetermined_treatments = schedule
             target_time = max(time for time, _ in schedule)
             should_run = True
             while should_run:
-                step, treatments = get_step_and_treatments(current.computational_unit, target_time)
-                print(f"Year {current.computational_unit.time}")
+                step, treatments = get_step_and_treatments(current.unit, target_time)
+                print(f"Year {current.unit.time}")
                 print(f"treatments: {[treatment.name for treatment in treatments]}")
 
                 for treatment in treatments:
                     print(f"Perform treatment {treatment.name}")
-                    current.computational_unit, cd = treatment(current.computational_unit)
-                    current.computational_unit.update_aggregates()
+                    current.unit, cd = treatment(current.unit)
+                    current.unit.update_aggregates()
                     current.node_id.append(0)
                     output_node_to_db(
                         out_db,
                         current.node_id,
                         treatment.name,
                         treatment.evaluated_params,
-                        current.computational_unit,
+                        current.unit,
                         cd,
                         treatment.tags,
                         output_state=resim_instructions.output_treatment_state,
-                        output_collected_data=resim_instructions.output_treatment_cd,
+                        output_cd=resim_instructions.output_treatment_cd,
                         node_type=NodeType.RESIMULATION_TREATMENT if step > 0 else NodeType.RESIMULATION_TREATMENT_LEAF
                     )
 
                 if step > 0:
-                    print(f"Transition to {current.computational_unit.time + step}, step {step}")
+                    print(f"Transition to {current.unit.time + step}, step {step}")
                     # TODO: This is a bit of a hack. DB stuff should be refactored into the (re)simulation
                     # control object once that branch is merged.
-                    current.computational_unit, cd = transition(current, None, step)
-                    current.computational_unit.update_aggregates()
+                    current.unit, cd = transition(current, None, step)
+                    current.unit.update_aggregates()
                     output_node_to_db(
                         out_db,
                         current.node_id,
                         transition.name,
                         transition.parameters,
-                        current.computational_unit,
+                        current.unit,
                         cd,
                         tags=None,
                         output_state=transition.db_output_state,
-                        output_collected_data=transition.db_output_cd,
+                        output_cd=transition.db_output_cd,
                         transition_count=1,
                         node_type=NodeType.RESIMULATION_TRANSITION
                     )

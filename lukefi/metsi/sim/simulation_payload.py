@@ -9,7 +9,7 @@ type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
 class SimulationPayload[T: ComputationalUnit]:
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
     operation calls. """
-    computational_unit: T
+    unit: T
     operation_history: OperationHistory
     node_id: list[int]
 
@@ -17,7 +17,7 @@ class SimulationPayload[T: ComputationalUnit]:
                  computational_unit: T,
                  operation_history: Optional[OperationHistory] = None,
                  node_id: Optional[list[int]] = None) -> None:
-        self.computational_unit = computational_unit
+        self.unit = computational_unit
 
         if operation_history is None:
             self.operation_history = []
@@ -31,10 +31,10 @@ class SimulationPayload[T: ComputationalUnit]:
 
     def __copy__(self) -> "SimulationPayload[T]":
         copy_like: T
-        if isinstance(self.computational_unit, Finalizable):
-            copy_like = self.computational_unit.finalize()
+        if isinstance(self.unit, Finalizable):
+            copy_like = self.unit.finalize()
         else:
-            copy_like = deepcopy(self.computational_unit)
+            copy_like = deepcopy(self.unit)
 
         return SimulationPayload(
             computational_unit=copy_like,
