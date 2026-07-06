@@ -24,7 +24,7 @@ def export_preprocessed(target_directory: str, decl: dict[str, Any],
     stands: list[ForestStand] = []
     for unit in units:
         if isinstance(unit, SimulationPayload):
-            stands.append(unit.computational_unit)
+            stands.append(unit.unit)
         else:
             stands.append(unit)
 
