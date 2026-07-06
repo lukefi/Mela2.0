@@ -49,28 +49,33 @@ class SelectionSet[T, V: VectorData]:
         self.profile_xscale = profile_xscale
 
     def __repr__(self) -> str:
-        return str({"sfunction": self.sfunction.__name__} |
-                   {key: value for key,
-                    value in self.__dict__.items() if key in ["order_var",
-                                                              "target_var",
-                                                              "target_type",
-                                                              "target_amount",
-                                                              "profile_x",
-                                                              "profile_y",
-                                                              "profile_xmode",
-                                                              "profile_xscale"]})
+        return str(
+            {"sfunction": self.sfunction.__name__} |
+            {
+                "order_var": self.order_var,
+                "target_var": self.target_var,
+                "target_type": self.target_type,
+                "target_amount": self.target_amount,
+                "profile_x": self.profile_x,
+                "profile_y": self.profile_y,
+                "profile_xmode": self.profile_xmode,
+                "profile_xscale": self.profile_xscale
+            }
+        )
 
     def __str__(self) -> str:
-        return str({key: value for key,
-                    value in self.__dict__.items() if key in ["sfunction",
-                                                              "order_var",
-                                                              "target_var",
-                                                              "target_type",
-                                                              "target_amount",
-                                                              "profile_x",
-                                                              "profile_y",
-                                                              "profile_xmode",
-                                                              "profile_xscale"]})
+        return str(
+            {
+                "sfunction": self.sfunction,
+                "order_var": self.order_var,
+                "target_var": self.target_var,
+                "target_type": self.target_type,
+                "target_amount": self.target_amount,
+                "profile_x": self.profile_x,
+                "profile_y": self.profile_y,
+                "profile_xmode": self.profile_xmode,
+                "profile_xscale": self.profile_xscale
+            })
 
 
 class SelectionTarget:
@@ -86,10 +91,10 @@ class SelectionTarget:
         self.amount = amount
 
     def __repr__(self) -> str:
-        return str({key: self.__dict__[key] for key in ["type", "var", "amount"]})
+        return str({"type": self.type, "var": self.var, "amount": self.amount})
 
     def __str__(self) -> str:
-        return str({key: self.__dict__[key] for key in ["type", "var", "amount"]})
+        return str({"type": self.type, "var": self.var, "amount": self.amount})
 
 
 def select_units[T, V: VectorData](context: T,
