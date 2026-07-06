@@ -6,7 +6,6 @@ from functools import reduce
 import numpy as np
 
 from lukefi.metsi.app.file_io import xml_file_reader
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import (
     Origin,
     OwnerCategory,

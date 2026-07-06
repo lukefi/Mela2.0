@@ -1,6 +1,5 @@
 import numpy as np
 import numpy.typing as npt
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 
 
@@ -11,8 +10,6 @@ def update_stand_growth(stand: ForestStand,
                         step: int):
     """In-place update stand's reference trees with given diameters, heights and stem count.
     Increase ages for trees and stand. Remove sapling flag from trees that have grown beyond 1.3m. """
-    if stand.reference_trees is None:
-        raise MetsiException("Data not vectorized")
 
     trees = stand.reference_trees
 

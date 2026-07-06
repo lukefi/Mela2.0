@@ -5,9 +5,10 @@ from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.domain.pre_ops import compute_location_metadata, filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
 from lukefi.metsi.sim.transition import Transition
 
 

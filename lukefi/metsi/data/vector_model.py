@@ -4,7 +4,6 @@ from typing import Any, Optional, overload
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import (
     CrownClass,
     DamageType,
@@ -16,6 +15,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     TreeType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
+from lukefi.metsi.sim.utils import MetsiException
 type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 DTYPES_TREE: dict[str, DTypeDeclaration] = {

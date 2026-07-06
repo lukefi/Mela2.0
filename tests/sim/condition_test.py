@@ -2,7 +2,7 @@ from typing import Any
 import unittest
 
 from lukefi.metsi.domain.conditions import _get_tag_last_run, _get_treatment_last_run
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
+from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
 from lukefi.metsi.sim.simulation_payload import SimulationPayload

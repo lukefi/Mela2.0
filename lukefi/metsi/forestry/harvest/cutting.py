@@ -1,11 +1,11 @@
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.sim.utils import MetsiException
 
 
 def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
@@ -21,8 +21,6 @@ def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[Forest
     stand = input_
 
     trees: ReferenceTrees = stand.reference_trees
-    if not isinstance(trees, ReferenceTrees):
-        raise MetsiException("cutting requires stand.reference_trees.")
 
     if stand.reference_trees.size == 0:
         return stand, []

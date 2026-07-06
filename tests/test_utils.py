@@ -5,9 +5,9 @@ import unittest
 from typing import Any
 from collections.abc import Callable
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.sim.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 

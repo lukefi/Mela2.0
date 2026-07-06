@@ -3,7 +3,8 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Updating
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+from lukefi.metsi.sim.sim_control import Preprocessing, Updating
 from lukefi.metsi.sim.transition import Transition
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl

@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import Optional
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+
+from lukefi.metsi.sim.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.finalizable import Finalizable
 
 

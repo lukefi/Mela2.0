@@ -2,8 +2,9 @@ from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
 from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.domain.conditions import TimePoints

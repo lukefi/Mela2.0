@@ -5,7 +5,7 @@ from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
 from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
 from lukefi.metsi.data.formats.nfi.vmi_const import *
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.utils import MetsiException
 from tests.data import test_util
 
 

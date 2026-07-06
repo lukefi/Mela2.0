@@ -2,12 +2,13 @@ import unittest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-from lukefi.metsi.app.app_io import parse_cli_arguments
-from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
-from lukefi.metsi.app.utils import ConfigurationException
 
+
+from lukefi.metsi.app.app_io import parse_cli_arguments
 from lukefi.metsi.app.file_io import delete_existing_export_files
-from lukefi.metsi.sim.sim_control import AppConfiguration
+from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.app.metsi_control import AppConfiguration
+from lukefi.metsi.sim.utils import ConfigurationException
 
 
 class TestAppIO(unittest.TestCase):

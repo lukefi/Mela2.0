@@ -1,7 +1,8 @@
 import numpy as np
 from numpy import typing as npt
 
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.utils import MetsiException
+
 
 #                   Pine                Spruce              Birch
 A_ALPHA =           (0.0136757779,      0.2370915100,       -0.6702075076   )

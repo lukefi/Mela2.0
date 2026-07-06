@@ -3,11 +3,12 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.events import GrowActa, GrowMetsi
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives
 from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
 from lukefi.metsi.sim.transition import Transition
 
 

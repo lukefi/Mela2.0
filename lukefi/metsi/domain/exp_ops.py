@@ -4,7 +4,7 @@ import numpy as np
 from lukefi.metsi.data.enums.internal import TreeCategory
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.conversion.internal2mela import mela_stand
-from lukefi.metsi.app.utils import ConfigurationException
+from lukefi.metsi.sim.utils import ConfigurationException
 
 
 def _recreate_stand_indices(stands: StandList) -> StandList:

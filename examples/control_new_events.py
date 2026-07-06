@@ -4,7 +4,8 @@ from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
 from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.instructions import SimulationInstruction
 from examples.declarations.sqlite import sqlite_decl

@@ -10,7 +10,6 @@
 from typing import Sequence
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
@@ -34,6 +33,7 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
+from lukefi.metsi.sim.utils import MetsiException
 
 
 # ---------- helpers ----------

@@ -6,8 +6,7 @@ from datetime import datetime as dt
 from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
-
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.sim.utils import MetsiException
 
 
 def generate_source_data(indices: dict[str, slice], row: str) -> dict[str, str]:

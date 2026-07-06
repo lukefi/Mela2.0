@@ -4,7 +4,6 @@ from typing import Any, Optional
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
@@ -25,6 +24,7 @@ from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
+from lukefi.metsi.sim.utils import MetsiException
 
 
 def filter_stands(stands: StandList,

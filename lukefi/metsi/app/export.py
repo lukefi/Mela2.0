@@ -9,7 +9,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.sim.operations import simple_processable_chain
 from lukefi.metsi.sim.runners import evaluate_sequence
-from lukefi.metsi.sim.sim_control import AppConfiguration
+from lukefi.metsi.app.metsi_control import AppConfiguration
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 

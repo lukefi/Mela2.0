@@ -1,9 +1,9 @@
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.transition import TransitionFn
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.sim.updating import get_step_and_treatments
+from lukefi.metsi.sim.utils import MetsiException
 
 
 def update_to_year_fn(stand: ForestStand,

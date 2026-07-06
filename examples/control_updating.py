@@ -6,8 +6,9 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.updating import update_to_year
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
 from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.instructions import SimulationInstruction
 from lukefi.metsi.sim.treatment import do_nothing

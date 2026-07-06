@@ -2,7 +2,7 @@ import sqlite3
 import re
 
 _SET_ITEM_RE = re.compile(r"'([^']*)'")
-SELECT_NODES = "SELECT * FROM nodes ORDER BY stand"
+SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
 SELECT_STANDS = "SELECT * FROM stands"
 SELECT_STRATA = "SELECT * FROM strata"
 SELECT_TREES = "SELECT * FROM trees"

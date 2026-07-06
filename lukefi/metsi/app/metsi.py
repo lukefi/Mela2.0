@@ -2,6 +2,7 @@ import os
 import sys
 import sqlite3
 from typing import Optional, Sequence, cast
+
 from lukefi.metsi.app.metsi_enum import RunMode
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
@@ -16,15 +17,15 @@ from lukefi.metsi.app.file_io import (
     read_stands_from_file,
     delete_existing_export_files,
     read_control_module)
-from lukefi.metsi.domain.utils.file_io import create_database_tables
+from lukefi.metsi.app.console_logging import print_logline
+from lukefi.metsi.app.metsi_control import MetsiControl
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.resimulation import resimulate_schedules
-from lukefi.metsi.sim.sim_control import MetsiControl, Resimulation
+from lukefi.metsi.sim.sim_control import Resimulation
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
-from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.sim.updating import update_units
+from lukefi.metsi.sim.utils import MetsiException, create_database_tables
 
 
 def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandList:
@@ -116,7 +117,7 @@ def main() -> int:
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
         out_db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
         sqlite_decl = app_config.sqlite_decl
-        create_database_tables(out_db, sqlite_decl=sqlite_decl)
+        create_database_tables(out_db, ForestStand, sqlite_decl=sqlite_decl)
         ForestStand.set_sqlite_decl(sqlite_decl)
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:

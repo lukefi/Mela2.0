@@ -5,10 +5,11 @@ import unittest
 from lukefi.metsi.app.file_io import read_control_module
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.domain.conditions import TimeSinceTreatment, RelativeTimePoints, TimePoints
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
 from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Simulation
+from lukefi.metsi.sim.sim_control import Simulation
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import _simulate_unit
 from lukefi.metsi.sim.treatment import Treatment
@@ -93,7 +94,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -182,7 +183,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -251,7 +252,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -323,7 +324,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -419,7 +420,7 @@ class SimulatorTest(unittest.TestCase):
             SELECT node, value FROM toys, nodes
             WHERE
                 toys.node = nodes.identifier AND
-                toys.identifier = nodes.stand AND
+                toys.identifier = nodes.unit AND
                 nodes.node_type = 3;
         """
 
@@ -482,7 +483,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     node_type = 3;
             """
@@ -508,7 +509,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     node_type = 3;
             """
@@ -534,7 +535,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -595,7 +596,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT node, value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """

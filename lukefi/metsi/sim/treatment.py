@@ -1,6 +1,7 @@
 from typing import Any, Callable, Generic, Mapping, Optional, TypeVar
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
+from lukefi.metsi.sim.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.operations import do_nothing as do_nothing_
 
 T_contra = TypeVar("T_contra", bound=ComputationalUnit, contravariant=True)

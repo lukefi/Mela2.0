@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.utils import MetsiException
+
 
 if TYPE_CHECKING:
     from lukefi.metsi.sim.collected_data import CollectedData

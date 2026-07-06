@@ -2,7 +2,6 @@ from typing import Generator, override
 
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import Origin, Storey
 from lukefi.metsi.data.enums.vmi import VmiIteration
@@ -13,6 +12,7 @@ from lukefi.metsi.data.formats.nfi.vmi_const import VMI10_COUNTY_AREAS, VMI10_ST
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.sim.utils import MetsiException
 
 
 class VMI10Builder(VMIBuilder):
