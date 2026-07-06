@@ -46,4 +46,4 @@ def update_to_year_fn[T: ComputationalUnit](unit: T,
     return current, []
 
 
-update_to_year = Treatment(update_to_year_fn, "update_to_year", default_tags={"initial", "update_to_year"})
+update_to_year = Treatment[ComputationalUnit](update_to_year_fn, "update_to_year", default_tags={"initial", "update_to_year"})
