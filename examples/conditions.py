@@ -98,9 +98,9 @@ control_structure = MetsiControl[ForestStand](
                                   # Conditions can be combined with | and & operators.
                                   # Here do_a_thing will be performed if the year is 2025 or any time that the last
                                   # cutting method was 1.
-                                  ForestCondition(lambda x: x.computational_unit.time == 2025) |
+                                  ForestCondition(lambda x: x.unit.time == 2025) |
                                   ForestCondition(
-                                      lambda x: x.computational_unit.method_of_last_cutting == CuttingMethod.THINNING)
+                                      lambda x: x.unit.method_of_last_cutting == CuttingMethod.THINNING)
                                   ]),
                             Event(Treatment(do_another_thing),
                                   preconditions=[
@@ -108,8 +108,8 @@ control_structure = MetsiControl[ForestStand](
                                   # This time do_another_thing will be performed the year 2030 for all non-auxiliary
                                   # stands.
                                   ForestCondition(
-                                      lambda x: (x.computational_unit.time == 2030) and
-                                      (not x.computational_unit.auxiliary_stand))
+                                      lambda x: (x.unit.time == 2030) and
+                                      (not x.unit.auxiliary_stand))
                                   ]),
                             Event(Treatment(do_yet_another_thing),
                                   # More complex conditions can be formulated in separate modules, such as pre-made
@@ -123,7 +123,7 @@ control_structure = MetsiControl[ForestStand](
             )
         ],
         transition=Transition(grow_acta_fn, db_output_state=False, db_output_cd=False),
-        end_condition=ForestCondition(lambda payload: payload.computational_unit.time > 2035))
+        end_condition=ForestCondition(lambda payload: payload.unit.time > 2035))
 )
 
 __all__ = ['control_structure']

@@ -79,7 +79,7 @@ control_structure = MetsiControl[ForestStand](
             # RelativeTimePoints([1, 4])], tags={"first_type"})
         ],
         transition=Transition(grow_acta_fn, 50, {NaturalProcessInfo}),
-        end_condition=ForestCondition(lambda x: x.computational_unit.year >= 2050)),
+        end_condition=ForestCondition(lambda x: x.unit.year >= 2050)),
 )
 
 __all__ = ['control_structure']

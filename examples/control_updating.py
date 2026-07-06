@@ -82,7 +82,7 @@ control_structure = MetsiControl[ForestStand](
             )
         ],
         transition=Transition(grow_acta_fn, 5, collected_data={NaturalProcessInfo}, name="grow_acta"),
-        end_condition=ForestCondition(lambda x: x.computational_unit.year >= 2050)),
+        end_condition=ForestCondition(lambda x: x.unit.year >= 2050)),
     export_prepro={
         'csv': {},
         'csv_exp': {},

@@ -83,6 +83,6 @@ control_structure = MetsiControl[ForestStand](
             )
         ],
         transition=Transition(grow_acta_fn, 50, {NaturalProcessInfo}),
-        end_condition=ForestCondition(lambda x: x.computational_unit.year >= 2050),
+        end_condition=ForestCondition(lambda x: x.unit.year >= 2050),
     ),
 )
