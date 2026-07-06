@@ -2,7 +2,7 @@ import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies, SiteType
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.data.util.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import PredeterminedTreatment
@@ -15,7 +15,7 @@ def _osc_tree_set1_fn(_: ForestStand, trees) -> np.ndarray:
 
 _osc_tree_selection = {
     "target": SelectionTarget(
-        type_="relative",
+        target_type=TargetType.RELATIVE,
         var="basal_area",
         amount=1
     ),
@@ -24,11 +24,11 @@ _osc_tree_selection = {
             sfunction=_osc_tree_set1_fn,
             order_var="breast_height_diameter",
             target_var="stems_per_ha",
-            target_type="relative",
+            target_type=TargetType.RELATIVE,
             target_amount=1,
             profile_x=[0, 1],
             profile_y=[0.5, 0.5],
-            profile_xmode="relative"
+            profile_xmode=ProfileXMode.RELATIVE
         ),
     ],
 }
@@ -88,7 +88,7 @@ def _ft_tree_set1_fn(stand: ForestStand, trees: ReferenceTrees) -> np.ndarray:
 def _ft_tree_selection_fn(stand: ForestStand):
     return {
         "target": SelectionTarget(
-            type_="absolute_remain",
+            target_type=TargetType.ABSOLUTE_REMAIN,
             var="stems_per_ha",
             amount=_ft_remaining_stems(stand) + _ft_nstems_not_included(stand),
         ),
@@ -97,21 +97,21 @@ def _ft_tree_selection_fn(stand: ForestStand):
                 sfunction=_ft_tree_set1_fn,
                 order_var="breast_height_diameter",
                 target_var="stems_per_ha",
-                target_type="relative",
+                target_type=TargetType.RELATIVE,
                 target_amount=1,
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
-                profile_xmode="relative"
+                profile_xmode=ProfileXMode.RELATIVE
             ),
             SelectionSet[ForestStand, ReferenceTrees](
                 sfunction=_ft_tree_base_set_fn,
                 order_var="breast_height_diameter",
                 target_var="stems_per_ha",
-                target_type="absolute_remain",
+                target_type=TargetType.ABSOLUTE_REMAIN,
                 target_amount=_ft_remaining_stems(stand),
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
-                profile_xmode="relative"
+                profile_xmode=ProfileXMode.RELATIVE
             ),
         ],
     }
@@ -184,7 +184,7 @@ def _thin_ba_not_included(stand: ForestStand, trees: ReferenceTrees) -> float:
 def _thin_tree_selection_fn(stand: ForestStand):
     return {
         "target": SelectionTarget(
-            type_="absolute_remain",
+            target_type=TargetType.ABSOLUTE_REMAIN,
             var="basal_area",
             amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand, stand.reference_trees),
         ),
@@ -193,11 +193,11 @@ def _thin_tree_selection_fn(stand: ForestStand):
                 sfunction=_thin_tree_base_set_fn,
                 order_var="breast_height_diameter",
                 target_var="basal_area",
-                target_type="absolute_remain",
+                target_type=TargetType.ABSOLUTE_REMAIN,
                 target_amount=_ba_after_thinning_below(stand) + _thin_ba_not_included(stand, stand.reference_trees),
                 profile_x=[0, 1],
                 profile_y=[1.0, 0.0],
-                profile_xmode="relative"
+                profile_xmode=ProfileXMode.RELATIVE
             ),
         ],
     }
@@ -226,7 +226,7 @@ def _cc_tree_set1_fn(_: ForestStand, trees) -> np.ndarray:
 
 _cc_tree_selection = {
     "target": SelectionTarget(
-        type_="relative",
+        target_type=TargetType.RELATIVE,
         var="basal_area",
         amount=1,
     ),
@@ -235,11 +235,11 @@ _cc_tree_selection = {
             sfunction=_cc_tree_set1_fn,
             order_var="breast_height_diameter",
             target_var="basal_area",
-            target_type="relative",
+            target_type=TargetType.RELATIVE,
             target_amount=1,
             profile_x=[0, 1],
             profile_y=[0.5, 0.5],
-            profile_xmode="relative"
+            profile_xmode=ProfileXMode.RELATIVE
         ),
     ],
 }

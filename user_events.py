@@ -2,7 +2,7 @@ from typing import Any, Optional
 from pathlib import Path
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeManagementCategory
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.data.util.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
@@ -107,49 +107,49 @@ class MarkRetentionTrees(Event[ForestStand]):
         params = parameters or {}
 
         # trees older than 60 years
-        def s_age_gt_60(_stand: ForestStand, trees) -> np.ndarray:
+        def s_age_gt_60(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_age > 60
 
         # other species than pine, spruce or birches
-        def s_other_species(_stand: ForestStand, trees) -> np.ndarray:
+        def s_other_species(_: ForestStand, trees) -> np.ndarray:
             return trees.species > 4
 
         # trees with diameter > 15 cm
-        def s_large_diameter(_stand: ForestStand, trees) -> np.ndarray:
+        def s_large_diameter(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_diameter > 15
 
         tree_selection = {
-            "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
+            "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_age_gt_60,
                     "breast_height_age",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     [0.0, 1.0],
                     [0.01, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_other_species,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     0.7,
                     [0.0, 0.5, 1.0],
                     [0.01, 0.05, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_large_diameter,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     0.2,
                     [0.0, 0.5, 1.0],
                     [0.01, 0.05, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
             ],
         }
@@ -272,27 +272,27 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         def _tree_selection(stand: ForestStand) -> dict[str, Any]:
             min_stems = _min_number_of_stems_after_thinning(stand)
             return {
-                "target": SelectionTarget("absolute_remain", "stems_per_ha", min_stems),
+                "target": SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", min_stems),
                 "sets": [
                     SelectionSet[ForestStand, ReferenceTrees](
                         s_conifer_bias,
                         "breast_height_diameter",
                         "stems_per_ha",
-                        "absolute_remain",
+                        TargetType.ABSOLUTE_REMAIN,
                         _first_set_target_amount(stand),
                         profile_x,
                         profile_y,
-                        "relative"
+                        ProfileXMode.RELATIVE
                     ),
                     SelectionSet[ForestStand, ReferenceTrees](
                         s_conifer_bias,
                         "breast_height_diameter",
                         "stems_per_ha",
-                        "relative",
+                        TargetType.RELATIVE,
                         1.0,
                         profile_x,
                         profile_y,
-                        "relative",
+                        ProfileXMode.RELATIVE,
                     ),
                 ],
             }
@@ -332,24 +332,24 @@ class Tracks(Event[ForestStand]):
                  **kw) -> None:
         params = parameters or {}
 
-        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+        def s_all(_: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
         profile_x = [0, 1]
         profile_y = [0.18, 0.18]
 
         tree_selection = {
-            "target": SelectionTarget("relative", "stems_per_ha", 0.18),
+            "target": SelectionTarget(TargetType.RELATIVE, "stems_per_ha", 0.18),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_all,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     profile_x,
                     profile_y,
-                    "relative",
+                    ProfileXMode.RELATIVE,
                 )
             ],
         }
@@ -417,17 +417,17 @@ class Harvest20percent(Event[ForestStand]):
                  **kw) -> None:
 
         tree_selection = {
-            "target": SelectionTarget("relative", "stems_per_ha", 0.2),
+            "target": SelectionTarget(TargetType.RELATIVE, "stems_per_ha", 0.2),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     lambda _, t: np.ones(t.size, dtype=bool),
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     profile_x=[0, 1],
                     profile_y=[0.2, 0.2],
-                    profile_xmode="relative",
+                    profile_xmode=ProfileXMode.RELATIVE,
                 )
             ],
         }

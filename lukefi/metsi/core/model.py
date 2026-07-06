@@ -59,6 +59,7 @@ class VectorData():
     """
     Base class for generic SoA data.
     """
+
     __slots__ = ("dtypes", "size")
 
     dtypes: dict[str, DTypeDeclaration]

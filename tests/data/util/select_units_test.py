@@ -16,7 +16,13 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeType)
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
+from lukefi.metsi.data.util.select_units import (
+    Mode,
+    ProfileXMode,
+    SelectionSet,
+    SelectionTarget,
+    TargetType,
+    select_units)
 from lukefi.metsi.data.vector_model import ReferenceTrees
 
 
@@ -80,24 +86,24 @@ class TestSelectUnits(unittest.TestCase):
             lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.5,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
         set1.sfunction = lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION
         set1.order_var = "breast_height_diameter"
         set1.target_var = "stems_per_ha"
-        set1.target_type = "relative"
+        set1.target_type = TargetType.RELATIVE
         set1.target_amount = 0.5
         set1.profile_x = np.array([0.0, 0.5, 1.0])
         set1.profile_y = np.array([0.01, 0.5, 0.99])
-        set1.profile_xmode = "relative"
+        set1.profile_xmode = ProfileXMode.RELATIVE
 
         sets = [set1]
 
-        target = SelectionTarget("absolute_remain", "stems_per_ha", 100)
+        target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([0.001285986, 0.026337014, 0.044398658, 0.064245866, 0.062085809, 0.081328615,
@@ -111,18 +117,18 @@ class TestSelectUnits(unittest.TestCase):
             lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.5,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         sets = [set1]
 
-        target = SelectionTarget("absolute_remain", "stems_per_ha", 100)
+        target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
-        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="odds_profile")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode=Mode.ODDS_PROFILE)
         expected = np.array([0.0002173194, 0.0069249673, 0.0103028322, 0.0133604573, 0.0128780946,
                              0.0151229730, 0.0514119379, 0.1843021961, 0.3066456085, 0.4205515442,
                              0.5302387415, 0.6314884621, 0.7306288135, 0.8255504266, 0.9183626704,
@@ -134,18 +140,18 @@ class TestSelectUnits(unittest.TestCase):
             lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.5,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         sets = [set1]
 
-        target = SelectionTarget("absolute_remain", "stems_per_ha", 100)
+        target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
-        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="scale")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode=Mode.SCALE)
         expected = np.array([
             0.0102433, 0.1676316, 0.2474976, 0.3199432, 0.3083750, 0.3614502, 0.4073618,
             0.4486822, 0.4867233, 0.5221408, 0.5562466, 0.5877288, 0.6185552, 0.6480698,
@@ -159,18 +165,18 @@ class TestSelectUnits(unittest.TestCase):
                               (trees.management_category <= TreeManagementCategory.NO_RESTRICTION)),
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.5,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         sets = [set1]
 
-        target = SelectionTarget("absolute_remain", "stems_per_ha", 100)
+        target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
-        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode="level")
+        selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode=Mode.LEVEL)
         expected = np.array([
             0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
             0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.3572367,
@@ -183,16 +189,16 @@ class TestSelectUnits(unittest.TestCase):
             lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.5,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         sets = [set1]
 
-        target = SelectionTarget("relative_remain", "stems_per_ha", 0.5)
+        target = SelectionTarget(TargetType.RELATIVE_REMAIN, "stems_per_ha", 0.5)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([
@@ -209,27 +215,27 @@ class TestSelectUnits(unittest.TestCase):
                               (trees.management_category <= TreeManagementCategory.NO_RESTRICTION)),
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.2,
             np.array([0.0, 0.5, 1.0]),
             np.array([0.01, 0.5, 0.99]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         set2 = SelectionSet[ForestStand, ReferenceTrees](
             lambda _, trees: trees.management_category <= TreeManagementCategory.NO_RESTRICTION,
             "breast_height_diameter",
             "stems_per_ha",
-            "relative",
+            TargetType.RELATIVE,
             0.3,
             np.array([0.0, 1.0]),
             np.array([1.0, 0.5]),
-            "relative"
+            ProfileXMode.RELATIVE
         )
 
         sets = [set1, set2]
 
-        target = SelectionTarget("absolute_remain", "stems_per_ha", 50)
+        target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 50)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
         expected = np.array([

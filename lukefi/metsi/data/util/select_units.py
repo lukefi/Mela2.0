@@ -1,9 +1,33 @@
-from typing import Callable, Optional, Sequence
+from enum import StrEnum
+from typing import Callable, Sequence
 import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import VectorData
+
+
+class TargetType(StrEnum):
+    ABSOLUTE = "absolute"
+    RELATIVE = "relative"
+    ABSOLUTE_REMAIN = "absolute_remain"
+    RELATIVE_REMAIN = "relative_remain"
+
+
+class Mode(StrEnum):
+    ODDS_PROFILE = "odds_profile"
+    ODDS_UNITS = "odds_units"
+    SCALE = "scale"
+    LEVEL = "level"
+
+
+class ProfileXMode(StrEnum):
+    RELATIVE = "relative"
+    ABSOLUTE = "absolute"
+
+
+class ProfileXScale(StrEnum):
+    ALL = "all"
 
 
 class SelectionSet[T, V: VectorData]:
@@ -21,23 +45,23 @@ class SelectionSet[T, V: VectorData]:
     sfunction: Callable[[T, V], npt.NDArray[np.bool_]]
     order_var: str
     target_var: str
-    target_type: str
+    target_type: TargetType
     target_amount: float
     profile_x: npt.NDArray[np.float64]
     profile_y: npt.NDArray[np.float64]
-    profile_xmode: str
-    profile_xscale: Optional[str]
+    profile_xmode: ProfileXMode
+    profile_xscale: ProfileXScale | None
 
     def __init__(self,
                  sfunction: Callable[[T, V], npt.NDArray[np.bool_]],
                  order_var: str,
                  target_var: str,
-                 target_type: str,
+                 target_type: TargetType,
                  target_amount: float,
                  profile_x: npt.NDArray[np.float64] | Sequence[int | float],
                  profile_y: npt.NDArray[np.float64] | Sequence[int | float],
-                 profile_xmode: str,
-                 profile_xscale: Optional[str] = None):
+                 profile_xmode: ProfileXMode,
+                 profile_xscale: ProfileXScale | None = None):
         self.sfunction = sfunction
         self.order_var = order_var
         self.target_var = target_var
@@ -79,22 +103,22 @@ class SelectionSet[T, V: VectorData]:
 
 
 class SelectionTarget:
-    __slots__ = ("type", "var", "amount")
+    __slots__ = ("target_type", "var", "amount")
 
-    type: str
+    target_type: TargetType
     var: str
     amount: float
 
-    def __init__(self, type_: str, var: str, amount: float):
-        self.type = type_
+    def __init__(self, target_type: TargetType, var: str, amount: float):
+        self.target_type = target_type
         self.var = var
         self.amount = amount
 
     def __repr__(self) -> str:
-        return str({"type": self.type, "var": self.var, "amount": self.amount})
+        return str({"type": self.target_type, "var": self.var, "amount": self.amount})
 
     def __str__(self) -> str:
-        return str({"type": self.type, "var": self.var, "amount": self.amount})
+        return str({"type": self.target_type, "var": self.var, "amount": self.amount})
 
 
 def select_units[T, V: VectorData](context: T,
@@ -103,7 +127,7 @@ def select_units[T, V: VectorData](context: T,
                                    sets: list[SelectionSet[T, V]],
                                    freq_var: str,
                                    select_from_all: bool = True,
-                                   mode: str = "odds_units") -> npt.NDArray[np.float64]:
+                                   mode: Mode = Mode.ODDS_UNITS) -> npt.NDArray[np.float64]:
     """
     The unit selection routine returns for each unit the amount of the target variable needed to meet a
     required collective amount.
@@ -169,14 +193,9 @@ def select_units[T, V: VectorData](context: T,
     Returns:
         npt.NDArray[np.float64]: Amount of the selected unit for each element in data
     """
-    if target_decl.var is not None and target_decl.type is not None and target_decl.amount is not None:
-        target_var = target_decl.var
-        target_type = target_decl.type
-        target_amount = target_decl.amount
-    else:
-        target_var = None
-        target_type = None
-        target_amount = None
+    target_var = target_decl.var
+    target_type = target_decl.target_type
+    target_amount = target_decl.amount
 
     # check that y values are between [0,1]
     for set_ in sets:
@@ -229,8 +248,8 @@ def select_units[T, V: VectorData](context: T,
             # calculate initial value for constant or scaling on the first line segment of the profile
             # constants for other line segments depend on this
             # Continue with binary search starting from the initial value
-            if sets[i_set].profile_xmode == "relative":
-                if hasattr(sets[i_set], "profile_xscale") and sets[i_set].profile_xscale == "all":
+            if sets[i_set].profile_xmode == ProfileXMode.RELATIVE:
+                if sets[i_set].profile_xscale == ProfileXScale.ALL:
                     ord_x_min = np.min(data[cur_set_order_var])
                     ord_x_max = np.max(data[cur_set_order_var])
                 else:
@@ -394,30 +413,27 @@ def _i_odds(o: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
 
 def _get_target(data: VectorData,
                 current_set: npt.NDArray[np.bool_],
-                target_var: Optional[str],
-                target_type: Optional[str],
-                target_amount: Optional[float],
+                target_var: str,
+                target_type: TargetType,
+                target_amount: float,
                 freq_var: str) -> float:
 
-    if target_var is None or target_type is None or target_amount is None:
-        return np.inf
-
-    if target_type == "absolute":
+    if target_type == TargetType.ABSOLUTE:
         amount = target_amount
 
-    elif target_type == "relative":
+    elif target_type == TargetType.RELATIVE:
         if target_var == freq_var:
             amount = target_amount * np.sum(data[freq_var][current_set])
         else:
             amount = target_amount * np.sum(data[freq_var][current_set] * data[target_var][current_set])
 
-    elif target_type == "absolute_remain":
+    elif target_type == TargetType.ABSOLUTE_REMAIN:
         if target_var == freq_var:
             amount = np.sum(data[freq_var][current_set]) - target_amount
         else:
             amount = np.sum(data[freq_var][current_set] * data[target_var][current_set]) - target_amount
 
-    elif target_type == "relative_remain":
+    elif target_type == TargetType.RELATIVE_REMAIN:
         if target_var == freq_var:
             amount = (1 - target_amount) * np.sum(data[freq_var][current_set])
         else:
@@ -477,7 +493,7 @@ def _init_search(mode: str,
     return scale, step, y0
 
 
-def _scale_y(mode: str,
+def _scale_y(mode: Mode,
              y0: npt.NDArray[np.float64],
              scale: float,
              prof_x: npt.NDArray[np.float64],
@@ -490,7 +506,7 @@ def _scale_y(mode: str,
     odds_y0 = y0.copy()
     y = y0.copy()
 
-    if mode == "odds_profile":
+    if mode == Mode.ODDS_PROFILE:
         prof_y = _i_odds(scale * odds_y0)
         y = np.empty((data.size), dtype=np.float64)
 
@@ -509,13 +525,13 @@ def _scale_y(mode: str,
             y[idx] = max(0.0, min(1.0, a[interval_id[i_ordx]] + b[interval_id[i_ordx]]
                                   * data[cur_set_order_var][cur_set_idx_ord][i_ordx]))
 
-    elif mode == "odds_units":
+    elif mode == Mode.ODDS_UNITS:
         y[cur_set_idx_ord] = _i_odds(scale * odds_y0[cur_set_idx_ord])
 
-    elif mode == "scale":
+    elif mode == Mode.SCALE:
         y[cur_set_idx_ord] = np.maximum(0.0, np.minimum(1.0, scale * y0[cur_set_idx_ord]))
 
-    elif mode == "level":
+    elif mode == Mode.LEVEL:
         y[cur_set_idx_ord] = np.maximum(0.0, np.minimum(1.0, y0[cur_set_idx_ord] + scale))
 
     return y

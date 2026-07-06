@@ -2,7 +2,7 @@
 import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.core.collected_data import OpTuple
-from lukefi.metsi.data.util.select_units import select_units
+from lukefi.metsi.data.util.select_units import Mode, select_units
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
@@ -48,7 +48,7 @@ def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
 
     select_from_all = operation_parameters.get("select_from_all", True)
 
-    mode = operation_parameters.get("mode", "odds_units")
+    mode = operation_parameters.get("mode", Mode.ODDS_UNITS)
     attributes = operation_parameters.get("attributes")
     if not attributes or not isinstance(attributes, dict):
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
@@ -61,7 +61,7 @@ def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
         sets=sets,
         freq_var="stems_per_ha",
         select_from_all=bool(select_from_all),
-        mode=str(mode),
+        mode=mode,
     )
 
     # Work directly on stand.reference_trees.stems_per_ha
