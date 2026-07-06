@@ -36,7 +36,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 1),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 1),
                 transition=ToyTransition())
         )
         payload = SimulationPayload(
@@ -79,7 +79,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 3))
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 3))
         )
         payload = SimulationPayload(
             computational_unit=ToyModel("", 0),
@@ -127,7 +127,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 3),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 3),
                 transition=ToyTransition()
             ))
         payload = SimulationPayload(computational_unit=ToyModel("", 0),
@@ -168,7 +168,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.relative_time > 5)
+                end_condition=Condition[ToyModel](lambda x: x.unit.relative_time > 5)
             ))
         payload = SimulationPayload(
             computational_unit=ToyModel("", 0, time=200),
@@ -232,7 +232,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
             )
         )
         assert declaration.simulation is not None
@@ -305,7 +305,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 0),
                 transition=ToyTransition()
             ))
         db = sqlite3.connect(":memory:")
@@ -361,7 +361,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             transition=ToyTransition(),
-            end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+            end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
         )
         declaration_two = Simulation[ToyModel](
             instructions=[
@@ -381,7 +381,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             transition=ToyTransition(),
-            end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+            end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
         )
         configs = [
             declaration_one, declaration_two
@@ -582,7 +582,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time >= 3)
+                end_condition=Condition[ToyModel](lambda x: x.unit.time >= 3)
             ))
 
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))

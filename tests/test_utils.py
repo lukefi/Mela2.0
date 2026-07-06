@@ -31,7 +31,7 @@ def none(x: Any) -> None:
 
 
 def collect_results[T: ComputationalUnit](payloads: list[SimulationPayload[T]]) -> list[T]:
-    return list(map(lambda payload: payload.computational_unit, payloads))
+    return list(map(lambda payload: payload.unit, payloads))
 
 
 def prepare_growth_test_stand():

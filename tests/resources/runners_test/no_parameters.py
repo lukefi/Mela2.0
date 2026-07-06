@@ -23,5 +23,5 @@ control_structure = MetsiControl[ToyModel](
         )
     ],
         transition=ToyTransition(),
-        end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 4)
+        end_condition=Condition[ToyModel](lambda x: x.unit.time > 4)
     ))

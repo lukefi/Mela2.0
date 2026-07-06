@@ -59,6 +59,6 @@ control_structure = MetsiControl[ForestStand](
             )
         ],
         transition=Transition(do_nothing, 5, db_output_state=False, db_output_cd=False),
-        end_condition=Condition[ForestStand](lambda x: x.computational_unit.time > 2028)
+        end_condition=Condition[ForestStand](lambda x: x.unit.time > 2028)
     )
 )

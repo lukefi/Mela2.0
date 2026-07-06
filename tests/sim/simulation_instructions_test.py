@@ -43,7 +43,7 @@ class SimulationInstructionsTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda payload: payload.computational_unit.time >= 3))
+                end_condition=Condition[ToyModel](lambda payload: payload.unit.time >= 3))
         )
 
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))

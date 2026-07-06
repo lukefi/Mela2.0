@@ -75,7 +75,7 @@ def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
                 keep_running = False
 
         # Drop performed treatments
-        current.computational_unit.predetermined_treatments = None
+        current.unit.predetermined_treatments = None
 
         # Update starting time for relative timepoints
         current.unit.start_time = current.unit.time
