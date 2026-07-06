@@ -18,11 +18,16 @@ control_structure = {
         transition=Transition(grow_motti_dll_fn,
                               max_step=5,
                               collected_data={NaturalProcessInfo},
-                              name="grow_motti"),
+                              name="grow_motti",
+                              db_output_state=False,
+                              db_output_cd=True),
         schedules_file="selected_schedules.csv",
         treatment_map={
             "do_nothing": do_nothing,
-        }
+        },
+        collected_data=None,
+        output_treatment_state=True,
+        output_treatment_cd=True
     )
 }
 
