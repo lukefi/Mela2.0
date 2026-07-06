@@ -7,6 +7,17 @@ from lukefi.metsi.core.model import VectorData
 
 
 class SelectionSet[T, V: VectorData]:
+    __slots__ = (
+        "sfunction",
+        "order_var",
+        "target_var",
+        "target_type",
+        "target_amount",
+        "profile_x",
+        "profile_y",
+        "profile_xmode",
+        "profile_xscale")
+
     sfunction: Callable[[T, V], npt.NDArray[np.bool_]]
     order_var: str
     target_var: str
@@ -15,7 +26,7 @@ class SelectionSet[T, V: VectorData]:
     profile_x: npt.NDArray[np.float64]
     profile_y: npt.NDArray[np.float64]
     profile_xmode: str
-    profile_xscale: Optional[str] = None
+    profile_xscale: Optional[str]
 
     def __init__(self,
                  sfunction: Callable[[T, V], npt.NDArray[np.bool_]],
@@ -63,6 +74,8 @@ class SelectionSet[T, V: VectorData]:
 
 
 class SelectionTarget:
+    __slots__ = ("type", "var", "amount")
+
     type: str
     var: str
     amount: float

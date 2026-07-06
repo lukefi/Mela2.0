@@ -144,7 +144,7 @@ def attrs_from_internal_stratum_csv_row(row: list[str]) -> dict[str, Any]:
     }
 
 
-@dataclass
+@dataclass(slots=True)
 class ReferenceTree:
     identifier: str = ""
     """
@@ -227,6 +227,27 @@ class ReferenceTree:
 
 
 class ReferenceTrees(VectorData):
+    __slots__ = ("identifier",
+                 "tree_number",
+                 "species",
+                 "breast_height_diameter",
+                 "height",
+                 "measured_height",
+                 "breast_height_age",
+                 "biological_age",
+                 "stems_per_ha",
+                 "origin",
+                 "management_category",
+                 "tree_category",
+                 "storey",
+                 "sapling",
+                 "tree_type",
+                 "damage_type",
+                 "crown_class",
+                 "basal_area",
+                 "volume",
+                 "stratum")
+
     identifier: npt.NDArray[np.str_]
     """
     Free-form tree identifier. Each tree must have a unique identifier,
@@ -390,7 +411,7 @@ class ReferenceTrees(VectorData):
         ]
 
 
-@dataclass
+@dataclass(slots=True)
 class TreeStratum:
     identifier: str = ""
     """
@@ -460,6 +481,21 @@ class TreeStratum:
 
 
 class TreeStrata(VectorData):
+    __slots__ = ("identifier",
+                 "species",
+                 "mean_diameter",
+                 "mean_height",
+                 "breast_height_age",
+                 "biological_age",
+                 "stems_per_ha",
+                 "basal_area",
+                 "origin",
+                 "stratum_number",
+                 "storey",
+                 "sapling_stems_per_ha",
+                 "number_of_generated_trees",
+                 "stratum_rank")
+
     identifier: npt.NDArray[np.str_]
     """
     Free-form stratum identifier. Each stratum must have a unique identifier,

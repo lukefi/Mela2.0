@@ -10,6 +10,8 @@ from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 class SimulationInstruction[T: ComputationalUnit]:
+    __slots__ = ("conditions", "events")
+
     conditions: Sequence_[Condition[T]]
     events: EventGenerator[T]
 

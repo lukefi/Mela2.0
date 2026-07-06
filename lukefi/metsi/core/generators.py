@@ -43,6 +43,7 @@ class EventGenerator(EventGeneratorBase[T], ABC):
     """
     Abstract base class for generator types.
     """
+    __slots__ = ("children", )
 
     children: Sequence_[EventGeneratorBase[T]]
 
@@ -150,6 +151,15 @@ class Event(EventGeneratorBase[T]):
     Base class for events.
     Contains conditions and parameters and the actual treatment function that operates on the simulation state.
     """
+
+    __slots__ = ("treatment",
+                 "static_parameters",
+                 "dynamic_parameters",
+                 "file_parameters",
+                 "preconditions",
+                 "postconditions",
+                 "tags",
+                 "db_output")
 
     treatment: Treatment[T]
     static_parameters: dict[str, Any]

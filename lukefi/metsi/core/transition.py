@@ -13,6 +13,16 @@ type TransitionInitFn[T: ComputationalUnit] = Callable[[T, dict[str, Any]], None
 
 
 class Transition[T: ComputationalUnit]:
+
+    __slots__ = ("transition_fn",
+                 "parameters",
+                 "init_fn",
+                 "name",
+                 "collected_data",
+                 "db_output_state",
+                 "db_output_cd",
+                 "max_step")
+
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
     init_fn: TransitionInitFn[T] | None

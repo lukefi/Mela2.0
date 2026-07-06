@@ -13,6 +13,8 @@ class Treatment(Generic[T_contra]):
     Class for wrapping a TreatmentFn with all necessary metadata.
     """
 
+    __slots__ = ("name", "treatment_fn", "default_tags", "collected_data")
+
     name: str
     """
     A name unique to this Treatment. This will be used to identify the done treatment in the `nodes` table of the output
@@ -73,6 +75,15 @@ class Treatment(Generic[T_contra]):
 
 
 class PredeterminedTreatment(Generic[T_contra]):
+
+    __slots__ = ("name",
+                 "treatment_fn",
+                 "tags",
+                 "static_parameters",
+                 "file_parameters",
+                 "dynamic_parameters",
+                 "evaluated_params",
+                 "collected_data")
 
     name: str
     treatment_fn: TreatmentFn[T_contra]

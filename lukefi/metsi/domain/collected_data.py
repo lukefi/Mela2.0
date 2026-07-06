@@ -9,6 +9,7 @@ from lukefi.metsi.core.collected_data import CollectedData
 
 
 class RemovedTrees(CollectedData):
+    __slots__ = ("removed_trees",)
 
     removed_trees: ReferenceTrees
 
@@ -64,6 +65,8 @@ class NaturalProcessInfo(CollectedData):
     """
     Aggregated natural process information for gross growth calculations.
     """
+
+    __slots__ = ("start_year", "step", "trees_before", "trees_after")
 
     start_year: int
     step: int

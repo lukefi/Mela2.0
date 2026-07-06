@@ -108,7 +108,7 @@ STRATA_TYPES = {
 
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
-           slots=False, weakref_slot=False, eq=False)
+           slots=True, weakref_slot=False, eq=False)
 class ForestStand(Finalizable, ComputationalUnit):
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)

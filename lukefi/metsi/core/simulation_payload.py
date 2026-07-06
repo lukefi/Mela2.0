@@ -7,8 +7,13 @@ type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
 
 
 class SimulationPayload[T: ComputationalUnit]:
-    """Data structure for keeping simulation state and progress data. Passed on as the data package of chained
-    operation calls. """
+    """
+    Data structure for keeping simulation state and progress data. Passed on as the data package of chained
+    operation calls.
+    """
+
+    __slots__ = ("unit", "operation_history", "node_id")
+
     unit: T
     operation_history: OperationHistory
     node_id: list[int]

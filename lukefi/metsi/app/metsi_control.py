@@ -8,10 +8,10 @@ from lukefi.metsi.core.sim_control import Preprocessing, Resimulation, Simulatio
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 
 
-@dataclass
+@dataclass(slots=True)
 class AppConfiguration:
-    input_path = ""
-    target_directory = ""
+    input_path: str
+    target_directory: str
     slice_percentage: float | None
     slice_size: int | None
     state_format: StateFormat
@@ -58,7 +58,7 @@ class AppConfiguration:
             raise ConfigurationException("Run mode EXPORT_PREPRO cannot be without PREPROCESS or UPDATE")
 
 
-@dataclass
+@dataclass(slots=True)
 class MetsiControl[T: ComputationalUnit]:
     app_configuration: AppConfiguration
     conversions: dict[str, dict[str, Conversion]] | None = None

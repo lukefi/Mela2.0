@@ -17,6 +17,8 @@ Schedule = list[tuple[int, PredeterminedTreatment[T]]]
 
 
 class _UnitInstructions[T: ComputationalUnit]:
+    __slots__ = ("initial_state", "schedules")
+
     initial_state: T
     schedules: list[Schedule[T]]
 

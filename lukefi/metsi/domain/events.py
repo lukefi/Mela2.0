@@ -79,8 +79,3 @@ class GrowMotti(Event[ForestStand]):
             preconditions=preconditions,
             postconditions=postconditions,
             file_parameters=file_parameters)
-
-
-__all__ = [
-    "DoNothing",
-]

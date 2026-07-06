@@ -13,13 +13,13 @@ from lukefi.metsi.core.treatment import TreatmentFn
 type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
 
 
-@dataclass
+@dataclass(slots=True)
 class Preprocessing[T:ComputationalUnit]:
     operations: Sequence[PreprocessingOperation[T]]
     params: dict[PreprocessingOperation[T], list[dict[str, Any]]]
 
 
-@dataclass
+@dataclass(slots=True)
 class Updating[T: ComputationalUnit]:
     target_time: int
     transition: Transition[T]
@@ -39,7 +39,7 @@ class Updating[T: ComputationalUnit]:
         self.output_treatment_cd = output_treatment_cd
 
 
-@dataclass
+@dataclass(slots=True)
 class Resimulation[T: ComputationalUnit]:
     transition: Transition[T]
     selected_schedules_file: str
@@ -47,6 +47,7 @@ class Resimulation[T: ComputationalUnit]:
     collected_data: CollectableDataTypes
     output_treatment_state: bool
     output_treatment_cd: bool
+    schedules_file: str
 
     def __init__(self,
                  transition: Transition[T],
@@ -70,7 +71,7 @@ class Resimulation[T: ComputationalUnit]:
         self.output_treatment_cd = output_treatment_cd
 
 
-@dataclass
+@dataclass(slots=True)
 class Simulation[T: ComputationalUnit]:
     instructions: Sequence[SimulationInstruction[T]]
     transition: Transition[T]

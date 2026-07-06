@@ -9,6 +9,8 @@ type Predicate[T] = Callable[[T], bool]
 
 
 class Condition[T: ComputationalUnit]:
+    __slots__ = ("predicate", "name", "time_points", "relative_time_points")
+
     predicate: Predicate[SimulationPayload[T]]
     name: str
     time_points: set[int]

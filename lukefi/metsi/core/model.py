@@ -15,9 +15,11 @@ type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 
 class ComputationalUnit(ABC):
+    __slots__ = ("identifier", "time", "start_time", "predetermined_treatments")
+
     identifier: str
-    time: int = 0
-    start_time: int = 0
+    time: int
+    start_time: int
     predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
 
     @abstractmethod
@@ -57,6 +59,8 @@ class VectorData():
     """
     Base class for generic SoA data.
     """
+    __slots__ = ("dtypes", "size")
+
     dtypes: dict[str, DTypeDeclaration]
     size: int
 
