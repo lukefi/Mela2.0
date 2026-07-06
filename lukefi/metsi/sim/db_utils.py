@@ -49,11 +49,11 @@ def output_node_to_db(db: sqlite3.Connection,
                       node_id: list[int],
                       operation: str,
                       params: dict[str, Any],
-                      computational_unit: ComputationalUnit,
+                      unit: ComputationalUnit,
                       collected_data: list[CollectedData],
                       tags: Optional[set[str]] = None,
                       output_state: bool = True,
-                      output_collected_data: bool = True,
+                      output_cd: bool = True,
                       transition_count: int = 0,
                       node_type: NodeType = NodeType.TREATMENT,
                       ):
@@ -78,16 +78,16 @@ def output_node_to_db(db: sqlite3.Connection,
             (?, ?, ?, ?, ?, ?)
         """,
         (node_str,
-         computational_unit.identifier,
+         unit.identifier,
          operation,
          str(params),
          str(tags) if len(tags) > 0 else "{}",
          node_type))
     if output_state:
-        computational_unit.output_to_db(db, node_str)
-    if output_collected_data:
+        unit.output_to_db(db, node_str)
+    if output_cd:
         for datum in collected_data:
-            datum.output_to_db(db, node_str, computational_unit.identifier)
+            datum.output_to_db(db, node_str, unit.identifier)
 
 
 def update_leaf_node[T: ComputationalUnit](
