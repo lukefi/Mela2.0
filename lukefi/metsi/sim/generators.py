@@ -6,14 +6,14 @@ from typing import Any, Generic, Mapping, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.finalizable import Finalizable
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
+from lukefi.metsi.sim.db_utils import output_node_to_db
+from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.sim.model import ComputationalUnit, Finalizable
 from lukefi.metsi.sim.operations import do_nothing
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.utils import MetsiException, output_node_to_db
 
 T = TypeVar("T", bound=ComputationalUnit)
 

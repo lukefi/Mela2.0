@@ -3,7 +3,7 @@ import sqlite3
 from typing import Any, Optional
 
 from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 
@@ -124,15 +124,3 @@ def update_leaf_node[T: ComputationalUnit](
             leaf_node.computational_unit.identifier
         )
     )
-
-
-class MetsiException(Exception):
-    """ Base type for Metsi exceptions """
-
-
-class ConfigurationException(MetsiException):
-    """ Custom exception for invalid user control and configurations settings """
-
-
-class ConditionFailed(MetsiException):
-    """ Pre- or postcondition failed """

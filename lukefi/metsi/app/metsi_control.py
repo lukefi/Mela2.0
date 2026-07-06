@@ -3,9 +3,9 @@ from typing import Any
 
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat, StrataOrigin
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.exceptions import ConfigurationException
+from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.sim_control import Preprocessing, Resimulation, Simulation, Updating
-from lukefi.metsi.sim.utils import ConfigurationException
 
 
 @dataclass

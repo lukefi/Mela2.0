@@ -21,7 +21,7 @@ from lukefi.metsi.data.vector_model import (
     DTYPES_TREE,
     DTYPES_STRATA,
 )
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
 
 
 def _append_attrs(target: dict[str, list[Any]], attrs: dict[str, Any]) -> None:

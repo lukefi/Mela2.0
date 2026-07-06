@@ -33,7 +33,7 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
 
 
 # ---------- helpers ----------

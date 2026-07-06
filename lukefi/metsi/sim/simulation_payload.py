@@ -1,11 +1,10 @@
 from copy import deepcopy
 from typing import Optional
 
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.finalizable import Finalizable
-
+from lukefi.metsi.sim.model import ComputationalUnit, Finalizable
 
 type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
+
 
 class SimulationPayload[T: ComputationalUnit]:
     """Data structure for keeping simulation state and progress data. Passed on as the data package of chained

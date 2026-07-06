@@ -4,8 +4,8 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
 from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.sim.exceptions import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.utils import MetsiException
 
 
 def cutting_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:

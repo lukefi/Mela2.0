@@ -7,7 +7,7 @@ from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
 
 
 def _all_trees(_stand: ForestStand, data: ReferenceTrees) -> np.ndarray:

@@ -4,9 +4,9 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies, SiteType
 from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.sim.exceptions import MetsiException
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
-from lukefi.metsi.sim.utils import MetsiException
 
 
 def _osc_tree_set1_fn(_: ForestStand, trees) -> np.ndarray:

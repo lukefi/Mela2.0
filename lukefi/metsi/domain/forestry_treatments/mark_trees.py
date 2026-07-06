@@ -3,8 +3,8 @@ import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.data.util.select_units import select_units
+from lukefi.metsi.sim.exceptions import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.utils import MetsiException
 
 
 def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:

@@ -1,8 +1,8 @@
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.forestry.treatment_utils import req
+from lukefi.metsi.sim.exceptions import MetsiException
 from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.utils import MetsiException
 
 
 def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:

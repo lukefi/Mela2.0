@@ -20,12 +20,13 @@ from lukefi.metsi.app.file_io import (
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.metsi_control import MetsiControl
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
+from lukefi.metsi.sim.db_utils import create_database_tables
+from lukefi.metsi.sim.exceptions import MetsiException
 from lukefi.metsi.sim.resimulation import resimulate_schedules
 from lukefi.metsi.sim.sim_control import Resimulation
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.sim.updating import update_units
-from lukefi.metsi.sim.utils import MetsiException, create_database_tables
 
 
 def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandList:

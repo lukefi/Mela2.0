@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Optional, TypeVar
 
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
+from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 
 

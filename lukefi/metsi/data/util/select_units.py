@@ -2,8 +2,8 @@ from typing import Callable, Optional, Sequence
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.vector_model import VectorData
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.sim.model import VectorData
 
 
 class SelectionSet[T, V: VectorData]:

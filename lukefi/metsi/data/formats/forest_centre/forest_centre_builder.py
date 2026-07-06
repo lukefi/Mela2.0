@@ -12,7 +12,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import DTYPES_STRATA, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_ops2treatments import IMPLEMENTED_FC_TREATMENTS
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
 
 
 class ForestCentreBuilder(ForestBuilder):

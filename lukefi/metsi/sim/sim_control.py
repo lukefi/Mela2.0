@@ -2,9 +2,9 @@ from dataclasses import dataclass
 from typing import Any, Callable, Sequence
 
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.instructions import SimulationInstruction
+from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.transition import Transition
 from lukefi.metsi.sim.treatment import TreatmentFn
 
