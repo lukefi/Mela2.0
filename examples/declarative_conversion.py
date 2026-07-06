@@ -3,10 +3,10 @@
 from random import random
 from examples.declarations.export_prepro import mela
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
-from lukefi.metsi.sim.sim_control import Preprocessing
 
 
 def sum3(x, y, z) -> float:

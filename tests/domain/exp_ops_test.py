@@ -5,7 +5,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.exp_ops import prepare_rst_output, classify_values_to
 from lukefi.metsi.data.enums.internal import TreeSpecies
-from lukefi.metsi.sim.exceptions import ConfigurationException
+from lukefi.metsi.core.exceptions import ConfigurationException
 
 
 class TestExpOps(unittest.TestCase):

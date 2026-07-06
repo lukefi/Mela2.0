@@ -1,6 +1,6 @@
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
+from lukefi.metsi.core.operations import do_nothing
+from lukefi.metsi.core.treatment import PredeterminedTreatment
 # from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare_fn
 # from lukefi.metsi.domain.forestry_treatments.pct import pct_fn
 

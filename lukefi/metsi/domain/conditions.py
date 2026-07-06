@@ -1,8 +1,8 @@
 from typing import Optional
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import OperationHistory, SimulationPayload
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import OperationHistory, SimulationPayload
+from lukefi.metsi.core.treatment import Treatment
 
 
 class TimePoints[T: ComputationalUnit](Condition[T]):

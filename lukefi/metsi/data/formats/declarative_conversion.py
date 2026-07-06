@@ -31,11 +31,12 @@ class ConversionMapper():
         return subset
 
     def apply_conversions[T](self, obj: T, source: dict[str, str]) -> T:
-        """ Applies declared conversions with source data and
-            adds the mapping result to the given object.
+        """
+        Applies declared conversions with source data and
+        adds the mapping result to the given object.
 
-            return: Given object updated with the conversion results
-            """
+        return: Given object updated with the conversion results
+        """
         subset = self._filter_declaration_by_instance(obj)
         for k, dconv in subset.items():
             conv_result = dconv(source, obj)

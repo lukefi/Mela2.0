@@ -1,9 +1,9 @@
-from lukefi.metsi.sim.exceptions import MetsiException
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.transition import TransitionFn
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.updating import get_step_and_treatments
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.transition import TransitionFn
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.core.updating import get_step_and_treatments
 
 
 def update_to_year_fn[T: ComputationalUnit](unit: T,
@@ -13,11 +13,11 @@ def update_to_year_fn[T: ComputationalUnit](unit: T,
                                             **transition_params
                                             ) -> OpTuple[T]:
     """
-        Apply a transition function to update the stand to target year.
+    Apply a transition function to update the stand to target year.
 
-        If the stand has predetermined treatments, they will be applied at the appropriate time points.
-        In such a case the transition can take place in several discrete steps (i.e. the time intervals between
-        the treatments).
+    If the stand has predetermined treatments, they will be applied at the appropriate time points.
+    In such a case the transition can take place in several discrete steps (i.e. the time intervals between
+    the treatments).
     """
 
     assert transition is not None, "required parameter `transition` missing "

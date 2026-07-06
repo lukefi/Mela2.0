@@ -2,10 +2,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat, StrataOrigin
+from lukefi.metsi.core.exceptions import ConfigurationException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.sim_control import Preprocessing, Resimulation, Simulation, Updating
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
-from lukefi.metsi.sim.exceptions import ConfigurationException
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.sim_control import Preprocessing, Resimulation, Simulation, Updating
 
 
 @dataclass
@@ -63,7 +63,7 @@ class MetsiControl[T: ComputationalUnit]:
     app_configuration: AppConfiguration
     conversions: dict[str, dict[str, Conversion]] | None = None
     preprocessing: Preprocessing[T] | None = None
-    updating: Updating | None = None
+    updating: Updating[T] | None = None
     export_prepro: dict[str, dict[str, Any]] | None = None
     simulation: Simulation[T] | None = None
     resimulation: Resimulation[T] | None = None

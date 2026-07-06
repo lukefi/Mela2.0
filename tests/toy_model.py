@@ -1,11 +1,11 @@
 from sqlite3 import Connection
 import sqlite3
 from typing import override
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.exceptions import MetsiException
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import CollectedData, OpTuple
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.treatment import Treatment
 
 
 class ToyModel(ComputationalUnit):

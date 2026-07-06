@@ -1,16 +1,17 @@
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat, StrataOrigin
+from lukefi.metsi.core.generators import Alternatives, Event, Sequence
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.sim_control import Preprocessing, Simulation
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.treatment import do_nothing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
-from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import Preprocessing, Simulation
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import do_nothing
+
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
 

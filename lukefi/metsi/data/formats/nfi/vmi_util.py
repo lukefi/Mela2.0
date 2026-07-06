@@ -6,14 +6,14 @@ from datetime import datetime as dt
 from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 def generate_source_data(indices: dict[str, slice], row: str) -> dict[str, str]:
     """
-        Create a dictionary of source data values from raw data row and index description.
-        If the data row does not contain an index (i.e. the row is cut short)
-        an empty string is returned natively when indexing by the slice.
+    Create a dictionary of source data values from raw data row and index description.
+    If the data row does not contain an index (i.e. the row is cut short)
+    an empty string is returned natively when indexing by the slice.
     """
     return {key: row[index] for key, index in indices.items()}
 
@@ -357,13 +357,14 @@ def determine_stratum_tree_height(source_height: str) -> Optional[float]:
 def determine_stratum_age_values(biological_age_source: str,
                                  breast_height_age_source: str,
                                  height: Optional[float]) -> tuple[float, float]:
-    """ Determinates biological age and breast height age for vmi source data.
+    """
+    Determinates biological age and breast height age for vmi source data.
 
-        param: biological_age_source: Stratum biological age or age increase value as vmi source value.
-        param: breast_height_age_source: Stratum breast height age as vmi source value
-        param: height (optional): Stratum height value
+    param: biological_age_source: Stratum biological age or age increase value as vmi source value.
+    param: breast_height_age_source: Stratum breast height age as vmi source value
+    param: height (optional): Stratum height value
 
-        return: Biological and breast height age as a tuple of whole number floats
+    return: Biological and breast height age as a tuple of whole number floats
     """
     computational_age = get_or_default(parse_float(biological_age_source), 0.0)
     breast_height_age = get_or_default(parse_float(breast_height_age_source), 0.0)

@@ -27,7 +27,8 @@ class TreeVolumeDataset(StrEnum):
 def tree_volumes(reference_trees: ReferenceTrees,
                  temperature_sum: float,
                  dataset: TreeVolumeDataset = TreeVolumeDataset.CLIMBED) -> npt.NDArray[np.float64]:
-    """Calculate volumes for reference trees based on variable form factor model.
+    """
+    Calculate volumes for reference trees based on variable form factor model.
 
     Args:
         reference_trees (ReferenceTrees): reference trees whose volumes to calculate
@@ -56,7 +57,8 @@ def _tree_volumes(dbh: npt.NDArray[np.float64],
                   h: npt.NDArray[np.float64],
                   logita: npt.NDArray[np.float64],
                   lambda_: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
-    """Calculate tree volumes.
+    """
+    Calculate tree volumes.
 
     Args:
         dbh (npt.NDArray[np.float64]): breast height diameter

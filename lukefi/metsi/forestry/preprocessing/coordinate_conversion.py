@@ -3,7 +3,7 @@ from typing import Optional
 from numba import njit
 from lukefi.metsi.forestry.preprocessing.data.points import ref_coords as _REF_COORDS, point_map as _POINT_MAP
 from lukefi.metsi.forestry.preprocessing.data.triangles import triangles as _TRIANGLES
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 MAXTRIANGLE = 167000.0

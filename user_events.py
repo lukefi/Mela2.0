@@ -7,9 +7,9 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.generators import Event
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.generators import Event
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation

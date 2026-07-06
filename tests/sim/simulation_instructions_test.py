@@ -1,14 +1,14 @@
 import sqlite3
 import unittest
 
-from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Event
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import Simulation
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, Event
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.sim_control import Simulation
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.simulator import _simulate_unit
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 

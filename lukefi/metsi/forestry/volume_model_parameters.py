@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import typing as npt
 
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 #                   Pine                Spruce              Birch

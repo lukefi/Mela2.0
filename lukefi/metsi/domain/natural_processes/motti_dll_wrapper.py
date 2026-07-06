@@ -295,7 +295,7 @@ class Motti4DLL:
 
     def new_trees(self, trees_py: list[dict]) -> Tuple[object, int]:
         """
-            fields used: id, f, d13, h, spe, age, age13, cr, snt
+        fields used: id, f, d13, h, spe, age, age13, cr, snt
         """
         ffi = self.ffi
         yp = ffi.new("Motti4Trees *")

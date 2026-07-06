@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Sequence
 
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import TreatmentFn
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.treatment import TreatmentFn
+
 
 
 type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]

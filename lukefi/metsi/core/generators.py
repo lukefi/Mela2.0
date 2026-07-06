@@ -6,21 +6,21 @@ from typing import Any, Generic, Mapping, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.db_utils import output_node_to_db
-from lukefi.metsi.sim.exceptions import MetsiException
-from lukefi.metsi.sim.model import ComputationalUnit, Finalizable
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.db_utils import output_node_to_db
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.operations import do_nothing
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
 
 class EventGeneratorBase(ABC, Generic[T]):
     """
-        Shared abstract base class for Generator and Event types.
+    Shared abstract base class for Generator and Event types.
     """
 
     @abstractmethod
@@ -41,7 +41,7 @@ class EventGeneratorBase(ABC, Generic[T]):
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """
-        Abstract base class for generator types.
+    Abstract base class for generator types.
     """
 
     children: Sequence_[EventGeneratorBase[T]]
@@ -59,7 +59,7 @@ class EventGenerator(EventGeneratorBase[T], ABC):
 
 class Sequence(EventGenerator[T]):
     """
-        Generator for sequential events.
+    Generator for sequential events.
     """
 
     @override
@@ -84,7 +84,7 @@ class Sequence(EventGenerator[T]):
 
 class Alternatives(EventGenerator[T]):
     """
-        Generator for branching events.
+    Generator for branching events.
     """
 
     @override
@@ -102,7 +102,9 @@ class Alternatives(EventGenerator[T]):
 
 
 class First(EventGenerator[T]):
-    """Generator for non-branching alternatives where only the first possible path is executed."""
+    """
+    Generator for non-branching alternatives where only the first possible path is executed.
+    """
 
     @override
     def evaluate(self,
@@ -121,8 +123,8 @@ class First(EventGenerator[T]):
 
 class Optional(EventGenerator[T]):
     """
-        Generator for continuing evaluation of child branches even if event conditions fail.
-        In such cases a `do_nothing` treatment is performed instead.
+    Generator for continuing evaluation of child branches even if event conditions fail.
+    In such cases a `do_nothing` treatment is performed instead.
     """
 
     def __init__(self, child: EventGeneratorBase):
@@ -145,8 +147,8 @@ class Optional(EventGenerator[T]):
 
 class Event(EventGeneratorBase[T]):
     """
-        Base class for events.
-        Contains conditions and parameters and the actual treatment function that operates on the simulation state.
+    Base class for events.
+    Contains conditions and parameters and the actual treatment function that operates on the simulation state.
     """
 
     treatment: Treatment[T]

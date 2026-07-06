@@ -2,7 +2,7 @@ import unittest
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import (
     convert_location_to_ykj, erts_tm35_to_ykj)
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class TestCoordinateConversion(unittest.TestCase):

@@ -7,8 +7,8 @@ from collections.abc import Callable
 
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 class ConverterTestSuite(unittest.TestCase):

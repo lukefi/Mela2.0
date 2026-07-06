@@ -14,7 +14,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     TreeType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
-from lukefi.metsi.sim.model import DTypeDeclaration, VectorData
+from lukefi.metsi.core.model import DTypeDeclaration, VectorData
 
 DTYPES_TREE: dict[str, DTypeDeclaration] = {
     "identifier": (np.dtype("U30"), ""),

@@ -8,8 +8,10 @@ def update_stand_growth(stand: ForestStand,
                         heights: npt.NDArray[np.float64],
                         stems: npt.NDArray[np.float64],
                         step: int):
-    """In-place update stand's reference trees with given diameters, heights and stem count.
-    Increase ages for trees and stand. Remove sapling flag from trees that have grown beyond 1.3m. """
+    """
+    In-place update stand's reference trees with given diameters, heights and stem count.
+    Increase ages for trees and stand. Remove sapling flag from trees that have grown beyond 1.3m.
+    """
 
     trees = stand.reference_trees
 

@@ -2,10 +2,11 @@ import sqlite3
 from typing import Generator, Optional
 from typing import Sequence as Sequence_
 
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, EventGenerator, EventGeneratorBase, Sequence
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+
 
 
 class SimulationInstruction[T: ComputationalUnit]:

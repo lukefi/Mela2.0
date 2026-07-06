@@ -8,6 +8,7 @@ from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments
+from lukefi.metsi.core.sim_control import Resimulation
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.app.export import export_preprocessed
@@ -17,16 +18,15 @@ from lukefi.metsi.app.file_io import (
     read_stands_from_file,
     delete_existing_export_files,
     read_control_module)
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.db_utils import create_database_tables
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.resimulation import resimulate_schedules
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.app.metsi_control import MetsiControl
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.db_utils import create_database_tables
-from lukefi.metsi.sim.exceptions import MetsiException
-from lukefi.metsi.sim.resimulation import resimulate_schedules
-from lukefi.metsi.sim.sim_control import Resimulation
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.simulator import simulate_alternatives
-from lukefi.metsi.sim.updating import update_units
+from lukefi.metsi.core.updating import update_units
 
 
 def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandList:

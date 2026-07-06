@@ -12,7 +12,7 @@ from lukefi.metsi.data.formats.nfi.vmi_const import VMI10_COUNTY_AREAS, VMI10_ST
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class VMI10Builder(VMIBuilder):

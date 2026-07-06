@@ -1,8 +1,8 @@
 from typing import Any, Callable, Generic, Mapping, Optional, TypeVar
 
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.operations import do_nothing as do_nothing_
+from lukefi.metsi.core.collected_data import CollectableDataTypes, OpTuple
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.operations import do_nothing as do_nothing_
 
 T_contra = TypeVar("T_contra", bound=ComputationalUnit, contravariant=True)
 TreatmentFn = Callable[[T_contra], OpTuple[T_contra]]

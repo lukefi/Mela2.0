@@ -2,9 +2,9 @@ from enum import IntEnum
 import sqlite3
 from typing import Any, Optional
 
-from lukefi.metsi.sim.collected_data import CollectedData
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.collected_data import CollectedData
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 class NodeType(IntEnum):

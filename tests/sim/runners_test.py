@@ -1,6 +1,6 @@
 import unittest
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.runners import evaluate_sequence
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.runners import evaluate_sequence
 from tests.test_utils import raises, identity, none
 from tests.toy_model import ToyModel
 

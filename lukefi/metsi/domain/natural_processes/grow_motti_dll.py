@@ -16,7 +16,7 @@ from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.core.collected_data import OpTuple
 
 
 def auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:

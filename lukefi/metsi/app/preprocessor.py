@@ -1,8 +1,8 @@
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.sim.operations import simple_processable_chain
-from lukefi.metsi.sim.runners import evaluate_sequence
-from lukefi.metsi.sim.sim_control import Preprocessing
+from lukefi.metsi.core.operations import simple_processable_chain
+from lukefi.metsi.core.runners import evaluate_sequence
 
 
 def preprocess_stands(stands: StandList, control: Preprocessing[ForestStand]) -> StandList:

@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any, Optional, Type, overload
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 if TYPE_CHECKING:
-    from lukefi.metsi.sim.treatment import PredeterminedTreatment
+    from lukefi.metsi.core.treatment import PredeterminedTreatment
 
 type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 

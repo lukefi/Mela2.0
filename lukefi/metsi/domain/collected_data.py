@@ -5,7 +5,7 @@ import numpy as np
 import numpy.typing as npt
 
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import CollectedData
+from lukefi.metsi.core.collected_data import CollectedData
 
 
 class RemovedTrees(CollectedData):

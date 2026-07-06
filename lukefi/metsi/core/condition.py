@@ -1,8 +1,8 @@
 from collections.abc import Callable
 from typing import Optional
 
-from lukefi.metsi.sim.model import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 type Predicate[T] = Callable[[T], bool]

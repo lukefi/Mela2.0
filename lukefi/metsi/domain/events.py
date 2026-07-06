@@ -5,8 +5,8 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
-from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.treatment import Treatment, do_nothing
+from lukefi.metsi.core.generators import Event
+from lukefi.metsi.core.treatment import Treatment, do_nothing
 
 
 class DoNothing(Event[ForestStand]):
