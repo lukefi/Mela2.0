@@ -1,17 +1,17 @@
 from lukefi.metsi.sim.exceptions import MetsiException
+from lukefi.metsi.sim.model import ComputationalUnit
 from lukefi.metsi.sim.transition import TransitionFn
-from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.collected_data import OpTuple
 from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.sim.updating import get_step_and_treatments
 
 
-def update_to_year_fn(stand: ForestStand,
-                      /,
-                      transition: TransitionFn[ForestStand] | None = None,
-                      target_year: int | None = None,
-                      **transition_params
-                      ) -> OpTuple[ForestStand]:
+def update_to_year_fn[T: ComputationalUnit](unit: T,
+                                            /,
+                                            transition: TransitionFn[T] | None = None,
+                                            target_year: int | None = None,
+                                            **transition_params
+                                            ) -> OpTuple[T]:
     """
         Apply a transition function to update the stand to target year.
 
@@ -23,11 +23,11 @@ def update_to_year_fn(stand: ForestStand,
     assert transition is not None, "required parameter `transition` missing "
     assert target_year is not None, "required parameter `target_year` missing"
 
-    if stand.time > target_year:
-        raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}: "
-                             f"already at {stand.time}")
+    if unit.time > target_year:
+        raise MetsiException(f"Unable to update stand {unit.identifier} to year {target_year}: "
+                             f"already at {unit.time}")
 
-    current = stand
+    current = unit
     keep_running = True
     while keep_running:
         step, treatments = get_step_and_treatments(current, target_year)
