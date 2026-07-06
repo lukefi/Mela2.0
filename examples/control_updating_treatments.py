@@ -41,8 +41,11 @@ control_structure = {
         ]
     },
     "updating": UpdatingInstructions(
-        2026,
-        Transition(grow_acta_fn, db_output_state=True, db_output_cd=True, collected_data={NaturalProcessInfo}),
+        target_time=2026,
+        transition=Transition(grow_acta_fn,
+                              db_output_state=True,
+                              db_output_cd=True,
+                              collected_data={NaturalProcessInfo}),
         output_treatment_state=True,
         output_treatment_cd=True
     ),
