@@ -31,7 +31,7 @@ def _min_regeneration_diameter(stand: ForestStand) -> float:
 
 
 def _forest_categories_check(payload: SimulationPayload[ForestStand]) -> bool:
-    stand = payload.computational_unit
+    stand = payload.unit
     stand.update_aggregates()  # use stand aggregates, not manual BA math
 
     manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1
