@@ -2,7 +2,7 @@ import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.core.collected_data import OpTuple, CollectedData
-from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
+from lukefi.metsi.core.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment

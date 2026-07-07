@@ -2,7 +2,7 @@ from typing import Any, Optional
 from pathlib import Path
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeManagementCategory
-from lukefi.metsi.data.util.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
+from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand

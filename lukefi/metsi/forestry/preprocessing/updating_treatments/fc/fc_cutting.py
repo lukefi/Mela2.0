@@ -2,7 +2,7 @@ import numpy as np
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.enums.internal import Storey, TreeSpecies, SiteType
-from lukefi.metsi.data.util.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
+from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import PredeterminedTreatment

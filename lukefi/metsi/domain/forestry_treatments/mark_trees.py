@@ -1,8 +1,8 @@
 
 import numpy as np
+from lukefi.metsi.core.select_units import Mode, select_units
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.core.collected_data import OpTuple
-from lukefi.metsi.data.util.select_units import Mode, select_units
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
