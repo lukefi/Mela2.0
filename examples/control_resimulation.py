@@ -21,7 +21,7 @@ control_structure = {
                               name="grow_motti",
                               db_output_state=False,
                               db_output_cd=True),
-        schedules_file="selected_schedules.csv",
+        schedules_file="examples/selected_schedules.csv",
         treatment_map={
             "do_nothing": do_nothing,
         },
