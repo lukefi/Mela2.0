@@ -6,7 +6,6 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.transition import TransitionFn
 
 
 class SimulationInstruction[T: ComputationalUnit]:
@@ -36,28 +35,3 @@ class SimulationInstruction[T: ComputationalUnit]:
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T]]:
         yield from self.event_generator.evaluate(payload, db, node)
-
-
-class Updating[T: ComputationalUnit]:
-    target_time: int
-    transition: TransitionFn[T]
-
-    output_transition_state: bool
-    output_transition_cd: bool
-    output_treatment_state: bool
-    output_treatment_cd: bool
-
-    def __init__(self,
-                 target_time: int,
-                 transition: TransitionFn[T],
-                 *,
-                 output_transition_state: bool = True,
-                 output_transition_cd: bool = True,
-                 output_treatment_state: bool = True,
-                 output_treatment_cd: bool = True) -> None:
-        self.target_time = target_time
-        self.transition = transition
-        self.output_transition_state = output_transition_state
-        self.output_transition_cd = output_transition_cd
-        self.output_treatment_state = output_treatment_state
-        self.output_treatment_cd = output_treatment_cd

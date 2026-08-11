@@ -3,7 +3,7 @@ from unittest.mock import ANY, Mock, call
 
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.instructions import Updating
+from lukefi.metsi.sim.sim_control import Updating
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.sim.updating import get_step_and_treatments, update_units
 

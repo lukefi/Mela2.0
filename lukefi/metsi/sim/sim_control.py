@@ -7,8 +7,8 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.instructions import SimulationInstruction, Updating
-from lukefi.metsi.sim.transition import Transition
+from lukefi.metsi.sim.instructions import SimulationInstruction
+from lukefi.metsi.sim.transition import Transition, TransitionFn
 
 
 @dataclass
@@ -60,12 +60,40 @@ class AppConfiguration:
                 RunMode.PREPROCESS not in self.run_modes and RunMode.UPDATE not in self.run_modes):
             raise ConfigurationException("Run mode EXPORT_PREPRO cannot be without PREPROCESS or UPDATE")
 
+
 type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
+
 
 @dataclass
 class Preprocessing[T:ComputationalUnit]:
     operations: Sequence[PreprocessingOperation[T]]
     params: dict[PreprocessingOperation[T], list[dict[str, Any]]]
+
+
+@dataclass
+class Updating[T: ComputationalUnit]:
+    target_time: int
+    transition: TransitionFn[T]
+
+    output_transition_state: bool
+    output_transition_cd: bool
+    output_treatment_state: bool
+    output_treatment_cd: bool
+
+    def __init__(self,
+                 target_time: int,
+                 transition: TransitionFn[T],
+                 *,
+                 output_transition_state: bool = True,
+                 output_transition_cd: bool = True,
+                 output_treatment_state: bool = True,
+                 output_treatment_cd: bool = True) -> None:
+        self.target_time = target_time
+        self.transition = transition
+        self.output_transition_state = output_transition_state
+        self.output_transition_cd = output_transition_cd
+        self.output_treatment_state = output_treatment_state
+        self.output_treatment_cd = output_treatment_cd
 
 
 @dataclass

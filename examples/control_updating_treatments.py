@@ -2,10 +2,9 @@ from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
-from lukefi.metsi.sim.instructions import Updating
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing
+from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Updating
 
 
 control_structure = MetsiControl[ForestStand](
