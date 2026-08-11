@@ -7,7 +7,7 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.instructions import SimulationInstruction, UpdatingInstructions
+from lukefi.metsi.sim.instructions import SimulationInstruction, Updating
 from lukefi.metsi.sim.transition import Transition
 
 
@@ -96,6 +96,6 @@ class MetsiControl[T: ComputationalUnit]:
     app_configuration: AppConfiguration
     conversions: dict[str, dict[str, Conversion]] | None = None
     preprocessing: Preprocessing[T] | None = None
-    updating: UpdatingInstructions | None = None
+    updating: Updating | None = None
     export_prepro: dict[str, dict[str, Any]] | None = None
     simulation: Simulation[T] | None = None

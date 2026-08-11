@@ -38,7 +38,7 @@ class SimulationInstruction[T: ComputationalUnit]:
         yield from self.event_generator.evaluate(payload, db, node)
 
 
-class UpdatingInstructions[T: ComputationalUnit]:
+class Updating[T: ComputationalUnit]:
     target_time: int
     transition: TransitionFn[T]
 

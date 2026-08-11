@@ -5,12 +5,12 @@ from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
-from lukefi.metsi.sim.instructions import UpdatingInstructions
+from lukefi.metsi.sim.instructions import Updating
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 
 
-def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructions[T],
+def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
                                        units: Sequence[T],
                                        db: sqlite3.Connection | None = None) -> tuple[list[SimulationPayload[T]],
                                                                                       CollectableDataTypes | None]:
@@ -89,7 +89,7 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 
 def _get_collected_data_types[T: ComputationalUnit](
         units: Sequence[T],
-        updating_instructions: UpdatingInstructions) -> CollectableDataTypes:
+        updating_instructions: Updating) -> CollectableDataTypes:
 
     if updating_instructions.output_transition_cd:
         retval: CollectableDataTypes = {NaturalProcessInfo}

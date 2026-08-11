@@ -3,7 +3,7 @@ from unittest.mock import ANY, Mock, call
 
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.instructions import UpdatingInstructions
+from lukefi.metsi.sim.instructions import Updating
 from lukefi.metsi.sim.treatment import PredeterminedTreatment
 from lukefi.metsi.sim.updating import get_step_and_treatments, update_units
 
@@ -63,7 +63,7 @@ class UpdatingTest(unittest.TestCase):
             return stand, []
 
         transition.side_effect = transition_side
-        instructions = UpdatingInstructions(target_time=2025,
+        instructions = Updating(target_time=2025,
                                             transition=transition,
                                             output_transition_state=False,
                                             output_transition_cd=False,
