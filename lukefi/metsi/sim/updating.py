@@ -72,7 +72,8 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
             else:
                 keep_running = False
 
-        # TODO: delete current.comptutaional_unit.predetermined_treatments?
+        # Drop performed treatments
+        current.computational_unit.predetermined_treatments = None
 
         # Update starting time for relative timepoints
         current.computational_unit.start_time = current.computational_unit.time
