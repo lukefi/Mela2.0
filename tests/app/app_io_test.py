@@ -1,5 +1,4 @@
 import unittest
-import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -49,20 +48,20 @@ class TestAppIO(unittest.TestCase):
 
 class TestRunModes(unittest.TestCase):
     def test_valid_typical_run_modes(self):
-        modes = ['preprocess', 'export_prepro', 'simulate', 'postprocess', 'export']
+        modes = ['preprocess', 'export_prepro', 'simulate']
         result = MetsiConfiguration._validate_and_sort_run_modes(modes)
         self.assertEqual(result, [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO,
-                         RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
+                         RunMode.SIMULATE])
 
     def test_valid_run_modes_sorted(self):
-        modes = ['simulate', 'PREPROCESS', 'export']
+        modes = ['simulate', 'PREPROCESS']
         result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.SIMULATE, RunMode.EXPORT])
+        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.SIMULATE])
 
     def test_valid_run_modes_with_dependencies(self):
-        modes = ['simulate', 'postprocess', 'export']
+        modes = ['simulate']
         result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
+        self.assertEqual(result, [RunMode.SIMULATE])
 
     def test_invalid_run_mode(self):
         modes = ['simulate', 'invalid_mode']

@@ -1,6 +1,6 @@
 import argparse
 from types import SimpleNamespace
-from typing import Optional
+from typing import Optional, Sequence
 from lukefi.metsi.app.utils import ConfigurationException
 from lukefi.metsi.app.metsi_enum import (
     IntConfigEnum,
@@ -78,7 +78,7 @@ class MetsiConfiguration(SimpleNamespace):
         return kwargs
 
     @staticmethod
-    def _validate_and_sort_run_modes(modes: list[str | RunMode]) -> list[RunMode]:
+    def _validate_and_sort_run_modes(modes: Sequence[str | RunMode]) -> list[RunMode]:
         """Validate and sort run modes."""
         try:
             mode_enums = [RunMode.from_str(p) if isinstance(p, str) else RunMode(p) for p in modes]
@@ -91,12 +91,6 @@ class MetsiConfiguration(SimpleNamespace):
         if RunMode.EXPORT_PREPRO in sorted_modes and RunMode.PREPROCESS not in sorted_modes:
             raise ConfigurationException(
                 f"Error: Run mode {RunMode.EXPORT_PREPRO} cannot be without {RunMode.PREPROCESS}")
-
-        if RunMode.EXPORT in sorted_modes and not any(p in sorted_modes for p in [RunMode.SIMULATE,
-                                                                                  RunMode.POSTPROCESS]):
-            raise ConfigurationException(
-                f"Error: Run mode {RunMode.EXPORT} is possible only when {RunMode.SIMULATE} or "
-                f"{RunMode.POSTPROCESS} is included")
 
         return sorted_modes
 

@@ -65,8 +65,6 @@ class RunMode(IntConfigEnum):
     UPDATE = 2
     EXPORT_PREPRO = 3
     SIMULATE = 4
-    POSTPROCESS = 5
-    EXPORT = 6
 
 
 class StrataOrigin(IntConfigEnum):

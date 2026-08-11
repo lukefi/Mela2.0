@@ -1,12 +1,9 @@
 import os
 import sys
-import copy
 import sqlite3
 from typing import Optional, cast
 from lukefi.metsi.app.preprocessor import (
     preprocess_stands,
-    slice_list_by_percentage,
-    slice_list_by_size
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments, MetsiConfiguration, generate_application_configuration, RunMode
 from lukefi.metsi.domain.forestry_types import StandList
@@ -69,8 +66,9 @@ def main() -> int:
     cli_arguments = parse_cli_arguments(sys.argv[1:])
     force_delete = bool(cli_arguments.pop("delete", False))
 
-    control_file = \
-        MetsiConfiguration.control_file if cli_arguments["control_file"] is None else cli_arguments['control_file']
+    control_file = (MetsiConfiguration.control_file
+                    if cli_arguments["control_file"] is None else cli_arguments['control_file'])
+
     try:
         control_structure = read_control_module(control_file)
     except IOError:
@@ -78,7 +76,9 @@ def main() -> int:
         return 1
 
     app_config = generate_application_configuration({**cli_arguments, **control_structure['app_configuration']})
+
     prepare_target_directory(app_config.target_directory)
+
     print_logline("Reading input...")
     should_continue = delete_existing_export_files(
         target_directory=app_config.target_directory,
@@ -87,9 +87,12 @@ def main() -> int:
         simulation_base_name=app_config.simulation_output_file,
         force_delete=force_delete,
     )
+
     if not should_continue:
         return 0
+
     db: sqlite3.Connection | None = None
+
     if RunMode.SIMULATE in app_config.run_modes or RunMode.UPDATE in app_config.run_modes:
         print_logline("Initializing output database")
         db_base = app_config.simulation_output_file or "simulation_results"
@@ -100,51 +103,23 @@ def main() -> int:
         ForestStand.set_sqlite_decl(sqlite_decl)
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:
-        # 1) read full stand list
-        full_stands = read_stands_from_file(app_config, control_structure.get('conversions', {}))
-
-        # 2) split it if slice_* parameters are given
-        pct = control_structure.get('slice_percentage')
-        sz = control_structure.get('slice_size')
-        if pct is not None:
-            stand_sublists = slice_list_by_percentage(full_stands, pct)
-        elif sz is not None:
-            stand_sublists = slice_list_by_size(full_stands, sz)
-        else:
-            stand_sublists = [full_stands]
-
-        input_data: list[StandList] = stand_sublists
-
-    elif app_config.run_modes[0] in [RunMode.POSTPROCESS, RunMode.EXPORT]:
-        raise MetsiException("Post-processing and export currently not implemented")
-
+        input_data = read_stands_from_file(app_config, control_structure.get('conversions', {}))
     else:
         raise MetsiException("Can not determine input data for unknown run mode")
 
-    # now run each slice in turn
-    for _, stands in enumerate(input_data):
-        # -- optional slice folder (disabled for now) --
-        # slice_target = os.path.join(app_config.target_directory, f"slice_{slice_idx+1}")
-        # prepare_target_directory(slice_target)
+    prepare_target_directory(app_config.target_directory)
 
-        # use original directory instead (to overwrite for now)
-        prepare_target_directory(app_config.target_directory)
+    cd_types_from_updating: CollectableDataTypes | None = None
+    current: list[ForestStand] | list[SimulationPayload[ForestStand]] = input_data
 
-        # clone config so we don’t stomp on the original
-        cfg = copy.copy(app_config)
-        cfg.target_directory = app_config.target_directory
-
-        # feed this sub‐list of stands through the normal run_modes
-        current: list[ForestStand] | list[SimulationPayload[ForestStand]] = stands
-        cd_types_from_updating: CollectableDataTypes | None = None
-        if RunMode.PREPROCESS in cfg.run_modes:
-            current = _preprocess(cfg, control_structure, cast(list[ForestStand], current))
-        if RunMode.UPDATE in cfg.run_modes:
-            current, cd_types_from_updating = _update(control_structure, cast(list[ForestStand], current), db)
-        if RunMode.EXPORT_PREPRO in cfg.run_modes:
-            _export_prepro(cfg, control_structure, current)
-        if RunMode.SIMULATE in cfg.run_modes:
-            _simulate(control_structure, current, db, cd_types_from_updating)
+    if RunMode.PREPROCESS in app_config.run_modes:
+        current = _preprocess(app_config, control_structure, cast(list[ForestStand], current))
+    if RunMode.UPDATE in app_config.run_modes:
+        current, cd_types_from_updating = _update(control_structure, cast(list[ForestStand], current), db)
+    if RunMode.EXPORT_PREPRO in app_config.run_modes:
+        _export_prepro(app_config, control_structure, current)
+    if RunMode.SIMULATE in app_config.run_modes:
+        _simulate(control_structure, current, db, cd_types_from_updating)
 
     if db is not None:
         db.commit()
