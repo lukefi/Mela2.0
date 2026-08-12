@@ -1,86 +1,77 @@
-from user_events import Harvest20percent, FirstThinningMineralSoils
-from lukefi.metsi.sim.treatment import do_nothing
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
+from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
+from lukefi.metsi.sim.instructions import SimulationInstruction
+from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
+from lukefi.metsi.sim.transition import Transition
+from lukefi.metsi.sim.treatment import do_nothing
 from examples.declarations.export_prepro import mela_and_default_csv
 from examples.declarations.sqlite import sqlite_decl
+from user_events import FirstThinningMineralSoils, Harvest20percent
 
-control_structure = {
-    "app_configuration": {
-        "state_format": "vmi13",  # options: fdm, vmi12, vmi13, xml, gpkg
-        # "state_input_container": "csv",  # Only relevant with fdm state_format. Options: pickle, json
-        "run_modes": ["preprocess", "export_prepro", "simulate"],
-        "sqlite_decl": sqlite_decl,
-    },
-    "preprocessing_operations": [
-        scale_area_weight,
-        generate_reference_trees,  # reference trees from strata, replaces existing reference trees
-        filter_stands,
-        filter_trees
-    ],
-    "preprocessing_params": {
-        generate_reference_trees: [
-            {
-                "n_trees": 10,
-                "method": "weibull",
-                "debug": False,
-                "delete_strata": True
-            }
+control_structure = MetsiControl[ForestStand](
+    app_configuration=AppConfiguration(
+        state_format=StateFormat.VMI13,
+        run_modes=[RunMode.PREPROCESS, RunMode.EXPORT_PREPRO, RunMode.SIMULATE],
+        sqlite_decl=sqlite_decl
+    ),
+    preprocessing=Preprocessing[ForestStand](
+        operations=[
+            scale_area_weight,
+            generate_reference_trees,
+            filter_stands,
+            filter_trees
         ],
-        filter_stands: [
-            {
-                "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
-            }
-        ],
-        filter_trees: [
-            {
-                "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                              (stand.reference_trees.stems_per_ha == 0))),
-            }
-        ]
-    },
-    "simulation_instructions": [
-        SimulationInstruction(
-            events=[
-                Alternatives[ForestStand]([
-                    Event[ForestStand](treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
-                    Sequence[ForestStand]([
-                        Event[ForestStand](treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
-                        Event[ForestStand](
-                            treatment=do_nothing,
-                            static_parameters={"n": 3},
-                            dynamic_parameters={
-                                "m": lambda s: (s.site_type_category.value if s.site_type_category is not None else 0) + 100
-                            },
-                            tags={"third_type"},
-                        ),
-                        Harvest20percent(),
-                        FirstThinningMineralSoils()
-                    ]),
+        params={
+            generate_reference_trees: [
+                {
+                    "n_trees": 10,
+                    "method": "weibull",
+                    "debug": False,
+                    "delete_strata": True
+                }
+            ],
+            filter_stands: [
+                {
+                    "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+                }
+            ],
+            filter_trees: [
+                {
+                    "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                                  (stand.reference_trees.stems_per_ha == 0))),
+                }
+            ]
+
+        }
+    ),
+    export_prepro=mela_and_default_csv,
+    simulation=Simulation[ForestStand](
+        instructions=[
+            SimulationInstruction(
+                events=[
+                    Alternatives[ForestStand]([
+                        Event[ForestStand](treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
+                        Sequence[ForestStand]([
+                            Event[ForestStand](treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
+                            Event[ForestStand](
+                                treatment=do_nothing,
+                                static_parameters={"n": 3},
+                                dynamic_parameters={
+                                    "m": lambda s: (s.site_type_category.value if s.site_type_category is not None else 0) + 100
+                                },
+                                tags={"third_type"},
+                            ),
+                            Harvest20percent(),
+                            FirstThinningMineralSoils()
+                        ]),
+                    ])
                 ])
-            ]
-        )
-    ],
-    "transition": Transition(grow_acta_fn, 5, db_output_state=False, db_output_cd=False),
-    "end_condition": ForestCondition(lambda x: x.computational_unit.relative_time > 30),
-    "post_processing": {
-        "operation_params": {
-            do_nothing: [
-                {"param": "value"}
-            ]
-        },
-        "post_processing": [
-            do_nothing
-        ]
-    },
-    'export_prepro': mela_and_default_csv
-
-
-}
-
-__all__ = ['control_structure']
+        ],
+        transition=Transition(grow_acta_fn, 5, db_output_state=False, db_output_cd=False),
+        end_condition=ForestCondition(lambda x: x.computational_unit.relative_time > 30),
+    )
+)

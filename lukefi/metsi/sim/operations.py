@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence
 
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
@@ -18,7 +18,7 @@ def prepared_operation[T](operation_entrypoint: Callable[[T], T], **operation_pa
     return lambda state: operation_entrypoint(state, **operation_parameters)
 
 
-def simple_processable_chain[T](operation_tags: list[Callable[[T], T]],
+def simple_processable_chain[T](operation_tags: Sequence[Callable[[T], T]],
                                 operation_params: dict[Callable[[T], T], Any]) -> list[Callable[[T], T]]:
     """Prepare a list of partially applied (parametrized) operation functions based on given declaration of operation
     tags and operation parameters"""

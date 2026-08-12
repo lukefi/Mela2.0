@@ -7,7 +7,7 @@ from typing import Any, Set, TypeVar
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import init_collected_data_tables
-from lukefi.metsi.sim.instructions import ResimulationInstructions
+from lukefi.metsi.sim.sim_control import Resimulation
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.treatment import PredeterminedTreatment, TreatmentFn
 from lukefi.metsi.sim.updating import get_step_and_treatments
@@ -27,7 +27,7 @@ class UnitInstructions[T: ComputationalUnit]:
         self.schedules = []
 
 
-def resimulate_schedules(resim_instructions: ResimulationInstructions[T],
+def resimulate_schedules(resim_instructions: Resimulation[T],
                          in_db: sqlite3.Connection,
                          out_db: sqlite3.Connection,
                          unit_type: type[T]):

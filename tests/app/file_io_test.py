@@ -7,13 +7,14 @@ from dataclasses import dataclass
 
 import numpy as np
 from lukefi.metsi.app import file_io
+from lukefi.metsi.app.metsi_enum import StateFormat
 from lukefi.metsi.data.enums.internal import (
     DrainageCategory, LandUseCategory, OwnerCategory, SiteType,
     SoilPeatlandCategory, TreeSpecies)
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.app.app_io import MetsiConfiguration
+from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl
 
 
 @dataclass
@@ -145,9 +146,10 @@ class TestFileReading(unittest.TestCase):
         shutil.rmtree('outdir')
 
     def test_read_stands_from_csv_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path="tests/resources/file_io_test/forest_centre.csv",
-            state_format="csv",
+            state_format=StateFormat.CSV,
         )
         stands_from_csv = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands_from_csv), 2)
@@ -156,41 +158,46 @@ class TestFileReading(unittest.TestCase):
         self.assertIsInstance(stands_from_csv[0].tree_strata, TreeStrata)
 
     def test_read_stands_from_vmi12_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path="tests/resources/file_io_test/vmi12.dat",
-            state_format="vmi12",
+            state_format=StateFormat.VMI12,
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
 
     def test_read_stands_from_vmi13_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path=Path("tests", "data", "resources", "VMI13_source_mini.dat"),
-            state_format="vmi13",
+            state_format=StateFormat.VMI13,
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 4)
 
     def test_read_stands_from_xml_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path="tests/resources/file_io_test/forest_centre.xml",
-            state_format="xml",
+            state_format=StateFormat.XML,
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 2)
 
     def test_read_stands_from_gpkg_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path="tests/data/resources/SMK_source.gpkg",
-            state_format="gpkg",
+            state_format=StateFormat.GPKG,
         )
         stands = file_io.read_stands_from_file(config, {})
         self.assertEqual(len(stands), 9)
 
     def test_read_stands_from_nonexisting_file(self):
-        config = MetsiConfiguration(
+        config = AppConfiguration(
+            run_modes=[],
             input_path="nonexisting_file.pickle",
-            state_format="csv",
+            state_format=StateFormat.CSV,
         )
         self.assertRaises(Exception, file_io.read_stands_from_file, config)
 
@@ -206,17 +213,20 @@ class TestReadControlModule(unittest.TestCase):
         mock_spec_from_file_location.return_value = mock_spec
 
         mock_module = MagicMock()
-        mock_module.control_structure = {"key": "value"}
+        mock_module.control_structure = MetsiControl(
+            app_configuration=AppConfiguration(
+                run_modes=[], state_format=StateFormat.VMI13))
         mock_module_from_spec.return_value = mock_module
 
         # Call the function
         control_path = str(Path("test_control.py").resolve())  # Resolve to absolute path
-        result = file_io.read_control_module(control_path, "control_structure")
+        result = file_io.read_control_module(control_path, {}, "control_structure")
 
         # Assertions
         mock_spec_from_file_location.assert_called_once_with("test_control", control_path)
         mock_loader.exec_module.assert_called_once_with(mock_module)
-        self.assertEqual(result, {"key": "value"})
+        self.assertEqual(result.app_configuration.run_modes, [])
+        self.assertEqual(result.app_configuration.state_format, StateFormat.VMI13)
 
     def test_read_control_module_attribute_error(self):
         control_path = os.path.join(os.getcwd(), "tests", "resources", "file_io_test", "dummy_control.py")
@@ -224,7 +234,7 @@ class TestReadControlModule(unittest.TestCase):
             f.write("some_variable = {'key': 'value'}")  # Create a dummy control file without the expected attribute
 
         with self.assertRaises(AttributeError) as context:
-            file_io.read_control_module(control_path, control="nonexistent_control")
+            file_io.read_control_module(control_path, {}, control="nonexistent_control")
 
         self.assertIn("Variable 'nonexistent_control' not found", str(context.exception))
         os.remove(control_path)

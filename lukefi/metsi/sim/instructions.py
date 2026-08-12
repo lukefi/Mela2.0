@@ -3,12 +3,9 @@ from typing import Generator, Optional
 from typing import Sequence as Sequence_
 
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.generators import Alternatives, EventGeneratorBase, EventGenerator, Sequence
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import TreatmentFn
 
 
 class SimulationInstruction[T: ComputationalUnit]:
@@ -38,52 +35,3 @@ class SimulationInstruction[T: ComputationalUnit]:
                  db: sqlite3.Connection | None = None,
                  node: int = 0) -> Generator[SimulationPayload[T]]:
         yield from self.event_generator.evaluate(payload, db, node)
-
-
-class UpdatingInstructions[T: ComputationalUnit]:
-    target_time: int
-    transition: Transition[T]
-
-    output_treatment_state: bool
-    output_treatment_cd: bool
-
-    def __init__(self,
-                 target_time: int,
-                 transition: Transition[T],
-                 *,
-                 output_treatment_state: bool = True,
-                 output_treatment_cd: bool = True) -> None:
-        self.target_time = target_time
-        self.transition = transition
-        self.output_treatment_state = output_treatment_state
-        self.output_treatment_cd = output_treatment_cd
-
-
-class ResimulationInstructions[T: ComputationalUnit]:
-    transition: Transition[T]
-    selected_schedules_file: str
-    treatment_map: dict[str, TreatmentFn[T]]
-    collected_data: CollectableDataTypes
-    output_treatment_state: bool
-    output_treatment_cd: bool
-
-    def __init__(self,
-                 transition: Transition[T],
-                 schedules_file: str,
-                 *,
-                 treatment_map: dict[str, TreatmentFn[T]] | None = None,
-                 collected_data: CollectableDataTypes | None = None,
-                 output_treatment_state: bool = True,
-                 output_treatment_cd: bool = True) -> None:
-        self.transition = transition
-        self.schedules_file = schedules_file
-        if treatment_map is None:
-            self.treatment_map = {}
-        else:
-            self.treatment_map = treatment_map
-        if collected_data is None:
-            self.collected_data = set()
-        else:
-            self.collected_data = collected_data
-        self.output_treatment_state = output_treatment_state
-        self.output_treatment_cd = output_treatment_cd

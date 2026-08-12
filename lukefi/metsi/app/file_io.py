@@ -4,7 +4,7 @@ import importlib.util
 from collections.abc import Callable
 from pathlib import Path
 import sqlite3
-from typing import Any, Generator, Optional
+from typing import Generator, Optional
 from lukefi.metsi.data.formats.forest_centre.forest_centre_builder import GeoPackageBuilder, XMLBuilder
 from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
 from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
@@ -17,7 +17,6 @@ from lukefi.metsi.data.formats.io_utils import (
     csv_exp_content_to_stands,
     stands_to_rst_content,
     mela_par_file_content)
-from lukefi.metsi.app.app_io import MetsiConfiguration
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
 from lukefi.metsi.domain.forestry_types import SimResults
@@ -28,6 +27,7 @@ from lukefi.metsi.sim.collected_data import CollectedData
 from lukefi.metsi.data.util.csv_utils import STAND_INTERNAL_COLUMNS, csv_cell
 from lukefi.metsi.data.vector_model import DTYPES_TREE, DTYPES_STRATA
 from lukefi.metsi.data.model import stand_as_internal_row
+from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl
 
 StandReader = Callable[[str | Path], StandList]
 StandWriter = Callable[[Path, ExportableContainer[ForestStand]], None]
@@ -109,7 +109,8 @@ def source_data_reader(state_format: str, conversions, **builder_flags) -> Stand
     raise MetsiException(f"Unsupported state format '{state_format}'")
 
 
-def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str, Conversion]) -> StandList:
+def read_stands_from_file(app_config: AppConfiguration,
+                          conversions: dict[str, dict[str, Conversion]] | None = None) -> StandList:
     """
     Read a list of ForestStands from given file with given configuration. Directly reads CSV format data. Utilizes
     FDM ForestBuilder utilities to transform VMI12, VMI13 or Forest Centre data into CSV ForestStand format.
@@ -131,7 +132,7 @@ def read_stands_from_file(app_config: MetsiConfiguration, conversions: dict[str,
     raise MetsiException(f"Unsupported state format '{app_config.state_format}'")
 
 
-def read_control_module(control_path: str, control: str = "control_structure") -> dict[str, Any]:
+def read_control_module(control_path: str, cli_arguments: dict, control: str = "control_structure") -> MetsiControl:
     config_path = Path(control_path).resolve()  # Ensure absolute path
     module_name = config_path.stem  # Extract filename without extension
 
@@ -141,7 +142,13 @@ def read_control_module(control_path: str, control: str = "control_structure") -
         spec.loader.exec_module(module)
 
         if hasattr(module, control):  # Check if variable exists
-            return getattr(module, control)
+            retval: MetsiControl = getattr(module, control)
+            cfg = retval.app_configuration
+            if "input_path" in cli_arguments:
+                cfg.input_path = cli_arguments["input_path"]
+            if "target_directory" in cli_arguments:
+                cfg.target_directory = cli_arguments["target_directory"]
+            return retval
         raise AttributeError(f"Variable '{control}' not found in {config_path}")
     raise ImportError(f"Could not load control module from {config_path}")
 

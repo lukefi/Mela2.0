@@ -47,7 +47,10 @@ def filter_stands(stands: StandList,
     return stands
 
 
-def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+def filter_trees(stands: StandList,
+                 *,
+                 predicate: Callable[[ForestStand],
+                                     npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter reference trees for each stand in list based on given predicate.
 
     Args:
@@ -58,6 +61,7 @@ def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.ND
     Returns:
         StandList: the list of stands with the trees filtered (also modified in-place)
     """
+    assert predicate is not None
     stands = filter_trees_(stands, predicate)
     return stands
 
@@ -126,7 +130,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
-def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
+def generate_reference_trees(stands: StandList, /, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
     # oletusarvo true vai false?
@@ -240,7 +244,7 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
+def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration | None = None) -> StandList:
     """Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
        for NFI iterations 12 and up, forestry centre for earlier.
        NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
@@ -252,6 +256,8 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     Returns:
         StandList: updated stands
     """
+
+    assert nfi_iteration is not None
 
     county = stands[0].region
     if county == 19 and stands[1].municipality_id in (47, 148, 890):
@@ -405,7 +411,7 @@ def update_strata_to_match_trees(stands: StandList, **operation_params) -> Stand
     return stands
 
 
-def scale_area_weight(stands: StandList, **operation_params):
+def scale_area_weight(stands: StandList, /, **operation_params):
     """ Scales area weight of a stand.
 
         Especially necessary for VMI tree generation cases.
