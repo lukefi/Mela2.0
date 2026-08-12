@@ -1,8 +1,10 @@
+from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_trees, generate_reference_trees, filter_stands, scale_area_weight
 from lukefi.metsi.sim.instructions import UpdatingInstructions
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
+from lukefi.metsi.sim.transition import Transition
 
 
 control_structure = {
@@ -39,10 +41,11 @@ control_structure = {
         ]
     },
     "updating": UpdatingInstructions(
-        2026,
-        grow_acta_fn,
-        output_transition_state=True,
-        output_transition_cd=True,
+        target_time=2026,
+        transition=Transition(grow_acta_fn,
+                              db_output_state=True,
+                              db_output_cd=True,
+                              collected_data={NaturalProcessInfo}),
         output_treatment_state=True,
         output_treatment_cd=True
     ),

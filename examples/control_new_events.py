@@ -34,7 +34,7 @@ control_structure = {
             events=[Mounding()]
         ),
     ],
-    "transition": Transition(grow_motti_dll_fn, db_output=False),
+    "transition": Transition(grow_motti_dll_fn, db_output_state=False, db_output_cd=False),
     "end_condition": ForestCondition(lambda payload: payload.computational_unit.time > 2050)
 }
 

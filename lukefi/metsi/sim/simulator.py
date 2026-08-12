@@ -29,6 +29,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
 
         if db is not None:
             # Write initial state to database
+            payload.computational_unit.output_initial_state_to_db(db)
             output_node_to_db(db,
                               payload.node_id,
                               "do_nothing",

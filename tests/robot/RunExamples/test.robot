@@ -71,3 +71,10 @@ VMI13 tree generation example should run
     ...    ${INPUT_DIR}/VMI13_source_mini.dat
     ...    ${OUT_DIR}/vmi13_tree_generation
     ...    ${EXAMPLES_DIR}/vmi13_gen_trees.py
+
+Resimulation example should run
+    [Tags]    resimulation
+    Run Simulation
+    ...    ${INPUT_DIR}/simulation_results.db
+    ...    ${OUT_DIR}/resimulation
+    ...    ${EXAMPLES_DIR}/control_resimulation.py

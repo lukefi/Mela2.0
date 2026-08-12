@@ -1,3 +1,4 @@
+import ast
 from copy import copy
 import dataclasses
 from functools import lru_cache
@@ -231,7 +232,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     Whether the stand contains an over storey.
     """
 
-    sqlite_decl: Optional[dict] = None
+    sqlite_decl: Optional[dict[str, list[str]]] = None
     """
     Declarations for SQLite output database columns.
     """
@@ -466,6 +467,104 @@ class ForestStand(Finalizable, ComputationalUnit):
             f"VALUES({', '.join(['?'] * (len(cols) + 3))})"
 
     @override
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        cur = db.cursor()
+        cur.execute(
+            """--sql
+                INSERT INTO initial_stands
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
+            """,
+            (
+                self.identifier,
+                self.year,
+                self.stand_id,
+                self.area,
+                self.area_weight,
+                str(
+                    (
+                        float(self.geo_location[0]) if self.geo_location[0] is not None else None,
+                        float(self.geo_location[1]) if self.geo_location[1] is not None else None,
+                        float(self.geo_location[2]) if self.geo_location[2] is not None else None,
+                        self.geo_location[3]
+                    )
+                ) if self.geo_location is not None else None,
+                self.degree_days,
+                self.owner_category,
+                self.land_use_category,
+                self.soil_peatland_category,
+                self.site_type_category,
+                self.tax_class_reduction,
+                self.tax_class,
+                self.drainage_category,
+                self.drainage_year,
+                self.fertilization_year,
+                self.soil_surface_preparation_year,
+                self.regeneration_area_cleaning_year,
+                self.development_class,
+                self.artificial_regeneration_year,
+                self.young_stand_tending_year,
+                self.cutting_year,
+                self.forestry_centre_id,
+                self.forest_management_category,
+                self.method_of_last_cutting,
+                self.municipality_id,
+                self.ds_main_tree_species_biological_age,
+                str(self.area_weight_factors),
+                self.fra_category,
+                self.auxiliary_stand,
+                self.sea_effect,
+                self.lake_effect,
+                self.basal_area,
+                self.main_tree_species_dominant_storey,
+                self.ds_dominant_height,
+                self.region,
+                self.peatland_type,
+                self.drained_peatland_type,
+                self.under_storey,
+                self.over_storey
+            )
+        )
+
+        trees = self.reference_trees
+        cur.executemany(
+            """--sql
+                INSERT INTO initial_trees
+                VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                );
+            """,
+            (
+                (
+                    trees.identifier[i],
+                    self.identifier,
+                    int(trees.tree_number[i]),
+                    int(trees.species[i]),
+                    trees.breast_height_diameter[i],
+                    trees.height[i],
+                    trees.measured_height[i],
+                    trees.breast_height_age[i],
+                    trees.biological_age[i],
+                    trees.stems_per_ha[i],
+                    int(trees.origin[i]),
+                    int(trees.management_category[i]),
+                    trees.tree_category[i],
+                    int(trees.storey[i]),
+                    int(trees.sapling[i]),
+                    trees.tree_type[i],
+                    trees.damage_type[i],
+                    trees.crown_class[i],
+                    trees.basal_area[i],
+                    trees.volume[i],
+                    int(trees.stratum[i])
+                )
+                for i in range(trees.size)
+            )
+        )
+
+    @override
     def output_to_db(self, db: sqlite3.Connection, node: str):
         cur = db.cursor()
 
@@ -553,6 +652,149 @@ class ForestStand(Finalizable, ComputationalUnit):
         denominator = min(100, sorted_cum_stems[i_100_largest])
 
         return (numerator_1 + numerator_2) / denominator
+
+    @classmethod
+    @override
+    def reconstruct_initial_state(cls, identifier: str, db: sqlite3.Connection) -> "ForestStand":
+        cur = db.cursor()
+        cur.row_factory = sqlite3.Row
+        cur.execute(
+            """--sql
+                SELECT * FROM initial_stands
+                WHERE
+                    identifier = ?;
+            """,
+            (
+                identifier,
+            )
+        )
+        stand_row = cur.fetchone()
+
+        cur.row_factory = None
+        cur.execute(
+            """--sql
+                SELECT COUNT(*) FROM initial_trees
+                WHERE
+                    stand = ?;
+            """,
+            (
+                identifier,
+            )
+        )
+        tree_count = cur.fetchone()[0]
+        trees = ReferenceTrees()
+        trees.size = tree_count
+
+        trees.identifier = np.array(_fetch_initial_trees_col(identifier, "identifier", cur), dtype=np.dtype("U30"))
+        trees.tree_number = np.array(_fetch_initial_trees_col(identifier, "tree_number", cur), dtype=np.int32)
+        trees.species = np.array(_fetch_initial_trees_col(identifier, "species", cur), dtype=np.int32)
+        trees.breast_height_diameter = np.array(_fetch_initial_trees_col(
+            identifier, "breast_height_diameter", cur), dtype=np.float64)
+        trees.height = np.array(_fetch_initial_trees_col(identifier, "height", cur), dtype=np.float64)
+        trees.measured_height = np.array(_fetch_initial_trees_col(identifier, "measured_height", cur), dtype=np.float64)
+        trees.breast_height_age = np.array(_fetch_initial_trees_col(
+            identifier, "breast_height_age", cur), dtype=np.float64)
+        trees.biological_age = np.array(_fetch_initial_trees_col(identifier, "biological_age", cur), dtype=np.float64)
+        trees.stems_per_ha = np.array(_fetch_initial_trees_col(identifier, "stems_per_ha", cur), dtype=np.float64)
+        trees.origin = np.array(_fetch_initial_trees_col(identifier, "origin", cur), dtype=np.int32)
+        trees.management_category = np.array(_fetch_initial_trees_col(
+            identifier, "management_category", cur), dtype=np.int32)
+        trees.tree_category = np.array(_fetch_initial_trees_col(identifier, "tree_category", cur), dtype=np.dtype("U1"))
+        trees.storey = np.array(_fetch_initial_trees_col(identifier, "storey", cur), dtype=np.int32)
+        trees.sapling = np.array(_fetch_initial_trees_col(identifier, "sapling", cur), dtype=np.bool_)
+        trees.tree_type = np.array(_fetch_initial_trees_col(identifier, "tree_type", cur), dtype=np.dtype("U1"))
+        trees.damage_type = np.array(_fetch_initial_trees_col(identifier, "damage_type", cur), dtype=np.dtype("U2"))
+        trees.crown_class = np.array(_fetch_initial_trees_col(identifier, "crown_class", cur), dtype=np.dtype("U1"))
+        trees.basal_area = np.array(_fetch_initial_trees_col(identifier, "basal_area", cur), dtype=np.float64)
+        trees.volume = np.array(_fetch_initial_trees_col(identifier, "volume", cur), dtype=np.float64)
+        trees.stratum = np.array(_fetch_initial_trees_col(identifier, "stratum", cur), dtype=np.int32)
+
+        assert len(trees.identifier) == trees.size
+        assert len(trees.tree_number) == trees.size
+        assert len(trees.species) == trees.size
+        assert len(trees.breast_height_diameter) == trees.size
+        assert len(trees.height) == trees.size
+        assert len(trees.measured_height) == trees.size
+        assert len(trees.breast_height_age) == trees.size
+        assert len(trees.biological_age) == trees.size
+        assert len(trees.stems_per_ha) == trees.size
+        assert len(trees.origin) == trees.size
+        assert len(trees.management_category) == trees.size
+        assert len(trees.tree_category) == trees.size
+        assert len(trees.storey) == trees.size
+        assert len(trees.sapling) == trees.size
+        assert len(trees.tree_type) == trees.size
+        assert len(trees.damage_type) == trees.size
+        assert len(trees.crown_class) == trees.size
+        assert len(trees.basal_area) == trees.size
+        assert len(trees.volume) == trees.size
+        assert len(trees.stratum) == trees.size
+
+        retval = ForestStand(
+            reference_trees=trees,
+            tree_strata=TreeStrata(),
+            motti_state=None,
+            time=stand_row["year"],
+            start_time=stand_row["year"],
+            identifier=stand_row["identifier"],
+            stand_id=stand_row["stand_id"],
+            area=stand_row["area"],
+            area_weight=stand_row["area_weight"],
+            geo_location=_parse_geo_location(stand_row["geo_location"]),
+            degree_days=stand_row["degree_days"],
+            owner_category=conv(stand_row["owner_category"], OwnerCategory),
+            soil_peatland_category=conv(stand_row["soil_peatland_category"], SoilPeatlandCategory),
+            site_type_category=conv(stand_row["site_type_category"], SiteType),
+            tax_class_reduction=stand_row["tax_class_reduction"],
+            tax_class=stand_row["tax_class"],
+            drainage_category=conv(stand_row["drainage_category"], DrainageCategory),
+            drainage_year=stand_row["drainage_year"],
+            fertilization_year=stand_row["fertilization_year"],
+            soil_surface_preparation_year=stand_row["soil_surface_preparation_year"],
+            regeneration_area_cleaning_year=stand_row["regeneration_area_cleaning_year"],
+            development_class=conv(stand_row["development_class"], DevelopmentClass),
+            artificial_regeneration_year=stand_row["artificial_regeneration_year"],
+            young_stand_tending_year=stand_row["young_stand_tending_year"],
+            cutting_year=stand_row["cutting_year"],
+            forestry_centre_id=stand_row["forestry_centre_id"],
+            forest_management_category=stand_row["forest_management_category"],
+            method_of_last_cutting=conv(stand_row["method_of_last_cutting"], CuttingMethod),
+            municipality_id=stand_row["municipality_id"],
+            ds_main_tree_species_biological_age=stand_row["ds_main_tree_species_biological_age"],
+            area_weight_factors=stand_row["area_weight_factors"],
+            fra_category=conv(stand_row["fra_category"], FraLandUseClass),
+            auxiliary_stand=bool(stand_row["auxiliary_stand"]),
+            sea_effect=stand_row["sea_effect"],
+            lake_effect=stand_row["lake_effect"],
+            basal_area=stand_row["basal_area"],
+            main_tree_species_dominant_storey=conv(stand_row["main_tree_species_dominant_storey"], TreeSpecies),
+            ds_dominant_height=stand_row["ds_dominant_height"],
+            region=stand_row["region"],
+            peatland_type=conv(stand_row["peatland_type"], PeatlandForestType),
+            drained_peatland_type=conv(stand_row["drained_peatland_type"], DrainedPeatlandForestType),
+            under_storey=bool(stand_row["under_storey"]),
+            over_storey=bool(stand_row["over_storey"])
+        )
+
+        return retval
+
+
+def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
+    return ast.literal_eval(src)
+
+
+def _fetch_initial_trees_col(stand: str, col: str, cur: sqlite3.Cursor) -> list[Any]:
+    cur.execute(
+        f"""--sql
+            SELECT {col} FROM initial_trees
+            WHERE
+                stand = ?;
+        """,
+        (
+            stand,
+        )
+    )
+    return [row[0] for row in cur.fetchall()]
 
 
 def stand_as_internal_csv_row(stand: ForestStand, decl_keys: Optional[list[str]] = None) -> list[str]:
