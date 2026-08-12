@@ -92,3 +92,9 @@ Optional generator example should run
     ...    ${INPUT_DIR}/VMI13_source_mini.dat
     ...    ${OUT_DIR}/optional_generator
     ...    ${EXAMPLES_DIR}/optional_generator.py
+Resimulation example should run
+    [Tags]    resimulation
+    Run Simulation
+    ...    ${INPUT_DIR}/simulation_results.db
+    ...    ${OUT_DIR}/resimulation
+    ...    ${EXAMPLES_DIR}/control_resimulation.py

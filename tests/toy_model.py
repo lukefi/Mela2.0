@@ -1,5 +1,7 @@
 from sqlite3 import Connection
+import sqlite3
 from typing import override
+from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
 from lukefi.metsi.sim.transition import Transition
@@ -35,11 +37,16 @@ class ToyModel(ComputationalUnit):
     def update_aggregates(self):
         pass
 
+    @override
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        _ = db
+        pass
+
     @staticmethod
     def init_db_tables(db: Connection):
         cur = db.cursor()
         cur.execute(
-        """--sql
+            """--sql
             CREATE TABLE nodes(
                 identifier TEXT,
                 stand TEXT,
@@ -63,6 +70,12 @@ class ToyModel(ComputationalUnit):
             """
         )
 
+    @classmethod
+    @override
+    def reconstruct_initial_state(cls, identifier: str, db: sqlite3.Connection) -> "ToyModel":
+        _ = identifier
+        _ = db
+        raise MetsiException("reconstruct_initial_state not implemented for ToyModel")
 
 class ToyTransition(Transition[ToyModel]):
     def __init__(self, max_step: int = 1, **parameters):

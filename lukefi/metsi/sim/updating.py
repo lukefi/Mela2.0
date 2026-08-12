@@ -2,7 +2,6 @@ import sqlite3
 from typing import Sequence
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
 from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
 from lukefi.metsi.sim.sim_control import Updating
@@ -16,8 +15,6 @@ def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
                                                                                       CollectableDataTypes | None]:
     target_time = updating_instructions.target_time
     transition = updating_instructions.transition
-    output_transition_state = updating_instructions.output_transition_state
-    output_transition_cd = updating_instructions.output_transition_cd
     output_treatment_state = updating_instructions.output_treatment_state
     output_treatment_cd = updating_instructions.output_treatment_cd
     cd_types: CollectableDataTypes | None = None
@@ -56,26 +53,28 @@ def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
                     )
 
             if step > 0:
-                current.computational_unit, cd = transition(current.computational_unit, step)
+                # TODO: This is a bit of a hack. DB stuff should be refactored.
+                current.computational_unit, cd = transition(current, None, step)
                 current.computational_unit.update_aggregates()
                 if db is not None:
                     output_node_to_db(
                         db,
                         current.node_id,
-                        transition.__name__,
+                        transition.name,
                         {},
                         current.computational_unit,
                         cd,
                         tags=None,
-                        output_state=output_transition_state,
-                        output_collected_data=output_transition_cd,
+                        output_state=transition.db_output_state,
+                        output_collected_data=transition.db_output_cd,
                         transition_count=1,
                         node_type=NodeType.UPDATING_TRANSITION
                     )
             else:
                 keep_running = False
 
-        # TODO: delete current.comptutaional_unit.predetermined_treatments?
+        # Drop performed treatments
+        current.computational_unit.predetermined_treatments = None
 
         # Update starting time for relative timepoints
         current.computational_unit.start_time = current.computational_unit.time
@@ -91,8 +90,8 @@ def _get_collected_data_types[T: ComputationalUnit](
         units: Sequence[T],
         updating_instructions: Updating) -> CollectableDataTypes:
 
-    if updating_instructions.output_transition_cd:
-        retval: CollectableDataTypes = {NaturalProcessInfo}
+    if updating_instructions.transition.db_output_cd:
+        retval = updating_instructions.transition.collected_data
     else:
         retval = set()
 

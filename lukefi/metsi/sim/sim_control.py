@@ -8,7 +8,8 @@ from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
 from lukefi.metsi.sim.condition import Condition
 from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.transition import Transition, TransitionFn
+from lukefi.metsi.sim.transition import Transition
+from lukefi.metsi.sim.treatment import TreatmentFn
 
 
 @dataclass
@@ -73,25 +74,50 @@ class Preprocessing[T:ComputationalUnit]:
 @dataclass
 class Updating[T: ComputationalUnit]:
     target_time: int
-    transition: TransitionFn[T]
+    transition: Transition[T]
 
-    output_transition_state: bool
-    output_transition_cd: bool
     output_treatment_state: bool
     output_treatment_cd: bool
 
     def __init__(self,
                  target_time: int,
-                 transition: TransitionFn[T],
+                 transition: Transition[T],
                  *,
-                 output_transition_state: bool = True,
-                 output_transition_cd: bool = True,
                  output_treatment_state: bool = True,
                  output_treatment_cd: bool = True) -> None:
         self.target_time = target_time
         self.transition = transition
-        self.output_transition_state = output_transition_state
-        self.output_transition_cd = output_transition_cd
+        self.output_treatment_state = output_treatment_state
+        self.output_treatment_cd = output_treatment_cd
+
+
+@dataclass
+class Resimulation[T: ComputationalUnit]:
+    transition: Transition[T]
+    selected_schedules_file: str
+    treatment_map: dict[str, TreatmentFn[T]]
+    collected_data: CollectableDataTypes
+    output_treatment_state: bool
+    output_treatment_cd: bool
+
+    def __init__(self,
+                 transition: Transition[T],
+                 schedules_file: str,
+                 *,
+                 treatment_map: dict[str, TreatmentFn[T]] | None = None,
+                 collected_data: CollectableDataTypes | None = None,
+                 output_treatment_state: bool = True,
+                 output_treatment_cd: bool = True) -> None:
+        self.transition = transition
+        self.schedules_file = schedules_file
+        if treatment_map is None:
+            self.treatment_map = {}
+        else:
+            self.treatment_map = treatment_map
+        if collected_data is None:
+            self.collected_data = set()
+        else:
+            self.collected_data = collected_data
         self.output_treatment_state = output_treatment_state
         self.output_treatment_cd = output_treatment_cd
 
@@ -127,3 +153,4 @@ class MetsiControl[T: ComputationalUnit]:
     updating: Updating | None = None
     export_prepro: dict[str, dict[str, Any]] | None = None
     simulation: Simulation[T] | None = None
+    resimulation: Resimulation[T] | None = None

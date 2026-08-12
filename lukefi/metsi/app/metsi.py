@@ -18,7 +18,8 @@ from lukefi.metsi.app.file_io import (
     read_control_module)
 from lukefi.metsi.domain.utils.file_io import create_database_tables
 from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.sim_control import MetsiControl
+from lukefi.metsi.sim.resimulation import resimulate_schedules
+from lukefi.metsi.sim.sim_control import MetsiControl, Resimulation
 from lukefi.metsi.sim.simulation_payload import SimulationPayload
 from lukefi.metsi.sim.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
@@ -69,6 +70,17 @@ def _simulate(control: MetsiControl[ForestStand],
     raise MetsiException("Declaration for 'simulation' not found from control.")
 
 
+def _resimulate(control: MetsiControl[ForestStand],
+                in_db: sqlite3.Connection,
+                out_db: sqlite3.Connection) -> None:
+    resimulation_instructions: Resimulation[ForestStand] | None = control.resimulation
+    if resimulation_instructions is not None:
+        print_logline("Resimulating schedules...")
+        return resimulate_schedules(resimulation_instructions, in_db, out_db, ForestStand)
+
+    raise MetsiException("Declaration for 'resimulation' not found from control")
+
+
 def main() -> int:
     cli_arguments = parse_cli_arguments(sys.argv[1:])
     force_delete = bool(cli_arguments.pop("delete", False))
@@ -84,6 +96,7 @@ def main() -> int:
     prepare_target_directory(app_config.target_directory)
 
     print_logline("Reading input...")
+
     should_continue = delete_existing_export_files(
         target_directory=app_config.target_directory,
         export_prepro=control.export_prepro,
@@ -95,19 +108,21 @@ def main() -> int:
     if not should_continue:
         return 0
 
-    db: sqlite3.Connection | None = None
+    out_db: sqlite3.Connection | None = None
 
-    if RunMode.SIMULATE in app_config.run_modes or RunMode.UPDATE in app_config.run_modes:
+    if any(run_mode in app_config.run_modes for run_mode in [RunMode.UPDATE, RunMode.SIMULATE, RunMode.RESIMULATE]):
         print_logline("Initializing output database")
         db_base = app_config.simulation_output_file or "simulation_results"
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
-        db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
+        out_db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
         sqlite_decl = app_config.sqlite_decl
-        create_database_tables(db, sqlite_decl=sqlite_decl)
+        create_database_tables(out_db, sqlite_decl=sqlite_decl)
         ForestStand.set_sqlite_decl(sqlite_decl)
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:
         input_data = read_stands_from_file(app_config, control.conversions or {})
+    elif app_config.run_modes[0] == RunMode.RESIMULATE:
+        input_data = []
     else:
         raise MetsiException("Can not determine input data for unknown run mode")
 
@@ -119,15 +134,20 @@ def main() -> int:
     if RunMode.PREPROCESS in app_config.run_modes:
         current = _preprocess(control, cast(list[ForestStand], current))
     if RunMode.UPDATE in app_config.run_modes:
-        current, cd_types_from_updating = _update(control, cast(list[ForestStand], current), db)
+        current, cd_types_from_updating = _update(control, cast(list[ForestStand], current), out_db)
     if RunMode.EXPORT_PREPRO in app_config.run_modes:
         _export_prepro(control, current)
     if RunMode.SIMULATE in app_config.run_modes:
-        _simulate(control, current, db, cd_types_from_updating)
+        _simulate(control, current, out_db, cd_types_from_updating)
 
-    if db is not None:
-        db.commit()
-        db.close()
+    if RunMode.RESIMULATE in app_config.run_modes:
+        assert out_db is not None
+        with sqlite3.connect(app_config.input_path) as in_db:
+            _resimulate(control, in_db, out_db)
+
+    if out_db is not None:
+        out_db.commit()
+        out_db.close()
 
     _, dirs, files = next(os.walk(app_config.target_directory))
     if len(dirs) == 0 and len(files) == 0:

@@ -64,7 +64,8 @@ control_structure = MetsiControl[ForestStand](
         transition=Transition(
             grow_motti_dll_fn,
             max_step=5,
-            db_output=False,
+            db_output_state=False,
+            db_output_cd=False,
             init_fn=initialize_motti
         ),
         end_condition=Condition[ForestStand](lambda x: x.computational_unit.year > 2030)

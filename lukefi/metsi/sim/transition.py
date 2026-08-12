@@ -17,7 +17,6 @@ class Transition[T: ComputationalUnit]:
     init_fn: TransitionInitFn[T] | None
     name: str
     collected_data: CollectableDataTypes
-    db_output: bool
     db_output_state: bool
     db_output_cd: bool
     max_step: int
@@ -28,7 +27,6 @@ class Transition[T: ComputationalUnit]:
         max_step: int = 5,
         collected_data: Optional[CollectableDataTypes] = None,
         name: Optional[str] = None,
-        db_output: bool = True,
         db_output_state: bool = False,
         db_output_cd: bool = True,
         *,
@@ -39,7 +37,6 @@ class Transition[T: ComputationalUnit]:
         self.max_step = max_step
         self.parameters = parameters
         self.init_fn = init_fn
-        self.db_output = db_output
         self.db_output_state = db_output_state
         self.db_output_cd = db_output_cd
 
@@ -66,7 +63,7 @@ class Transition[T: ComputationalUnit]:
             time_step = min(time_step, self.max_step)
         new_state, collected_data = self.transition_fn(payload.computational_unit, time_step, **self.parameters)
 
-        if db is not None and self.db_output:
+        if db is not None and (self.db_output_state or self.db_output_cd):
             output_node_to_db(db,
                               payload.node_id,
                               self.name,

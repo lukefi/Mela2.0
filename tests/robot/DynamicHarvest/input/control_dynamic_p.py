@@ -71,8 +71,7 @@ control_structure = MetsiControl[ForestStand](
                     ])
                 ])
         ],
-        transition=Transition(grow_acta_fn, 5, db_output=False),
+        transition=Transition(grow_acta_fn, 5, db_output_state=False, db_output_cd=False),
         end_condition=ForestCondition(lambda x: x.computational_unit.relative_time > 30),
-
     )
 )
