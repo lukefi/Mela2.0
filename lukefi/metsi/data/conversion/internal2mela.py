@@ -17,6 +17,7 @@ from lukefi.metsi.data.enums.mela import (
     MelaDrainageCategory
 )
 from lukefi.metsi.data.enums.internal import (
+    CRS,
     Origin,
     SiteType,
     SoilPeatlandCategory,
@@ -216,9 +217,9 @@ def stand_location_converter(target):
     in-place conversion of ForestStand geolocation to kilometer precision,
     and to YKJ/KKJ3 with band prefix 3 removed for EPSG:2393
     """
-    if target.geo_location[3] == 'EPSG:3067':
+    if target.geo_location[3] == CRS.EPSG_3067:
         lat, lon = (target.geo_location[0] / 1000, target.geo_location[1] / 1000)
-    elif target.geo_location[3] == 'EPSG:2393':
+    elif target.geo_location[3] == CRS.EPSG_2393:
         lat, lon = (target.geo_location[0] / 1000, target.geo_location[1] / 1000 - 3000)
     else:
         raise MetsiException(f"Unsupported CRS {target.geo_location[3]} for stand {target.identifier}")

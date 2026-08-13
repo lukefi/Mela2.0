@@ -324,8 +324,7 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
     return out
 
 
-def _init_motti_state(stand: ForestStand,
-                      sim_year: int) -> MottiState:
+def _init_motti_state(stand: ForestStand) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
     spedom = _spedom(stand.reference_trees)
@@ -378,7 +377,7 @@ def _init_motti_state(stand: ForestStand,
                    if stand.drainage_year is not None
                    else -9999),
         alr=stand.soil_peatland_category.value if stand.soil_peatland_category is not None else 0,
-        year=sim_year - stand.start_year,
+        year=stand.year - stand.start_year,
         spedom=spedom,  # OK
         spedom2=spedom,  # OK pääpuulajimetsikkö
         nstorey=1.0,
@@ -470,7 +469,7 @@ def _init_motti_state(stand: ForestStand,
 def initialize_motti(stand: ForestStand, **_: dict[str, Any]) -> None:
     """ Initialize MottiState for forest stand if missing. Does nothing if already initialized. """
     if stand.motti_state is None:
-        stand.motti_state = _init_motti_state(stand, sim_year=int(stand.year))
+        stand.motti_state = _init_motti_state(stand)
         motti_util.reconcile_reference_trees_from_motti(stand, init_mode=True)
 
 

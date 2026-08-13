@@ -9,6 +9,7 @@ import numpy as np
 from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (
+    CRS,
     CuttingMethod,
     DevelopmentClass,
     FraLandUseClass,
@@ -70,8 +71,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Area weight for growing stock [ha].
     """
-
-    geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[str]]] = None
+    geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[CRS]]] = None
     """
     Latitude, longitude, height above sea level [m] and coordinate reference system (CRS).
     """
@@ -279,7 +279,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.area_weight = area_ha
 
     def set_geo_location(self, lat: Optional[float], lon: Optional[float],
-                         height: Optional[float], system: str = "EPSG:3067"):
+                         height: Optional[float], system: CRS = CRS.EPSG_3067):
         if not lat or not lon:
             raise ValueError("Invalid source values for geo location")
         self.geo_location = (lat, lon, height, system)
@@ -309,7 +309,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             conv(row[3], float),
             conv(row[4], float),
             conv(row[5], float),
-            conv(row[6], str)
+            conv(row[6], CRS)
         )
         self.degree_days = conv(row[7], float)
         self.owner_category = conv(row[8], OwnerCategory)

@@ -55,8 +55,9 @@ def convert_str_to_type[T:(int,
                            SiteType,
                            DrainageCategory,
                            TreeSpecies,
-                           FraLandUseClass)](value: str,
-                                             ret_type: type[T]) -> Optional[T]:
+                           FraLandUseClass,
+                           CRS)](value: str,
+                                 ret_type: type[T]) -> Optional[T]:
     if value == "None":
         return None
     if issubclass(ret_type, IntEnum):
