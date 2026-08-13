@@ -1,6 +1,9 @@
-from lukefi.metsi.domain.exp_ops import *
+from typing import Any
 
-default = {}  # Empty dict declares a default output content
+from lukefi.metsi.domain.exp_ops import classify_values_to, prepare_rst_output
+
+
+default: dict[str, Any] = {}  # Empty dict declares a default output content
 
 mela_decl = {
     'operations': [prepare_rst_output, classify_values_to],

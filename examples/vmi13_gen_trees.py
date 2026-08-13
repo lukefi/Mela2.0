@@ -3,8 +3,7 @@
 from examples.declarations.export_prepro import default_csv
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.domain.pre_ops import *
-from lukefi.metsi.sim.generators import *
+from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing
 
 control_structure = MetsiControl[ForestStand](
