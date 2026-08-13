@@ -4,7 +4,7 @@ import sqlite3
 from typing import Optional, Sequence, cast
 
 from lukefi.metsi.app.metsi_enum import RunMode
-from lukefi.metsi.app.preprocessor import (
+from lukefi.metsi.core.preprocessor import (
     preprocess_units
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments
