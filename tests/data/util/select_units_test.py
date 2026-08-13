@@ -16,7 +16,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeType)
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import (
+from lukefi.metsi.core.select_units import (
     Mode,
     ProfileXMode,
     SelectionSet,

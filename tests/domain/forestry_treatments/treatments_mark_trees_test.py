@@ -5,7 +5,7 @@ import numpy as np
 
 from lukefi.metsi.data.enums.internal import TreeManagementCategory, TreeType
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.core.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees_fn
 from lukefi.metsi.core.exceptions import MetsiException
