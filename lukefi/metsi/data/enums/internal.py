@@ -376,3 +376,19 @@ class CrownClass(StrEnum):
 class RegenerationType(StrEnum):
     ARTIFICIAL = "artificial"
     NATURAL = "natural"
+
+
+EPSG_3067_ALIASES = {"EPSG:3067", "ERTS-TM35", "ETRS-TM35FIN"}
+EPSG_2393_ALIASES = {"EPSG:2393", "YKJ"}
+class CRS(StrEnum):
+    UNSET = ""
+    EPSG_3067 = "EPSG:3067"
+    EPSG_2393 = "EPSG:2393"
+
+    @classmethod
+    def _missing_(cls, value):
+        if value in EPSG_3067_ALIASES:
+            return cls.EPSG_3067
+        if value in EPSG_2393_ALIASES:
+            return cls.EPSG_2393
+        return None # raises ValueError by nature

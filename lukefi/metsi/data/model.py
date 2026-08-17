@@ -1,5 +1,6 @@
 from copy import copy
 import dataclasses
+from enum import Enum
 from functools import lru_cache
 import sqlite3
 from typing import Optional, override
@@ -349,10 +350,14 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     @staticmethod
     def _sql_value(v):
-        if isinstance(v, (np.generic,)):
+        if isinstance(v, Enum):
+            return repr(v.value)
+        if isinstance(v, np.generic):
             return v.item()
-        if isinstance(v, (tuple, list, np.ndarray)):
+        if isinstance(v, (list, np.ndarray)):
             return str(v)
+        if isinstance(v, tuple):
+            return f'({", ".join(str(ForestStand._sql_value(x)) for x in v)})'
         return v
 
     @classmethod

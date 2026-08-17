@@ -1,6 +1,7 @@
 from enum import IntEnum
 from typing import Optional, Any, Union
 from lukefi.metsi.data.enums.internal import (
+    CRS,
     DrainageCategory,
     FraLandUseClass,
     LandUseCategory,
