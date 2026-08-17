@@ -80,7 +80,8 @@ control_structure = MetsiControl[ForestStand](
             ],
             filter_trees: [
                 {
-                    "predicate": lambda stand: ~(stand.reference_trees.sapling | (stand.reference_trees.stems_per_ha == 0))
+                    "predicate": lambda stand: (~(stand.reference_trees.sapling |
+                                                  (stand.reference_trees.stems_per_ha == 0)))
                 }
             ],
         }),
