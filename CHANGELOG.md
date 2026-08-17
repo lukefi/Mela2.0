@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.1] - 2026-08-17
+
+### Changed
+
+- Run mode validation now checks that resimulation is not run together with other modes
+
 ## [1.0.0] - 2026-08-12
 
 ### Changed

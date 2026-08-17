@@ -60,6 +60,8 @@ class AppConfiguration:
         if RunMode.EXPORT_PREPRO in self.run_modes and (
                 RunMode.PREPROCESS not in self.run_modes and RunMode.UPDATE not in self.run_modes):
             raise ConfigurationException("Run mode EXPORT_PREPRO cannot be without PREPROCESS or UPDATE")
+        if RunMode.RESIMULATE in self.run_modes and len(self.run_modes) > 1:
+            raise ConfigurationException("Resimulation run mode cannot be used with other run modes")
 
 
 type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
