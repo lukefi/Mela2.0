@@ -36,6 +36,9 @@ class VMI9Builder(VMIBuilder):
                 stand_identifier = vmi_util.generate_stand_identifier(tree_row)
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
 
+        if len(self.stand_rows) == 0:
+            raise MetsiException("Source data did not contain any valid VMI9 stand rows")
+
     @staticmethod
     def _classify_row(row: str) -> RowKind:
         row_type = row[VMI9_STAND_COMMON["row_type"]]
