@@ -9,7 +9,7 @@ from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
 from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
 from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
 from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
-from lukefi.metsi.sim.utils import MetsiException
+from lukefi.metsi.sim.exceptions import MetsiException
 from tests.data.test_util import ForestBuilderTestBench
 from tests.data.snapshot_util import assert_snapshot, assert_file_snapshot
 
