@@ -1,9 +1,12 @@
 
+from pathlib import Path
 import unittest
 import os
 from functools import reduce
 import numpy as np
 
+from lukefi.metsi.app.file_io import xml_file_reader
+from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import (
     Origin,
     OwnerCategory,
@@ -282,3 +285,14 @@ class TestGeoPackageBuilder(unittest.TestCase):
 
         self.assertEqual(Storey.REMOTE, vec0.storey[0])
         self.assertEqual(Storey.REMOTE, vec0.storey[1])
+
+
+class TestBadSourceData(unittest.TestCase):
+
+    def test_xml_builder_should_fail_with_vmi(self):
+        reader = xml_file_reader(Path("tests", "data", "resources", "VMI13_source_mini.dat"))
+        self.assertRaises(Exception, XMLBuilder, {}, {}, reader)
+
+    def test_gpkg_builder_should_fail_with_vmi(self):
+        self.assertRaises(Exception, GeoPackageBuilder, {}, {}, str(Path(
+            "tests", "data", "resources", "VMI13_source_mini.dat")))

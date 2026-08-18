@@ -144,6 +144,9 @@ class XMLBuilder(ForestCentreBuilder):
             except Exception as e:
                 raise MetsiException(f"Parsing stand {estand} failed: {e}") from e
 
+        if len(stands) == 0:
+            raise MetsiException("Source data did not contain valid FC stand elements")
+
         return stands
 
 
@@ -191,6 +194,8 @@ class GeoPackageBuilder(ForestCentreBuilder):
         self.type_value = builder_flags['strata_origin'].value
         (self.stands,
          self.strata) = gpkg_util.read_geopackage(db_path, self.type_value)
+        if len(self.stands) == 0:
+            raise MetsiException("Source data did not contain any valid GPKG stands")
         self.declared_conversions = declared_conversions  # NOTE: not in use
 
     def convert_stand_entry(self, entry: Series) -> ForestStand:
