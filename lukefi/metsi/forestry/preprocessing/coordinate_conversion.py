@@ -112,7 +112,7 @@ def _convert_using_triangle_nb(triangles, point_map, ref_coords, x, y, input_is_
     return u, v
 
 
-def erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
+def _erts_tm35_to_ykj(u: float, v: float) -> tuple[float, float]:
 
     tri = _find_triangle_nb(
         _TRIANGLES, _POINT_MAP, _REF_COORDS,
@@ -149,7 +149,7 @@ def convert_location_to_ykj(
 
     if _is_erts(crs):
         new_crs = CRS.EPSG_2393
-        x, y = erts_tm35_to_ykj(latitude, longitude)
+        x, y = _erts_tm35_to_ykj(latitude, longitude)
         return (x, y, heigh_above_sea_level, new_crs)
 
     raise MetsiException(
@@ -158,4 +158,4 @@ def convert_location_to_ykj(
     )
 
 
-__all__ = ["convert_location_to_ykj", "erts_tm35_to_ykj"]
+__all__ = ["convert_location_to_ykj"]
