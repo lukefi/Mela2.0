@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.0] - 2026-08-19
+
+### Changed
+
+- Renamed the `sim` package to `core`
+- Moved domain independent base classes under `core`
+- Moved `select_units` under `core`
+- Made the preprocessor interface generic
+- Removed all domain dependencies from `core`
+- Changed classes to use `__slots__` where applicable
+
 ## [1.0.2] - 2026-08-18
 
 ### Changed
