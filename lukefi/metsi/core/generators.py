@@ -1,0 +1,282 @@
+from abc import ABC, abstractmethod
+from copy import copy, deepcopy
+import os
+import sqlite3
+from typing import Any, Generic, Mapping, TypeVar, override
+from typing import Sequence as Sequence_
+from collections.abc import Callable, Generator
+
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.db_utils import output_node_to_db
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.operations import do_nothing
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.treatment import Treatment
+
+T = TypeVar("T", bound=ComputationalUnit)
+
+
+class EventGeneratorBase(ABC, Generic[T]):
+    """
+    Shared abstract base class for Generator and Event types.
+    """
+
+    @abstractmethod
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
+        pass
+
+    @abstractmethod
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0
+                 ) -> Generator[SimulationPayload[T]]:
+        pass
+
+    def width(self) -> int:
+        return 1
+
+
+class EventGenerator(EventGeneratorBase[T], ABC):
+    """
+    Abstract base class for generator types.
+    """
+    __slots__ = ("children", )
+
+    children: Sequence_[EventGeneratorBase[T]]
+
+    def __init__(self, children: Sequence_[EventGeneratorBase]):
+        self.children = children
+
+    @override
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
+        retval = set()
+        for child in self.children:
+            retval.update(child.get_types_of_collected_data())
+        return retval
+
+
+class Sequence(EventGenerator[T]):
+    """
+    Generator for sequential events.
+    """
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0
+                 ) -> Generator[SimulationPayload[T]]:
+        def wrapper(inputs: Generator[SimulationPayload[T]],
+                    generator: EventGeneratorBase[T],
+                    node: int):
+            for parent in inputs:
+                yield from generator.evaluate(parent, db, node)
+
+        chain = (unit for unit in [payload])
+        for child in self.children:
+            chain = wrapper(chain, child, node)
+            node = 0
+
+        yield from chain
+
+
+class Alternatives(EventGenerator[T]):
+    """
+    Generator for branching events.
+    """
+
+    @override
+    def evaluate(self, payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
+        offset = 0
+        for child in self.children:
+            yield from child.evaluate(copy(payload), db, node + offset)
+            offset += child.width()
+
+    @override
+    def width(self) -> int:
+        return sum(child.width() for child in self.children)
+
+
+class First(EventGenerator[T]):
+    """
+    Generator for non-branching alternatives where only the first possible path is executed.
+    """
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        stop = False
+        for child in self.children:
+            gen = child.evaluate(payload, db, node)
+            for leaf in gen:
+                yield leaf
+                stop = True
+            if stop:
+                return
+
+
+class Optional(EventGenerator[T]):
+    """
+    Generator for continuing evaluation of child branches even if event conditions fail.
+    In such cases a `do_nothing` treatment is performed instead.
+    """
+
+    def __init__(self, child: EventGeneratorBase):
+        super().__init__(
+            [
+                First([
+                    child,
+                    Event(Treatment(do_nothing, "skip", {"skip"}))
+                ])
+            ]
+        )
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T], None, None]:
+        yield from self.children[0].evaluate(payload, db, node)
+
+
+class Event(EventGeneratorBase[T]):
+    """
+    Base class for events.
+    Contains conditions and parameters and the actual treatment function that operates on the simulation state.
+    """
+
+    __slots__ = ("treatment",
+                 "static_parameters",
+                 "dynamic_parameters",
+                 "file_parameters",
+                 "preconditions",
+                 "postconditions",
+                 "tags",
+                 "db_output")
+
+    treatment: Treatment[T]
+    static_parameters: dict[str, Any]
+    dynamic_parameters: Mapping[str, Callable[[T], Any]]
+    file_parameters: dict[str, str]
+    preconditions: list[Condition[T]]
+    postconditions: list[Condition[T]]
+    tags: set[str]
+    db_output: bool
+
+    def __init__(self,
+                 treatment: Treatment[T],
+                 static_parameters: dict[str, Any] | None = None,
+                 dynamic_parameters: Mapping[str, Callable[[T], Any]] | None = None,
+                 preconditions: list[Condition[T]] | None = None,
+                 postconditions: list[Condition[T]] | None = None,
+                 file_parameters: dict[str, str] | None = None,
+                 tags: set[str] | None = None,
+                 db_output: bool = True) -> None:
+        self.treatment = treatment
+
+        if static_parameters is not None:
+            self.static_parameters = static_parameters
+        else:
+            self.static_parameters = {}
+
+        if file_parameters is not None:
+            self._check_file_params(file_parameters)
+            self.static_parameters = self._merge_params(self.static_parameters, file_parameters)
+
+        self.dynamic_parameters = dynamic_parameters or {}
+
+        if preconditions is not None:
+            self.preconditions = preconditions
+        else:
+            self.preconditions = []
+
+        if postconditions is not None:
+            self.postconditions = postconditions
+        else:
+            self.postconditions = []
+
+        if tags is not None:
+            self.tags = tags
+        else:
+            self.tags = set()
+
+        self.db_output = db_output
+
+    @override
+    def evaluate(self,
+                 payload: SimulationPayload[T],
+                 db: sqlite3.Connection | None = None,
+                 node: int = 0) -> Generator[SimulationPayload[T]]:
+        for condition in self.preconditions:
+            if not condition(payload):
+                return
+
+        resolved_dynamic: dict[str, Any] = {
+            name: fn(payload.unit) for name, fn in self.dynamic_parameters.items()
+        }
+
+        combined_params = {**self.static_parameters, **resolved_dynamic}
+
+        new_state, new_collected_data = self.treatment(payload.unit, **combined_params)
+        new_state.update_aggregates()
+
+        new_payload = SimulationPayload(
+            computational_unit=new_state,
+            operation_history=payload.operation_history,
+            node_id=deepcopy(payload.node_id)
+        )
+
+        for condition in self.postconditions:
+            if not condition(new_payload):
+                return
+
+        new_payload.operation_history.append(
+            (
+                payload.unit.time,
+                self.treatment.name,
+                combined_params,
+                self.treatment.default_tags | self.tags
+            )
+        )
+
+        new_payload.node_id.append(node)
+        if db is not None and self.db_output:
+            output_node_to_db(
+                db,
+                new_payload.node_id,
+                self.treatment.name,
+                combined_params,
+                new_state,
+                new_collected_data,
+                self.tags | self.treatment.default_tags)
+
+        if isinstance(new_payload.unit, Finalizable):
+            new_payload.unit.finalize()
+
+        yield new_payload
+
+    @override
+    def get_types_of_collected_data(self) -> CollectableDataTypes:
+        return self.treatment.collected_data
+
+    @staticmethod
+    def _check_file_params(file_parameters: dict[str, str]):
+        for _, path in file_parameters.items():
+            if not os.path.isfile(path):
+                raise FileNotFoundError(f"file {path} defined in operation_file_params was not found")
+
+    @staticmethod
+    def _merge_params(static_params: dict[str, Any], file_params: dict[str, str]) -> dict[str, Any]:
+        common_keys = static_params.keys() & file_params.keys()
+        if common_keys:
+            raise MetsiException(
+                f"parameter(s) {common_keys} were defined both in 'parameters' and 'file_parameters' sections "
+                "in control.py. Please change the name of one of them.")
+        return static_params | file_params  # pipe is the merge operator

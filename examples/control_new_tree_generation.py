@@ -1,5 +1,6 @@
 import numpy as np
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import (
@@ -11,7 +12,7 @@ from lukefi.metsi.domain.pre_ops import (
     scale_basal_area_at_county_level,
     scale_trees_by_area_weight_factors,
     update_strata_to_match_trees)
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 
 control_structure = MetsiControl[ForestStand](
     app_configuration=AppConfiguration(

@@ -1,5 +1,7 @@
 from typing import Mapping, Any
-from lukefi.metsi.app.utils import MetsiException
+
+from lukefi.metsi.core.exceptions import MetsiException
+
 
 def req(params: Mapping[str, Any], name: str) -> Any:
     try:

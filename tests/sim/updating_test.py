@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import ANY, Mock, call
 
+from lukefi.metsi.core.sim_control import Updating
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_control import Updating
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
-from lukefi.metsi.sim.updating import get_step_and_treatments, update_units
+from lukefi.metsi.core.operations import do_nothing
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.treatment import PredeterminedTreatment
+from lukefi.metsi.core.updating import get_step_and_treatments, update_units
 
 
 class UpdatingTest(unittest.TestCase):

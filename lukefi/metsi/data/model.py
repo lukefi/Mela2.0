@@ -7,8 +7,6 @@ from typing import Optional, override, Any, cast
 from dataclasses import dataclass
 
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import (
     CuttingMethod,
     DevelopmentClass,
@@ -24,14 +22,93 @@ from lukefi.metsi.data.enums.internal import (
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.domain.utils.file_io import STANDS_TYPES, TREES_TYPES, STRATA_TYPES
 from lukefi.metsi.forestry.volume import tree_volumes
-from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.treatment import PredeterminedTreatment
+
+STANDS_TYPES = {
+    "year": "INTEGER",
+    "stand_id": "INTEGER",
+    "area": "REAL",
+    "area_weight": "REAL",
+    "geo_location": "TEXT",
+    "degree_days": "REAL",
+    "owner_category": "INTEGER",
+    "land_use_category": "INTEGER",
+    "soil_peatland_category": "INTEGER",
+    "site_type_category": "INTEGER",
+    "tax_class_reduction": "INTEGER",
+    "tax_class": "INTEGER",
+    "drainage_category": "INTEGER",
+    "drainage_year": "INTEGER",
+    "fertilization_year": "INTEGER",
+    "soil_surface_preparation_year": "INTEGER",
+    "regeneration_area_cleaning_year": "INTEGER",
+    "development_class": "INTEGER",
+    "artificial_regeneration_year": "INTEGER",
+    "young_stand_tending_year": "INTEGER",
+    "cutting_year": "INTEGER",
+    "forestry_centre_id": "INTEGER",
+    "forest_management_category": "REAL",
+    "method_of_last_cutting": "INTEGER",
+    "municipality_id": "INTEGER",
+    "ds_main_tree_species_biological_age": "REAL",
+    "area_weight_factors": "TEXT",
+    "fra_category": "INTEGER",
+    "auxiliary_stand": "INTEGER",
+    "sea_effect": "REAL",
+    "lake_effect": "REAL",
+    "basal_area": "REAL",
+    "main_tree_species_dominant_storey": "INTEGER",
+    "ds_dominant_height": "REAL",
+    "region": "INTEGER",
+    "peatland_type": "INTEGER",
+    "drained_peatland_type": "INTEGER",
+    "under_storey": "INTEGER",
+    "over_storey": "INTEGER",
+
+}
+
+TREES_TYPES = {
+    "tree_number": "INTEGER",
+    "species": "INTEGER",
+    "breast_height_diameter": "REAL",
+    "height": "REAL",
+    "measured_height": "REAL",
+    "breast_height_age": "REAL",
+    "biological_age": "REAL",
+    "stems_per_ha": "REAL",
+    "origin": "INTEGER",
+    "management_category": "INTEGER",
+    "tree_category": "TEXT",
+    "storey": "INTEGER",
+    "sapling": "INTEGER",
+    "tree_type": "TEXT",
+    "damage_type": "TEXT",
+    "basal_area": "REAL",
+    "volume": "REAL",
+    "stratum": "INTEGER"
+}
+
+STRATA_TYPES = {
+    "species": "INTEGER",
+    "mean_diameter": "REAL",
+    "mean_height": "REAL",
+    "breast_height_age": "REAL",
+    "biological_age": "REAL",
+    "stems_per_ha": "REAL",
+    "basal_area": "REAL",
+    "origin": "INTEGER",
+    "stratum_number": "INTEGER",
+    "storey": "INTEGER",
+    "sapling_stems_per_ha": "REAL",
+    "number_of_generated_trees": "INTEGER",
+}
 
 
 @dataclass(init=True, repr=False, order=False, unsafe_hash=False, frozen=False, match_args=False, kw_only=False,
-           slots=False, weakref_slot=False, eq=False)
+           slots=True, weakref_slot=False, eq=False)
 class ForestStand(Finalizable, ComputationalUnit):
 
     reference_trees: ReferenceTrees = dataclasses.field(default_factory=ReferenceTrees)
@@ -777,6 +854,144 @@ class ForestStand(Finalizable, ComputationalUnit):
         )
 
         return retval
+
+    @classmethod
+    @override
+    def create_database_tables(cls, db: sqlite3.Connection, sqlite_decl: dict[str, str] | None = None):
+        cur = db.cursor()
+
+        # initial_stands
+        cur.execute(
+            """--sql
+                CREATE TABLE initial_stands(
+                    identifier TEXT,
+                    year INTEGER,
+                    stand_id INTEGER,
+                    area REAL,
+                    area_weight REAL,
+                    geo_location TEXT,
+                    degree_days REAL,
+                    owner_category INTEGER,
+                    land_use_category INTEGER,
+                    soil_peatland_category INTEGER,
+                    site_type_category INTEGER,
+                    tax_class_reduction INTEGER,
+                    tax_class INTEGER,
+                    drainage_category INTEGER,
+                    drainage_year INTEGER,
+                    fertilization_year INTEGER,
+                    soil_surface_preparation_year INTEGER,
+                    regeneration_area_cleaning_year INTEGER,
+                    development_class INTEGER,
+                    artificial_regeneration_year INTEGER,
+                    young_stand_tending_year INTEGER,
+                    cutting_year INTEGER,
+                    forestry_centre_id INTEGER,
+                    forest_management_category REAL,
+                    method_of_last_cutting INTEGER,
+                    municipality_id INTEGER,
+                    ds_main_tree_species_biological_age REAL,
+                    area_weight_factors TEXT,
+                    fra_category INTEGER,
+                    auxiliary_stand INTEGER,
+                    sea_effect REAL,
+                    lake_effect REAL,
+                    basal_area REAL,
+                    main_tree_species_dominant_storey INTEGER,
+                    ds_dominant_height REAL,
+                    region INTEGER,
+                    peatland_type INTEGER,
+                    drained_peatland_type INTEGER,
+                    under_storey INTEGER,
+                    over_storey INTEGER,
+                    PRIMARY KEY(identifier)
+                );
+            """
+        )
+
+        # initial_trees
+        cur.execute(
+            """--sql
+                CREATE TABLE initial_trees(
+                    identifier TEXT,
+                    stand TEXT,
+                    tree_number INTEGER,
+                    species INTEGER,
+                    breast_height_diameter REAL,
+                    height REAL,
+                    measured_height REAL,
+                    breast_height_age REAL,
+                    biological_age REAL,
+                    stems_per_ha REAL,
+                    origin INTEGER,
+                    management_category INTEGER,
+                    tree_category TEXT,
+                    storey INTEGER,
+                    sapling INTEGER,
+                    tree_type TEXT,
+                    damage_type TEXT,
+                    crown_class INTEGER,
+                    basal_area REAL,
+                    volume REAL,
+                    stratum INTEGER,
+                    PRIMARY KEY(identifier)
+                );
+            """
+        )
+
+        # stands: required id fields + declared fields
+        stand_cols = _select_columns("stands", sqlite_decl)
+        # required id cols for stands table:
+        stand_prefix = ["node TEXT", "identifier TEXT"]
+
+        stand_decl = [f"{c} {STANDS_TYPES[c]}" for c in stand_cols]
+        cur.execute(
+            f"""--sql
+            CREATE TABLE stands(
+                {", ".join(stand_prefix + stand_decl)},
+                PRIMARY KEY(node, identifier),
+                FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, unit))
+            """
+        )
+
+        # trees: required id cols + declared cols
+        tree_cols = _select_columns("trees", sqlite_decl)
+        tree_prefix = ["node TEXT", "stand TEXT", "identifier TEXT"]
+        tree_decl = [f"{c} {TREES_TYPES[c]}" for c in tree_cols]
+        cur.execute(
+            f"""--sql
+            CREATE TABLE trees(
+                {", ".join(tree_prefix + tree_decl)},
+                PRIMARY KEY (node, identifier),
+                FOREIGN KEY (node, stand) REFERENCES nodes(identifier, unit))
+            """
+        )
+
+        # strata: required id cols + declared cols
+        strata_cols = _select_columns("strata", sqlite_decl)
+        strata_prefix = ["node TEXT", "stand TEXT", "identifier TEXT"]
+        strata_decl = [f"{c} {STRATA_TYPES[c]}" for c in strata_cols]
+        cur.execute(
+            f"""--sql
+            CREATE TABLE strata(
+                {", ".join(strata_prefix + strata_decl)},
+                PRIMARY KEY (node, identifier),
+                FOREIGN KEY (node, stand) REFERENCES nodes(identifier, unit))
+            """
+        )
+
+
+def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
+    if not decl:
+        # default = all fields
+        if table == "stands":
+            return list(STANDS_TYPES.keys())
+        if table == "trees":
+            return list(TREES_TYPES.keys())
+        if table == "strata":
+            return list(STRATA_TYPES.keys())
+        return []
+    return list(decl.get(table, []))
 
 
 def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:

@@ -3,6 +3,8 @@ from pathlib import Path
 
 
 class MunicipalityToRegionConversion:
+    __slots__ = ("mun_to_reg_map",)
+
     mun_to_reg_map: dict[int, int]
 
     def __init__(self, mapping_key_csv_path: str | Path) -> None:

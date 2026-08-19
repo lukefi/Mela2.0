@@ -1,7 +1,8 @@
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 
 
 control_structure = MetsiControl[ForestStand](

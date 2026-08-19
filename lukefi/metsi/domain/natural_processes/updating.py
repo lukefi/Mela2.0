@@ -1,33 +1,33 @@
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.transition import TransitionFn
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
-from lukefi.metsi.sim.updating import get_step_and_treatments
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.transition import TransitionFn
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.core.updating import get_step_and_treatments
 
 
-def update_to_year_fn(stand: ForestStand,
-                      /,
-                      transition: TransitionFn[ForestStand] | None = None,
-                      target_year: int | None = None,
-                      **transition_params
-                      ) -> OpTuple[ForestStand]:
+def update_to_year_fn[T: ComputationalUnit](unit: T,
+                                            /,
+                                            transition: TransitionFn[T] | None = None,
+                                            target_year: int | None = None,
+                                            **transition_params
+                                            ) -> OpTuple[T]:
     """
-        Apply a transition function to update the stand to target year.
+    Apply a transition function to update the stand to target year.
 
-        If the stand has predetermined treatments, they will be applied at the appropriate time points.
-        In such a case the transition can take place in several discrete steps (i.e. the time intervals between
-        the treatments).
+    If the stand has predetermined treatments, they will be applied at the appropriate time points.
+    In such a case the transition can take place in several discrete steps (i.e. the time intervals between
+    the treatments).
     """
 
     assert transition is not None, "required parameter `transition` missing "
     assert target_year is not None, "required parameter `target_year` missing"
 
-    if stand.time > target_year:
-        raise MetsiException(f"Unable to update stand {stand.identifier} to year {target_year}: "
-                             f"already at {stand.time}")
+    if unit.time > target_year:
+        raise MetsiException(f"Unable to update stand {unit.identifier} to year {target_year}: "
+                             f"already at {unit.time}")
 
-    current = stand
+    current = unit
     keep_running = True
     while keep_running:
         step, treatments = get_step_and_treatments(current, target_year)
@@ -46,4 +46,6 @@ def update_to_year_fn(stand: ForestStand,
     return current, []
 
 
-update_to_year = Treatment(update_to_year_fn, "update_to_year", default_tags={"initial", "update_to_year"})
+update_to_year = Treatment[ComputationalUnit](update_to_year_fn,
+                                              "update_to_year",
+                                              default_tags={"initial", "update_to_year"})

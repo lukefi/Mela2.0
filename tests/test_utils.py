@@ -5,10 +5,10 @@ import unittest
 from typing import Any
 from collections.abc import Callable
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
 from lukefi.metsi.data.enums.internal import LandUseCategory, SiteType, SoilPeatlandCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 class ConverterTestSuite(unittest.TestCase):
@@ -31,7 +31,7 @@ def none(x: Any) -> None:
 
 
 def collect_results[T: ComputationalUnit](payloads: list[SimulationPayload[T]]) -> list[T]:
-    return list(map(lambda payload: payload.computational_unit, payloads))
+    return list(map(lambda payload: payload.unit, payloads))
 
 
 def prepare_growth_test_stand():

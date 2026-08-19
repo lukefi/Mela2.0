@@ -2,11 +2,11 @@ from typing import Any
 import unittest
 
 from lukefi.metsi.domain.conditions import _get_tag_last_run, _get_treatment_last_run
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, Sequence, Event
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.treatment import Treatment
 from tests.toy_model import ToyModel
 
 
@@ -42,18 +42,18 @@ class ConditionTest(unittest.TestCase):
 
         generator = Alternatives[ToyModel]([
             Sequence([
-                Event(step, preconditions=[Condition(lambda x: x.computational_unit.value <= 2)]),
-                Event(step, preconditions=[Condition(lambda x: x.computational_unit.value >= 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.computational_unit.value == 4)]),
+                Event(step, preconditions=[Condition(lambda x: x.unit.value <= 2)]),
+                Event(step, preconditions=[Condition(lambda x: x.unit.value >= 2)]),
+                Event(step, postconditions=[Condition(lambda x: x.unit.value == 4)]),
             ]),
             Sequence([
-                Event(step, preconditions=[Condition(lambda x: x.computational_unit.value < 2)]),
-                Event(step, preconditions=[Condition(lambda x: x.computational_unit.value >= 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.computational_unit.value == 3)]),
+                Event(step, preconditions=[Condition(lambda x: x.unit.value < 2)]),
+                Event(step, preconditions=[Condition(lambda x: x.unit.value >= 2)]),
+                Event(step, postconditions=[Condition(lambda x: x.unit.value == 3)]),
             ]),
             Sequence([
-                Event(step, postconditions=[Condition(lambda x: x.computational_unit.value == 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.computational_unit.value < 5)]),
+                Event(step, postconditions=[Condition(lambda x: x.unit.value == 2)]),
+                Event(step, postconditions=[Condition(lambda x: x.unit.value < 5)]),
             ]),
             Event(step, preconditions=[Condition(lambda _: True)]),
             Event(step, preconditions=[Condition(lambda _: False)]),
@@ -67,10 +67,10 @@ class ConditionTest(unittest.TestCase):
             operation_history=[])))
 
         self.assertEqual(len(list(result)), 4)
-        self.assertEqual(result[0].computational_unit.value, 4)
-        self.assertEqual(result[1].computational_unit.value, 3)
-        self.assertEqual(result[2].computational_unit.value, 2)
-        self.assertEqual(result[3].computational_unit.value, 2)
+        self.assertEqual(result[0].unit.value, 4)
+        self.assertEqual(result[1].unit.value, 3)
+        self.assertEqual(result[2].unit.value, 2)
+        self.assertEqual(result[3].unit.value, 2)
 
     def test_treatment_last_run(self):
 

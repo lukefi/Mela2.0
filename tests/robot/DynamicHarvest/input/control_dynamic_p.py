@@ -1,16 +1,19 @@
+from user_events import Harvest20percent, FirstThinningMineralSoils
+
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Preprocessing, Simulation
+from lukefi.metsi.core.treatment import do_nothing
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.generators import Alternatives, Event, Sequence
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+
 from examples.declarations.export_prepro import mela_and_default_csv
 from examples.declarations.sqlite import sqlite_decl
-from user_events import FirstThinningMineralSoils, Harvest20percent
 
 control_structure = MetsiControl[ForestStand](
     app_configuration=AppConfiguration(
@@ -72,6 +75,6 @@ control_structure = MetsiControl[ForestStand](
                 ])
         ],
         transition=Transition(grow_acta_fn, 5, db_output_state=False, db_output_cd=False),
-        end_condition=ForestCondition(lambda x: x.computational_unit.relative_time > 30),
+        end_condition=ForestCondition(lambda x: x.unit.relative_time > 30),
     )
 )

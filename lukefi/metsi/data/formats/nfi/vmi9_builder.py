@@ -2,7 +2,6 @@ from typing import Generator, override
 
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import Origin, Storey
 from lukefi.metsi.data.enums.vmi import VmiIteration
@@ -17,6 +16,7 @@ from lukefi.metsi.data.formats.nfi.vmi_const import (
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class VMI9Builder(VMIBuilder):

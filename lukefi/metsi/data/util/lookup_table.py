@@ -1,14 +1,12 @@
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, Mapping, Sequence, TypeVar
+from typing import Any, Callable, Dict, Mapping, Sequence
 import csv
 
-T = TypeVar("T")  # e.g. ForestStand
 
-
-@dataclass
-class LookupTable(Generic[T]):
+@dataclass(slots=True)
+class LookupTable[T]:
     """
     Generic CSV-backed lookup.
 

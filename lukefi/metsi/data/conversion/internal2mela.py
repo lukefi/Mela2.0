@@ -27,7 +27,7 @@ from lukefi.metsi.data.enums.internal import (
 
 )
 from lukefi.metsi.data.conversion.util import apply_mappers
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 _SPECIES_MAP = {

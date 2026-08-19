@@ -1,15 +1,20 @@
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, Event, Sequence
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.treatment import do_nothing
 from lukefi.metsi.domain.natural_processes.motti_bootstrap import initialize_motti
-from lukefi.metsi.domain.pre_ops import compute_location_metadata, filter_stands, filter_trees, generate_reference_trees, scale_area_weight
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Preprocessing, Simulation
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.domain.pre_ops import (
+    compute_location_metadata,
+    filter_stands,
+    filter_trees,
+    generate_reference_trees,
+    scale_area_weight)
 
 
 control_structure = MetsiControl[ForestStand](
@@ -68,6 +73,6 @@ control_structure = MetsiControl[ForestStand](
             db_output_cd=False,
             init_fn=initialize_motti
         ),
-        end_condition=Condition[ForestStand](lambda x: x.computational_unit.year > 2030)
+        end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
     )
 )

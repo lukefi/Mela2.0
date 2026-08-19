@@ -1,13 +1,14 @@
 import sqlite3
 import unittest
 
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Event
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Simulation
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.simulator import _simulate_unit
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, Event
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.sim_control import Simulation
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.simulator import _simulate_unit
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
@@ -42,7 +43,7 @@ class SimulationInstructionsTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda payload: payload.computational_unit.time >= 3))
+                end_condition=Condition[ToyModel](lambda payload: payload.unit.time >= 3))
         )
 
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
@@ -75,7 +76,7 @@ class SimulationInstructionsTest(unittest.TestCase):
 
         cur.execute(
             """--sql
-                SELECT value FROM toys, nodes WHERE nodes.stand = toys.identifier AND nodes.identifier = toys.node AND nodes.node_type = 3
+                SELECT value FROM toys, nodes WHERE nodes.unit = toys.identifier AND nodes.identifier = toys.node AND nodes.node_type = 3
             """
         )
         self.assertListEqual(

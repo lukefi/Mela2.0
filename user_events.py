@@ -2,14 +2,14 @@ from typing import Any, Optional
 from pathlib import Path
 import numpy as np
 from lukefi.metsi.data.enums.internal import TreeManagementCategory
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.generators import Event
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.generators import Event
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
@@ -31,7 +31,7 @@ def _min_regeneration_diameter(stand: ForestStand) -> float:
 
 
 def _forest_categories_check(payload: SimulationPayload[ForestStand]) -> bool:
-    stand = payload.computational_unit
+    stand = payload.unit
     stand.update_aggregates()  # use stand aggregates, not manual BA math
 
     manag_cat = stand.forest_management_category if stand.forest_management_category is not None else -1
@@ -107,49 +107,49 @@ class MarkRetentionTrees(Event[ForestStand]):
         params = parameters or {}
 
         # trees older than 60 years
-        def s_age_gt_60(_stand: ForestStand, trees) -> np.ndarray:
+        def s_age_gt_60(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_age > 60
 
         # other species than pine, spruce or birches
-        def s_other_species(_stand: ForestStand, trees) -> np.ndarray:
+        def s_other_species(_: ForestStand, trees) -> np.ndarray:
             return trees.species > 4
 
         # trees with diameter > 15 cm
-        def s_large_diameter(_stand: ForestStand, trees) -> np.ndarray:
+        def s_large_diameter(_: ForestStand, trees) -> np.ndarray:
             return trees.breast_height_diameter > 15
 
         tree_selection = {
-            "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
+            "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_age_gt_60,
                     "breast_height_age",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     [0.0, 1.0],
                     [0.01, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_other_species,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     0.7,
                     [0.0, 0.5, 1.0],
                     [0.01, 0.05, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_large_diameter,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     0.2,
                     [0.0, 0.5, 1.0],
                     [0.01, 0.05, 0.999],
-                    "relative"
+                    ProfileXMode.RELATIVE
                 ),
             ],
         }
@@ -210,26 +210,19 @@ class Mounding(Event[ForestStand]):
 
     def __init__(
         self,
-        parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
         postconditions: Optional[list[ForestCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        defaults = {
-            "method": "mounding",
-            "intensity": 1200.0,
-        }
         # Default preconditions: at least 20 years since this treatment last ran
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(20, soil_surface_preparation)
         ]
 
-        merged_params = defaults | (parameters or {})
         merged_preconds = default_preconds + (preconditions or [])
 
         super().__init__(
             treatment=soil_surface_preparation,
-            static_parameters=merged_params,
             preconditions=merged_preconds,
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -279,27 +272,27 @@ class FirstThinningMineralSoils(Event[ForestStand]):
         def _tree_selection(stand: ForestStand) -> dict[str, Any]:
             min_stems = _min_number_of_stems_after_thinning(stand)
             return {
-                "target": SelectionTarget("absolute_remain", "stems_per_ha", min_stems),
+                "target": SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", min_stems),
                 "sets": [
                     SelectionSet[ForestStand, ReferenceTrees](
                         s_conifer_bias,
                         "breast_height_diameter",
                         "stems_per_ha",
-                        "absolute_remain",
+                        TargetType.ABSOLUTE_REMAIN,
                         _first_set_target_amount(stand),
                         profile_x,
                         profile_y,
-                        "relative"
+                        ProfileXMode.RELATIVE
                     ),
                     SelectionSet[ForestStand, ReferenceTrees](
                         s_conifer_bias,
                         "breast_height_diameter",
                         "stems_per_ha",
-                        "relative",
+                        TargetType.RELATIVE,
                         1.0,
                         profile_x,
                         profile_y,
-                        "relative",
+                        ProfileXMode.RELATIVE,
                     ),
                 ],
             }
@@ -339,24 +332,24 @@ class Tracks(Event[ForestStand]):
                  **kw) -> None:
         params = parameters or {}
 
-        def s_all(_stand: ForestStand, trees) -> np.ndarray:
+        def s_all(_: ForestStand, trees) -> np.ndarray:
             return np.ones(trees.size, dtype=bool)
 
         profile_x = [0, 1]
         profile_y = [0.18, 0.18]
 
         tree_selection = {
-            "target": SelectionTarget("relative", "stems_per_ha", 0.18),
+            "target": SelectionTarget(TargetType.RELATIVE, "stems_per_ha", 0.18),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_all,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     profile_x,
                     profile_y,
-                    "relative",
+                    ProfileXMode.RELATIVE,
                 )
             ],
         }
@@ -424,17 +417,17 @@ class Harvest20percent(Event[ForestStand]):
                  **kw) -> None:
 
         tree_selection = {
-            "target": SelectionTarget("relative", "stems_per_ha", 0.2),
+            "target": SelectionTarget(TargetType.RELATIVE, "stems_per_ha", 0.2),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     lambda _, t: np.ones(t.size, dtype=bool),
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     profile_x=[0, 1],
                     profile_y=[0.2, 0.2],
-                    profile_xmode="relative",
+                    profile_xmode=ProfileXMode.RELATIVE,
                 )
             ],
         }

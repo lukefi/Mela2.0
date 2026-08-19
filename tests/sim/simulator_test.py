@@ -3,15 +3,16 @@ import sqlite3
 import unittest
 
 from lukefi.metsi.app.file_io import read_control_module
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Simulation
 from lukefi.metsi.domain.conditions import TimeSinceTreatment, RelativeTimePoints, TimePoints
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.generators import Alternatives, Event, Sequence
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Simulation
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.simulator import _simulate_unit
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.generators import Alternatives, Event, Sequence
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.simulator import _simulate_unit
+from lukefi.metsi.core.treatment import Treatment
 from tests.toy_model import ToyModel, ToyTransition, toy_inc, toy_inc_fn
 
 
@@ -35,7 +36,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 1),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 1),
                 transition=ToyTransition())
         )
         payload = SimulationPayload(
@@ -78,7 +79,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 3))
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 3))
         )
         payload = SimulationPayload(
             computational_unit=ToyModel("", 0),
@@ -93,7 +94,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -126,7 +127,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 3),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 3),
                 transition=ToyTransition()
             ))
         payload = SimulationPayload(computational_unit=ToyModel("", 0),
@@ -167,7 +168,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.relative_time > 5)
+                end_condition=Condition[ToyModel](lambda x: x.unit.relative_time > 5)
             ))
         payload = SimulationPayload(
             computational_unit=ToyModel("", 0, time=200),
@@ -182,7 +183,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -231,7 +232,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
             )
         )
         assert declaration.simulation is not None
@@ -251,7 +252,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -304,7 +305,7 @@ class SimulatorTest(unittest.TestCase):
                         ])
                     )
                 ],
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0),
+                end_condition=Condition[ToyModel](lambda x: x.unit.time > 0),
                 transition=ToyTransition()
             ))
         db = sqlite3.connect(":memory:")
@@ -323,7 +324,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -360,7 +361,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             transition=ToyTransition(),
-            end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+            end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
         )
         declaration_two = Simulation[ToyModel](
             instructions=[
@@ -380,7 +381,7 @@ class SimulatorTest(unittest.TestCase):
                 )
             ],
             transition=ToyTransition(),
-            end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 0)
+            end_condition=Condition[ToyModel](lambda x: x.unit.time > 0)
         )
         configs = [
             declaration_one, declaration_two
@@ -419,7 +420,7 @@ class SimulatorTest(unittest.TestCase):
             SELECT node, value FROM toys, nodes
             WHERE
                 toys.node = nodes.identifier AND
-                toys.identifier = nodes.stand AND
+                toys.identifier = nodes.unit AND
                 nodes.node_type = 3;
         """
 
@@ -482,7 +483,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     node_type = 3;
             """
@@ -508,7 +509,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     node_type = 3;
             """
@@ -534,7 +535,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """
@@ -581,7 +582,7 @@ class SimulatorTest(unittest.TestCase):
                     )
                 ],
                 transition=ToyTransition(),
-                end_condition=Condition[ToyModel](lambda x: x.computational_unit.time >= 3)
+                end_condition=Condition[ToyModel](lambda x: x.unit.time >= 3)
             ))
 
         payload = SimulationPayload[ToyModel](computational_unit=ToyModel("test", 0))
@@ -595,7 +596,7 @@ class SimulatorTest(unittest.TestCase):
             """--sql
                 SELECT node, value FROM toys, nodes
                 WHERE
-                    toys.identifier = nodes.stand AND
+                    toys.identifier = nodes.unit AND
                     toys.node = nodes.identifier AND
                     nodes.node_type = 3;
             """

@@ -2,11 +2,13 @@ import os
 import sys
 import sqlite3
 from typing import Optional, Sequence, cast
+
 from lukefi.metsi.app.metsi_enum import RunMode
-from lukefi.metsi.app.preprocessor import (
-    preprocess_stands,
+from lukefi.metsi.core.preprocessor import (
+    preprocess_units
 )
 from lukefi.metsi.app.app_io import parse_cli_arguments
+from lukefi.metsi.core.sim_control import Resimulation
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.app.export import export_preprocessed
@@ -16,22 +18,22 @@ from lukefi.metsi.app.file_io import (
     read_stands_from_file,
     delete_existing_export_files,
     read_control_module)
-from lukefi.metsi.domain.utils.file_io import create_database_tables
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.resimulation import resimulate_schedules
-from lukefi.metsi.sim.sim_control import MetsiControl, Resimulation
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.simulator import simulate_alternatives
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.db_utils import create_database_tables
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.resimulation import resimulate_schedules
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.simulator import simulate_alternatives
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.updating import update_units
+from lukefi.metsi.app.metsi_control import MetsiControl
+from lukefi.metsi.core.updating import update_units
 
 
 def _preprocess(control: MetsiControl[ForestStand], stands: StandList) -> StandList:
     print_logline("Preprocessing...")
     preprocess_control = control.preprocessing
     if preprocess_control is not None:
-        result = preprocess_stands(stands, preprocess_control)
+        result = preprocess_units(stands, preprocess_control)
         return result
     raise MetsiException("Declaration of preprocess control missing")
 
@@ -116,7 +118,7 @@ def main() -> int:
         db_name = db_base if str(db_base).lower().endswith(".db") else f"{db_base}.db"
         out_db = init_sqlite_database(f"{app_config.target_directory}/{db_name}")
         sqlite_decl = app_config.sqlite_decl
-        create_database_tables(out_db, sqlite_decl=sqlite_decl)
+        create_database_tables(out_db, ForestStand, sqlite_decl=sqlite_decl)
         ForestStand.set_sqlite_decl(sqlite_decl)
 
     if app_config.run_modes[0] in [RunMode.PREPROCESS, RunMode.UPDATE, RunMode.SIMULATE]:

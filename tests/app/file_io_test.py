@@ -14,7 +14,8 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl
+from lukefi.metsi.app.metsi_control import MetsiControl
+from lukefi.metsi.app.metsi_control import AppConfiguration
 
 
 @dataclass

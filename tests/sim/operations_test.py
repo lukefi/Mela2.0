@@ -1,5 +1,5 @@
 import unittest
-from lukefi.metsi.sim.operations import simple_processable_chain
+from lukefi.metsi.core.operations import simple_processable_chain
 from tests.toy_model import parametrized_treatment
 
 

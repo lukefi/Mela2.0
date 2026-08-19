@@ -4,8 +4,8 @@ import numpy as np
 from lukefi.metsi.data.enums.internal import Origin, SiteType, SoilPeatlandCategory, DrainageCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTree, ReferenceTrees
-from lukefi.metsi.forestry.ika import ages as ages_
-from lukefi.metsi.forestry.ika import agesuo as agesuo_
+from lukefi.metsi.forestry.age_model import ages as ages_
+from lukefi.metsi.forestry.age_model import agesuo as agesuo_
 
 
 class _AgeModelSpecies(IntEnum):

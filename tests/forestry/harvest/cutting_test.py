@@ -1,16 +1,16 @@
 import unittest
 from typing import cast
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget
+from lukefi.metsi.core.select_units import Mode, ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.core.exceptions import MetsiException
 
 
-def _all_trees(_stand: ForestStand, data: ReferenceTrees) -> np.ndarray:
+def _all_trees(_: ForestStand, data: ReferenceTrees) -> np.ndarray:
     # selection function that includes every tree
     return np.repeat(True, data.size)
 
@@ -42,21 +42,21 @@ class CuttingTest(unittest.TestCase):
         total = np.sum(stand.reference_trees.stems_per_ha)
         params = {
             "tree_selection": {
-                "target": SelectionTarget("absolute", "stems_per_ha", 0.5 * total),
+                "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 0.5 * total),
                 "sets": [
                     SelectionSet[ForestStand, ReferenceTrees](
                         _all_trees,
                         "height",
                         "stems_per_ha",
-                        "absolute",
+                        TargetType.ABSOLUTE,
                         0.5 * total,
                         [0.0, 1.0],
                         [0.5, 0.5],
-                        "relative",
+                        ProfileXMode.RELATIVE,
                     )
                 ]
             },
-            "mode": "odds_units",
+            "mode": Mode.ODDS_UNITS,
             "select_from_all": True,
             "cutting_method": CuttingMethod.CLEARCUTTING,
         }
@@ -87,7 +87,7 @@ class CuttingTest(unittest.TestCase):
         # With no trees, cutting should return early regardless of sets content
         updated, cdata = cutting_fn(
             stand,
-            tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0), "sets": []},
+            tree_selection={"target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0), "sets": []},
             mode="odds_units",
             select_from_all=True,
         )
@@ -106,29 +106,30 @@ class CuttingTest(unittest.TestCase):
 
         # Empty sets
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection={"target": SelectionTarget("absolute", "stems_per_ha", 10.0),
-                                              "sets": []},
-                       mode="odds_units", select_from_all=True)
+            cutting_fn(stand,
+                       tree_selection={"target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
+                                       "sets": []},
+                       mode=Mode.ODDS_UNITS, select_from_all=True)
 
         # Mismatched profile shapes
         bad = {
             "tree_selection": {
-                "target": SelectionTarget("absolute", "stems_per_ha", 10.0),
+                "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
                 "sets": [
                     SelectionSet[ForestStand, ReferenceTrees](
                         _all_trees,
                         "height",
                         "stems_per_ha",
-                        "absolute",
+                        TargetType.ABSOLUTE,
                         10.0,
                         [0.0, 1.0, 2.0],
                         [0.5, 0.5],  # length mismatch
-                        "relative",
+                        ProfileXMode.RELATIVE,
                     )
 
                 ]
             },
-            "mode": "odds_units",
+            "mode": Mode.ODDS_UNITS,
             "select_from_all": True,
         }
         with self.assertRaises(MetsiException):
@@ -140,7 +141,7 @@ class CuttingTest(unittest.TestCase):
 
         # Missing select_from_all
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", mode="odds_units")
+            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", mode=Mode.ODDS_UNITS)
 
 
 if __name__ == "__main__":

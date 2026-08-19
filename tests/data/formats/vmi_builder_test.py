@@ -4,7 +4,7 @@ from pathlib import Path
 
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.app.file_io import csv_exp_writer, vmi_file_reader
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
 from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
 from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder

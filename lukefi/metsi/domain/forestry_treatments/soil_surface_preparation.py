@@ -1,14 +1,10 @@
 from typing import Optional
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.treatment import Treatment
 
 
-def soil_surface_preparation_fn(
-    op: ForestStand,
-    /,
-    **_operation_parameters
-) -> OpTuple[ForestStand]:
+def soil_surface_preparation_fn(op: ForestStand) -> OpTuple[ForestStand]:
     """
     Simulate soil surface preparation on a stand (e.g., mounding).
 

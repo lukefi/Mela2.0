@@ -1,10 +1,11 @@
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.app.metsi_control import MetsiControl, AppConfiguration
+from lukefi.metsi.core.sim_control import Simulation
 from lukefi.metsi.domain.conditions import TimePoints
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.instructions import SimulationInstruction
-from lukefi.metsi.sim.generators import Alternatives, Sequence, Event
-from lukefi.metsi.sim.sim_control import AppConfiguration, MetsiControl, Simulation
-from lukefi.metsi.sim.treatment import do_nothing
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.instructions import SimulationInstruction
+from lukefi.metsi.core.generators import Alternatives, Sequence, Event
+from lukefi.metsi.core.treatment import do_nothing
 from tests.toy_model import ToyModel, ToyTransition, toy_inc
 
 
@@ -28,6 +29,6 @@ control_structure = MetsiControl[ToyModel](
             )
         ],
         transition=ToyTransition(),
-        end_condition=Condition[ToyModel](lambda x: x.computational_unit.time > 2)
+        end_condition=Condition[ToyModel](lambda x: x.unit.time > 2)
     )
 )
