@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 from unittest.mock import patch
 import numpy as np
 from lukefi.metsi.data.enums.internal import (
+    CRS,
     DrainedPeatlandForestType,
     LandUseCategory,
     SiteType,

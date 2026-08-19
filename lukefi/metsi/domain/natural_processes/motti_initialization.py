@@ -179,11 +179,6 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
     """
     Convert given TreeStrata into Python dicts for Motti4Strata.
     If strata is not given, use stand.tree_strata.
-
-    Uncertain fields:
-      hw -> temporary fallback to mean_height
-      dg -> temporary fallback to mean_diameter
-      st -> temporary dummy 0.0
     """
     if strata is None:
         strata = stand.tree_strata
@@ -194,42 +189,38 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
     out: list[dict[str, float]] = []
 
     for i in range(min(strata.size, 10)):
-        species = TreeSpecies(int(strata.species[i]))
-        if species <= TreeSpecies.TREELESS:  # TODO: parempi olisi käyttää enumeja. + species.TREELESS
-            continue
+        species = TreeSpecies(strata.species[i].item())
+        if species <= TreeSpecies.TREELESS:
+            continue # Skips strata if no trees.
 
+        _basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
+        basal_area = _basal_area if _basal_area > 0.001 else 0.0
         biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
-        basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))  # TODO: lisää ehto - jos ppa < 0.001 --> 0.0
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
-        origin = float(strata.origin[i])
-
+        origin = float(strata.origin[i].item())
+        stratum_sid = float(strata.stratum_number[i].item())
+        spe = float(internal2motti.convert_species(species))
         storey = _storey_to_motti(
             stand,
             i,
-            Storey(int(strata.storey[i])),
-            is_stratum_index=True,
-        )
+            Storey(strata.storey[i].item()),
+            is_stratum_index=True)
 
-        stratum_sid = int(strata.stratum_number[i])
-        if stratum_sid <= 0:
-            stratum_sid = i + 1
-
-        spe = float(internal2motti.convert_species(species))
+        # NOTE: pitääkö nää kaiki floatata?
         out.append({
             "spe": spe,
             "age": biological_age,
             "ba": basal_area,
             "f": stems_main,
-            # nää on aritmeettisia ei keskiarvoja. TODO: Mitä tehdään - tyhjänä, nollana vai lasketaan (kuka laskee)?
-            "h": mean_height,
+            "h": 0.0,
             "hw": mean_height,
-            "d": mean_diameter,  # nää on aritmeettisia ei keskiarvoja.
+            "d": 0.0,
             "dg": mean_diameter,
             "storey": storey,
             "st": origin,
-            "sid": float(stratum_sid),
+            "sid": stratum_sid,
         })
 
     return out
