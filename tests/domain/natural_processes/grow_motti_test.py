@@ -72,7 +72,7 @@ def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
         time=2000,
         year=2000,
         relative_year=2000,
-        geo_location=(6900000.0, 3400000.0, 150.0),
+        geo_location=(6900000.0, 3400000.0, 150.0, CRS.EPSG_3067),
         lake_effect=0.0,
         sea_effect=0.0,
         land_use_category=LandUseCategory.FOREST,
@@ -325,12 +325,12 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertEqual(internal2motti.convert_species(TreeSpecies(3)), 3)
 
         # auto_euref_km conversion logic
-        y_km, x_km = motti_initialization._auto_euref_km(6900000.0, 3400000.0)
+        _geo_location = (6900000.0, 3400000.0, None, CRS.EPSG_3067)
+        y_km, x_km = motti_initialization._auto_euref_km(_geo_location) # pylint: disable=protected-access
         self.assertEqual((y_km, x_km), (6900.0, 3400.0))
-        y_10km, x_10km = motti_initialization._auto_euref_km(6900.0, 3400.0)
-        self.assertEqual((y_10km, x_10km), (6.9, 3.4))
         with self.assertRaises(ValueError):
-            motti_initialization._auto_euref_km(62.0, 25.0)  # looks like lat/lon -> should raise
+            _geo_location = (None, None, None, CRS.EPSG_2393)
+            motti_initialization._auto_euref_km(_geo_location)  # pylint: disable=protected-access
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
         rt = _make_rt(species=(3, 7))  # 7 -> 6
