@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 from lukefi.metsi.data.conversion import internal2motti
-from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
@@ -156,28 +156,23 @@ def _spedom(rt: ReferenceTrees) -> int:
     return max(ba_per_species.items(), key=lambda kv: kv[1])[0]
 
 
-def _auto_euref_km(y1: float | None, x1: float | None) -> tuple[float, float]:
-    """
-    NOTE: eikö näitä koordinaatti konversioita ole jo olemassa?
-        - Motti:ssa itsessään?
-        - Lukefissä joku utility funktio?
+def _auto_euref_km(geo_location:
+                   Optional[tuple[float | None,
+                                  float | None,
+                                  float | None,
+                                  CRS | None]]) -> tuple[float, float]:
+    """ Normalize to EUREF-FIN/TM35FIN kilometers. """
+    if geo_location is None:
+        raise ValueError("Stand is missing geolocation information required by Motti")
 
-    Normalize to EUREF-FIN/TM35FIN kilometers.
-    Input is expected to be in meters
-    - Raise if values look like lat/long.
-    """
-    if not y1 or not x1:
-        raise ValueError("Stand is missing coordinates required by Motti")
-    abs_y, abs_x = abs(y1), abs(x1)
+    x, y, _, crs = geo_location
 
-    # Clear lat/long guard
-    if abs_y <= 90.0 and abs_x <= 180.0:
-        raise ValueError(
-            f"Coordinates look like lat/long (Y={y1}, X={x1}). "
-            "Expected EUREF-FIN/TM35 in kilometers."
-        )
+    if crs is None or crs not in CRS.EPSG_3067:
+        raise ValueError("Expected EUREF-FIN/TM35 in kilometers.")
+    if not x or not y:
+        raise ValueError("Stand is missing coordinates values")
 
-    return y1 / 1000.0, x1 / 1000.0
+    return x / 1000.0, y / 1000.0
 
 
 def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None) -> list[dict[str, float]]:
@@ -329,8 +324,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
 
     spedom = _spedom(stand.reference_trees)
 
-    y_km, x_km = _auto_euref_km(stand.geo_location[0] if stand.geo_location is not None else None,
-                                stand.geo_location[1] if stand.geo_location is not None else None)
+    y_km, x_km = _auto_euref_km(stand.geo_location)
 
     if stand.geo_location is not None:
         z = stand.geo_location[2]
