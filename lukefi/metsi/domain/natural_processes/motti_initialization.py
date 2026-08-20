@@ -370,13 +370,9 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     )
 
     rt = stand.reference_trees
-    n = rt.size
-    # TODO: Is this right? yp <--> rt yhteys, tää pitää tarkastella onko
-    # validi näin; eg. menetetäänkö alkuperäiset ja miten strata päivitys
-    # vaikuttaa.
-    rt.tree_number = np.arange(1, n + 1, dtype=rt.tree_number.dtype)
-    ids = rt.tree_number.astype(int).copy()
+    n = len(rt)
 
+    ids = rt.tree_number.astype(int).copy()
     stems = np.nan_to_num(rt.stems_per_ha, nan=0.0)
     d13 = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
     h = np.nan_to_num(rt.height, nan=0.0)

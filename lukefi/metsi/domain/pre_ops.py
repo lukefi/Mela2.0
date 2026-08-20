@@ -236,6 +236,8 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
 
         stand.reference_trees = new_trees + retention_trees
 
+        stand.reference_trees.tree_number = np.arange(1, len(stand.reference_trees) + 1, dtype=np.int32)
+
         if operation_params.get("delete_strata", False):
             stand.tree_strata = TreeStrata()
 
