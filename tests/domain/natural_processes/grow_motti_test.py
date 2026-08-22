@@ -8,7 +8,6 @@ from unittest.mock import patch
 import numpy as np
 from lukefi.metsi.data.enums.internal import (
     CRS,
-    DrainedPeatlandForestType,
     LandUseCategory,
     SiteType,
     SoilPeatlandCategory,
@@ -112,6 +111,7 @@ def _make_rt(
     crown_ratio=(0.3, 0.4),
     origin=(0, 0),
     storey=(0, 0),
+    stratum=(1, 2)
 ) -> ReferenceTrees:
     """Build a real ReferenceTrees vector container for Motti sync tests.
 
@@ -128,6 +128,7 @@ def _make_rt(
     crown_ratio_arr = np.asarray(crown_ratio, dtype=float)
     origin_arr = np.asarray(origin, dtype=int)
     storey_arr = np.asarray(storey, dtype=int)
+    stratum_arr = np.asarray(stratum, dtype=int)
 
     n = stems_arr.shape[0]
     rt = ReferenceTrees()
@@ -143,7 +144,7 @@ def _make_rt(
             "breast_height_age": float(bh_age_arr[i]),
             "crown_ratio": float(crown_ratio_arr[i]),
             "origin": int(origin_arr[i]),
-            "stratum": int(origin_arr[i]),
+            "stratum": int(stratum_arr[i]),
             "storey": int(storey_arr[i]),
             "sapling": bool(h_arr[i] < 1.3),
             "tree_category": "1",

@@ -384,11 +384,9 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     origin = rt.origin
     spe_vec = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
 
-    stratum_ids = [
-        # Miksi? else osassa otetaan kuviolta id? eikö stratum_id:t mene sekaisin?
-        int(v) if v > 0 else (stand.stand_id or (idx + 1))
-        for idx, v in enumerate(rt.stratum)
-    ]
+    stratum_ids = rt.stratum.tolist()
+    if -1 in stratum_ids:
+        raise ValueError("ReferenceTrees contains stratum_number=-1, which is invalid for Motti initialization.")
     storey_vec = [_storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
     trees_py = [
         {

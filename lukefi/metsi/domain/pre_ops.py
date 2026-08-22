@@ -111,7 +111,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
             stand.geo_location = (
                 stand.geo_location[0],
                 stand.geo_location[1],
-                xkor_value,
+                float(xkor_value),
                 stand.geo_location[3])
         else:
             xkor_value = stand.geo_location[2]
