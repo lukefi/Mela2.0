@@ -208,7 +208,6 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
             Storey(strata.storey[i].item()),
             is_stratum_index=True)
 
-        # NOTE: pitääkö nää kaiki floatata?
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -261,9 +260,9 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
     candidate_idx: list[int] = []  # tähän KPG:n generoimat säästöpuu ositteet
     for i in range(strata.size):
         # KPG on lukenut lukupuun ja muodostanut siitä säästöpuuositteen. Siksi n_gen == 1 *1
-        n_gen = int(np.nan_to_num(strata.number_of_generated_trees[i], nan=0))
-        storey = int(np.nan_to_num(strata.storey[i], nan=-1))
-        if n_gen == 1 and storey == int(Storey.SPARE):
+        gen_n = strata.number_of_generated_trees[i].item()
+        storey = strata.storey[i].item()
+        if gen_n == 1 and storey == Storey.SPARE:
             candidate_idx.append(i)
 
     needed = excess + 1
