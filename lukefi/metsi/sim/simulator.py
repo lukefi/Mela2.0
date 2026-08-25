@@ -29,6 +29,7 @@ def simulate_alternatives[T: ComputationalUnit](control: dict[str, Any],
         else:
             payload = unit
         if simconfig.initialization is not None:
+            payload.computational_unit.update_aggregates()
             # initialize transition state
             simconfig.initialization(payload.computational_unit)
         print(f"Simulating unit {payload.computational_unit.identifier} ({i} of {len(units)})...")

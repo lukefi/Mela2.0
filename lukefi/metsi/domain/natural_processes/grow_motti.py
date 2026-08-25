@@ -25,6 +25,7 @@ def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
     rt = stand.reference_trees
 
     if stand.land_use_category is not None and stand.land_use_category >= LandUseCategory.WASTE_LAND:
+         # Can these even be nan? Is the condition necessary?
         base_d = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
         base_h = np.nan_to_num(rt.height, nan=0.0)
         base_f = np.nan_to_num(rt.stems_per_ha, nan=0.0)

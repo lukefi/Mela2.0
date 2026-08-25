@@ -195,7 +195,7 @@ class Motti4DLL:
     @classmethod
     def new_trees(cls, trees_py: list[dict]) -> Tuple[Motti4Trees, int]:
         """
-            fields used: id, sid, f, d13, h, spe, age, age13, cr, snt
+            fields used: id, sid, f, d13, h, spe, age, age13, snt
         """
         ypp = cast(Motti4Trees, cls.ffi.new("Motti4Trees *"))
         yp = ypp[0]
@@ -208,7 +208,6 @@ class Motti4DLL:
             yp[i].spe = float(t.get("spe", 1))
             yp[i].age = float(t.get("age", 0.0))
             yp[i].age13 = float(t.get("age13", 0.0))
-            yp[i].cr = float(t.get("cr", 0.0))
             yp[i].snt = float(t.get("snt", 1))
             yp[i].crerror = 0.0  # clear before growth
             yp[i].storie = float(t.get("storie", 2.0))
@@ -375,7 +374,7 @@ class Motti4DLL:
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
-            lib.Motti4UpdateAfterImport(
+            lib.Motti4UpdateAfterImport( # NOTE: Oliko niin, että tämä oli turha? Tsekkaa manuaalista.
                 yy,
                 yp,
                 buffers.saplings,

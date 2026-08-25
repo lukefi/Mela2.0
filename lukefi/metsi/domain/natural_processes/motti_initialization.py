@@ -10,7 +10,7 @@ from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
 
-# NOTE: Miksi tämän osalta ei käytetä sitä mitä on enumeissa?
+# NOTE: Why not use what is in enum-modules?
 FDM_TO_MOTTI_STOREY = {
     Storey.DOMINANT: 2,  # ylempi
     Storey.UNDER: 1,     # alempi
@@ -109,22 +109,13 @@ def _strip_tree_strata(stand: ForestStand):
 
     stand.tree_strata = stripped
 
-# kutsujärjestys 1. _init_motti_state
-
 
 def _spedom(rt: ReferenceTrees) -> int:
     """
-    NOTE: pitäskö tää laskea uudestaan joka stepissä, jos puulajijakauma muuttuu merkittävästi?
-     - Vaikuttaako Mottiin jos ei päivitetä?
-    NOTE: onko tämä vähän epäluotettava, koska riippuu siitä että reference_trees on kunnossa ja 
-        että siellä on lajikoodit.
-    - Ehkä vois olla parempi hakea suoraan Mottista dominantti laji ja laskea spedom siitä?
-        - NOTE: laskeeko mottiInit itse spedom vai onko tää hyvä antaa tätä kautta?
-        - Returns dominant species from Motti species.
-    NOTE: onko tämän oikea paikka tälle vai pitäskö olla conversion/interl2motti.py:ssä? Tai jopa motti_util.py:ssä?
-
     Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
     If trees are empty fall back to PINE, we need to give valid value for growth.
+
+    NOTE: This should be generalized to ForestStand.spedom like solution.
     """
     if rt.size == 0:
         return TreeSpecies.PINE
@@ -147,7 +138,6 @@ def _spedom(rt: ReferenceTrees) -> int:
         ba_per_species.clear()
         # Fallback: stems/ha totals per species
         for code, stems in zip(spe_codes, f_ha.tolist()):
-            # TODO: Is this correct?
             ba_per_species[code] = ba_per_species.get(code, 0.0) + float(stems)
 
     if not ba_per_species:
@@ -225,13 +215,16 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
     return out
 
 
-def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> TreeStrata:
+def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> TreeStrata:
     """
-    If there are more than max_strata strata, merge säästöpuut into one so the count becomes max_strata.
+    If there are more than max_strata strata, merge retention stata into one so the count becomes max_strata.
 
-    Candidate Säästöpuu for merge is:
+    Candidate retention strata for merge is:
       - number_of_generated_trees == 1
       - storey == SPARE
+
+    Values for compression strata are calculated from reference trees
+        that share the same stratum number as the compressed strata
 
     Merged result:
       - species = species whose candidate strata have the highest total stems_per_ha
@@ -242,6 +235,8 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
 
     If there are not enough merge candidates, return original strata unchanged.
     """
+    strata: TreeStrata = stand.tree_strata
+
     if strata.size <= max_strata:
         return strata
 
@@ -249,62 +244,73 @@ def _compress_strata_for_motti(strata: TreeStrata, max_strata: int = 10) -> Tree
     if excess <= 0:
         return strata
 
-    # Iso kuva:
-    # KPG_lukupuille(luku_puu) -> säästöpuu_osite, jolla (tunnistusehto) n_gen=1 ja storey=SPARE *1
-    # - compress siis tiivistää vain KPG:n generoimia säästöpuu
-    # - alkuperäisiin ositteisiin ei kosketa, KPG:n generoima säästöpuu "ylivuoto" on tarkoitus tiivistää. ***
-    # säästöpuu
-    # ongelmadomain: motti ei tue kuin 10 ositetta max., joten ylimääräiset ei mahdu mukaan.
-    # - säästöpuu spesifi UC (kuvaupuiden generoinnissa tehdään säästöpuut)
-    # Tässä vaiheessa ositteissa on datassa luetut (oikeat) ositteet + KPG luomat säästöpuuositteet
-    candidate_idx: list[int] = []  # tähän KPG:n generoimat säästöpuu ositteet
+    retention_idx: list[int] = []
     for i in range(strata.size):
-        # KPG on lukenut lukupuun ja muodostanut siitä säästöpuuositteen. Siksi n_gen == 1 *1
         gen_n = strata.number_of_generated_trees[i].item()
         storey = strata.storey[i].item()
         if gen_n == 1 and storey == Storey.SPARE:
-            candidate_idx.append(i)
+            retention_idx.append(i)
 
     needed = excess + 1
-    if len(candidate_idx) < needed:
+    if len(retention_idx) < needed:
         return strata  # fallback: current truncation behavior stays
 
     # take exactly as many as needed; simplest and least invasive
-    merge_idx = candidate_idx[:needed]
+    merge_idx = retention_idx[:needed]
 
     # species totals by stems_per_ha -> choose dominant/base species
     stems_by_species: dict[int, float] = {}
     for i in merge_idx:
-        species = int(strata.species[i])
-        stems = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
+        species = strata.species[i].item()
+        stems = strata.stems_per_ha[i].item()
         stems_by_species[species] = stems_by_species.get(species, 0.0) + stems
 
     base_species = max(stems_by_species.items(), key=lambda kv: kv[1])[0]
 
-    # choose base row as first row of the major species
-    base_idx = next(i for i in merge_idx if int(strata.species[i]) == base_species)
-    rest_idx = [i for i in merge_idx if i != base_idx]  # TODO: rest_idx osittelle pitää vaihtaa base_idx osite_id
+    # (choose from needed retention indices) the base row as first row of the major species
+    base_idx = next(i for i in merge_idx if strata.species[i].item() == base_species)
+    rest_idx = [i for i in merge_idx if i != base_idx]
 
     out = strata[:]
 
     # merged numeric values
     out.stems_per_ha[base_idx] = float(np.nansum(out.stems_per_ha[merge_idx]))
-    out.mean_height[base_idx] = float(np.nanmean(out.mean_height[merge_idx]))
-    out.mean_diameter[base_idx] = float(np.nanmean(out.mean_diameter[merge_idx]))
 
-    if np.any(~np.isnan(out.biological_age[merge_idx])):
-        out.biological_age[base_idx] = float(np.nanmean(out.biological_age[merge_idx]))
-
-    if np.any(~np.isnan(out.breast_height_age[merge_idx])):
-        out.breast_height_age[base_idx] = float(np.nanmean(out.breast_height_age[merge_idx]))
-
+    # calculate the base compression strata values from same stratum number trees as merge_idx
+    merge_mask = np.isin(stand.reference_trees.stratum, strata.stratum_number[merge_idx])
+    merge_trees = stand.reference_trees[merge_mask]
+    divider = np.sum(merge_trees.basal_area * merge_trees.stems_per_ha)
+    out.mean_diameter[base_idx] = (
+                (np.sum(
+                    merge_trees.stems_per_ha *
+                    merge_trees.basal_area *
+                    merge_trees.breast_height_diameter)) / divider) if divider > 0.0 else None
+    out.mean_height[base_idx] = (
+                (np.sum(
+                    merge_trees.stems_per_ha *
+                    merge_trees.basal_area *
+                    merge_trees.height)) / divider) if divider > 0.0 else None
+    out.biological_age[base_idx] = (
+                (np.sum(
+                    merge_trees.stems_per_ha *
+                    merge_trees.basal_area *
+                    merge_trees.biological_age)) / divider) if divider > 0.0 else None
+    out.breast_height_age[base_idx] = (
+                (np.sum(
+                    merge_trees.stems_per_ha *
+                    merge_trees.basal_area *
+                    merge_trees.breast_height_age)) / divider) if divider > 0.0 else None
     out.sapling_stems_per_ha[base_idx] = float(np.nansum(out.sapling_stems_per_ha[merge_idx]))
 
     # force species to same
     out.species[base_idx] = base_species
 
+    # remove compressed strata
     if rest_idx:
         out.delete(rest_idx)
+
+    # update the stratum values of reference trees after compression
+    stand.reference_trees.stratum[merge_mask] = strata.stratum_number[base_idx]
 
     return out
 
@@ -368,6 +374,8 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         gstorey=1.0,
     )
 
+    compressed_strata = _compress_strata_for_motti(stand, max_strata=10)
+
     rt = stand.reference_trees
     n = len(rt)
 
@@ -378,8 +386,6 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     age = np.nan_to_num(rt.biological_age, nan=0.0)
     age13 = np.nan_to_num(rt.breast_height_age, nan=0.0)
 
-    # TODO: ReferenceTrees does not have this attribute; where did it come from?
-    cr = np.nan_to_num(getattr(rt, "crown_ratio", np.zeros(n, dtype=float)), nan=0.0)
     origin = rt.origin
     spe_vec = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
 
@@ -397,12 +403,11 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
             "spe": int(sp),
             "age": float(a),
             "age13": float(a13),
-            "cr": float(c),
             "snt": int(o + 1),
             "storie": float(storey),
 
         }
-        for i, sid, f, d, hh, sp, a, a13, c, o, storey in zip(
+        for i, sid, f, d, hh, sp, a, a13, o, storey in zip(
             ids,
             stratum_ids,  # original osite_id
             stems,
@@ -411,19 +416,12 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
             spe_vec,
             age,
             age13,
-            cr,
             origin,
             storey_vec,
         )
     ]
     yp, ntrees = Motti4DLL.new_trees(trees_py)
 
-    # puut on jo yp:ssä ja niiden osite id:t muuttu. eli hävikääkö puut joiden pitäisi siirtyä yp vektoriin?
-    # _compress* == jos liikaa ositteita, niin tiivistetään s.e. jää vain 10 ositetta.
-    #   - ylimääräisistä siirretään puut yhteen ositteeseen eg. 5 ositetta --> jäljelle jäävään
-    #
-    # Tää pitäs tehdä ennen yp:n alustusta. Rikkoo osite_id eheyden.
-    compressed_strata = _compress_strata_for_motti(stand.tree_strata, max_strata=10)
     strata_py = _build_motti_strata_py(stand, compressed_strata)
 
     yo = Motti4DLL.new_strata(strata_py)
