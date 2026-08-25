@@ -90,6 +90,7 @@ def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_n
 
 # reconcile_reference_trees_from_motti
 def _storey_from_layer(stand: ForestStand, layer: int) -> int:
+    # NOTE: This can't be right! Check.
     strata = getattr(stand, "tree_strata", None)
     if strata is None or layer >= strata.size:
         return int(Storey.UNSET)
@@ -152,20 +153,20 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
                 storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
 
         row = {
-            "identifier": identifier,
-            "tree_number": yp_tree_id,
-            "stratum": str(sid),
-            "species": int(t.spe),
+            "identifier": identifier, # NOTE: should not be updated
+            "tree_number": yp_tree_id, # NOTE: should not be updated
+            "stratum": str(sid), # NOTE: should not be updated
+            "species": int(t.spe), # NOTE: should not be updated
             "stems_per_ha": t.f,
-            "origin": int(t.snt) - 1,
+            "origin": int(t.snt) - 1, # NOTE: should not be updated
             "height": t.h,
             "breast_height_diameter": t.d13,
             "biological_age": t.age,
             "breast_height_age": t.age13,
-            "sapling": False,
-            "tree_category": "",
-            "management_category": 1,
-            "storey": storey,
+            "sapling": False, # Tarviiko tätä ollenkaan?
+            "tree_category": "", # Tarviiko tätä olla tässä jos kerran tyhjä?
+            "management_category": 1, # NOTE: should not be updated
+            "storey": storey, # NOTE: should not be updated
             "basal_area": (t.ba / 10000.0) if getattr(t, "ba", None) is not None else 0.0,
             "volume": t.vol if getattr(t, "vol", None) is not None else 0.0,
         }
@@ -192,6 +193,7 @@ def _build_reference_tree_update(*,
                                  volume: float,
                                  storey: int,
                                  ) -> dict[str, Any]:
+    # NOTE: This could be raised into upper function stack
     return {
         "identifier": identifier,
         "tree_number": tree_number,
@@ -225,7 +227,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
         for spe_name, internal_species in UT_SPECIES_FIELDS:
             s = getattr(ut[0][layer], spe_name)
 
-            try:
+            try: # NOTE: Unnecessary try-except?
                 if float(s.year) == -1.0:
                     continue
             except TypeError:
@@ -336,7 +338,7 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
     delete_idx: list[int] = []
     for i in range(rt.size):
         sid = int(rt.stratum[i])
-        try:
+        try: # NOTE: Unnecessary try-except?
             tree_number = int(rt.tree_number[i])
         except (TypeError, ValueError):
             tree_number = -1
