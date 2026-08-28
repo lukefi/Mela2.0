@@ -1,15 +1,16 @@
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.motti_util import (
-    next_osite_id, sync_ut_to_reference_trees, sync_yp_to_reference_trees)
-from lukefi.metsi.domain.natural_processes.motti_util import (
-    prune_reference_trees_not_in_motti,
+    next_osite_id,
+    sync_ut_to_reference_trees,
+    sync_yp_to_reference_trees,
+    prune_reference_trees_not_in_motti
 )
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.core.collected_data import OpTuple
 
 
 def fillinplanting_fn(stand: ForestStand,

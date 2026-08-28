@@ -56,13 +56,7 @@ def mark_trees_fn(input_: ForestStand,
     target: SelectionTarget = ts["target"]
     sets: list[SelectionSet] = ts["sets"]
 
-
-    assert attributes
-    select_from_all = attributes.get("select_from_all", True)
-
-    mode = attributes.get("mode", Mode.ODDS_UNITS)
-    attributes = attributes.get("attributes")
-    if not attributes or not isinstance(attributes, dict):
+    if not attributes:
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
     # Selection amounts for each reference-tree row

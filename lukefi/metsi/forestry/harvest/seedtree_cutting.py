@@ -5,9 +5,10 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_util import (
     reconcile_reference_trees_from_motti)
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
+from lukefi.metsi.core.select_units import Mode
 
 
 def seedtree_cutting_fn(stand: ForestStand,
@@ -15,7 +16,7 @@ def seedtree_cutting_fn(stand: ForestStand,
                         seed_tree_class: int = 3,
                         tree_selection: dict[str, Any] | None = None,
                         cutting_method: CuttingMethod | None = None,
-                        mode: str = "odds_units",
+                        mode: Mode = Mode.ODDS_UNITS,
                         select_from_all: bool = False
                         ) -> OpTuple[ForestStand]:
     """
