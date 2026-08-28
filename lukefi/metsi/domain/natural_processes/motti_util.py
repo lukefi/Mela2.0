@@ -10,14 +10,14 @@ from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
-# reconcile_reference_trees_from_motti
+
 UT_CATEGORIES = [
     ("kkp", "usable"),
     ("klv", "unusable"),
     ("vlj", "farmed"),
 ]
 
-# reconcile_reference_trees_from_motti
+
 UT_SPECIES_FIELDS = [
     ("ma", TreeSpecies.PINE),
     ("ku", TreeSpecies.SPRUCE),
@@ -31,12 +31,12 @@ UT_SPECIES_FIELDS = [
     ("_10", TreeSpecies.UNSET),
 ]
 
-# reconcile_reference_trees_from_motti
+
 def _safe_origin(raw: float | int) -> int:
     v = int(raw)
     return v if v >= 0 else int(Origin.UNSET)
 
-# reconcile_reference_trees_from_motti
+
 def next_osite_id(stand: ForestStand) -> int:
     used: list[int] = []
 
@@ -66,7 +66,7 @@ def next_osite_id(stand: ForestStand) -> int:
 
     return (max(used) + 1) if used else 1
 
-# reconcile_reference_trees_from_motti
+
 def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[int]:
     target = str(osid)
     retval: list[int] = []
@@ -75,7 +75,7 @@ def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[in
             retval.append(i)
     return retval
 
-# reconcile_reference_trees_from_motti
+
 def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
     target_tree_number = tree_number
     for i in _reference_tree_indices_by_stratum(rt, osid):
@@ -88,7 +88,7 @@ def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_n
             continue
     return None
 
-# reconcile_reference_trees_from_motti
+
 def _storey_from_layer(stand: ForestStand, layer: int) -> int:
     # NOTE: This can't be right! Check.
     strata = getattr(stand, "tree_strata", None)
@@ -101,7 +101,7 @@ def _storey_from_layer(stand: ForestStand, layer: int) -> int:
     except (TypeError, ValueError):
         return int(Storey.UNSET)
 
-# reconcile_reference_trees_from_motti
+
 def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
     target_osid = osid
 
@@ -116,7 +116,7 @@ def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | N
 
     return None
 
-# reconcile_reference_trees_from_motti
+
 def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     ms = stand.motti_state
     if ms is None or ms.yp is None:
@@ -176,7 +176,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         else:
             rt.update(row, idx)
 
-# reconcile_reference_trees_from_motti
+
 def _build_reference_tree_update(*,
                                  identifier: str,
                                  tree_number: int,
@@ -213,7 +213,7 @@ def _build_reference_tree_update(*,
         "volume": volume,
     }
 
-# reconcile_reference_trees_from_motti
+
 def sync_ut_to_reference_trees(stand: ForestStand) -> None:
     ms = stand.motti_state
     if ms is None or ms.buffers is None:
@@ -281,7 +281,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                 else:
                     rt.update(row, idx)
 
-# reconcile_reference_trees_from_motti
+
 def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     """
     Delete old sapling RFs if SID exists in YP vector.
@@ -314,7 +314,7 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
 
-# reconcile_reference_trees_from_motti
+
 def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
     """
     Keep only ReferenceTrees that have a live in the YP vector.
@@ -360,7 +360,7 @@ def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool 
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
-# asd
+
 def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
     """
     Rebuild Motti internal state after yp edits, run grow(step=0) and
@@ -374,7 +374,7 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
 
     reconcile_reference_trees_from_motti(stand)
 
-# asd
+
 def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: npt.NDArray[np.float64]) -> bool:
     ms = stand.motti_state
     trees = stand.reference_trees
@@ -411,7 +411,7 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
 
     return changed
 
-# asd
+
 def apply_motti_yp_reduction_from_removed_reference_trees(stand: ForestStand,
                                                           removed_f: np.ndarray,
                                                           *,
@@ -461,7 +461,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
 
     return live
 
-# reconcile_reference_trees_from_motti
+
 def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     rt = stand.reference_trees

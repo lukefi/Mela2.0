@@ -4,7 +4,6 @@ from typing import Any, Optional
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import (
     EPSG_2393_ALIASES,
@@ -27,6 +26,7 @@ from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 def filter_stands(stands: StandList,
@@ -49,7 +49,10 @@ def filter_stands(stands: StandList,
     return stands
 
 
-def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+def filter_trees(stands: StandList,
+                 *,
+                 predicate: Callable[[ForestStand],
+                                     npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter reference trees for each stand in list based on given predicate.
 
     Args:
@@ -60,6 +63,7 @@ def filter_trees(stands: StandList, *, predicate: Callable[[ForestStand], npt.ND
     Returns:
         StandList: the list of stands with the trees filtered (also modified in-place)
     """
+    assert predicate is not None
     stands = filter_trees_(stands, predicate)
     return stands
 
@@ -128,7 +132,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
-def generate_reference_trees(stands: StandList, **operation_params) -> StandList:
+def generate_reference_trees(stands: StandList, /, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
     # oletusarvo true vai false?
@@ -244,11 +248,12 @@ def generate_reference_trees(stands: StandList, **operation_params) -> StandList
     return stands
 
 
-def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration) -> StandList:
-    """Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
-       for NFI iterations 12 and up, forestry centre for earlier.
-       NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
-       (or fc).
+def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration | None = None) -> StandList:
+    """
+    Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
+    for NFI iterations 12 and up, forestry centre for earlier.
+    NOTE: It is supposed that all stands belong to same county (or forestry centre) and represent the whole county
+    (or fc).
 
     Args:
         stands (StandList): the list of stands to update
@@ -256,6 +261,8 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     Returns:
         StandList: updated stands
     """
+
+    assert nfi_iteration is not None
 
     county = stands[0].region
     if county == 19 and stands[1].municipality_id in (47, 148, 890):
@@ -409,11 +416,12 @@ def update_strata_to_match_trees(stands: StandList, **operation_params) -> Stand
     return stands
 
 
-def scale_area_weight(stands: StandList, **operation_params):
-    """ Scales area weight of a stand.
+def scale_area_weight(stands: StandList, /, **operation_params):
+    """
+    Scales area weight of a stand.
 
-        Especially necessary for VMI tree generation cases.
-        Should be used as precesing operation before the generation of reference trees.
+    Especially necessary for VMI tree generation cases.
+    Should be used as precesing operation before the generation of reference trees.
     """
     _ = operation_params
     for stand in stands:
@@ -431,10 +439,11 @@ def area_ha_to_1000ha(stands: StandList, **operation_params):
 
 
 def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
-    """Scale the number of stems of the (measured) trees according to the stand's
-       proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
-       by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
-       are scaled by proportion of the sample plot with 9 m radius.
+    """
+    Scale the number of stems of the (measured) trees according to the stand's
+    proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
+    by proportion of the sample plot having 4 m radius. Trees having diameter >= 9.5 cm
+    are scaled by proportion of the sample plot with 9 m radius.
 
     Args:
         stands (StandList): list of ForestStands
@@ -457,7 +466,8 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
 
 
 def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -> StandList:
-    """ Preprocessing operation for converting the current coordinate system to target system
+    """
+    Preprocessing operation for converting the current coordinate system to target system
 
     :target_system (optional): Spesified target system. Default is EPSG:2393
     """

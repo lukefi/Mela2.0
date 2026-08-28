@@ -1,10 +1,10 @@
-from typing import TYPE_CHECKING, Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional, Sequence
 
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
 
 if TYPE_CHECKING:
-    from lukefi.metsi.sim.collected_data import CollectedData
+    from lukefi.metsi.core.collected_data import CollectedData
 
 
 def do_nothing[T: ComputationalUnit](data: T, step: Optional[int] = None, **kwargs) -> tuple[T, list["CollectedData"]]:
@@ -13,12 +13,12 @@ def do_nothing[T: ComputationalUnit](data: T, step: Optional[int] = None, **kwar
     return data, []
 
 
-def prepared_operation[T](operation_entrypoint: Callable[[T], T], **operation_parameters) -> Callable[[T], T]:
+def _prepared_operation[T](operation_entrypoint: Callable[[T], T], **operation_parameters) -> Callable[[T], T]:
     """prepares an opertion entrypoint function with configuration parameters"""
     return lambda state: operation_entrypoint(state, **operation_parameters)
 
 
-def simple_processable_chain[T](operation_tags: list[Callable[[T], T]],
+def simple_processable_chain[T](operation_tags: Sequence[Callable[[T], T]],
                                 operation_params: dict[Callable[[T], T], Any]) -> list[Callable[[T], T]]:
     """Prepare a list of partially applied (parametrized) operation functions based on given declaration of operation
     tags and operation parameters"""
@@ -29,5 +29,5 @@ def simple_processable_chain[T](operation_tags: list[Callable[[T], T]],
             raise MetsiException(f"Trying to apply multiple parameter set for preprocessing operation \'{tag}\'. "
                                  "Defining multiple parameter sets is only supported for alternative clause "
                                  "generators.")
-        result.append(prepared_operation(tag, **params[0]))
+        result.append(_prepared_operation(tag, **params[0]))
     return result

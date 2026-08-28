@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
 
-def evaluate_sequence[V](payload: V, *operations: Callable[[V], V]) -> V:
+def evaluate_sequence[T](payload: T, *operations: Callable[[T], T]) -> T:
     """
     Compute a single processing result for single data input.
 

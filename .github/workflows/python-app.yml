@@ -53,6 +53,10 @@ jobs:
       run: |
         pylint lukefi --output-format=github
 
+    - name: Run pylint for examples
+      run: |
+        pylint examples --output-format=github
+
     - name: Run pylint, TODO warnings only
       continue-on-error: true
       run: |
@@ -61,6 +65,10 @@ jobs:
     - name: Run mypy
       run: |
         mypy -p lukefi
+
+    - name: Run mypy for examples
+      run: |
+        mypy -p examples
 
     - name: Install R dependencies
       uses: r-lib/actions/setup-r-dependencies@v2

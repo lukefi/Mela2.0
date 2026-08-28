@@ -2,7 +2,6 @@ from typing import Generator, override
 
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import Origin, Storey, CRS
 from lukefi.metsi.data.enums.vmi import VmiIteration
@@ -17,6 +16,7 @@ from lukefi.metsi.data.formats.nfi.vmi_const import (
 from lukefi.metsi.data.formats.nfi import vmi_util
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class VMI9Builder(VMIBuilder):
@@ -35,6 +35,9 @@ class VMI9Builder(VMIBuilder):
                 tree_row = vmi_util.generate_source_data(VMI9_TREE_INDICES, row)
                 stand_identifier = vmi_util.generate_stand_identifier(tree_row)
                 self.tree_rows.setdefault(stand_identifier, []).append(tree_row)
+
+        if len(self.stand_rows) == 0:
+            raise MetsiException("Source data did not contain any valid VMI9 stand rows")
 
     @staticmethod
     def _classify_row(row: str) -> RowKind:

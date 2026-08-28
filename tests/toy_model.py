@@ -1,9 +1,11 @@
 from sqlite3 import Connection
+import sqlite3
 from typing import override
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectedData, OpTuple
-from lukefi.metsi.sim.transition import Transition
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.collected_data import CollectedData, OpTuple
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.transition import Transition
+from lukefi.metsi.core.treatment import Treatment
 
 
 class ToyModel(ComputationalUnit):
@@ -35,19 +37,24 @@ class ToyModel(ComputationalUnit):
     def update_aggregates(self):
         pass
 
+    @override
+    def output_initial_state_to_db(self, db: sqlite3.Connection):
+        _ = db
+        pass
+
     @staticmethod
     def init_db_tables(db: Connection):
         cur = db.cursor()
         cur.execute(
-        """--sql
+            """--sql
             CREATE TABLE nodes(
                 identifier TEXT,
-                stand TEXT,
+                unit TEXT,
                 done_treatment TEXT,
                 treatment_params TEXT,
                 tags TEXT,
                 node_type INTEGER DEFAULT(0),
-                PRIMARY KEY(identifier, stand))
+                PRIMARY KEY(identifier, unit))
         """
         )
         cur.execute(
@@ -58,11 +65,24 @@ class ToyModel(ComputationalUnit):
                     value INTEGER,
                     time INTEGER,
                     PRIMARY KEY(node, identifier),
-                    FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, stand)
+                    FOREIGN KEY(node, identifier) REFERENCES nodes(identifier, unit)
                 )
             """
         )
 
+    @classmethod
+    @override
+    def reconstruct_initial_state(cls, identifier: str, db: sqlite3.Connection) -> "ToyModel":
+        _ = identifier
+        _ = db
+        raise MetsiException("reconstruct_initial_state not implemented for ToyModel")
+
+    @classmethod
+    @override
+    def create_database_tables(cls, db: sqlite3.Connection, sqlite_decl: dict[str, str] | None = None):
+        _ = db
+        _ = sqlite_decl
+        raise MetsiException("create_database_tables not implemented for ToyModel")
 
 class ToyTransition(Transition[ToyModel]):
     def __init__(self, max_step: int = 1, **parameters):

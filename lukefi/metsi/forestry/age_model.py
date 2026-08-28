@@ -1,5 +1,6 @@
 from math import exp, log
-from lukefi.metsi.app.utils import MetsiException
+
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 B: dict[tuple[int, int, int, int], list[float]] = {

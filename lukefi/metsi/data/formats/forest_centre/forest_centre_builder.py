@@ -3,7 +3,6 @@ import xml.etree.ElementTree as ET
 import numpy as np
 from pandas import DataFrame, Series
 from lukefi.metsi.app.console_logging import print_logline
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.conversion import fc2internal
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, OwnerCategory
 from lukefi.metsi.data.formats import util
@@ -13,6 +12,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import DTYPES_STRATA, TreeStrata
 from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_ops2treatments import IMPLEMENTED_FC_TREATMENTS
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class ForestCentreBuilder(ForestBuilder):
@@ -145,6 +145,9 @@ class XMLBuilder(ForestCentreBuilder):
             except Exception as e:
                 raise MetsiException(f"Parsing stand {estand} failed: {e}") from e
 
+        if len(stands) == 0:
+            raise MetsiException("Source data did not contain valid FC stand elements")
+
         return stands
 
 
@@ -192,6 +195,8 @@ class GeoPackageBuilder(ForestCentreBuilder):
         self.type_value = builder_flags['strata_origin'].value
         (self.stands,
          self.strata) = gpkg_util.read_geopackage(db_path, self.type_value)
+        if len(self.stands) == 0:
+            raise MetsiException("Source data did not contain any valid GPKG stands")
         self.declared_conversions = declared_conversions  # NOTE: not in use
 
     def convert_stand_entry(self, entry: Series) -> ForestStand:
@@ -263,7 +268,8 @@ class GeoPackageBuilder(ForestCentreBuilder):
 
 
 def _append_gpkg_stratum_row(attr: dict[str, list], stand_identifier: str, rowj: Series):
-    """Append one GeoPackage stratum row into an SoA attribute dict.
+    """
+    Append one GeoPackage stratum row into an SoA attribute dict.
     """
 
     stratum_number = util.parse_type(rowj.stratumnumber, int)

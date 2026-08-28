@@ -1,18 +1,22 @@
 
 from typing import Any
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.data.util.select_units import SelectionSet, SelectionTarget, select_units
-from lukefi.metsi.sim.treatment import Treatment
+from lukefi.metsi.core.select_units import (
+    SelectionSet,
+    SelectionTarget,
+    select_units,
+    Mode)
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.treatment import Treatment
 
 
 def mark_trees_fn(input_: ForestStand,
                   /,
                   tree_selection: dict[str, Any] | None = None,
                   select_from_all: bool = True,
-                  mode: str = "odds_units",
+                  mode: Mode = Mode.ODDS_UNITS,
                   attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
     """
     mark_trees treatment (Python equivalent of the R function `ftrt_mark_trees`):
@@ -52,7 +56,13 @@ def mark_trees_fn(input_: ForestStand,
     target: SelectionTarget = ts["target"]
     sets: list[SelectionSet] = ts["sets"]
 
-    if not attributes:
+
+    assert attributes
+    select_from_all = attributes.get("select_from_all", True)
+
+    mode = attributes.get("mode", Mode.ODDS_UNITS)
+    attributes = attributes.get("attributes")
+    if not attributes or not isinstance(attributes, dict):
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
     # Selection amounts for each reference-tree row
@@ -63,7 +73,7 @@ def mark_trees_fn(input_: ForestStand,
         sets=sets,
         freq_var="stems_per_ha",
         select_from_all=bool(select_from_all),
-        mode=str(mode),
+        mode=mode,
     )
 
     # Work directly on stand.reference_trees.stems_per_ha

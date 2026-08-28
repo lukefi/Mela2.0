@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Any, Optional
 from collections.abc import Callable
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.app.app_types import ExportableContainer
 from lukefi.metsi.data.formats.util import parse_float
 from lukefi.metsi.data.model import (
@@ -22,6 +21,7 @@ from lukefi.metsi.data.vector_model import (
     DTYPES_TREE,
     DTYPES_STRATA,
 )
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 def _append_attrs(target: dict[str, list[Any]], attrs: dict[str, Any]) -> None:

@@ -1,8 +1,10 @@
-from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from typing import Sequence
 
-StandList = list[ForestStand]
+from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+
+StandList = Sequence[ForestStand]
 ForestOpPayload = SimulationPayload[ForestStand]
 SimResults = dict[str, list[ForestOpPayload]]
 ForestCondition = Condition[ForestStand]

@@ -58,7 +58,8 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
 
 
 def _trees_from_weibull(stratum: TreeStratum, n_trees: int) -> ReferenceTrees:
-    """ Generate N trees from weibull distribution.
+    """
+    Generate N trees from weibull distribution.
 
     For a single tree, stem count and diameter are obtained
     from weibull distribution.
@@ -81,7 +82,7 @@ def _trees_from_weibull(stratum: TreeStratum, n_trees: int) -> ReferenceTrees:
 
 
 def _trees_from_sapling_height_distribution(stratum: TreeStratum, n_trees: int) -> ReferenceTrees:
-    """  Generate N trees from height distribution """
+    """ Generate N trees from height distribution """
     return distributions.sapling_height_distribution(stratum, 0.0, n_trees)
 
 
@@ -128,7 +129,8 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
 
 
 def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, **params) -> Optional[ReferenceTrees]:
-    """ Composes N number of reference trees based on values of the stratum.
+    """
+    Composes N number of reference trees based on values of the stratum.
 
     The tree generation strategies: weibull distribution, lm_trees and height distribution.
     For big trees generation strategies are weibull or lm_trees depending on configuration, and height distributions.

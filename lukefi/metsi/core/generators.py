@@ -5,22 +5,22 @@ import sqlite3
 from typing import Any, Generic, Mapping, TypeVar, override
 from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.utils.file_io import output_node_to_db
-from lukefi.metsi.sim.finalizable import Finalizable
-from lukefi.metsi.sim.collected_data import CollectableDataTypes
-from lukefi.metsi.sim.condition import Condition
-from lukefi.metsi.sim.operations import do_nothing
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.sim.treatment import Treatment
+
+from lukefi.metsi.core.collected_data import CollectableDataTypes
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.db_utils import output_node_to_db
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.operations import do_nothing
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.treatment import Treatment
 
 T = TypeVar("T", bound=ComputationalUnit)
 
 
 class EventGeneratorBase(ABC, Generic[T]):
     """
-        Shared abstract base class for Generator and Event types.
+    Shared abstract base class for Generator and Event types.
     """
 
     @abstractmethod
@@ -41,8 +41,9 @@ class EventGeneratorBase(ABC, Generic[T]):
 
 class EventGenerator(EventGeneratorBase[T], ABC):
     """
-        Abstract base class for generator types.
+    Abstract base class for generator types.
     """
+    __slots__ = ("children", )
 
     children: Sequence_[EventGeneratorBase[T]]
 
@@ -59,7 +60,7 @@ class EventGenerator(EventGeneratorBase[T], ABC):
 
 class Sequence(EventGenerator[T]):
     """
-        Generator for sequential events.
+    Generator for sequential events.
     """
 
     @override
@@ -84,7 +85,7 @@ class Sequence(EventGenerator[T]):
 
 class Alternatives(EventGenerator[T]):
     """
-        Generator for branching events.
+    Generator for branching events.
     """
 
     @override
@@ -102,7 +103,9 @@ class Alternatives(EventGenerator[T]):
 
 
 class First(EventGenerator[T]):
-    """Generator for non-branching alternatives where only the first possible path is executed."""
+    """
+    Generator for non-branching alternatives where only the first possible path is executed.
+    """
 
     @override
     def evaluate(self,
@@ -121,8 +124,8 @@ class First(EventGenerator[T]):
 
 class Optional(EventGenerator[T]):
     """
-        Generator for continuing evaluation of child branches even if event conditions fail.
-        In such cases a `do_nothing` treatment is performed instead.
+    Generator for continuing evaluation of child branches even if event conditions fail.
+    In such cases a `do_nothing` treatment is performed instead.
     """
 
     def __init__(self, child: EventGeneratorBase):
@@ -145,9 +148,18 @@ class Optional(EventGenerator[T]):
 
 class Event(EventGeneratorBase[T]):
     """
-        Base class for events.
-        Contains conditions and parameters and the actual treatment function that operates on the simulation state.
+    Base class for events.
+    Contains conditions and parameters and the actual treatment function that operates on the simulation state.
     """
+
+    __slots__ = ("treatment",
+                 "static_parameters",
+                 "dynamic_parameters",
+                 "file_parameters",
+                 "preconditions",
+                 "postconditions",
+                 "tags",
+                 "db_output")
 
     treatment: Treatment[T]
     static_parameters: dict[str, Any]
@@ -207,12 +219,12 @@ class Event(EventGeneratorBase[T]):
                 return
 
         resolved_dynamic: dict[str, Any] = {
-            name: fn(payload.computational_unit) for name, fn in self.dynamic_parameters.items()
+            name: fn(payload.unit) for name, fn in self.dynamic_parameters.items()
         }
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
 
-        new_state, new_collected_data = self.treatment(payload.computational_unit, **combined_params)
+        new_state, new_collected_data = self.treatment(payload.unit, **combined_params)
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
@@ -227,7 +239,7 @@ class Event(EventGeneratorBase[T]):
 
         new_payload.operation_history.append(
             (
-                payload.computational_unit.time,
+                payload.unit.time,
                 self.treatment.name,
                 combined_params,
                 self.treatment.default_tags | self.tags
@@ -245,8 +257,8 @@ class Event(EventGeneratorBase[T]):
                 new_collected_data,
                 self.tags | self.treatment.default_tags)
 
-        if isinstance(new_payload.computational_unit, Finalizable):
-            new_payload.computational_unit.finalize()
+        if isinstance(new_payload.unit, Finalizable):
+            new_payload.unit.finalize()
 
         yield new_payload
 

@@ -1,7 +1,8 @@
 from typing import Any, Callable, Generic, Mapping, Optional, TypeVar
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, OpTuple
-from lukefi.metsi.sim.operations import do_nothing as do_nothing_
+
+from lukefi.metsi.core.collected_data import CollectableDataTypes, OpTuple
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.operations import do_nothing as do_nothing_
 
 T_contra = TypeVar("T_contra", bound=ComputationalUnit, contravariant=True)
 TreatmentFn = Callable[[T_contra], OpTuple[T_contra]]
@@ -11,6 +12,8 @@ class Treatment(Generic[T_contra]):
     """
     Class for wrapping a TreatmentFn with all necessary metadata.
     """
+
+    __slots__ = ("name", "treatment_fn", "default_tags", "collected_data")
 
     name: str
     """
@@ -72,6 +75,15 @@ class Treatment(Generic[T_contra]):
 
 
 class PredeterminedTreatment(Generic[T_contra]):
+
+    __slots__ = ("name",
+                 "treatment_fn",
+                 "tags",
+                 "static_parameters",
+                 "file_parameters",
+                 "dynamic_parameters",
+                 "evaluated_params",
+                 "collected_data")
 
     name: str
     treatment_fn: TreatmentFn[T_contra]

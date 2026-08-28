@@ -4,6 +4,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.0.0] - 2026-08-19
+
+### Changed
+
+- Renamed the `sim` package to `core`
+- Moved domain independent base classes under `core`
+- Moved `select_units` under `core`
+- Made the preprocessor interface generic
+- Removed all domain dependencies from `core`
+- Changed classes to use `__slots__` where applicable
+
+## [1.0.2] - 2026-08-18
+
+### Changed
+
+- An exception is now raised if no valid forest stand entries are parsed from source data
+
+## [1.0.1] - 2026-08-17
+
+### Changed
+
+- Run mode validation now checks that resimulation is not run together with other modes
+
+## [1.0.0] - 2026-08-12
+
+### Changed
+
+- Replaced dictionary based control structure with a typed, class based one
+
+## [0.11.2] - 2026-08-12
+
+### Added
+
+- Lists of predetermined treatments are now cleared once the treatments are performed by updating
+
+## [0.11.1] - 2026-08-12
+
+### Removed
+
+- Removed unused input slicing functions
+
+## [0.11.0] - 2026-08-12
+
+### Added
+
+- Added resimulation run mode
+
+## [0.10.0] - 2026-08-10
+
+### Removed
+
+- Removed the input slicing feature
+
 ## [0.9.0] - 2026-06-30
 
 ### Added

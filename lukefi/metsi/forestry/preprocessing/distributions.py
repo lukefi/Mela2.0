@@ -1,10 +1,11 @@
 # pylint: disable=invalid-name
 
-""" Module contains distribution based model functions
-    - weibull distribution
-    - simple height distribution
-    - weibull height distribution for sapling stratum and diameter models of generated
-      sapling trees
+"""
+Module contains distribution based model functions
+- weibull distribution
+- simple height distribution
+- weibull height distribution for sapling stratum and diameter models of generated
+  sapling trees
 """
 import math
 from typing import Optional
@@ -15,7 +16,8 @@ from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStratum
 
 def weibull_coeffs(diameter: float, basal_area: float,
                    min_diameter: Optional[float] = None) -> tuple[float, float, float]:
-    """ Weight parameter calcualtions for Weibull distribution formula.
+    """
+    Weight parameter calcualtions for Weibull distribution formula.
 
     Notice that min_diameter can be used to override the formulation of weight (a).
 
@@ -34,8 +36,9 @@ def weibull_coeffs(diameter: float, basal_area: float,
 
 def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
             min_diameter: Optional[float] = None) -> ReferenceTrees:
-    """ Computes Stems per hectare and diameter for given number of refernece trees.
-        The values are driven from the Weibull distribution.
+    """
+    Computes Stems per hectare and diameter for given number of refernece trees.
+    The values are driven from the Weibull distribution.
 
     :param n_samples: Number of trees to be created
     :param diameter: Average diameter (cm)
@@ -83,7 +86,8 @@ def weibull(n_samples: int, diameter: float, basal_area: float, height: float,
 # ---- Weibull height distribution models for diameter models of sapling trees ----
 
 def diameter_model_valkonen(height_rt: float) -> float:
-    """ Sapling diameter prediction model by Valkonen (1997).
+    """
+    Sapling diameter prediction model by Valkonen (1997).
     Predicts sapling diameter for youngest trees directly from height.
 
     height_rt: reference tree height (m)
@@ -94,7 +98,8 @@ def diameter_model_valkonen(height_rt: float) -> float:
 
 
 def diameter_model_siipilehto(height_rt: float, height: float, diameter: float, dominant_height: float) -> float:
-    """ Diameter model for reference tree by Siipilehto in FORECO 257
+    """
+    Diameter model for reference tree by Siipilehto in FORECO 257
 
     height_rt: Reference tree height (m)
     height: Mean diameter of stratum (cm)
@@ -119,7 +124,8 @@ def predict_sapling_diameters(
         height: float,
         diameter: float,
         dominant_height: float) -> ReferenceTrees:
-    """ Logic for predicting sapling diameters.
+    """
+    Logic for predicting sapling diameters.
 
     Diameters are predicted via Valkonen's diameter height model or Siipilehto's diameter model.
     For other cases diameter is set to zero.
@@ -146,7 +152,8 @@ def predict_sapling_diameters(
 
 
 def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_trees: int) -> ReferenceTrees:
-    """Formulates weibull height distribution of sapling stratum and the number of stems of the trees
+    """
+    Formulates weibull height distribution of sapling stratum and the number of stems of the trees
 
     References: Siipilehto, J. 2009, Modelling stand structure in young Scots pine dominated stands.
         Forest Ecology and management 257: 223–232. (GLM model).
@@ -213,7 +220,8 @@ def weibull_sapling(height: float, stem_count: float, dominant_height: float, n_
 
 
 def sapling_height_distribution(stratum: TreeStratum, dominant_height: float, n_trees: int) -> ReferenceTrees:
-    """Formulates height distribution of sapling stratum and predicts the diameters and the number of stems of the
+    """
+    Formulates height distribution of sapling stratum and predicts the diameters and the number of stems of the
     simulation trees
     References: Siipilehto, J. 2009, Modelling stand structure in young Scots pine dominated stands.
                 Forest Ecology and management 257: 223–232. (GLM model)

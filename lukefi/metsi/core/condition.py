@@ -1,15 +1,16 @@
 from collections.abc import Callable
-from typing import Optional, TypeVar
+from typing import Optional
 
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
-T = TypeVar("T")
-Predicate = Callable[[T], bool]
+type Predicate[T] = Callable[[T], bool]
 
 
 class Condition[T: ComputationalUnit]:
+    __slots__ = ("predicate", "name", "time_points", "relative_time_points")
+
     predicate: Predicate[SimulationPayload[T]]
     name: str
     time_points: set[int]

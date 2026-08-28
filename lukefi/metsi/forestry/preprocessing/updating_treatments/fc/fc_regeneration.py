@@ -6,7 +6,7 @@ from lukefi.metsi.data.enums.internal import (
     Origin
 )
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration_fn
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
+from lukefi.metsi.core.treatment import PredeterminedTreatment
 
 
 def _regeneration_species_fn(stand: ForestStand) -> TreeSpecies:

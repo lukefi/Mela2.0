@@ -6,7 +6,8 @@ from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratu
 
 
 def calculate_basal_area(tree: ReferenceTree) -> float:
-    """ Single reference tree basal area calculation.
+    """
+    Single reference tree basal area calculation.
 
     The tree should contain breast height diameter (in cm) and stesm per hectare for the species spesific calculations.
 
@@ -20,7 +21,8 @@ def calculate_basal_area(tree: ReferenceTree) -> float:
 
 
 def generate_diameter_threshold(d1: float, d2: float) -> float:
-    """ Threshold value for diameter based comparison of two stratums.
+    """
+    Threshold value for diameter based comparison of two stratums.
 
     Threshold will have a value based on relative distance of at most 50% of the distance between d[0] and d[1].
     """
@@ -31,7 +33,8 @@ def generate_diameter_threshold(d1: float, d2: float) -> float:
 
 def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: TreeStratum,
                            reference_tree: ReferenceTree) -> TreeStratum:
-    """ Out of given strata, return the stratum for which the mean diameter better matches the reference tree diameter.
+    """
+    Out of given strata, return the stratum for which the mean diameter better matches the reference tree diameter.
     This happens by calculating a threshold value based on which of the stratum diameters
     is greater and comparing the threshold to reference tree diameter.
 
@@ -88,7 +91,8 @@ def find_matching_stratum_by_diameter_lm(
 
 
 def split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
-    """ Splits a list into two lists based on a predicate.
+    """
+    Splits a list into two lists based on a predicate.
 
     :param items: list to be split
     :param predicate: Predicate used to split the list

@@ -1,8 +1,8 @@
 import unittest
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration_fn
+from lukefi.metsi.core.exceptions import MetsiException
 
 class RegenerationTest(unittest.TestCase):
     def make_stand(self, identifier="stand-A", year=2025):

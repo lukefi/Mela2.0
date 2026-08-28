@@ -1,5 +1,5 @@
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
+from lukefi.metsi.core.treatment import PredeterminedTreatment
 from lukefi.metsi.forestry.preprocessing.updating_treatments.fc.fc_cutting import (
     over_storey_cutting,
     first_thinning,

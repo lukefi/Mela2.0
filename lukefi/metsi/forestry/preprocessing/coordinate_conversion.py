@@ -1,9 +1,9 @@
 from typing import Optional
 from numba import njit
 from lukefi.metsi.data.enums.internal import CRS, EPSG_3067_ALIASES, EPSG_2393_ALIASES
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.forestry.preprocessing.data.points import ref_coords as _REF_COORDS, point_map as _POINT_MAP
 from lukefi.metsi.forestry.preprocessing.data.triangles import triangles as _TRIANGLES
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 MAXTRIANGLE = 167000.0
@@ -156,6 +156,3 @@ def convert_location_to_ykj(
         f"Error while converting from {CRS.EPSG_3067} to {CRS.EPSG_2393}. "
         f"Check the source crs.\n We only support {CRS.EPSG_3067} as source crs at the moment."
     )
-
-
-__all__ = ["convert_location_to_ykj"]

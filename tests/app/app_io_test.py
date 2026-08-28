@@ -1,17 +1,14 @@
 import unittest
-import os
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-from lukefi.metsi.app.utils import ConfigurationException
-from lukefi.metsi.app.app_io import (
-    MetsiConfiguration, RunMode,
-    StateFormat,
-    parse_cli_arguments, generate_application_configuration
-)
 
+
+from lukefi.metsi.app.app_io import parse_cli_arguments
 from lukefi.metsi.app.file_io import delete_existing_export_files
-
+from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.exceptions import ConfigurationException
+from lukefi.metsi.app.metsi_control import AppConfiguration
 
 class TestAppIO(unittest.TestCase):
 
@@ -24,63 +21,21 @@ class TestAppIO(unittest.TestCase):
         self.assertEqual('control.py', result['control_file'])
         self.assertFalse(result['delete'])
 
-    def test_control_configurations(self):
-        args = ['cli_input', 'cli_output', 'cli_control.py']
-        cli_args = parse_cli_arguments(args)
-
-        # y is CLI-only flag and must not go into app config
-        cli_args.pop("delete", None)
-        control_args = {
-            'run_modes': ['preprocess',
-                          'simulate'],
-            'multiprocessing': True}
-        app_args = {**cli_args, **control_args}
-        result = generate_application_configuration(app_args)
-        self.assertEqual(args[0], result.input_path)
-        self.assertEqual(args[1], result.target_directory)
-        self.assertEqual(args[2], result.control_file)
-        self.assertEqual(StateFormat.CSV, result.state_format)  # MetsiConfiguration default
-        self.assertEqual([RunMode.PREPROCESS, RunMode.SIMULATE], result.run_modes)
-
-    def test_control_config_with_invalid_values(self):
-        control_args = {'asd123': 123}
-        self.assertRaises(ConfigurationException, generate_application_configuration, control_args)
-
 
 class TestRunModes(unittest.TestCase):
     def test_valid_typical_run_modes(self):
-        modes = ['preprocess', 'export_prepro', 'simulate', 'postprocess', 'export']
-        result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.EXPORT_PREPRO,
-                         RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
-
-    def test_valid_run_modes_sorted(self):
-        modes = ['simulate', 'PREPROCESS', 'export']
-        result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.PREPROCESS, RunMode.SIMULATE, RunMode.EXPORT])
-
-    def test_valid_run_modes_with_dependencies(self):
-        modes = ['simulate', 'postprocess', 'export']
-        result = MetsiConfiguration._validate_and_sort_run_modes(modes)
-        self.assertEqual(result, [RunMode.SIMULATE, RunMode.POSTPROCESS, RunMode.EXPORT])
-
-    def test_invalid_run_mode(self):
-        modes = ['simulate', 'invalid_mode']
-        self.assertRaises(ConfigurationException,
-                          MetsiConfiguration._validate_and_sort_run_modes,
-                          modes)
+        _ = AppConfiguration(
+            state_format=StateFormat.VMI13,
+            run_modes=[
+                RunMode.PREPROCESS,
+                RunMode.EXPORT_PREPRO,
+                RunMode.SIMULATE,
+            ])
 
     def test_export_prepro_without_preprocess(self):
-        modes = ['export_prepro']
-        self.assertRaises(ConfigurationException,
-                          MetsiConfiguration._validate_and_sort_run_modes,
-                          modes)
-
-    def test_export_without_simulate_or_postprocess(self):
-        modes = ['export']
-        self.assertRaises(ConfigurationException,
-                          MetsiConfiguration._validate_and_sort_run_modes,
-                          modes)
+        self.assertRaises(ConfigurationException, AppConfiguration, state_format=StateFormat.VMI13, run_modes=[
+            RunMode.EXPORT_PREPRO,
+        ])
 
 
 class TestDeleteExistingExportFiles(unittest.TestCase):

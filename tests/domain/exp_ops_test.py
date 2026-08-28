@@ -3,9 +3,9 @@ from unittest.mock import Mock
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.forestry_types import StandList
-from lukefi.metsi.app.utils import ConfigurationException
 from lukefi.metsi.domain.exp_ops import prepare_rst_output, classify_values_to
 from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.core.exceptions import ConfigurationException
 
 
 class TestExpOps(unittest.TestCase):
@@ -52,7 +52,7 @@ class TestExpOps(unittest.TestCase):
             has_strata=Mock(return_value=False),
         )
 
-        self.stands = StandList([self.stand1, self.stand2])
+        self.stands = [self.stand1, self.stand2]
 
     def test_prepare_rst_output(self):
         result = prepare_rst_output(self.stands)

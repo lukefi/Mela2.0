@@ -65,8 +65,7 @@ class RunMode(IntConfigEnum):
     UPDATE = 2
     EXPORT_PREPRO = 3
     SIMULATE = 4
-    POSTPROCESS = 5
-    EXPORT = 6
+    RESIMULATE = 5
 
 
 class StrataOrigin(IntConfigEnum):
@@ -85,11 +84,4 @@ class StateFormat(StringConfigEnum):
     VMI13 = 'vmi13'
     XML = 'xml'
     GPKG = 'gpkg'
-
-
-# Expose public API
-__all__ = [
-    "RunMode",
-    "StrataOrigin",
-    "StateFormat",
-]
+    DB = 'db'

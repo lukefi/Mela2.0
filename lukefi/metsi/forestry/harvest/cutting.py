@@ -1,24 +1,24 @@
 from typing import Any
-
 import numpy as np
-from lukefi.metsi.app.utils import MetsiException
+
 from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.sim.collected_data import OpTuple, CollectedData
-from lukefi.metsi.data.util.select_units import select_units, SelectionSet, SelectionTarget
 from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.sim.treatment import Treatment
 from lukefi.metsi.domain.natural_processes.motti_util import (
     apply_motti_yp_reduction_from_removed_reference_trees,
 )
+from lukefi.metsi.core.collected_data import OpTuple, CollectedData
+from lukefi.metsi.core.select_units import select_units, SelectionSet, SelectionTarget, Mode
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.treatment import Treatment
 
 
 def cutting_fn(stand: ForestStand,
                /,
                tree_selection: dict[str, Any] | None = None,
                cutting_method: CuttingMethod | None = None,
-               mode: str = "odds_units",
+               mode: Mode = Mode.ODDS_UNITS,
                select_from_all: bool = False,
                ) -> OpTuple[ForestStand]:
     """

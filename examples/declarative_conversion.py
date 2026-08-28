@@ -2,21 +2,24 @@
 
 from random import random
 from examples.declarations.export_prepro import mela
+from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 
 
 def sum3(x, y, z) -> float:
     return float(x) + float(y) + float(z)
 
 
-control_structure = {
-    "app_configuration": {
-        "state_format": "vmi13",
-        "run_modes": ["preprocess", "export_prepro"]
-    },
+control_structure = MetsiControl[ForestStand](
+    app_configuration=AppConfiguration(
+        state_format=StateFormat.VMI13,
+        run_modes=[RunMode.PREPROCESS, RunMode.EXPORT_PREPRO]
+    ),
     # Examples of declarative conversions
-    "conversions": {
+    conversions={
         'vmi13': {
             # common conversions
             'VAR0': Conversion(lambda: 123456789),
@@ -32,10 +35,13 @@ control_structure = {
             'VAR9': Conversion(lambda x, obj: int(x) * obj.area, indices=("row_type",), object_type=ForestStand),
             'VAR10': Conversion(lambda x, obj: int(x) * obj.VAR1, indices=("row_type",), object_type=ForestStand),
         }
-    }
-}
+    },
+    preprocessing=Preprocessing(
+        operations=[],
+        params={}
+    ),
+    export_prepro=mela
+)
 
-# The preprocessing export format is added as an external module
-control_structure['export_prepro'] = mela
 
 __all__ = ['control_structure']

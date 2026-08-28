@@ -3,7 +3,13 @@ import unittest
 from pathlib import Path
 
 from lukefi.metsi.app.app_types import ExportableContainer
-from lukefi.metsi.app.file_io import csv_exp_writer
+from lukefi.metsi.app.file_io import csv_exp_writer, vmi_file_reader
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.data.formats.nfi.vmi10_builder import VMI10Builder
+from lukefi.metsi.data.formats.nfi.vmi11_builder import VMI11Builder
+from lukefi.metsi.data.formats.nfi.vmi12_builder import VMI12Builder
+from lukefi.metsi.data.formats.nfi.vmi13_builder import VMI13Builder
+from lukefi.metsi.data.formats.nfi.vmi9_builder import VMI9Builder
 from tests.data.test_util import ForestBuilderTestBench
 from tests.data.snapshot_util import assert_snapshot, assert_file_snapshot
 
@@ -83,24 +89,24 @@ class TestForestBuilderCsvExpSnapshots(unittest.TestCase):
         self._assert_csv_exp_snapshots("vmi13", self.vmi13_stands)
 
 
-class TestForestBuilder(unittest.TestCase):
+class TestBadSourceData(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.vmi9_builder = ForestBuilderTestBench.vmi9_builder
-        cls.vmi10_builder = ForestBuilderTestBench.vmi10_builder
-        cls.vmi11_builder = ForestBuilderTestBench.vmi11_builder
-        cls.vmi12_builder = ForestBuilderTestBench.vmi12_builder
-        cls.vmi13_builder = ForestBuilderTestBench.vmi13_builder
+    def test_vmi9_builder_should_fail_with_xml(self):
+        reader = vmi_file_reader(Path("tests", "data", "resources", "SMK_source.xml"))
+        self.assertRaises(MetsiException, VMI9Builder, {}, {}, reader)
 
-        cls.vmi9_stands = ForestBuilderTestBench.vmi9_built()
-        cls.vmi10_stands = ForestBuilderTestBench.vmi10_built()
-        cls.vmi11_stands = ForestBuilderTestBench.vmi11_built()
-        cls.vmi12_stands = ForestBuilderTestBench.vmi12_built()
-        cls.vmi13_stands = ForestBuilderTestBench.vmi13_built()
+    def test_vmi10_builder_should_fail_with_xml(self):
+        reader = vmi_file_reader(Path("tests", "data", "resources", "SMK_source.xml"))
+        self.assertRaises(MetsiException, VMI10Builder, {}, {}, reader)
 
-        cls.vmi9_stands_ref_trees_false = ForestBuilderTestBench.vmi9_built({'measured_trees': False, 'strata': True})
-        cls.vmi10_stands_ref_trees_false = ForestBuilderTestBench.vmi10_built({'measured_trees': False, 'strata': True})
-        cls.vmi11_stands_ref_trees_false = ForestBuilderTestBench.vmi11_built({'measured_trees': False, 'strata': True})
-        cls.vmi12_stands_ref_trees_false = ForestBuilderTestBench.vmi12_built({'measured_trees': False, 'strata': True})
-        cls.vmi13_stands_ref_trees_false = ForestBuilderTestBench.vmi13_built({'measured_trees': False, 'strata': True})
+    def test_vmi11_builder_should_fail_with_xml(self):
+        reader = vmi_file_reader(Path("tests", "data", "resources", "SMK_source.xml"))
+        self.assertRaises(MetsiException, VMI11Builder, {}, {}, reader)
+
+    def test_vmi12_builder_should_fail_with_xml(self):
+        reader = vmi_file_reader(Path("tests", "data", "resources", "SMK_source.xml"))
+        self.assertRaises(MetsiException, VMI12Builder, {}, {}, reader)
+
+    def test_vmi13_builder_should_fail_with_xml(self):
+        reader = vmi_file_reader(Path("tests", "data", "resources", "SMK_source.xml"))
+        self.assertRaises(MetsiException, VMI13Builder, {}, {}, reader)

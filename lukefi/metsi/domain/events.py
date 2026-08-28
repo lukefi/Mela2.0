@@ -1,3 +1,5 @@
+""" NOTE: This module is depricated and should be removed """
+
 from typing import Any, Optional
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
@@ -5,8 +7,8 @@ from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
-from lukefi.metsi.sim.generators import Event
-from lukefi.metsi.sim.treatment import Treatment, do_nothing
+from lukefi.metsi.core.generators import Event
+from lukefi.metsi.core.treatment import Treatment, do_nothing
 
 
 class DoNothing(Event[ForestStand]):
@@ -79,8 +81,3 @@ class GrowMotti(Event[ForestStand]):
             preconditions=preconditions,
             postconditions=postconditions,
             file_parameters=file_parameters)
-
-
-__all__ = [
-    "DoNothing",
-]

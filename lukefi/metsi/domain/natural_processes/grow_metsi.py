@@ -10,7 +10,6 @@
 from typing import Sequence
 import numpy as np
 
-from lukefi.metsi.app.utils import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
@@ -20,7 +19,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
-from lukefi.metsi.sim.collected_data import OpTuple
+from lukefi.metsi.core.collected_data import OpTuple
 
 # Lower-level MetsiGrow types
 from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
@@ -34,6 +33,7 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Origin,
     Storie,
 )
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 # ---------- helpers ----------

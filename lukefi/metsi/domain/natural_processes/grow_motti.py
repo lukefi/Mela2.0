@@ -5,8 +5,8 @@ from lukefi.metsi.data.enums.internal import LandUseCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.util import update_stand_growth
 from lukefi.metsi.domain.natural_processes.natural_process_wrapper import natural_process_transition
-from lukefi.metsi.sim.collected_data import OpTuple
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 @natural_process_transition

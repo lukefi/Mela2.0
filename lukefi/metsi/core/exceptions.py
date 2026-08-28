@@ -1,6 +1,3 @@
-""" App utility functions """
-
-
 class MetsiException(Exception):
     """ Base type for Metsi exceptions """
 

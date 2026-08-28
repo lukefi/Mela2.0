@@ -1,22 +1,20 @@
 import sqlite3
-from lukefi.metsi.app.utils import MetsiException
-from lukefi.metsi.data.computational_unit import ComputationalUnit
-from lukefi.metsi.domain.collected_data import NaturalProcessInfo
-from lukefi.metsi.domain.utils.file_io import NodeType, output_node_to_db
-from lukefi.metsi.sim.collected_data import CollectableDataTypes, init_collected_data_tables
-from lukefi.metsi.sim.instructions import UpdatingInstructions
-from lukefi.metsi.sim.simulation_payload import SimulationPayload
-from lukefi.metsi.sim.treatment import PredeterminedTreatment
+from typing import Sequence
+from lukefi.metsi.core.collected_data import CollectableDataTypes, init_collected_data_tables
+from lukefi.metsi.core.db_utils import NodeType, output_node_to_db
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.sim_control import Updating
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.treatment import PredeterminedTreatment
 
 
-def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructions[T],
-                                       units: list[T],
+def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
+                                       units: Sequence[T],
                                        db: sqlite3.Connection | None = None) -> tuple[list[SimulationPayload[T]],
                                                                                       CollectableDataTypes | None]:
     target_time = updating_instructions.target_time
     transition = updating_instructions.transition
-    output_transition_state = updating_instructions.output_transition_state
-    output_transition_cd = updating_instructions.output_transition_cd
     output_treatment_state = updating_instructions.output_treatment_state
     output_treatment_cd = updating_instructions.output_treatment_cd
     cd_types: CollectableDataTypes | None = None
@@ -34,11 +32,11 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
         current = SimulationPayload(unit)
         keep_running = True
         while keep_running:
-            step, treatments = get_step_and_treatments(current.computational_unit, target_time)
+            step, treatments = get_step_and_treatments(current.unit, target_time)
 
             for treatment in treatments:
-                current.computational_unit, cd = treatment(current.computational_unit)
-                current.computational_unit.update_aggregates()
+                current.unit, cd = treatment(current.unit)
+                current.unit.update_aggregates()
                 current.node_id.append(0)
                 if db is not None:
                     output_node_to_db(
@@ -46,38 +44,40 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
                         current.node_id,
                         treatment.name,
                         treatment.evaluated_params,
-                        current.computational_unit,
+                        current.unit,
                         cd,
                         treatment.tags,
                         output_state=output_treatment_state,
-                        output_collected_data=output_treatment_cd,
+                        output_cd=output_treatment_cd,
                         node_type=NodeType.UPDATING_TREATMENT
                     )
 
             if step > 0:
-                current.computational_unit, cd = transition(current.computational_unit, step)
-                current.computational_unit.update_aggregates()
+                # TODO: This is a bit of a hack. DB stuff should be refactored.
+                current.unit, cd = transition(current, None, step)
+                current.unit.update_aggregates()
                 if db is not None:
                     output_node_to_db(
                         db,
                         current.node_id,
-                        transition.__name__,
+                        transition.name,
                         {},
-                        current.computational_unit,
+                        current.unit,
                         cd,
                         tags=None,
-                        output_state=output_transition_state,
-                        output_collected_data=output_transition_cd,
+                        output_state=transition.db_output_state,
+                        output_cd=transition.db_output_cd,
                         transition_count=1,
                         node_type=NodeType.UPDATING_TRANSITION
                     )
             else:
                 keep_running = False
 
-        # TODO: delete current.comptutaional_unit.predetermined_treatments?
+        # Drop performed treatments
+        current.unit.predetermined_treatments = None
 
         # Update starting time for relative timepoints
-        current.computational_unit.start_time = current.computational_unit.time
+        current.unit.start_time = current.unit.time
 
         # TODO: update initial state tables in db?
 
@@ -87,11 +87,11 @@ def update_units[T: ComputationalUnit](updating_instructions: UpdatingInstructio
 
 
 def _get_collected_data_types[T: ComputationalUnit](
-        units: list[T],
-        updating_instructions: UpdatingInstructions) -> CollectableDataTypes:
+        units: Sequence[T],
+        updating_instructions: Updating) -> CollectableDataTypes:
 
-    if updating_instructions.output_transition_cd:
-        retval: CollectableDataTypes = {NaturalProcessInfo}
+    if updating_instructions.transition.db_output_cd:
+        retval = updating_instructions.transition.collected_data
     else:
         retval = set()
 
