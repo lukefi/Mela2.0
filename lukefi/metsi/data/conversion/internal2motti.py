@@ -1,4 +1,4 @@
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.enums.internal import (
     MetsiEnum, CONIFEROUS_SPECIES, DECIDUOUS_SPECIES,
     DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType)

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from lukefi.metsi.app.utils import MetsiException
+from lukefi.metsi.core.exceptions import MetsiException
 
 
 class MottiStub:

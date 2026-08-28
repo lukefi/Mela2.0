@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Any
 
 
@@ -41,10 +41,13 @@ def convert_str_to_type[T: Enum | int | float | str](value: str | None,
                                                           ret_type: type[T]) -> T | None:
     if value is None or value == "None":
         return None
-    if issubclass(ret_type, Enum):
+    if issubclass(ret_type, IntEnum):
         return ret_type(int(value))
+    if issubclass(ret_type, Enum):
+        return ret_type(value)
     if issubclass(ret_type, int):
         return ret_type(value)
     if issubclass(ret_type, float):
         return ret_type(value)
     return ret_type(value)
+ 
