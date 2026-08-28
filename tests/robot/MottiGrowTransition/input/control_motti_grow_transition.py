@@ -1,11 +1,12 @@
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+from lukefi.metsi.core.generators import Event
+from lukefi.metsi.core.treatment import do_nothing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
-from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
     filter_stands,
@@ -60,7 +61,7 @@ control_structure = MetsiControl[ForestStand](
             SimulationInstruction[ForestStand](
                 conditions=[TimePoints([2025, 2030, 2035])],
                 events=[
-                    DoNothing()
+                    Event(do_nothing)
                 ]
             )
         ],

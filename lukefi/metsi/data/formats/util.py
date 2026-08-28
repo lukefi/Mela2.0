@@ -38,7 +38,7 @@ def get_or_default(maybe: Any | None, default: Any = None) -> Any:
 
 
 def convert_str_to_type[T: Enum | int | float | str](value: str | None,
-                                                          ret_type: type[T]) -> T | None:
+                                                     ret_type: type[T]) -> T | None:
     if value is None or value == "None":
         return None
     if issubclass(ret_type, IntEnum):
