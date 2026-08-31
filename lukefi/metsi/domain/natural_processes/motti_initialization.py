@@ -98,6 +98,7 @@ def _strip_tree_strata(stand: ForestStand):
     stripped.origin = stand.tree_strata.origin.copy()
     stripped.storey = stand.tree_strata.storey.copy()
 
+    # NOTE: We lose all original data info about species, id_number and generated tree count, but does it matter?
     stripped.basal_area[:] = 0.0
     stripped.stems_per_ha[:] = 0.0
     stripped.mean_height[:] = 0.0

@@ -39,7 +39,7 @@ control_structure = MetsiControl[ForestStand](
                     "n_trees": 10,
                     "method": "weibull",
                     "debug": False,
-                    "delete_strata": True
+                    "delete_strata": False
                 }
             ],
             filter_stands: [

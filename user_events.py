@@ -63,7 +63,7 @@ def _forest_categories_check(payload: SimulationPayload[ForestStand]) -> bool:
 
 def _forest_categories_regeneration(payload: Any) -> bool:
 
-    stand: ForestStand = payload.computational_unit  # SimulationPayload[ForestStand]
+    stand: ForestStand = payload.unit  # SimulationPayload[ForestStand]
 
     manag_cat = stand.forest_management_category
     site_idx = stand.site_type_category
@@ -477,17 +477,17 @@ class SeedtreeCutting(Event[ForestStand]):
             return np.ones(trees.size, dtype=bool)
 
         default_tree_selection = {
-            "target": SelectionTarget("relative", "stems_per_ha", 0.5),
+            "target": SelectionTarget(TargetType.RELATIVE, "stems_per_ha", 0.5),
             "sets": [
                 SelectionSet[ForestStand, ReferenceTrees](
                     s_all,
                     "breast_height_diameter",
                     "stems_per_ha",
-                    "relative",
+                    TargetType.RELATIVE,
                     1.0,
                     profile_x=[0, 1],
                     profile_y=[0.5, 0.5],
-                    profile_xmode="relative",
+                    profile_xmode=ProfileXMode.RELATIVE,
                 )
             ],
         }

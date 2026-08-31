@@ -11,7 +11,7 @@ Test Tags         motti    smk
 *** Variables ***
 ${INPUT_DATA}       ${CURDIR}/input/data.xml
 ${OUTPUT_PATH}      ${CURDIR}/output/test
-${CONTROL_SCRIPT}   ${CURDIR}/input/control.py
+${CONTROL_SCRIPT}   ${CURDIR}/input/control_motti_grow_transition.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
 ${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
 ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
