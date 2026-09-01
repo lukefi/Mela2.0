@@ -972,7 +972,7 @@ def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
     return list(decl.get(table, []))
 
 
-def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
+def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, CRS | None] | None:
     return ast.literal_eval(src)
 
 
