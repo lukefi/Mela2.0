@@ -50,4 +50,3 @@ def convert_str_to_type[T: Enum | int | float | str](value: str | None,
     if issubclass(ret_type, float):
         return ret_type(value)
     return ret_type(value)
- 
