@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.0.0] - 2026-09-02
+
+### Changed
+
+- Motti state as composition on ForestStand
+- General initialization as composition of transition
+- Separate Motti initialization from Motti growth
+- Motti state synkronisation with ForestStand reference trees
+- Implemented Motti Juvenile Development treatments and events (unvalidated)
+    - regeneration
+    - early care
+    - PCT (sapling care)
+    - fillin planting
+    - seed tree cutting
+    - mineral soil fertilization
+- Introduce CRS enum class
+- Make tree numbers uniquely incremental for stands reference trees
+
 ## [2.0.0] - 2026-08-19
 
 ### Changed
