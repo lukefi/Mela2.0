@@ -39,15 +39,13 @@ def _next_reference_tree_identifier_suffix(stand: ForestStand) -> int:
 
 
 def new_reference_tree_identity(stand: ForestStand) -> tuple[str, int]:
+    """ Composes a new identifier and tree number value for a new reference tree
+            keeping tree number as unique and incremental within the stand.
+    """
     rt = stand.reference_trees
-
-    # keep tree_number allocation logic for Motti bookkeeping
-    tree_number = _next_reference_tree_number(rt)
-
-    # allocate identifier independently so it is always unique in the stand
-    ident_suffix = _next_reference_tree_identifier_suffix(stand)
-    identifier = f"{stand.identifier}-{ident_suffix}-tree"
-
+    tree_number = np.max(rt.tree_number).item() if rt.size > 0 else 0
+    tree_number += 1
+    identifier = f"{stand.identifier}-{tree_number}-tree"
     return identifier, tree_number
 
 

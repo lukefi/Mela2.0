@@ -227,7 +227,8 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
         for spe_name, internal_species in UT_SPECIES_FIELDS:
             s = getattr(ut[0][layer], spe_name)
 
-            try: # NOTE: Unnecessary try-except?
+            try:
+                # If Motti stratum year is -1, it means that the stratum is not yet active and should be skipped.
                 if float(s.year) == -1.0:
                     continue
             except TypeError:
@@ -242,6 +243,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                 osid = int(osid_raw)
 
                 if osid <= 0:
+                    # If osid is not set, allocate a new one and update the Motti sapling stratum
                     osid = next_osid
                     next_osid += 1
                     setattr(s, f"osid_{cat_code}", float(osid))
