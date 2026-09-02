@@ -4,7 +4,7 @@ import numpy as np
 from pandas import DataFrame, Series
 from lukefi.metsi.app.console_logging import print_logline
 from lukefi.metsi.data.conversion import fc2internal
-from lukefi.metsi.data.enums.internal import CuttingMethod, OwnerCategory
+from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, OwnerCategory
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.forest_builder_base import ForestBuilder
 from lukefi.metsi.data.formats.forest_centre import gpkg_util, smk_util
@@ -98,6 +98,7 @@ class XMLBuilder(ForestCentreBuilder):
         stand.start_year = stand.year
         stand.set_area(util.parse_type(stand_basic_data.Area, float))  # RST record 3 and 4
         (latitude, longitude, crs) = smk_util.parse_coordinates(entry)
+        crs = CRS(crs) if crs is not None else None
         stand.geo_location = (latitude, longitude, None, crs)  # RST record 5,6,8
         stand.identifier = stand_basic_data.id  # RST record 7
         stand.degree_days = None  # RST record 9
@@ -208,10 +209,12 @@ class GeoPackageBuilder(ForestCentreBuilder):
         stand.set_area(entry.area - entry.areadecrease)  # RST record 3 and 4
         # RST records 5, 6 and 8
         (latitude, longitude) = entry.centroid.get('centroid')
+        crs = entry.centroid.get('crs')
+        crs = CRS(crs) if crs is not None else None
         stand.geo_location = (latitude,
                               longitude,
                               None,
-                              entry.centroid.get('crs'))
+                              crs)
         stand.identifier = entry.standid  # RST record 7
         stand.degree_days = None  # RST record 9
         stand.owner_category = OwnerCategory.PRIVATE  # RST record 10

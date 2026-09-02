@@ -61,7 +61,8 @@ sqlite_decl = {
         "tree_type",
         "damage_type",
         "basal_area",
-        "volume"
+        "volume",
+        "stratum"
     ],
 
     "strata": [

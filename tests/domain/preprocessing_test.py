@@ -50,7 +50,7 @@ class PreprocessingTest(unittest.TestCase):
 
     def test_coordinate_conversion_operation(self):
         dummy_float = 0.0
-        crs = CRS.EPSG_3067.epsg
+        crs = CRS.EPSG_3067
         stand = ForestStand(
             geo_location=(6640610.26, 267924.92, dummy_float, crs)
         )
@@ -67,7 +67,7 @@ class PreprocessingTest(unittest.TestCase):
             if rstand.geo_location:
                 self.assertEqual(rstand.geo_location[0], 6643400.000631507)
                 self.assertEqual(rstand.geo_location[1], 3268000.003019635)
-                self.assertEqual(rstand.geo_location[3], CRS.EPSG_2393.epsg)
+                self.assertEqual(rstand.geo_location[3], CRS.EPSG_2393)
             invalid_assertion = {"target_system": "ASD"}
             self.assertRaises(
                 Exception,

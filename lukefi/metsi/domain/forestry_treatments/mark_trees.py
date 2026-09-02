@@ -1,13 +1,23 @@
 
+from typing import Any
 import numpy as np
-from lukefi.metsi.core.select_units import Mode, select_units
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.core.select_units import (
+    SelectionSet,
+    SelectionTarget,
+    select_units,
+    Mode)
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
 
-def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def mark_trees_fn(input_: ForestStand,
+                  /,
+                  tree_selection: dict[str, Any] | None = None,
+                  select_from_all: bool = True,
+                  mode: Mode = Mode.ODDS_UNITS,
+                  attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
     """
     mark_trees treatment (Python equivalent of the R function `ftrt_mark_trees`):
 
@@ -39,18 +49,14 @@ def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
     if stand.reference_trees.size == 0:
         return stand, []
 
-    ts = operation_parameters.get("tree_selection")
+    ts = tree_selection
     if not ts or "target" not in ts or "sets" not in ts:
         raise MetsiException("Missing 'tree_selection' with 'target' and 'sets'.")
 
-    target = ts["target"]
-    sets = ts["sets"]
+    target: SelectionTarget = ts["target"]
+    sets: list[SelectionSet] = ts["sets"]
 
-    select_from_all = operation_parameters.get("select_from_all", True)
-
-    mode = operation_parameters.get("mode", Mode.ODDS_UNITS)
-    attributes = operation_parameters.get("attributes")
-    if not attributes or not isinstance(attributes, dict):
+    if not attributes:
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
     # Selection amounts for each reference-tree row
@@ -108,5 +114,6 @@ def mark_trees_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[For
         stand.reference_trees.create(new_rows)
 
     return stand, []
+
 
 mark_trees = Treatment(mark_trees_fn, "mark_trees")

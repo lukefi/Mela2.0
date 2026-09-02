@@ -3,7 +3,7 @@ from typing import Generator, override
 import numpy as np
 
 from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.enums.internal import Origin, Storey
+from lukefi.metsi.data.enums.internal import Origin, Storey, CRS
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
@@ -143,7 +143,7 @@ class VMI9Builder(VMIBuilder):
         if not lon:
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
         height_dm = util.get_or_default(util.parse_type(row["height_above_sea_level"], float), 0.0)
-        result.set_geo_location(lat, lon, height_dm / 10.0, "EPSG:2393")
+        result.set_geo_location(lat, lon, height_dm / 10.0, CRS.EPSG_2393)
 
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
             row["maanmuokkaus_aika"],

@@ -1,13 +1,15 @@
 import ast
 from copy import copy
 import dataclasses
+from enum import Enum
 from functools import lru_cache
 import sqlite3
-from typing import Optional, override, Any, cast
+from typing import Any, Optional, override
 from dataclasses import dataclass
 
 import numpy as np
 from lukefi.metsi.data.enums.internal import (
+    CRS,
     CuttingMethod,
     DevelopmentClass,
     FraLandUseClass,
@@ -21,11 +23,13 @@ from lukefi.metsi.data.enums.internal import (
     PeatlandForestType,
     DrainedPeatlandForestType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
+from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.forestry.volume import tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit, Finalizable
 from lukefi.metsi.core.treatment import PredeterminedTreatment
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
 STANDS_TYPES = {
     "year": "INTEGER",
@@ -119,7 +123,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Tree strata in the stand.
     """
-    motti_state: Optional["MottiState"] = None
+    motti_state: Optional[MottiState] = None
 
     time: int = 0
     """
@@ -146,8 +150,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Area weight for growing stock [ha].
     """
-
-    geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[str]]] = None
+    geo_location: Optional[tuple[Optional[float], Optional[float], Optional[float], Optional[CRS]]] = None
     """
     Latitude, longitude, height above sea level [m] and coordinate reference system (CRS).
     """
@@ -355,7 +358,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.area_weight = area_ha
 
     def set_geo_location(self, lat: Optional[float], lon: Optional[float],
-                         height: Optional[float], system: str = "EPSG:3067"):
+                         height: Optional[float], system: CRS = CRS.EPSG_3067):
         if not lat or not lon:
             raise ValueError("Invalid source values for geo location")
         self.geo_location = (lat, lon, height, system)
@@ -385,7 +388,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             conv(row[3], float),
             conv(row[4], float),
             conv(row[5], float),
-            conv(row[6], str)
+            conv(row[6], CRS)
         )
         self.degree_days = conv(row[7], float)
         self.owner_category = conv(row[8], OwnerCategory)
@@ -425,10 +428,14 @@ class ForestStand(Finalizable, ComputationalUnit):
 
     @staticmethod
     def _sql_value(v):
-        if isinstance(v, (np.generic,)):
+        if isinstance(v, Enum):
+            return repr(v.value)
+        if isinstance(v, np.generic):
             return v.item()
-        if isinstance(v, (tuple, list, np.ndarray)):
+        if isinstance(v, (list, np.ndarray)):
             return str(v)
+        if isinstance(v, tuple):
+            return f'({", ".join(str(ForestStand._sql_value(x)) for x in v)})'
         return v
 
     @classmethod
@@ -489,36 +496,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         retval.tree_strata = self.tree_strata.finalize()
 
         if self.motti_state is not None:
-            dll = self.motti_state.dll
-            yy = self.motti_state.yy
-            yp = self.motti_state.yp
-            buffers = self.motti_state.buffers
-            ntrees = self.motti_state.ntrees
-            signature = self.motti_state.signature
-
-            if dll is None or yy is None or yp is None or buffers is None or ntrees is None:
-                retval.motti_state = None
-                return retval
-            if signature is None:
-                retval.motti_state = None
-                return retval
-            try:
-                yy2 = dll.clone_site(yy)
-                yp2 = dll.clone_trees(yp)
-                buffers2 = dll.clone_state_buffers(buffers)
-            except (AttributeError, TypeError, ValueError, RuntimeError):
-                # cloning failed -> drop state rather than share pointers
-                retval.motti_state = None
-                return retval
-
-            retval.motti_state = MottiState(
-                dll=dll,
-                yy=yy2,
-                yp=yp2,
-                ntrees=int(ntrees),
-                buffers=buffers2,
-                signature=cast(tuple[int, ...], signature),
-            )
+            retval.motti_state = Motti4DLL.clone_state(self.motti_state)
 
         return retval
 
@@ -994,7 +972,7 @@ def _select_columns(table: str, decl: Optional[dict]) -> list[str]:
     return list(decl.get(table, []))
 
 
-def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, str | None] | None:
+def _parse_geo_location(src: str) -> tuple[float | None, float | None, float | None, CRS | None] | None:
     return ast.literal_eval(src)
 
 
@@ -1103,13 +1081,3 @@ def stand_as_internal_row(stand: ForestStand):
         stand.under_storey,
         stand.over_storey,
     ]
-
-
-@dataclass(eq=False, repr=False)
-class MottiState:
-    dll: Any
-    yy: Any                     # "Motti4Site *"
-    yp: Any                     # "Motti4Trees *"
-    ntrees: int                 # current number of “active” trees in yp
-    buffers: Any                # MottiStateBuffers
-    signature: tuple[int, ...]

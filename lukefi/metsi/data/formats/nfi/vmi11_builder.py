@@ -1,7 +1,7 @@
 from typing import Generator, override
 
 from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.enums.internal import Origin
+from lukefi.metsi.data.enums.internal import Origin, CRS
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
@@ -146,7 +146,7 @@ class VMI11Builder(VMIBuilder):
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
         height = VMI11Builder._transform_height_above_sea_level(row["height_above_sea_level"])
-        result.set_geo_location(lat, lon, height, "EPSG:2393")
+        result.set_geo_location(lat, lon, height, CRS.EPSG_2393)
 
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
@@ -374,26 +374,36 @@ class VMI11Builder(VMIBuilder):
             trees.tree_number[i] = tree_number
         trees.species[i] = species
         trees.breast_height_diameter[i] = breast_height_diameter
+        trees.stems_per_ha[i] = stems_per_ha
+        trees.sapling[i] = sapling
+        trees.management_category[i] = management_category
+
         if height is not None:
             trees.height[i] = height
+
         if measured_height is not None:
             trees.measured_height[i] = measured_height
+
         if breast_height_age is not None:
             trees.breast_height_age[i] = breast_height_age
+
         if biological_age is not None:
             trees.biological_age[i] = biological_age
-        trees.stems_per_ha[i] = stems_per_ha
+
         if origin is not None:
             trees.origin[i] = origin
-        trees.management_category[i] = management_category
+
         if tree_category is not None:
             trees.tree_category[i] = tree_category
+
         if storey is not None:
             trees.storey[i] = storey
-        trees.sapling[i] = sapling
+
         if tree_type is not None:
             trees.tree_type[i] = tree_type
+
         if damage_type is not None:
             trees.damage_type[i] = damage_type
+
         if crown_class is not None:
             trees.crown_class[i] = crown_class

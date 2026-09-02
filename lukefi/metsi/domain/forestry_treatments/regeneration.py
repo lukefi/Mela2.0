@@ -1,15 +1,39 @@
+from lukefi.metsi.data.conversion.internal2motti import convert_species
+from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
+from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
+from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
+from lukefi.metsi.domain.natural_processes.motti_util import (
+    prune_reference_trees_not_in_motti,
+)
+from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
-from lukefi.metsi.forestry.treatment_utils import req
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
 
-def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[ForestStand]:
+def regeneration_fn(input_: ForestStand,
+                    /,
+                    origin: Origin | None = None,
+                    species: TreeSpecies | None = None,
+                    stems_per_ha: float | None = None,
+                    height: float | None = None,
+                    biological_age: float | None = None,
+                    regen_type: RegenerationType | None = None,
+                    method: MottiRegenerationMethod | None = None,
+                    breast_height_diameter: float | None = None,
+                    breast_height_age: float | None = None,
+                    ntrees: int = 10,
+                    istep: int = 0,
+                    survival_percent: float = 100.0,
+                    soil_preparation_type: int = 0,
+                    clearing: int = 0,
+                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.
-    - Parameters (all via **operation_parameters):
+    - Parameters:
         origin: int                 # e.g. 2 (planted)
         method: Optional[int]       # accepted, unused
         species: int                # tree species code
@@ -21,43 +45,60 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
         ntrees: Optional[int] = 10  # number of reference trees to create
         labels: Optional[list[str]] = None  # accepted, unused
         type: str                   # "artificial" | "natural"
+
+    - Motti path: if stand.motti_state exists, delegate sapling regeneration to Motti4Regenerate
     """
     stand = input_
 
-    origin = int(req(operation_parameters, "origin"))
-    species = int(req(operation_parameters, "species"))
-    stems_per_ha = float(req(operation_parameters, "stems_per_ha"))
-    height = float(req(operation_parameters, "height"))
-    biological_age = float(req(operation_parameters, "biological_age"))
-    regen_type = str(req(operation_parameters, "type"))
+    if origin is None:
+        raise MetsiException("Origin missing")
+    if species is None:
+        raise MetsiException("Species is missing")
+    if stems_per_ha is None:
+        raise MetsiException("stems_per_ha is missing")
+    if height is None:
+        raise MetsiException("Height is missing")
+    if biological_age is None:
+        raise MetsiException("Biological age is missing")
+    if regen_type is None:
+        raise MetsiException("regen_type is missing")
 
     # ---- optional ----
-    breast_height_diameter = operation_parameters.get("breast_height_diameter", None)
-    breast_height_age = operation_parameters.get("breast_height_age", None)
-    ntrees = operation_parameters.get("ntrees", 10)
 
     if height <= 0:
         raise MetsiException("Regeneration: Height can not be negative or zero")
-    if regen_type not in ("artificial", "natural"):
-        raise MetsiException("regeneration 'type' must be 'artificial' or 'natural'")
     if not ntrees or ntrees <= 0:
         raise MetsiException("Parameter 'ntrees' must be positive")
     if stems_per_ha <= 0:
         raise MetsiException("Parameter 'stems_per_ha' must be > 0")
 
-    if regen_type == "artificial":
+    if regen_type == RegenerationType.ARTIFICIAL:
         stand.artificial_regeneration_year = stand.year
 
-    # ---- create trees ----
+    if stand.motti_state is not None:
+        if method is None:
+            raise MetsiException("Regeneration method missing")
+
+        _regeneration_via_motti(
+            stand,
+            method=method,
+            species=species,
+            stems_per_ha=stems_per_ha,
+            step=istep,
+            survival_percent=survival_percent,
+            soil_preparation_type=soil_preparation_type,
+            clearing=clearing,
+            seed_tree_species=seed_tree_species,
+        )
+        return stand, []
+
     per_tree_stems = stems_per_ha / float(ntrees)
-    start_idx = int(stand.reference_trees.size)
-    new_rows = []
-    for i in range(ntrees):
-        global_idx = start_idx + i
-        identifier = f"{stand.identifier}-{global_idx + 1}-tree"
-        new_rows.append({
+
+    for _ in range(ntrees):
+        identifier, tree_number = new_reference_tree_identity(stand)
+        stand.reference_trees.create({
             "identifier": identifier,
-            "tree_number": global_idx,
+            "tree_number": tree_number,
             "species": species,
             "origin": origin,
             "stems_per_ha": per_tree_stems,
@@ -66,10 +107,49 @@ def regeneration_fn(input_: ForestStand, /, **operation_parameters) -> OpTuple[F
             "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
             "breast_height_age": None if breast_height_age is None else float(breast_height_age),
         })
-    stand.reference_trees.create(new_rows)
 
-    # No cdata here by design
     return stand, []
+
+
+def _regeneration_via_motti(stand: ForestStand,
+                            *,
+                            method: MottiRegenerationMethod,
+                            species: TreeSpecies,
+                            stems_per_ha: float,
+                            step: int,
+                            survival_percent: float = 100.0,
+                            soil_preparation_type: int = 0,
+                            clearing: int = 0,
+                            seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
+                            ) -> None:
+    ms = stand.motti_state
+    if ms is None or ms.buffers is None:
+        raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
+
+    cultivated_species = convert_species(species)
+    seed_species = convert_species(seed_tree_species)
+
+    method_vec = [
+        float(method),
+        survival_percent,
+        float(cultivated_species),
+        stems_per_ha,
+        soil_preparation_type,
+        clearing,
+        float(seed_species),
+    ]
+
+    ms.ntrees = Motti4DLL.regenerate_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        method=method_vec,
+        step=int(step),
+    )
+
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand)
 
 
 regeneration = Treatment(regeneration_fn, "regeneration")

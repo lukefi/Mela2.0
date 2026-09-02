@@ -28,9 +28,6 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     n_trees = len(reference_trees)
     stratum.number_of_generated_trees = n_trees
 
-    for i in range(n_trees):
-        reference_trees.tree_number[i] = i + 1
-
     reference_trees.species[np.isin(reference_trees.species, (TreeSpecies.UNKNOWN,
                                     TreeSpecies.UNSET, TreeSpecies.TREELESS))] = stratum.species
 

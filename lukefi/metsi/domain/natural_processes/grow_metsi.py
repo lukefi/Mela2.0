@@ -248,12 +248,11 @@ class MetsiGrowPredictor(Predict):
 
 # ---------- public API  ----------
 @natural_process_transition
-def grow_metsi_fn(input_: ForestStand, step: int = 5, /, **operation_parameters) -> OpTuple[ForestStand]:
+def grow_metsi_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.
     Assumes input is vectorized
     """
-    _ = operation_parameters
     stand = input_
 
     if stand.reference_trees.size == 0:

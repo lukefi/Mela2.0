@@ -1,10 +1,12 @@
+""" NOTE: This module is depricated and should be removed """
+
 from typing import Any, Optional
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
 from lukefi.metsi.domain.natural_processes.grow_metsi import grow_metsi_fn
-from lukefi.metsi.domain.natural_processes.grow_motti_dll import grow_motti_dll_fn
+from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.core.generators import Event
 from lukefi.metsi.core.treatment import Treatment, do_nothing
 
@@ -70,7 +72,7 @@ class GrowMotti(Event[ForestStand]):
                  file_parameters: Optional[dict[str, str]] = None) -> None:
         super().__init__(
             treatment=Treatment(
-                lambda state, **params: grow_motti_dll_fn(
+                lambda state, **params: grow_motti_fn(
                     state,
                     max_step,
                     **params),

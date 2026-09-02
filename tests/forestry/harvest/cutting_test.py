@@ -137,11 +137,11 @@ class CuttingTest(unittest.TestCase):
 
         # Missing mode
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", select_from_all=True)
+            cutting_fn(stand, tree_selection=bad["tree_selection"], select_from_all=True)
 
         # Missing select_from_all
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection=bad["tree_selection"], freq_var="stems_per_ha", mode=Mode.ODDS_UNITS)
+            cutting_fn(stand, tree_selection=bad["tree_selection"], mode=Mode.ODDS_UNITS)
 
 
 if __name__ == "__main__":

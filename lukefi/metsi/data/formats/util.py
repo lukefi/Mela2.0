@@ -1,8 +1,5 @@
-from enum import IntEnum
+from enum import Enum, IntEnum
 from typing import Any
-from lukefi.metsi.data.enums.internal import (
-    MetsiEnum,
-)
 
 
 def parse_type[T:int | float | str](source, *ts: type[T]):
@@ -40,12 +37,14 @@ def get_or_default(maybe: Any | None, default: Any = None) -> Any:
     return default if maybe is None else maybe
 
 
-def convert_str_to_type[T: MetsiEnum | int | float | str](value: str | None,
+def convert_str_to_type[T: Enum | int | float | str](value: str | None,
                                                           ret_type: type[T]) -> T | None:
     if value is None or value == "None":
         return None
     if issubclass(ret_type, IntEnum):
         return ret_type(int(value))
+    if issubclass(ret_type, Enum):
+        return ret_type(value)
     if issubclass(ret_type, int):
         return ret_type(value)
     if issubclass(ret_type, float):

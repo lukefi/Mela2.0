@@ -6,6 +6,8 @@ import numpy.typing as npt
 import pandas as pd
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import (
+    EPSG_2393_ALIASES,
+    CRS,
     LandUseCategory,
     Storey,
     TreeCategory,
@@ -21,7 +23,7 @@ from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
 from lukefi.metsi.forestry.preprocessing.ages import ages
-from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj, CRS
+from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 from lukefi.metsi.core.exceptions import MetsiException
@@ -101,9 +103,9 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
         if stand.geo_location[0] is None or stand.geo_location[1] is None:
             raise MetsiException(f"Stand {stand.identifier} has incomplete geolocation data: {stand.geo_location}")
 
-        if stand.geo_location[3] == 'EPSG:3067':
+        if stand.geo_location[3] == CRS.EPSG_3067:
             lat, lon = conv(stand.geo_location[0] / 1000, stand.geo_location[1] / 1000)
-        elif stand.geo_location[3] == 'EPSG:2393':
+        elif stand.geo_location[3] == CRS.EPSG_2393:
             lat, lon = (stand.geo_location[0] / 1000, stand.geo_location[1] / 1000)
         else:
             raise MetsiException(f"Unsupported CRS {stand.geo_location[3]} for stand {stand.identifier}")
@@ -113,7 +115,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
             stand.geo_location = (
                 stand.geo_location[0],
                 stand.geo_location[1],
-                xkor_value,
+                float(xkor_value),
                 stand.geo_location[3])
         else:
             xkor_value = stand.geo_location[2]
@@ -237,6 +239,8 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
         stand.tree_strata = stand.tree_strata + new_strata
 
         stand.reference_trees = new_trees + retention_trees
+
+        stand.reference_trees.tree_number = np.arange(1, len(stand.reference_trees) + 1, dtype=np.int32)
 
         if operation_params.get("delete_strata", False):
             stand.tree_strata = TreeStrata()
@@ -467,8 +471,8 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 
     :target_system (optional): Spesified target system. Default is EPSG:2393
     """
-    defaults = CRS.EPSG_2393.value
-    target_system = operation_params.get('target_system', defaults[0])
+    defaults = EPSG_2393_ALIASES
+    target_system = operation_params.get('target_system', CRS.EPSG_2393)
     if target_system in defaults:
         for s in stands:
             if s.geo_location is not None:
@@ -477,7 +481,7 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
                     s.geo_location = convert_location_to_ykj(latitude, longitude, height, crs)
     else:
         raise MetsiException("Check definition of operation params.\n"
-                             f"{defaults[0]}\' conversion supported.")
+                             f"{defaults}\' conversion supported.")
     return stands
 
 

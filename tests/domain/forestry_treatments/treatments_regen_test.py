@@ -20,7 +20,7 @@ class RegenerationTest(unittest.TestCase):
             "stems_per_ha": 1500.0,
             "height": 0.7,
             "biological_age": 3.0,
-            "type": "artificial",
+            "regen_type": "artificial",
             "ntrees": 5,
         }
         start_size = stand.reference_trees.size
@@ -47,7 +47,7 @@ class RegenerationTest(unittest.TestCase):
             "stems_per_ha": 900.0,
             "height": 0.6,
             "biological_age": 2.0,
-            "type": "natural",
+            "regen_type": "natural",
             "ntrees": 3,
         }
         start_size = stand.reference_trees.size
@@ -69,11 +69,11 @@ class RegenerationTest(unittest.TestCase):
         # First regeneration adds 2 trees -> identifiers ...-1-tree, ...-2-tree
         regeneration_fn(stand,
                      origin=2, species=1, stems_per_ha=200.0,
-                     height=0.5, biological_age=1.0, type="artificial", ntrees=2)
+                     height=0.5, biological_age=1.0, regen_type="artificial", ntrees=2)
         # Second regeneration adds 3 more -> identifiers start at 3
         updated, _ = regeneration_fn(stand,
                                   origin=2, species=1, stems_per_ha=300.0,
-                                  height=0.6, biological_age=2.0, type="artificial", ntrees=3)
+                                  height=0.6, biological_age=2.0, regen_type="artificial", ntrees=3)
         ids = list(updated.reference_trees.identifier)
         self.assertIn(f"{stand.identifier}-3-tree", ids)
         self.assertIn(f"{stand.identifier}-4-tree", ids)
@@ -89,7 +89,7 @@ class RegenerationTest(unittest.TestCase):
             stems_per_ha=1000.0,
             height=0.8,
             biological_age=4.0,
-            type="artificial",
+            regen_type="artificial",
             ntrees=2,
             breast_height_diameter=1.2,
             breast_height_age=1.0,
@@ -105,22 +105,22 @@ class RegenerationTest(unittest.TestCase):
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.0, biological_age=3.0, type="artificial", ntrees=5)
+                         height=0.0, biological_age=3.0, regen_type="artificial", ntrees=5)
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.5, biological_age=3.0, type="invalid", ntrees=5)
+                         height=0.5, biological_age=3.0, ntrees=5)
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.5, biological_age=3.0, type="natural", ntrees=0)
+                         height=0.5, biological_age=3.0, regen_type="natural", ntrees=0)
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
                          origin=2, species=1, stems_per_ha=0.0,
-                         height=0.5, biological_age=3.0, type="natural", ntrees=5)
+                         height=0.5, biological_age=3.0, regen_type="natural", ntrees=5)
 
 if __name__ == "__main__":
     unittest.main()

@@ -47,6 +47,9 @@ def resimulate_schedules(resim_instructions: Resimulation[T],
         for i, schedule in enumerate(instructions.schedules):
             print(f"Schedule {i}:")
             current = SimulationPayload(deepcopy(instructions.initial_state))
+            if transition.initialization is not None:
+                # instructions.initial_state.update_aggregates()
+                transition.initialization(current.unit)
             current.node_id[0] = i
             current.unit.predetermined_treatments = schedule
             target_time = max(time for time, _ in schedule)

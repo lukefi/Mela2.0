@@ -18,12 +18,15 @@ def simulate_alternatives[T: ComputationalUnit](control: Simulation[T],
 
     for i, unit in enumerate(units, 1):
         if not isinstance(unit, SimulationPayload):
+            # ensure type of SimulationPayload[T]
             payload = cast(SimulationPayload[T], SimulationPayload(unit))
         else:
             payload = unit
         print(f"Simulating unit {payload.unit.identifier} ({i} of {len(units)})...")
+        if control.transition.initialization is not None:
+            payload.unit.update_aggregates()
+            control.transition.initialization(payload.unit)
         payload.unit.update_aggregates()
-        control.transition.initialize(payload.unit)
 
         if db is not None:
             # Write initial state to database

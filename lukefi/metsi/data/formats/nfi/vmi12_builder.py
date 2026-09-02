@@ -1,5 +1,6 @@
 from typing import Generator, override
 from lukefi.metsi.data.conversion import vmi2internal
+from lukefi.metsi.data.enums.internal import CRS
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
@@ -128,7 +129,7 @@ class VMI12Builder(VMIBuilder):
             lon = util.get_or_default(util.parse_type(row["lon"], float), 0.0)
 
         height = VMI12Builder._transform_height_above_sea_level(row["height_above_sea_level"])
-        result.set_geo_location(lat, lon, height, "EPSG:2393")
+        result.set_geo_location(lat, lon, height, CRS.EPSG_2393)
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
             row["maanmuokkaus_aika"],
