@@ -324,7 +324,7 @@ class VMI10Builder(VMIBuilder):
         if v == "3":
             return Storey.REMOVAL
         if v == "4":
-            return Storey.SPARE
+            return Storey.RETENTION
         if v == "5":
             return Storey.UNDER
         if v == "6":
