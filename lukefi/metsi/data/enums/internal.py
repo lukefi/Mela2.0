@@ -264,6 +264,8 @@ class TreeManagementCategory(MetsiEnum):
     UNSET = -1
     NO_RESTRICTION = 1
     RETENTION_TREE = 2
+    SEEDING_TREE = 3
+    REMOVAL_TREE = 4
 
 
 class DevelopmentClass(MetsiEnum):
