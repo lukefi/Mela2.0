@@ -180,7 +180,7 @@ class Storey(MetsiEnum):
     DOMINANT = 1
     UNDER = 2
     OVER = 3
-    SPARE = 4
+    RETENTION = 4
     REMOTE = 5
     REMOVAL = 6
 

@@ -48,7 +48,7 @@ _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
     Storey.OVER: MottiStorey.OVER,
-    Storey.SPARE: MottiStorey.SPARE,
+    Storey.RETENTION: MottiStorey.SPARE,
 }
 
 _DRAINAGE_CATEGORY_MAP = {
@@ -103,8 +103,8 @@ def convert_species(source: TreeSpecies) -> MottiSpecies:
 def convert_drainage_category(source: DrainageCategory | None) ->  MottiDrainageCategory:
     """
     Drainage category transformation from internal to motti value.
-     
-    defaults undrained mineral soil which is valued as zero. 
+
+    defaults undrained mineral soil which is valued as zero.
      """
     if source is None:
         return MottiDrainageCategory.OJITTAMATON_KANGAS

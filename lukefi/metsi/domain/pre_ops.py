@@ -230,7 +230,7 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
         new_strata.mean_height = retention_trees.height
         new_strata.breast_height_age = retention_trees.breast_height_age
         new_strata.biological_age = retention_trees.biological_age
-        new_strata.storey = np.repeat(Storey.SPARE, len(retention_trees))
+        new_strata.storey = np.repeat(Storey.RETENTION, len(retention_trees))
         new_strata.stems_per_ha = retention_trees.stems_per_ha
         new_strata.basal_area = retention_trees.stems_per_ha * np.pi * \
             ((retention_trees.breast_height_diameter / 200) ** 2)

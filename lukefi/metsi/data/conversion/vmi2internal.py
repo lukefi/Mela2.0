@@ -222,8 +222,8 @@ _TREE_STOREY_MAP = {
     VmiTreeStorey.DOMINANT_SPARE_2: Storey.INDETERMINATE,
     VmiTreeStorey.DOMINANT_SPARE_3: Storey.INDETERMINATE,
     VmiTreeStorey.UNDER_SPARE_1: Storey.INDETERMINATE,
-    VmiTreeStorey.OVER_SPARE_1: Storey.SPARE,
-    VmiTreeStorey.OVER_SPARE_2: Storey.SPARE
+    VmiTreeStorey.OVER_SPARE_1: Storey.RETENTION,
+    VmiTreeStorey.OVER_SPARE_2: Storey.RETENTION
 }
 
 _ORIGIN_MAP = {

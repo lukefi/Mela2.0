@@ -15,7 +15,7 @@ FDM_TO_MOTTI_STOREY = {
     Storey.DOMINANT: 2,  # ylempi
     Storey.UNDER: 1,     # alempi
     Storey.OVER: 3,      # siemenpuu
-    Storey.SPARE: 4,     # säästöpuu
+    Storey.RETENTION: 4,     # säästöpuu
 }
 
 
@@ -249,7 +249,7 @@ def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> Tree
     for i in range(strata.size):
         gen_n = strata.number_of_generated_trees[i].item()
         storey = strata.storey[i].item()
-        if gen_n == 1 and storey == Storey.SPARE:
+        if gen_n == 1 and storey == Storey.RETENTION:
             retention_idx.append(i)
 
     needed = excess + 1
