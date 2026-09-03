@@ -351,7 +351,7 @@ def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
 
-# reconcile_reference_trees_from_motti
+
 def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
     sync_yp_to_reference_trees(stand)
     _prune_promoted_sapling_reference_trees(stand)
@@ -430,7 +430,7 @@ def apply_motti_yp_reduction_from_removed_reference_trees(stand: ForestStand,
         _refresh_reference_trees_from_motti_after_yp_change(stand)
     return changed
 
-# reconcile_reference_trees_from_motti
+
 def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
     live: set[tuple[str, int, int | None]] = set()
 
