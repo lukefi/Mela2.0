@@ -3,7 +3,7 @@ from typing import Generator, override
 import numpy as np
 
 from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.enums.internal import Origin, Storey, CRS
+from lukefi.metsi.data.enums.internal import Origin, Storey, CRS, StratumRank
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
@@ -395,7 +395,9 @@ class VMI9Builder(VMIBuilder):
         age = VMI9Builder._segment_age_years(seg_d13_age_raw, seg_age_inc_raw, fallback_age=fallback_age)
 
         syntytapa = VMI9Builder._determine_stratum_origin(seg_syntytapa_raw)
-        storey = VMI9Builder._determine_storey_for_segment(seg_asema_raw)
+
+        segment_rank = vmi2internal.convert_stratum_rank(seg_asema_raw)
+        storey = VMI9Builder._determine_storey_for_segment(segment_rank)
 
         identifier = f"{stand_identifier}-{i + 1}-stratum"
 
@@ -431,7 +433,7 @@ class VMI9Builder(VMIBuilder):
         return Origin.NATURAL
 
     @staticmethod
-    def _determine_storey_for_segment(asema_raw: str) -> Storey:
+    def _determine_storey_for_segment(segment_rank: StratumRank) -> Storey:
         """
         VMI10 jakson asema:
         1 Vallitseva jakso
@@ -442,23 +444,19 @@ class VMI9Builder(VMIBuilder):
         6 Kehityskelvoton alikasvos
         7 Vaihtuva taimiaines
         """
-        v = (asema_raw or "").strip()
-        if not v or v == ".":
+        if segment_rank == StratumRank.UNSET:
             return Storey.INDETERMINATE
-        if v == "1":
+        if segment_rank == StratumRank.DOMINANT_TREE_STOREY:
             return Storey.DOMINANT
-        if v == "2":
+        if segment_rank in (StratumRank.OVER_STOREY, StratumRank.NURSE_CROP):
             return Storey.OVER
-        if v == "3":
-            return Storey.REMOVAL
-        if v == "4":
+        if segment_rank == StratumRank.RETENTION_TREE_STOREY:
             return Storey.RETENTION
-        if v == "5":
+        if segment_rank in (
+                StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
+                StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE,
+                StratumRank.NON_ESTABLISHED_SEEDLINGS):
             return Storey.UNDER
-        if v == "6":
-            return Storey.REMOTE
-        if v == "7":
-            return Storey.INDETERMINATE
         return Storey.INDETERMINATE
 
     @staticmethod
