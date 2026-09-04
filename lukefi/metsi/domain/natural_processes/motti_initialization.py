@@ -445,9 +445,8 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
 
 def initialize_motti(stand: ForestStand, **_: dict[str, Any]) -> None:
     """ Initialize MottiState for forest stand if missing. Does nothing if already initialized. """
-    if stand.motti_state is None:
-        stand.motti_state = _init_motti_state(stand)
-        motti_util.reconcile_reference_trees_from_motti(stand, init_mode=True)
+    stand.motti_state = _init_motti_state(stand)
+    motti_util.reconcile_reference_trees_from_motti(stand, init_mode=True)
 
 
 __all__ = ["initialize_motti"]

@@ -118,10 +118,13 @@ def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | N
 
 
 def sync_yp_to_reference_trees(stand: ForestStand) -> None:
-    ms = stand.motti_state
-    if ms is None or ms.yp is None:
-        return
+    """ Synchronize Motti tree vector into stand reference trees. """
 
+    if stand.motti_state is None:
+        raise ValueError("Cannot sync Motti tree vector into stand reference trees." \
+        "MottiState is not initialized for the stand.")
+
+    ms = stand.motti_state
     yp = ms.yp
     rt = stand.reference_trees
 
@@ -129,28 +132,18 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         t = yp[0][i]
 
         sid = int(t.sid)
-        if sid <= 0:
-            continue
         yp_tree_id = int(t.id)
+        idx = _find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
 
-        if yp_tree_id <= 0:
+        if idx is None:
             identifier, tree_number = new_reference_tree_identity(stand)
             yp_tree_id = tree_number
             t.id = float(tree_number)
-            idx = None
             storey = int(Storey.UNSET)
         else:
-            idx = _find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
-
-            if idx is None:
-                identifier, tree_number = new_reference_tree_identity(stand)
-                yp_tree_id = tree_number
-                t.id = float(tree_number)
-                storey = int(Storey.UNSET)
-            else:
-                identifier = str(rt.identifier[idx])
-                tree_number = int(rt.tree_number[idx])
-                storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
+            identifier = str(rt.identifier[idx])
+            tree_number = int(rt.tree_number[idx])
+            storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
 
         row = {
             "identifier": identifier, # NOTE: should not be updated
