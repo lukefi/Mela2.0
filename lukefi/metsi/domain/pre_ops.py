@@ -517,8 +517,9 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
                                tree_stems_per_ha: npt.NDArray[np.float64],
                                tree_species: npt.NDArray[np.int32],
                                tree_basal_areas: npt.NDArray[np.float64]) -> TreeSpecies:
+
     if should_use_ba_for_storey(tree_diameters, tree_basal_areas):
-        # use BA
+        # use basal area for comparing
         storey_basal_area = calc_storey_basal_area(tree_basal_areas, tree_stems_per_ha)
         if storey_basal_area < 1.0:  # 1 m^2/ha # TODO: Check limit
             return TreeSpecies.TREELESS
@@ -538,10 +539,12 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
         species_bas = {species: calc_storey_basal_area(
             tree_basal_areas[tree_species == species], tree_stems_per_ha[tree_species == species])
             for species in species_list}
+
+        # Species with maximum basal area
         return max(species_bas, key=lambda key: species_bas[key])
 
     else:
-        # use stems per ha
+        # use stems per ha for comparing
         storey_stems_per_ha = np.sum(tree_stems_per_ha)
         if storey_stems_per_ha < 400.0:  # 400 1/ha # TODO: Check limit
             return TreeSpecies.TREELESS
@@ -557,6 +560,8 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
             species_list = DECIDUOUS_SPECIES
 
         species_stems = {species: np.sum(tree_stems_per_ha[tree_species == species]) for species in species_list}
+
+        # Species with maximum stems per ha
         return max(species_stems, key=lambda key: species_stems[key])
 
 
@@ -607,6 +612,7 @@ def supplement_storey_information(stands: StandList) -> StandList:
                                                                       over_storey_tree_basal_areas)
 
             if compare_under_storey_by_ba:  # and compare_over_storey_by_ba
+                # Compare by basal area
                 under_storey_dominant_species_mask = under_storey_tree_species == under_storey_dominant_species
                 over_storey_dominant_species_mask = over_storey_tree_species == over_storey_dominant_species
 
