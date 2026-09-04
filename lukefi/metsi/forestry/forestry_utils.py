@@ -5,56 +5,8 @@ from lukefi.metsi.data.enums.internal import CrownClass, StratumRank, TreeCatego
 from lukefi.metsi.data.vector_model import ReferenceTree, TreeStrata, TreeStratum
 
 
-def calculate_basal_area(tree: ReferenceTree) -> float:
-    """
-    Single reference tree basal area calculation.
 
-    The tree should contain breast height diameter (in cm) and stesm per hectare for the species spesific calculations.
-
-    :param tree: Single ReferenceTree instance with breast height diameter (in cm) and stems per hectare properties.
-    :return reference tree basal area in square meters (m^2)
-    """
-    meters_factor = 0.01
-    radius = (tree.breast_height_diameter or 0.0) * 0.5 * meters_factor
-    single_basal_area = math.pi * math.pow(radius, 2)
-    return (single_basal_area or 0.0) * (tree.stems_per_ha or 0.0)
-
-
-def generate_diameter_threshold(d1: float, d2: float) -> float:
-    """
-    Threshold value for diameter based comparison of two stratums.
-
-    Threshold will have a value based on relative distance of at most 50% of the distance between d[0] and d[1].
-    """
-    greater = max((d1, d2))
-    lesser = min((d1, d2))
-    return greater + (lesser - greater) * (greater / (lesser + greater))
-
-
-def override_from_diameter(initial_stratum: TreeStratum, candidate_stratum: TreeStratum,
-                           reference_tree: ReferenceTree) -> TreeStratum:
-    """
-    Out of given strata, return the stratum for which the mean diameter better matches the reference tree diameter.
-    This happens by calculating a threshold value based on which of the stratum diameters
-    is greater and comparing the threshold to reference tree diameter.
-
-    :param initial_stratum: Stratum which is assumed as the current match for the reference tree
-    :param candidate_stratum: Stratum which is tested for better compatiblity than the initial stratum
-    :param reference_tree: The tree for which the supplementing will be done
-
-    :returns: the better matching stratum
-    """
-    threshold = generate_diameter_threshold(
-        initial_stratum.mean_diameter or 0.0,
-        candidate_stratum.mean_diameter or 0.0)
-    if not threshold or not reference_tree.breast_height_diameter:
-        return initial_stratum
-    if threshold > reference_tree.breast_height_diameter:
-        return candidate_stratum
-    return initial_stratum
-
-
-def find_matching_stratum_by_diameter_lm(
+def _find_matching_stratum_by_diameter_lm(
         reference_tree: ReferenceTree,
         strata: Iterable[TreeStratum],
         threshold: float = 3.0) -> Optional[TreeStratum]:
@@ -90,7 +42,7 @@ def find_matching_stratum_by_diameter_lm(
     return None
 
 
-def split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+def _split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -> tuple[list[T], list[T]]:
     """
     Splits a list into two lists based on a predicate.
 
@@ -109,7 +61,7 @@ def split_list_by_predicate[T](items: list[T], predicate: Callable[[T], bool]) -
     return matching_items, non_matching_items
 
 
-def find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratum]) -> list[TreeStratum]:
+def _find_strata_by_similar_species(species: TreeSpecies, strata: list[TreeStratum]) -> list[TreeStratum]:
     """
     Find a list of strata which have a similar species to the given species. Out of deciduous trees,
     silver birch is considered most similar to downy birch and vice versa.
@@ -170,7 +122,7 @@ def find_matching_storey_stratum_for_tree(
         strata.get_stratum(i) for i in range(len(strata))
         if _storey_match(strata.get_stratum(i), tree)
     ]
-    same_species_strata, other_species_strata = split_list_by_predicate(
+    same_species_strata, other_species_strata = _split_list_by_predicate(
         same_storey_strata,
         lambda stratum: stratum.species == tree.species)
 
@@ -178,14 +130,14 @@ def find_matching_storey_stratum_for_tree(
     if len(same_species_strata) > 0:
         candidate_strata = same_species_strata
     elif len(other_species_strata) > 0:
-        candidate_strata = find_strata_by_similar_species(tree.species, other_species_strata)
+        candidate_strata = _find_strata_by_similar_species(tree.species, other_species_strata)
     else:
         candidate_strata = []
 
     # h.	Jos em. säännöt ei yksiselitteisesti määrää ositetta, valitaan se osite,
     #       jonka keskiläpimitta on lähinnä puun läpimittaa.
     if len(candidate_strata) > 0:
-        selected_stratum = find_matching_stratum_by_diameter_lm(tree, candidate_strata, diameter_threshold)
+        selected_stratum = _find_matching_stratum_by_diameter_lm(tree, candidate_strata, diameter_threshold)
     else:
         selected_stratum = None
 
