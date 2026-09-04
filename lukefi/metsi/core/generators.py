@@ -10,7 +10,7 @@ from lukefi.metsi.core.collected_data import CollectableDataTypes
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.db_utils import output_node_to_db
 from lukefi.metsi.core.exceptions import MetsiException
-from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.model import ComputationalUnit
 from lukefi.metsi.core.operations import do_nothing
 from lukefi.metsi.core.simulation_payload import SimulationPayload
 from lukefi.metsi.core.treatment import Treatment
@@ -114,7 +114,7 @@ class First(EventGenerator[T]):
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
         stop = False
         for child in self.children:
-            gen = child.evaluate(payload, db, node)
+            gen = child.evaluate(copy(payload), db, node)
             for leaf in gen:
                 yield leaf
                 stop = True
@@ -256,9 +256,6 @@ class Event(EventGeneratorBase[T]):
                 new_state,
                 new_collected_data,
                 self.tags | self.treatment.default_tags)
-
-        if isinstance(new_payload.unit, Finalizable):
-            new_payload.unit.finalize()
 
         yield new_payload
 
