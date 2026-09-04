@@ -114,7 +114,7 @@ class First(EventGenerator[T]):
                  node: int = 0) -> Generator[SimulationPayload[T], None, None]:
         stop = False
         for child in self.children:
-            gen = child.evaluate(payload, db, node)
+            gen = child.evaluate(copy(payload), db, node)
             for leaf in gen:
                 yield leaf
                 stop = True
@@ -256,9 +256,6 @@ class Event(EventGeneratorBase[T]):
                 new_state,
                 new_collected_data,
                 self.tags | self.treatment.default_tags)
-
-        if isinstance(new_payload.unit, Finalizable):
-            new_payload.unit.finalize()
 
         yield new_payload
 
