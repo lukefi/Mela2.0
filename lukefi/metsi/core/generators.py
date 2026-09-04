@@ -10,7 +10,7 @@ from lukefi.metsi.core.collected_data import CollectableDataTypes
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.db_utils import output_node_to_db
 from lukefi.metsi.core.exceptions import MetsiException
-from lukefi.metsi.core.model import ComputationalUnit, Finalizable
+from lukefi.metsi.core.model import ComputationalUnit
 from lukefi.metsi.core.operations import do_nothing
 from lukefi.metsi.core.simulation_payload import SimulationPayload
 from lukefi.metsi.core.treatment import Treatment
