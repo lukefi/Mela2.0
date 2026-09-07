@@ -494,8 +494,14 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 def supplement_storey_information(stands: StandList) -> StandList:
     for stand in stands:
         trees = stand.reference_trees
-        trees.basal_area = calc_tree_basal_areas(
-            trees.breast_height_diameter)  # Pre-calculate basal areas for all trees
+
+        if len(trees) == 0:
+            continue
+
+        # Pre-calculate basal areas for all trees
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        # Ensure proper management category for REMOVAL trees
         trees.management_category[trees.storey == Storey.REMOVAL] = TreeManagementCategory.REMOVAL_TREE
 
         storeys = np.unique(trees.storey)
@@ -587,12 +593,14 @@ def supplement_storey_information(stands: StandList) -> StandList:
         mean_heights = {}
         for storey in storeys:
             if storey == Storey.RETENTION:
+                # Retention storey will not change
                 continue
             storey_mask = trees.storey == storey
             tree_diameters = trees.breast_height_diameter[storey_mask]
             tree_basal_areas = trees.basal_area[storey_mask]
             tree_stems_per_ha = trees.stems_per_ha[storey_mask]
             tree_heights = trees.height[storey_mask]
+
             should_use_ba = should_use_ba_for_storey(tree_diameters, tree_basal_areas)
             if should_use_ba:
                 mean_height = np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
@@ -611,6 +619,7 @@ def supplement_storey_information(stands: StandList) -> StandList:
         if Storey.OVER in storeys:
             if abs(mean_heights[Storey.OVER] - dominant_storey_mean_height) < 5.0:
                 # Merge OVER into DOMINANT
+                # TODO: Seeding trees?
                 trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
 
         for storey in (Storey.REMOTE, Storey.REMOVAL, Storey.INDETERMINATE, Storey.UNSET):
