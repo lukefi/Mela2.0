@@ -508,7 +508,6 @@ def supplement_storey_information(stands: StandList) -> StandList:
         has_dominant_storey = Storey.DOMINANT in storeys
         has_under_storey = Storey.UNDER in storeys
         has_over_storey = Storey.OVER in storeys
-        # has_retention_storey = Storey.RETENTION in storeys
         has_remote_storey = Storey.REMOTE in storeys
         has_removal_storey = Storey.REMOVAL in storeys
         has_indeterminate_storey = Storey.INDETERMINATE in storeys
