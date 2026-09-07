@@ -29,7 +29,7 @@ from lukefi.metsi.forestry.preprocessing.tree_generation import (
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.forestry.storey import (
     calc_tree_basal_areas,
-    promote_under_or_over_storey_to_dominant,
+    promote_either_storey_to_dominant,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
 
@@ -507,6 +507,22 @@ def supplement_storey_information(stands: StandList) -> StandList:
         has_indeterminate_storey = Storey.INDETERMINATE in storeys
         has_unset_storey = Storey.UNSET in storeys
 
+        def fallback_using_under_storey(trees: ReferenceTrees, compare_under_by_ba: bool):
+            _ = compare_under_by_ba
+            trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+        def fallback_using_removal_storey(trees: ReferenceTrees, compare_remote_by_ba: bool):
+            _ = compare_remote_by_ba
+            trees.storey[trees.storey == Storey.REMOVAL] = Storey.DOMINANT
+
+        def fallback_using_height(trees: ReferenceTrees, compare_indeterminate_by_ba: bool):
+            # Assume that the storey with the larger mean diameter also has larger mean height
+            # and promote the one with the smaller height to DOMINANT.
+            if compare_indeterminate_by_ba:
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+            else:
+                trees.storey[trees.storey == Storey.INDETERMINATE] = Storey.DOMINANT
+
         if not has_dominant_storey:
             if stand_has_only_retention_storey(trees) or stand_has_only_seeding_tree_storey(trees):
                 # Retention storey or seeding tree over storey can exists alone
@@ -522,7 +538,13 @@ def supplement_storey_information(stands: StandList) -> StandList:
                              (trees.management_category != TreeManagementCategory.SEEDING_TREE)] = Storey.DOMINANT
 
             elif has_under_storey and has_over_storey:
-                promote_under_or_over_storey_to_dominant(trees)
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.UNDER,
+                    (trees.storey == Storey.OVER) &
+                    (trees.management_category != TreeManagementCategory.SEEDING_TREE),
+                    fallback_using_under_storey
+                )
 
             elif has_remote_storey and not has_removal_storey:
                 # Promote REMOTE storey to DOMINANT
@@ -533,7 +555,12 @@ def supplement_storey_information(stands: StandList) -> StandList:
                 trees.storey[trees.storey == Storey.REMOVAL] = Storey.DOMINANT
 
             elif has_remote_storey and has_removal_storey:
-                promote_remote_or_removal_storey_to_dominant(trees)
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.REMOTE,
+                    trees.storey == Storey.REMOVAL,
+                    fallback_using_removal_storey
+                )
 
             elif has_indeterminate_storey and not has_unset_storey:
                 # Promote INDETERMINATE storey to DOMINANT
@@ -544,8 +571,16 @@ def supplement_storey_information(stands: StandList) -> StandList:
                 trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
 
             else:
-                promote_indeterminate_or_unset_storey_to_dominant(trees)
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.INDETERMINATE,
+                    trees.storey == Storey.UNSET,
+                    fallback_using_height
+                )
 
-        merge_storeys(trees)
+        # merge storeys
+        dominant_storey_mean_height =
+
+
 
     return stands
