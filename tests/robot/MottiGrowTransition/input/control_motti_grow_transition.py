@@ -11,7 +11,8 @@ from lukefi.metsi.domain.pre_ops import (
     filter_stands,
     filter_trees,
     generate_reference_trees,
-    scale_area_weight)
+    scale_area_weight,
+    supplement_storey_information)
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.core.condition import Condition
@@ -31,7 +32,8 @@ control_structure = MetsiControl[ForestStand](
             generate_reference_trees,
             compute_location_metadata,
             filter_stands,
-            filter_trees
+            filter_trees,
+            supplement_storey_information
         ],
         params={
             generate_reference_trees: [
