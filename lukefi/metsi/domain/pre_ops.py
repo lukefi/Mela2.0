@@ -30,6 +30,7 @@ from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.forestry.storey import (
     calc_tree_basal_areas,
     promote_either_storey_to_dominant,
+    should_use_ba_for_storey,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
 
@@ -501,7 +502,7 @@ def supplement_storey_information(stands: StandList) -> StandList:
         has_dominant_storey = Storey.DOMINANT in storeys
         has_under_storey = Storey.UNDER in storeys
         has_over_storey = Storey.OVER in storeys
-        has_retention_storey = Storey.RETENTION in storeys
+        # has_retention_storey = Storey.RETENTION in storeys
         has_remote_storey = Storey.REMOTE in storeys
         has_removal_storey = Storey.REMOVAL in storeys
         has_indeterminate_storey = Storey.INDETERMINATE in storeys
@@ -527,6 +528,8 @@ def supplement_storey_information(stands: StandList) -> StandList:
             if stand_has_only_retention_storey(trees) or stand_has_only_seeding_tree_storey(trees):
                 # Retention storey or seeding tree over storey can exists alone
                 continue
+
+            # Promote new DOMINANT storey --------------------------------------------
 
             if has_under_storey and not has_over_storey:
                 # Promote UNDER storey to DOMINANT
@@ -578,9 +581,50 @@ def supplement_storey_information(stands: StandList) -> StandList:
                     fallback_using_height
                 )
 
-        # merge storeys
-        dominant_storey_mean_height =
+        # Merge storeys ----------------------------------------------------------
+        storeys = np.unique(trees.storey)
 
+        mean_heights = {}
+        for storey in storeys:
+            if storey == Storey.RETENTION:
+                continue
+            storey_mask = trees.storey == storey
+            tree_diameters = trees.breast_height_diameter[storey_mask]
+            tree_basal_areas = trees.basal_area[storey_mask]
+            tree_stems_per_ha = trees.stems_per_ha[storey_mask]
+            tree_heights = trees.height[storey_mask]
+            should_use_ba = should_use_ba_for_storey(tree_diameters, tree_basal_areas)
+            if should_use_ba:
+                mean_height = np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
+                    np.sum(tree_basal_areas * tree_stems_per_ha)
+            else:
+                mean_height = np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
+            mean_heights[storey] = mean_height
 
+        dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
+
+        if Storey.UNDER in storeys:
+            if abs(dominant_storey_mean_height - mean_heights[Storey.UNDER]) < 5.0:
+                # Merge UNDER into DOMINANT
+                trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+        if Storey.OVER in storeys:
+            if abs(mean_heights[Storey.OVER] - dominant_storey_mean_height) < 5.0:
+                # Merge OVER into DOMINANT
+                trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
+
+        for storey in (Storey.REMOTE, Storey.REMOVAL, Storey.INDETERMINATE, Storey.UNSET):
+            if storey in storeys:
+                diff = mean_heights[storey] - dominant_storey_mean_height
+                if abs(diff) < 5.0:
+                    # Merge storey into DOMINANT
+                    new_storey = Storey.DOMINANT
+                elif diff > 0.0:
+                    # Merge storey into OVER
+                    new_storey = Storey.OVER
+                else:
+                    # Merge storey into UNDER
+                    new_storey = Storey.UNDER
+                trees.storey[trees.storey == storey] = new_storey
 
     return stands
