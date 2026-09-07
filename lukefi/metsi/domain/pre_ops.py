@@ -31,8 +31,7 @@ from lukefi.metsi.forestry.storey import (
     calc_tree_basal_areas,
     promote_under_or_over_storey_to_dominant,
     stand_has_only_retention_storey,
-    stand_has_only_seeding_tree_storey,
-    stand_has_storey)
+    stand_has_only_seeding_tree_storey)
 
 
 def filter_stands(stands: StandList,
@@ -550,16 +549,3 @@ def supplement_storey_information(stands: StandList) -> StandList:
         merge_storeys(trees)
 
     return stands
-
-
-__all__ = ['filter_stands',
-           'filter_trees',
-           'filter_strata',
-           'compute_location_metadata',
-           'generate_reference_trees',
-           'scale_basal_area_at_county_level',
-           'update_strata_to_match_trees',
-           'scale_area_weight',
-           'area_ha_to_1000ha',
-           'scale_trees_by_area_weight_factors',
-           'convert_coordinates']
