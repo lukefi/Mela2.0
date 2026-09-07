@@ -27,7 +27,12 @@ from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_lo
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 from lukefi.metsi.core.exceptions import MetsiException
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, promote_under_or_over_storey_to_dominant, stand_has_dominant_storey, stand_has_only_retention_storey, stand_has_only_seeding_tree_storey
+from lukefi.metsi.forestry.storey import (
+    calc_tree_basal_areas,
+    promote_under_or_over_storey_to_dominant,
+    stand_has_only_retention_storey,
+    stand_has_only_seeding_tree_storey,
+    stand_has_storey)
 
 
 def filter_stands(stands: StandList,
@@ -489,14 +494,60 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 def supplement_storey_information(stands: StandList) -> StandList:
     for stand in stands:
         trees = stand.reference_trees
-        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)  # Calculate basal areas for all trees
+        trees.basal_area = calc_tree_basal_areas(
+            trees.breast_height_diameter)  # Pre-calculate basal areas for all trees
+        trees.management_category[trees.storey == Storey.REMOVAL] = TreeManagementCategory.REMOVAL_TREE
 
-        if not stand_has_dominant_storey(trees):
-            if not stand_has_only_retention_storey(trees) and not stand_has_only_seeding_tree_storey(trees):
-                # promote UNDER or OVER storey to DOMINANT
+        storeys = np.unique(trees.storey)
+        has_dominant_storey = Storey.DOMINANT in storeys
+        has_under_storey = Storey.UNDER in storeys
+        has_over_storey = Storey.OVER in storeys
+        has_retention_storey = Storey.RETENTION in storeys
+        has_remote_storey = Storey.REMOTE in storeys
+        has_removal_storey = Storey.REMOVAL in storeys
+        has_indeterminate_storey = Storey.INDETERMINATE in storeys
+        has_unset_storey = Storey.UNSET in storeys
+
+        if not has_dominant_storey:
+            if stand_has_only_retention_storey(trees) or stand_has_only_seeding_tree_storey(trees):
+                # Retention storey or seeding tree over storey can exists alone
+                continue
+
+            if has_under_storey and not has_over_storey:
+                # Promote UNDER storey to DOMINANT
+                trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+            elif not has_under_storey and has_over_storey:
+                # Promote non-seeding OVER storey to DOMINANT
+                trees.storey[(trees.storey == Storey.OVER) &
+                             (trees.management_category != TreeManagementCategory.SEEDING_TREE)] = Storey.DOMINANT
+
+            elif has_under_storey and has_over_storey:
                 promote_under_or_over_storey_to_dominant(trees)
 
+            elif has_remote_storey and not has_removal_storey:
+                # Promote REMOTE storey to DOMINANT
+                trees.storey[trees.storey == Storey.REMOTE] = Storey.DOMINANT
 
+            elif not has_remote_storey and has_removal_storey:
+                # Promote REMOVAL storey to DOMINANT
+                trees.storey[trees.storey == Storey.REMOVAL] = Storey.DOMINANT
+
+            elif has_remote_storey and has_removal_storey:
+                promote_remote_or_removal_storey_to_dominant(trees)
+
+            elif has_indeterminate_storey and not has_unset_storey:
+                # Promote INDETERMINATE storey to DOMINANT
+                trees.storey[trees.storey == Storey.INDETERMINATE] = Storey.DOMINANT
+
+            elif not has_indeterminate_storey and has_unset_storey:
+                # Promote UNSET storey to DOMINANT
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+
+            else:
+                promote_indeterminate_or_unset_storey_to_dominant(trees)
+
+        merge_storeys(trees)
 
     return stands
 
