@@ -1,4 +1,3 @@
-import math
 from collections.abc import Callable
 from typing import Iterable, Optional
 from lukefi.metsi.data.enums.internal import CrownClass, StratumRank, TreeCategory, TreeSpecies, TreeType
