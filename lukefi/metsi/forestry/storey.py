@@ -172,7 +172,7 @@ def promote_under_or_over_storey_to_dominant(trees: ReferenceTrees):
 def promote_either_storey_to_dominant(trees: ReferenceTrees,
                                       mask1: npt.NDArray[np.bool_],
                                       mask2: npt.NDArray[np.bool_],
-                                      fallback: Callable[[ReferenceTrees], None]):
+                                      fallback: Callable[[ReferenceTrees, bool], None]):
 
     storey_1_tree_diameters = trees.breast_height_diameter[mask1]
     storey_1_tree_basal_areas = trees.basal_area[mask1]
@@ -194,7 +194,7 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
     if compare_storey_1_by_ba != compare_storey_2_by_ba:
         # Can not compare storeys, use fallback
-        fallback(trees)
+        fallback(trees, compare_storey_1_by_ba)
         return
 
     storey_1_dominant_species = determine_dominant_species(storey_1_tree_diameters,
@@ -206,17 +206,18 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
                                                            storey_2_tree_species,
                                                            storey_2_tree_basal_areas)
 
-    if compare_storey_1_by_ba:  # and compare_over_storey_by_ba
+    storey_1_dominant_species_mask = storey_1_tree_species == storey_1_dominant_species
+    storey_2_dominant_species_mask = storey_2_tree_species == storey_2_dominant_species
+
+    if compare_storey_1_by_ba:  # and compare_storey_2_by_ba
         # Compare by basal area
-        storey_1_dominant_species_mask = storey_1_tree_species == storey_1_dominant_species
-        storey_2_dominant_species_mask = storey_2_tree_species == storey_2_dominant_species
 
         storey_1_dominant_species_ba = calc_storey_basal_area(
-            trees.basal_area[storey_1_dominant_species_mask],
-            trees.stems_per_ha[storey_1_dominant_species_mask])
+            storey_1_tree_basal_areas[storey_1_dominant_species_mask],
+            storey_1_tree_stems_per_ha[storey_1_dominant_species_mask])
         storey_2_dominant_species_ba = calc_storey_basal_area(
-            trees.basal_area[storey_2_dominant_species_mask],
-            trees.stems_per_ha[storey_2_dominant_species_mask])
+            storey_2_tree_basal_areas[storey_2_dominant_species_mask],
+            storey_2_tree_stems_per_ha[storey_2_dominant_species_mask])
 
         if storey_1_dominant_species_ba >= storey_2_dominant_species_ba:
             # Promote storey 1
@@ -229,11 +230,9 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
     else:
         # Compare by stems
-        storey_1_dominant_species_mask = storey_1_tree_species == storey_1_dominant_species
-        storey_2_dominant_species_mask = storey_2_tree_species == storey_2_dominant_species
 
-        storey_1_dominant_species_stems = trees.stems_per_ha[storey_1_dominant_species_mask]
-        storey_2_dominant_species_stems = trees.stems_per_ha[storey_2_dominant_species_mask]
+        storey_1_dominant_species_stems = storey_1_tree_stems_per_ha[storey_1_dominant_species_mask]
+        storey_2_dominant_species_stems = storey_2_tree_stems_per_ha[storey_2_dominant_species_mask]
 
         if storey_1_dominant_species_stems >= storey_2_dominant_species_stems:
             # Promote storey 1
@@ -243,8 +242,3 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
             # Promote storey 2
             trees.storey[mask2] = Storey.DOMINANT
             return
-
-
-def promote_remote_or_removal_storey_to_dominant(trees: ReferenceTrees):
-    remote_storey_mask = trees.storey == Storey.REMOTE
-    removal_storey_mask = trees.storey == Storey.REMOVAL
