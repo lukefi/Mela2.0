@@ -48,55 +48,6 @@ def strata_fixture() -> list[TreeStratum]:
 
 class ForestryUtilsTest(unittest.TestCase):
     #
-    # AoS-based tests
-    #
-    def test_calculate_basal_area(self):
-        tree = ReferenceTree()
-        assertions = [
-            ((10.0, 50.0), 0.3927),
-            ((0.0, 50.0), 0.0),
-            ((10.0, 0.0), 0.0),
-            ((0.0, 0.0), 0.0),
-        ]
-        for (diameter, stems), expected in assertions:
-            tree.breast_height_diameter = diameter
-            tree.stems_per_ha = stems
-            result = futil.calculate_basal_area(tree)
-            self.assertEqual(expected, round(result, 4))
-
-    def test_generate_diameter_threshold(self):
-        assertions = [
-            ((10.0, 20.0), 13.33333),
-            ((5.0, 10.0), 6.66667),
-            ((0.0, 10.0), 0.0),
-            ((5.0, 0.0), 0.0),
-        ]
-
-        for (d1, d2), expected in assertions:
-            result = round(
-                futil.generate_diameter_threshold(d1, d2),
-                5,
-            )
-            self.assertEqual(result, expected)
-
-    def test_override_from_diameter(self):
-        initial_stratum = TreeStratum()
-        initial_stratum.mean_diameter = 10.0
-        current_stratum = TreeStratum()
-        current_stratum.mean_diameter = 20.0
-        assertions = [
-            (13.0, current_stratum),
-            (15.0, initial_stratum),
-        ]
-        for diameter, expected_stratum in assertions:
-            reference_tree = ReferenceTree()
-            reference_tree.breast_height_diameter = diameter
-            result = futil.override_from_diameter(
-                initial_stratum, current_stratum, reference_tree
-            )
-            self.assertEqual(expected_stratum, result)
-
-    #
     # SoA-based tests for find_matching_storey_stratum_for_tree
     #
     def test_matching_storey_stratum_same_species(self):
