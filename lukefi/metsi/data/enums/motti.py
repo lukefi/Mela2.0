@@ -8,7 +8,8 @@ class MottiSpecies(IntEnum):
     SILVER_BIRCH = 3
     DOWNY_BIRCH = 4
     ASPEN = 5
-    ALDER = 6
+    GREY_ALDER = 6
+    COMMON_ALDER = 7 # Miksi tämä puuttui?
     OTHER_CONIFEROUS = 8
     OTHER_DECIDUOUS = 9
 
