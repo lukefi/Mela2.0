@@ -281,7 +281,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
 
 def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     """
-    Delete old sapling RFs if SID exists in YP vector.
+    Delete sapling reference trees that exist in the YP vector.
     """
     ms = stand.motti_state
     rt = stand.reference_trees
