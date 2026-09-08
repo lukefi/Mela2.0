@@ -29,8 +29,8 @@ from lukefi.metsi.forestry.preprocessing.tree_generation import (
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.forestry.storey import (
     calc_tree_basal_areas,
+    calculate_storey_mean_heights,
     promote_either_storey_to_dominant,
-    should_use_ba_for_storey,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
 
@@ -587,26 +587,10 @@ def supplement_storey_information(stands: StandList) -> StandList:
                 )
 
         # Merge storeys ----------------------------------------------------------
+
         storeys = np.unique(trees.storey)
 
-        mean_heights = {}
-        for storey in storeys:
-            if storey == Storey.RETENTION:
-                # Retention storey will not change
-                continue
-            storey_mask = trees.storey == storey
-            tree_diameters = trees.breast_height_diameter[storey_mask]
-            tree_basal_areas = trees.basal_area[storey_mask]
-            tree_stems_per_ha = trees.stems_per_ha[storey_mask]
-            tree_heights = trees.height[storey_mask]
-
-            should_use_ba = should_use_ba_for_storey(tree_diameters, tree_basal_areas)
-            if should_use_ba:
-                mean_height = np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
-                    np.sum(tree_basal_areas * tree_stems_per_ha)
-            else:
-                mean_height = np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
-            mean_heights[storey] = mean_height
+        mean_heights = calculate_storey_mean_heights(trees, set(storeys))
 
         dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
 
@@ -618,7 +602,6 @@ def supplement_storey_information(stands: StandList) -> StandList:
         if Storey.OVER in storeys:
             if abs(mean_heights[Storey.OVER] - dominant_storey_mean_height) < 5.0:
                 # Merge OVER into DOMINANT
-                # TODO: Seeding trees?
                 trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
 
         for storey in (Storey.REMOTE, Storey.REMOVAL, Storey.INDETERMINATE, Storey.UNSET):
