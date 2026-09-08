@@ -1,14 +1,18 @@
+from functools import wraps
 from typing import Callable, Set
 
 import numpy as np
 import numpy.typing as npt
 
+from lukefi.metsi.core.collected_data import CollectedData
+from lukefi.metsi.core.transition import TransitionFn
 from lukefi.metsi.data.enums.internal import (
     CONIFEROUS_SPECIES,
     DECIDUOUS_SPECIES,
     Storey,
     TreeManagementCategory,
     TreeSpecies)
+from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 
 
@@ -177,3 +181,54 @@ def calculate_storey_mean_heights(trees: ReferenceTrees, storeys: Set[Storey]) -
             mean_height = np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
         retval[storey] = mean_height
     return retval
+
+
+def handle_storeys_after_natural_process(natural_process_func: TransitionFn[ForestStand]):
+    @wraps(natural_process_func)
+    def wrapper(unit: ForestStand, step: int, **params) -> tuple[ForestStand, list[CollectedData]]:
+        unit, cd = natural_process_func(unit, step, **params)
+        trees = unit.reference_trees
+
+        # Handle new trees' storeys --------------------------------------------------------------------------
+
+        # Pre-calculate basal area for all trees
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        storeys = np.unique(trees.storey)
+        has_dominant_storey = Storey.DOMINANT in storeys
+
+        # Merge new trees into DOMINANT, UNDER or OVER storey
+        if not has_dominant_storey:
+            # Mark new trees as DOMINANT
+            trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+        else:
+            # Check if should merge new trees into DOMINANT
+            mean_heights = calculate_storey_mean_heights(trees, {Storey.DOMINANT, Storey.UNSET})
+            diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
+            if abs(diff) < 5.0:
+                # Merge into DOMINANT
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+            else:
+                # Merge into UNDER
+                trees.storey[trees.storey == Storey.UNSET] = Storey.UNDER
+
+        # Merge existing storeys ----------------------------------------------------------------------------
+
+        storeys = np.unique(trees.storey)
+        mean_heights = calculate_storey_mean_heights(trees, {Storey.DOMINANT, Storey.UNDER, Storey.OVER})
+
+        dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
+
+        if Storey.UNDER in storeys:
+            if abs(dominant_storey_mean_height - mean_heights[Storey.UNDER]) < 5.0:
+                # Merge UNDER into DOMINANT
+                trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+        if Storey.OVER in storeys:
+            if abs(mean_heights[Storey.OVER] - dominant_storey_mean_height) < 5.0:
+                # Merge OVER into DOMINANT
+                trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
+
+        return unit, cd
+
+    return wrapper
