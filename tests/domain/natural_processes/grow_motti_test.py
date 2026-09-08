@@ -110,7 +110,7 @@ def _make_rt(
     bh_age=(20.0, 22.0),
     crown_ratio=(0.3, 0.4),
     origin=(0, 0),
-    storey=(0, 0),
+    storey=(1, 1),
     stratum=(1, 2)
 ) -> ReferenceTrees:
     """Build a real ReferenceTrees vector container for Motti sync tests.
