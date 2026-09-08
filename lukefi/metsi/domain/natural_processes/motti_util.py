@@ -132,9 +132,9 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
         t = yp[0][i]
         yp_tree_id = int(t.id)
 
-        YP_IN_RT = np.any(rt.tree_number == yp_tree_id)
+        yp_in_rt = np.any(rt.tree_number == yp_tree_id)
 
-        if not YP_IN_RT:
+        if not yp_in_rt:
             itree_number += 1
             t.id = itree_number
             rts_for_create.append(
