@@ -161,7 +161,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             rts_for_update["breast_height_diameter"].append(t.d13)
             rts_for_update["biological_age"].append(t.age)
             rts_for_update["breast_height_age"].append(t.age13)
-            rts_for_update["basal_area"].append(t.ba)
+            rts_for_update["basal_area"].append(t.ba / 10000.0)
             rts_for_update["volume"].append(t.vol)
 
     if rts_for_create:
