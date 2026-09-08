@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Set
 
 import numpy as np
 import numpy.typing as npt
@@ -155,3 +155,25 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
     # Promote storey 2
     trees.storey[mask2] = Storey.DOMINANT
+
+
+def calculate_storey_mean_heights(trees: ReferenceTrees, storeys: Set[Storey]) -> dict[Storey, float]:
+    retval = {}
+    for storey in storeys:
+        if storey == Storey.RETENTION:
+            # Retention storey will not change
+            continue
+        storey_mask = trees.storey == storey
+        tree_diameters = trees.breast_height_diameter[storey_mask]
+        tree_basal_areas = trees.basal_area[storey_mask]
+        tree_stems_per_ha = trees.stems_per_ha[storey_mask]
+        tree_heights = trees.height[storey_mask]
+
+        should_use_ba = should_use_ba_for_storey(tree_diameters, tree_basal_areas)
+        if should_use_ba:
+            mean_height = np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
+                np.sum(tree_basal_areas * tree_stems_per_ha)
+        else:
+            mean_height = np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
+        retval[storey] = mean_height
+    return retval
