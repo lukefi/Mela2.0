@@ -162,7 +162,7 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
 
 def calculate_storey_mean_heights(trees: ReferenceTrees, storeys: Set[Storey]) -> dict[Storey, float]:
-    retval = {}
+    retval: dict[Storey, float] = {}
     for storey in storeys:
         if storey == Storey.RETENTION:
             # Retention storey will not change
