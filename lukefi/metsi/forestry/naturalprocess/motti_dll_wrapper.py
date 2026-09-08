@@ -103,7 +103,10 @@ class Motti4DLL:
             for p in (lib_path.parent, cls.data_dir):
                 if p:
                     ps = str(Path(p).resolve())
-                    os.add_dll_directory(ps)
+                    try:
+                        os.add_dll_directory(ps)
+                    except FileNotFoundError as e:
+                        print(f"Error occurred while adding DLL directory: {e}")
 
         lib = ffi.dlopen(str(lib_path))
         cls.ffi, cls.lib = ffi, lib
