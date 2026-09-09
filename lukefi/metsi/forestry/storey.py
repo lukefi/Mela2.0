@@ -206,12 +206,13 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn[Fore
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        # Handle new trees' storeys
+        # Handle new trees' storeys --------------------------------------------------------------------------
+
         if np.any(trees.storey == Storey.UNSET):
             storeys = np.unique(trees.storey)
             has_dominant_storey = Storey.DOMINANT in storeys
 
-            # Merge new trees into DOMINANT, UNDER or OVER storey
+            # Merge new trees into DOMINANT or UNDER storey
             if not has_dominant_storey:
                 # Mark new trees as DOMINANT
                 trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
