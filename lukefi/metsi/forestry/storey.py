@@ -227,6 +227,33 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn[Fore
                     # Merge into UNDER
                     trees.storey[trees.storey == Storey.UNSET] = Storey.UNDER
 
+        # Check diminished DOMINANT storey ------------------------------------------------------------------
+
+        storeys = np.unique(trees.storey)
+
+        if Storey.DOMINANT in storeys:
+            dominant_storey_mask = trees.storey == Storey.DOMINANT
+            dominant_storey_diameters = trees.breast_height_diameter[dominant_storey_mask]
+            dominant_storey_basal_areas = trees.basal_area[dominant_storey_mask]
+            dominant_storey_stems_per_ha = trees.stems_per_ha[dominant_storey_mask]
+
+            should_use_ba = should_use_ba_for_storey(
+                dominant_storey_diameters,
+                dominant_storey_basal_areas,
+                dominant_storey_stems_per_ha)
+
+            if (should_use_ba and calc_storey_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
+                    < 1.0) or (not should_use_ba and np.sum(dominant_storey_stems_per_ha) < 400.0):
+                # DOMINANT storey is too small
+                if Storey.UNDER in storeys:
+                    # Make UNDER storey DOMINANT
+                    trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+                elif (Storey.OVER in storeys and
+                        np.all(trees.management_category[trees.storey == Storey.OVER] !=
+                               TreeManagementCategory.SEEDING_TREE)):
+                    # Make OVER storey DOMINANT
+                    trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
+
         # Merge existing storeys ----------------------------------------------------------------------------
 
         storeys = np.unique(trees.storey)
