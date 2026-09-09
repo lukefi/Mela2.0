@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from lukefi.metsi.data.enums.internal import TreeManagementCategory, TreeType
+from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, TreeType
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.core.select_units import SelectionSet, SelectionTarget
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -31,6 +31,7 @@ class MarkTreesTest(unittest.TestCase):
                     "stems_per_ha": s,
                     "tree_type": TreeType.UNSET,
                     "management_category": TreeManagementCategory.NO_RESTRICTION,
+                    "storey": Storey.DOMINANT
                 }
             )
 
