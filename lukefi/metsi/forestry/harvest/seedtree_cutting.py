@@ -1,5 +1,6 @@
-import numpy as np
 from typing import Any
+
+import numpy as np
 
 from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
