@@ -120,8 +120,8 @@ def regeneration_fn(input_: ForestStand,
             # Merge old DOMINANT into OVER
             trees.storey[trees.storey == Storey.DOMINANT] = Storey.OVER
 
-        # Promote new trees to DOMINANT storey
-        trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+    # Promote new trees to DOMINANT storey
+    trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
 
     return stand, []
 
