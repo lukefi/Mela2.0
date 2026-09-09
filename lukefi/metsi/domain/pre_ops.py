@@ -29,7 +29,7 @@ from lukefi.metsi.forestry.preprocessing.tree_generation import (
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.forestry.storey import (
     calc_tree_basal_areas,
-    calculate_storey_mean_heights,
+    calc_storey_mean_height,
     promote_either_storey_to_dominant,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
@@ -588,9 +588,9 @@ def supplement_storey_information(stands: StandList) -> StandList:
 
         # Merge storeys ----------------------------------------------------------
 
-        storeys = np.unique(trees.storey)
+        storeys = np.unique(trees.storey[trees.storey != Storey.RETENTION])
 
-        mean_heights = calculate_storey_mean_heights(trees, set(storeys))
+        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in storeys}
 
         dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
 

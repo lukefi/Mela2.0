@@ -13,7 +13,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, calculate_storey_mean_heights
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, calc_storey_mean_height
 
 
 def regeneration_fn(input_: ForestStand,
@@ -117,7 +117,7 @@ def regeneration_fn(input_: ForestStand,
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_heights = calculate_storey_mean_heights(trees, {Storey.DOMINANT, Storey.UNSET})
+        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in (Storey.DOMINANT, Storey.UNSET)}
         diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
         if diff >= 5.0:
             # Merge old DOMINANT into OVER
