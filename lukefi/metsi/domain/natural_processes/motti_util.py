@@ -161,7 +161,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
             rts_for_update["breast_height_diameter"].append(t.d13)
             rts_for_update["biological_age"].append(t.age)
             rts_for_update["breast_height_age"].append(t.age13)
-            rts_for_update["basal_area"].append(t.ba / 10000.0)
+            rts_for_update["basal_area"].append(t.ba / 10000.0) # cm2 -> m2
             rts_for_update["volume"].append(t.vol)
 
     if rts_for_create:
@@ -312,48 +312,9 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
-    """
-    Keep only ReferenceTrees that have a live in the YP vector.
-    Used after Motti4Init init.
-    """
-    rt = stand.reference_trees
-    ms = stand.motti_state
-
-    if rt.size == 0:
-        return
-
-    live_yp: set[tuple[int, int]] = set()
-    if ms is not None and ms.yp is not None:
-        for i in range(ms.ntrees):
-            t = ms.yp[0][i]
-            sid = int(t.sid)
-            tree_id = int(t.id)
-            if sid > 0 and tree_id > 0:
-                live_yp.add((sid, tree_id))
-
-    delete_idx: list[int] = []
-    for i in range(rt.size):
-        sid = int(rt.stratum[i])
-        try: # NOTE: Unnecessary try-except?
-            tree_number = int(rt.tree_number[i])
-        except (TypeError, ValueError):
-            tree_number = -1
-
-        if sid <= 0 or tree_number <= 0 or (sid, tree_number) not in live_yp:
-            delete_idx.append(i)
-
-    if delete_idx:
-        rt.delete(np.array(delete_idx, dtype=int))
-
-
-def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
+def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
     sync_yp_to_reference_trees(stand)
     _prune_promoted_sapling_reference_trees(stand)
-
-    if init_mode:
-        _prune_reference_trees_not_in_yp(stand)
-
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 

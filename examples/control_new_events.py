@@ -4,7 +4,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
-from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
@@ -49,7 +49,7 @@ control_structure = MetsiControl[ForestStand](
         transition=Transition(grow_motti_fn,
                               db_output_state=False,
                               db_output_cd=False,
-                              initialization=Initialization(initialize_motti)),
+                              initialization=motti_init),
         end_condition=ForestCondition(lambda payload: payload.unit.time > 2050))
 )
 

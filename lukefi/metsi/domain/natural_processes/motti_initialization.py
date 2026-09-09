@@ -1,6 +1,6 @@
-from typing import Any, Optional
-
+from typing import Optional
 import numpy as np
+from lukefi.metsi.core.transition import Initialization
 from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
@@ -443,10 +443,33 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     return MottiState(yy=yy, yp=yp, ntrees=ntrees, buffers=buffers, )
 
 
-def initialize_motti(stand: ForestStand, **_: dict[str, Any]) -> None:
+def _prune_reference_trees(stand: ForestStand) -> None:
+    """ 
+    Keeps only ReferenceTrees that have a matching tree in YP vector.
+    """
+    rt = stand.reference_trees
+    ms = stand.motti_state
+
+    if ms is None:
+        raise ValueError("Cannot prune ReferenceTrees. MottiState is not initialized for the stand.")
+
+    if rt.size == 0:
+        return
+
+    in_yp_mask = np.zeros(rt.size, dtype=bool)
+    for t in ms.yp[0][0:ms.ntrees]:
+        in_yp_mask |= (rt.tree_number == t.id)
+
+    trees_not_in_yp = np.where(~in_yp_mask)[0]
+    if trees_not_in_yp.size > 0:
+        rt.delete(trees_not_in_yp)
+
+
+def _initialize_motti(stand: ForestStand) -> None:
     """ Initialize MottiState for forest stand if missing. Does nothing if already initialized. """
     stand.motti_state = _init_motti_state(stand)
-    motti_util.reconcile_reference_trees_from_motti(stand, init_mode=True)
+    _prune_reference_trees(stand)
+    motti_util.sync_ut_to_reference_trees(stand)
 
 
-__all__ = ["initialize_motti"]
+motti_init = Initialization(_initialize_motti)
