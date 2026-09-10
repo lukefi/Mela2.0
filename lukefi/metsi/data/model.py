@@ -17,6 +17,7 @@ from lukefi.metsi.data.enums.internal import (
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory,
+    Storey,
     TreeManagementCategory,
     TreeSpecies,
     DrainageCategory,
@@ -25,7 +26,8 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.volume import tree_volumes
+from lukefi.metsi.forestry.storey import calc_storey_basal_area, calc_tree_basal_areas, determine_dominant_species
+from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit, Finalizable
 from lukefi.metsi.core.treatment import PredeterminedTreatment
@@ -660,51 +662,71 @@ class ForestStand(Finalizable, ComputationalUnit):
         trees = self.reference_trees
 
         # ReferenceTrees
-        trees.basal_area = np.pi * (trees.breast_height_diameter / 200) ** 2
-        trees.volume = tree_volumes(trees, self.degree_days or 0.0)
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+        trees.volume = calc_tree_volumes(trees, self.degree_days or 0.0)
 
         # ForestStand
+        # TODO: Should some or all of these be properties instead?
         self.stems_per_ha = np.sum(trees.stems_per_ha)
         self.basal_area = np.sum(trees.stems_per_ha * trees.basal_area)
-        self.ds_ba_weighted_mean_diameter = (
-            (np.sum(
-                trees.stems_per_ha *
-                trees.basal_area *
-                trees.breast_height_diameter)) / self.basal_area) if (self.basal_area > 0) else None
 
-        self.ds_ba_weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height)) /
-                                           self.basal_area) if (self.basal_area > 0) else None
+        ds_mask = trees.storey == Storey.DOMINANT
+        ds_stems = trees.stems_per_ha[ds_mask]
+        ds_tree_basal_areas = trees.basal_area[ds_mask]
+        ds_diameters = trees.breast_height_diameter[ds_mask]
+        ds_heights = trees.height[ds_mask]
+
+        ds_basal_area = calc_storey_basal_area(ds_tree_basal_areas, ds_stems)
+
+        self.ds_ba_weighted_mean_diameter = (
+            (np.sum(ds_stems *
+                    ds_tree_basal_areas *
+                    ds_diameters)) / ds_basal_area) if (ds_basal_area > 0) else None
+
+        self.ds_ba_weighted_mean_height = (
+            (np.sum(ds_stems *
+                    ds_tree_basal_areas *
+                    ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
         self.ds_dominant_height = self._calculate_dominant_height()
 
     def _calculate_dominant_height(self) -> float | None:
-        if len(self.reference_trees) == 0:
-            return None
         trees = self.reference_trees
 
-        # Use only non-retention trees by default
-        trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
-        if len(trees_indices) == 0:
-            # Fallback to using all trees if all are retention trees
-            trees_indices = np.arange(len(trees))
+        if np.all(trees.storey != Storey.DOMINANT):
+            return None
 
-        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[trees_indices]))
-        sorted_cum_stems = np.cumsum(trees.stems_per_ha[trees_indices][sorted_trees_indices])
-        i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
+        # Use only non-retention trees by default
+        trees_mask = (
+            trees.management_category != TreeManagementCategory.RETENTION_TREE) & (trees.storey == Storey.DOMINANT)
+
+        if not np.any(trees_mask):
+            # Fallback to using all trees if all are retention trees
+            trees_mask = trees.storey == Storey.DOMINANT
+
+        stems = trees.stems_per_ha[trees_mask]
+        diameter = trees.breast_height_diameter[trees_mask]
+        height = trees.height[trees_mask]
+
+        sorting = np.flip(np.argsort(diameter))
+        sorted_stems = stems[sorting]
+        sorted_height = height[sorting]
+        cumulative_sorted_stems = np.cumsum(sorted_stems)
+
+        i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
         if len(i_100_largest_arr) == 0:
-            stems_smallest: float = trees.stems_per_ha[trees_indices][sorted_trees_indices][-1]
-            i_100_largest: int = len(trees_indices) - 1
+            stems_smallest: float = cumulative_sorted_stems[-1]
+            i_100_largest: int = len(trees_mask) - 1
         elif i_100_largest_arr[0] == 0:
             stems_smallest = 100.0
             i_100_largest = 0
         else:
             i_100_largest = i_100_largest_arr[0]
-            stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
+            stems_smallest = 100 - cumulative_sorted_stems[i_100_largest - 1]
 
-        numerator_1 = np.sum(trees.stems_per_ha[trees_indices][sorted_trees_indices][:i_100_largest] *
-                             trees.height[trees_indices][sorted_trees_indices][:i_100_largest])
-        numerator_2: float = stems_smallest * trees.height[trees_indices][sorted_trees_indices][i_100_largest]
-        denominator = min(100, sorted_cum_stems[i_100_largest])
+        numerator_1 = np.sum(sorted_stems[:i_100_largest] * sorted_height[:i_100_largest])
+        numerator_2: float = stems_smallest * sorted_height[i_100_largest]
+        denominator = min(100, cumulative_sorted_stems[i_100_largest])
 
         return (numerator_1 + numerator_2) / denominator
 
