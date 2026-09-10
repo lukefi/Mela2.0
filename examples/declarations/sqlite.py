@@ -33,7 +33,7 @@ sqlite_decl = {
         "sea_effect",
         "lake_effect",
         "basal_area",
-        "main_tree_species_dominant_storey",
+        "ds_main_tree_species",
         "ds_dominant_height",
         "region",
         "peatland_type",
