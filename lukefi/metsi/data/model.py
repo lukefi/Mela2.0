@@ -18,7 +18,6 @@ from lukefi.metsi.data.enums.internal import (
     SiteType,
     SoilPeatlandCategory,
     Storey,
-    TreeManagementCategory,
     TreeSpecies,
     DrainageCategory,
     PeatlandForestType,
@@ -26,7 +25,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.storey import calc_storey_basal_area, calc_tree_basal_areas, determine_dominant_species
+from lukefi.metsi.forestry.storey import calc_storey_basal_area, calc_tree_basal_areas, calc_storey_dominant_height, determine_dominant_species
 from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit, Finalizable
@@ -678,6 +677,11 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         ds_basal_area = calc_storey_basal_area(ds_tree_basal_areas, ds_stems)
 
+        self.ds_main_tree_species = determine_dominant_species(ds_diameters,
+                                                               ds_stems,
+                                                               trees.species[ds_mask],
+                                                               ds_tree_basal_areas)
+
         self.ds_ba_weighted_mean_diameter = (
             (np.sum(ds_stems *
                     ds_tree_basal_areas *
@@ -688,47 +692,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     ds_tree_basal_areas *
                     ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
-        self.ds_dominant_height = self._calculate_dominant_height()
-
-    def _calculate_dominant_height(self) -> float | None:
-        trees = self.reference_trees
-
-        if np.all(trees.storey != Storey.DOMINANT):
-            return None
-
-        # Use only non-retention trees by default
-        trees_mask = (
-            trees.management_category != TreeManagementCategory.RETENTION_TREE) & (trees.storey == Storey.DOMINANT)
-
-        if not np.any(trees_mask):
-            # Fallback to using all trees if all are retention trees
-            trees_mask = trees.storey == Storey.DOMINANT
-
-        stems = trees.stems_per_ha[trees_mask]
-        diameter = trees.breast_height_diameter[trees_mask]
-        height = trees.height[trees_mask]
-
-        sorting = np.flip(np.argsort(diameter))
-        sorted_stems = stems[sorting]
-        sorted_height = height[sorting]
-        cumulative_sorted_stems = np.cumsum(sorted_stems)
-
-        i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
-        if len(i_100_largest_arr) == 0:
-            stems_smallest: float = cumulative_sorted_stems[-1]
-            i_100_largest: int = len(trees_mask) - 1
-        elif i_100_largest_arr[0] == 0:
-            stems_smallest = 100.0
-            i_100_largest = 0
-        else:
-            i_100_largest = i_100_largest_arr[0]
-            stems_smallest = 100 - cumulative_sorted_stems[i_100_largest - 1]
-
-        numerator_1 = np.sum(sorted_stems[:i_100_largest] * sorted_height[:i_100_largest])
-        numerator_2: float = stems_smallest * sorted_height[i_100_largest]
-        denominator = min(100, cumulative_sorted_stems[i_100_largest])
-
-        return (numerator_1 + numerator_2) / denominator
+        self.ds_dominant_height = calc_storey_dominant_height(trees, Storey.DOMINANT)
 
     @classmethod
     @override
