@@ -38,6 +38,45 @@ def calc_storey_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_
     return np.sum(tree_basal_areas * stems_per_ha)
 
 
+def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float | None:
+    if np.all(trees.storey != storey):
+        return None
+
+    # Use only non-retention trees by default
+    trees_mask = (
+        trees.management_category != TreeManagementCategory.RETENTION_TREE) & (trees.storey == storey)
+
+    if not np.any(trees_mask):
+        # Fallback to using all trees if all are retention trees
+        trees_mask = trees.storey == storey
+
+    stems = trees.stems_per_ha[trees_mask]
+    diameter = trees.breast_height_diameter[trees_mask]
+    height = trees.height[trees_mask]
+
+    sorting = np.flip(np.argsort(diameter))
+    sorted_stems = stems[sorting]
+    sorted_height = height[sorting]
+    cumulative_sorted_stems = np.cumsum(sorted_stems)
+
+    i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
+    if len(i_100_largest_arr) == 0:
+        stems_smallest: float = cumulative_sorted_stems[-1]
+        i_100_largest: int = len(trees_mask) - 1
+    elif i_100_largest_arr[0] == 0:
+        stems_smallest = 100.0
+        i_100_largest = 0
+    else:
+        i_100_largest = i_100_largest_arr[0]
+        stems_smallest = 100 - cumulative_sorted_stems[i_100_largest - 1]
+
+    numerator_1 = np.sum(sorted_stems[:i_100_largest] * sorted_height[:i_100_largest])
+    numerator_2: float = stems_smallest * sorted_height[i_100_largest]
+    denominator = min(100, cumulative_sorted_stems[i_100_largest])
+
+    return (numerator_1 + numerator_2) / denominator
+
+
 def _should_use_ba_for_storey(diameters: npt.NDArray[np.float64],
                               basal_areas: npt.NDArray[np.float64],
                               stems_per_ha: npt.NDArray[np.float64]) -> bool:
@@ -175,9 +214,17 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
 def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
     storey_mask = trees.storey == storey
+
+    if not np.any(storey_mask):
+        return 0.0
+
+    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
+
+    if not np.any(tree_stems_per_ha > 0):
+        return 0.0
+
     tree_diameters = trees.breast_height_diameter[storey_mask]
     tree_basal_areas = trees.basal_area[storey_mask]
-    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
     tree_heights = trees.height[storey_mask]
 
     should_use_ba = _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha)
