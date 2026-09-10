@@ -170,8 +170,8 @@ class VMI13Builder(VMIBuilder):
         result.over_storey = bool(util.parse_type(row["ylikehl"], int))
 
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            row["main_tree_species_dominant_storey"],
+        result.ds_main_tree_species = vmi_util.determine_main_tree_species_dominant_storey(
+            row["ds_main_tree_species"],
             result.site_type_category
         )
         result.basal_area = util.parse_type(row["pohjapintaala"], float)
