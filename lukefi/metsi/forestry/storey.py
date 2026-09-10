@@ -1,5 +1,5 @@
 from functools import wraps
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
@@ -12,8 +12,10 @@ from lukefi.metsi.data.enums.internal import (
     Storey,
     TreeManagementCategory,
     TreeSpecies)
-from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
+
+if TYPE_CHECKING:
+    from lukefi.metsi.data.model import ForestStand
 
 DOMINANT_STOREY_BA_LIMIT = 1.0  # m^2/ha
 DOMINANT_STOREY_STEMS_LIMIT = 400.0  # 1/ha
@@ -261,10 +263,10 @@ def manage_existing_storeys(trees: ReferenceTrees):
             trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
 
 
-def handle_storeys_after_natural_process(natural_process_func: TransitionFn[ForestStand]):
+def handle_storeys_after_natural_process(natural_process_func: TransitionFn["ForestStand"]):
 
     @wraps(natural_process_func)
-    def wrapper(unit: ForestStand, step: int, **params) -> tuple[ForestStand, list[CollectedData]]:
+    def wrapper(unit: "ForestStand", step: int, **params) -> tuple["ForestStand", list[CollectedData]]:
         unit, cd = natural_process_func(unit, step, **params)
         trees = unit.reference_trees
 

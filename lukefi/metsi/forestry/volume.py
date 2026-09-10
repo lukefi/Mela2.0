@@ -24,7 +24,7 @@ class TreeVolumeDataset(StrEnum):
     """
 
 
-def tree_volumes(reference_trees: ReferenceTrees,
+def calc_tree_volumes(trees: ReferenceTrees,
                  temperature_sum: float,
                  dataset: TreeVolumeDataset = TreeVolumeDataset.CLIMBED) -> npt.NDArray[np.float64]:
     """
@@ -33,19 +33,19 @@ def tree_volumes(reference_trees: ReferenceTrees,
     Args:
         reference_trees (ReferenceTrees): reference trees whose volumes to calculate
         temperature_sum (float): temperature sum ("degree days")
-        dataset (TreeVolumeDataset, optional): which dataset fit to use for model parameters ("climbed", "felled" or 
+        dataset (TreeVolumeDataset, optional): which dataset fit to use for model parameters ("climbed", "felled" or
             "scanned"). Defaults to TreeVolumeDataset.CLIMBED.
 
     Returns:
         npt.NDArray[np.float64]: vector containing calculated volumes for each reference tree in m^3
     """
-    retval = np.full(shape=len(reference_trees), fill_value=0.0, dtype=np.float64)
+    retval = np.full(shape=len(trees), fill_value=0.0, dtype=np.float64)
 
-    tall_trees = reference_trees.height > 1.3
+    tall_trees = trees.height > 1.3
 
-    h = reference_trees.height[tall_trees]
-    dbh = reference_trees.breast_height_diameter[tall_trees]
-    species = reference_trees.species[tall_trees]
+    h = trees.height[tall_trees]
+    dbh = trees.breast_height_diameter[tall_trees]
+    species = trees.species[tall_trees]
 
     logita, lambda_ = volume_params(dbh, h, species, temperature_sum / 10, dataset)
     retval[tall_trees] = _tree_volumes(dbh, h, logita, lambda_) / 1000  # Convert dm^3 -> m^3
