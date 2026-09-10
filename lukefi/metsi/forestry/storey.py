@@ -84,7 +84,7 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
         return TreeSpecies.TREELESS
 
     coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
-    coniferous_stems_per_ha = tree_stems_per_ha[coniferous_mask]
+    coniferous_stems_per_ha = np.sum(tree_stems_per_ha[coniferous_mask])
 
     if coniferous_stems_per_ha >= storey_stems_per_ha / 2:
         # Coniferous dominated storey
