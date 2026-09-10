@@ -66,7 +66,7 @@ STANDS_TYPES = {
     "sea_effect": "REAL",
     "lake_effect": "REAL",
     "basal_area": "REAL",
-    "main_tree_species_dominant_storey": "INTEGER",
+    "ds_main_tree_species": "INTEGER",
     "ds_dominant_height": "REAL",
     "region": "INTEGER",
     "peatland_type": "INTEGER",
@@ -208,7 +208,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Development class of the forest stand.
     """
-    main_tree_species_dominant_storey: Optional[TreeSpecies] = None
+    ds_main_tree_species: Optional[TreeSpecies] = None
     """
     Main tree species in the dominant storey.
     """
@@ -420,7 +420,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.stand_id = conv(row[31], int)
         self.basal_area = conv(row[32], float)
         self.ds_main_tree_species_biological_age = conv(row[33], float)
-        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.ds_main_tree_species = conv(row[34], TreeSpecies)
         self.region = conv(row[35], int)
 
         self.peatland_type = PeatlandForestType(int(row[36])) if row[36] != "None" else None
@@ -575,7 +575,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.sea_effect,
                 self.lake_effect,
                 self.basal_area,
-                self.main_tree_species_dominant_storey,
+                self.ds_main_tree_species,
                 self.ds_dominant_height,
                 self.region,
                 self.peatland_type,
@@ -844,7 +844,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             sea_effect=stand_row["sea_effect"],
             lake_effect=stand_row["lake_effect"],
             basal_area=stand_row["basal_area"],
-            main_tree_species_dominant_storey=conv(stand_row["main_tree_species_dominant_storey"], TreeSpecies),
+            ds_main_tree_species=conv(stand_row["ds_main_tree_species"], TreeSpecies),
             ds_dominant_height=stand_row["ds_dominant_height"],
             region=stand_row["region"],
             peatland_type=conv(stand_row["peatland_type"], PeatlandForestType),
@@ -897,7 +897,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     sea_effect REAL,
                     lake_effect REAL,
                     basal_area REAL,
-                    main_tree_species_dominant_storey INTEGER,
+                    ds_main_tree_species INTEGER,
                     ds_dominant_height REAL,
                     region INTEGER,
                     peatland_type INTEGER,
@@ -1096,7 +1096,7 @@ def stand_as_internal_row(stand: ForestStand):
         stand.stand_id,
         stand.basal_area,
         stand.ds_main_tree_species_biological_age,
-        stand.main_tree_species_dominant_storey,
+        stand.ds_main_tree_species,
         stand.region,
         stand.peatland_type,
         stand.drained_peatland_type,
