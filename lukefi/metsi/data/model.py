@@ -26,7 +26,6 @@ from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.forestry.storey import (
-    _should_use_ba_for_storey,
     calc_mean_biological_age,
     calc_storey_basal_area,
     calc_tree_basal_areas,
