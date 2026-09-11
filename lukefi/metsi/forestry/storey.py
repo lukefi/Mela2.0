@@ -254,6 +254,7 @@ def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
         storey_basal_area = calc_storey_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
         if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
             return True
+        return False
 
     storey_stems_per_ha = np.sum(dominant_storey_stems_per_ha)
     if storey_stems_per_ha < DOMINANT_STOREY_STEMS_LIMIT:
