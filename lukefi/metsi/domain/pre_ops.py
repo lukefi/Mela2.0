@@ -512,6 +512,8 @@ def supplement_storey_information(stands: StandList) -> StandList:
         has_removal_storey = Storey.REMOVAL in storeys
         has_indeterminate_storey = Storey.INDETERMINATE in storeys
         has_unset_storey = Storey.UNSET in storeys
+        has_non_seeding_over_storey = has_over_storey and np.any(
+            trees.management_category != TreeManagementCategory.SEEDING_TREE)
 
         def fallback_using_under_storey(trees: ReferenceTrees, compare_under_by_ba: bool):
             _ = compare_under_by_ba
@@ -536,16 +538,16 @@ def supplement_storey_information(stands: StandList) -> StandList:
 
             # Promote new DOMINANT storey --------------------------------------------
 
-            if has_under_storey and not has_over_storey:
+            if has_under_storey and not has_non_seeding_over_storey:
                 # Promote UNDER storey to DOMINANT
                 trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
 
-            elif not has_under_storey and has_over_storey:
+            elif not has_under_storey and has_non_seeding_over_storey:
                 # Promote non-seeding OVER storey to DOMINANT
                 trees.storey[(trees.storey == Storey.OVER) &
                              (trees.management_category != TreeManagementCategory.SEEDING_TREE)] = Storey.DOMINANT
 
-            elif has_under_storey and has_over_storey:
+            elif has_under_storey and has_non_seeding_over_storey:
                 promote_either_storey_to_dominant(
                     trees,
                     trees.storey == Storey.UNDER,
