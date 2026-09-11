@@ -34,6 +34,7 @@ from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.chain import (
     Storie,
 )
 from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.forestry.storey import handle_storeys_after_natural_process
 
 
 # ---------- helpers ----------
@@ -248,6 +249,7 @@ class MetsiGrowPredictor(Predict):
 
 # ---------- public API  ----------
 @natural_process_transition
+@handle_storeys_after_natural_process
 def grow_metsi_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
     """
     Wrapper for metsi_grow. Applies growth step to ForestStand.

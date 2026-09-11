@@ -1,7 +1,7 @@
 import unittest
 from typing import cast
 import numpy as np
-from lukefi.metsi.data.enums.internal import CuttingMethod
+from lukefi.metsi.data.enums.internal import CuttingMethod, Storey
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.core.select_units import Mode, ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -29,6 +29,7 @@ class CuttingTest(unittest.TestCase):
             "height": [10.0, 20.0, 30.0],
             "species": [1, 1, 2],
             "tree_number": [1, 2, 3],
+            "storey": [Storey.DOMINANT, Storey.DOMINANT, Storey.DOMINANT]
         })
         stand.reference_trees = rt
         return stand

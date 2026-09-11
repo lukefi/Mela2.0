@@ -49,7 +49,7 @@ def _finalize_trees(reference_trees: ReferenceTrees, stratum: TreeStratum, ng_sc
     retained = stratum.stratum_rank == StratumRank.RETENTION_TREE_STOREY
     reference_trees.management_category.fill(
         TreeManagementCategory.RETENTION_TREE if retained else TreeManagementCategory.NO_RESTRICTION)
-    reference_trees.storey.fill(Storey.SPARE if retained else stratum.storey)
+    reference_trees.storey.fill(Storey.RETENTION if retained else stratum.storey)
 
     reference_trees.origin.fill(stratum.origin)
     reference_trees.stratum.fill(stratum.stratum_number)
@@ -249,7 +249,7 @@ def adjust_retention_trees(stand: ForestStand,
     for j, i in enumerate(np.where(retention_trees_mask)[0]):
         trees.identifier[i] = f"{stand.identifier}-{stand_tree_count + j + 1}-tree"
         trees.management_category[i] = TreeManagementCategory.RETENTION_TREE
-        trees.storey[i] = Storey.SPARE
+        trees.storey[i] = Storey.RETENTION
         breast_height_age, biological_age = _determine_ages(stand, new_trees, retention_trees_mask, i, 10)
         trees.breast_height_age[i] = breast_height_age
         trees.biological_age[i] = biological_age

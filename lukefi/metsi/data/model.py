@@ -17,7 +17,7 @@ from lukefi.metsi.data.enums.internal import (
     OwnerCategory,
     SiteType,
     SoilPeatlandCategory,
-    TreeManagementCategory,
+    Storey,
     TreeSpecies,
     DrainageCategory,
     PeatlandForestType,
@@ -25,7 +25,13 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.volume import tree_volumes
+from lukefi.metsi.forestry.storey import (
+    calc_mean_biological_age,
+    calc_storey_basal_area,
+    calc_tree_basal_areas,
+    calc_storey_dominant_height,
+    determine_dominant_species)
+from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit, Finalizable
 from lukefi.metsi.core.treatment import PredeterminedTreatment
@@ -64,7 +70,7 @@ STANDS_TYPES = {
     "sea_effect": "REAL",
     "lake_effect": "REAL",
     "basal_area": "REAL",
-    "main_tree_species_dominant_storey": "INTEGER",
+    "ds_main_tree_species": "INTEGER",
     "ds_dominant_height": "REAL",
     "region": "INTEGER",
     "peatland_type": "INTEGER",
@@ -206,7 +212,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Development class of the forest stand.
     """
-    main_tree_species_dominant_storey: Optional[TreeSpecies] = None
+    ds_main_tree_species: Optional[TreeSpecies] = None
     """
     Main tree species in the dominant storey.
     """
@@ -418,7 +424,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.stand_id = conv(row[31], int)
         self.basal_area = conv(row[32], float)
         self.ds_main_tree_species_biological_age = conv(row[33], float)
-        self.main_tree_species_dominant_storey = conv(row[34], TreeSpecies)
+        self.ds_main_tree_species = conv(row[34], TreeSpecies)
         self.region = conv(row[35], int)
 
         self.peatland_type = PeatlandForestType(int(row[36])) if row[36] != "None" else None
@@ -573,7 +579,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.sea_effect,
                 self.lake_effect,
                 self.basal_area,
-                self.main_tree_species_dominant_storey,
+                self.ds_main_tree_species,
                 self.ds_dominant_height,
                 self.region,
                 self.peatland_type,
@@ -660,53 +666,47 @@ class ForestStand(Finalizable, ComputationalUnit):
         trees = self.reference_trees
 
         # ReferenceTrees
-        trees.basal_area = np.pi * (trees.breast_height_diameter / 200) ** 2
-        trees.volume = tree_volumes(trees, self.degree_days or 0.0)
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+        trees.volume = calc_tree_volumes(trees, self.degree_days or 0.0)
 
         # ForestStand
+        # TODO: Should some or all of these be properties instead?
         self.stems_per_ha = np.sum(trees.stems_per_ha)
         self.basal_area = np.sum(trees.stems_per_ha * trees.basal_area)
+
+        ds_mask = trees.storey == Storey.DOMINANT
+        ds_stems = trees.stems_per_ha[ds_mask]
+        ds_tree_basal_areas = trees.basal_area[ds_mask]
+        ds_diameters = trees.breast_height_diameter[ds_mask]
+        ds_heights = trees.height[ds_mask]
+        ds_species = trees.species[ds_mask]
+        ds_basal_area = calc_storey_basal_area(ds_tree_basal_areas, ds_stems)
+
+        self.ds_main_tree_species = determine_dominant_species(ds_diameters,
+                                                               ds_stems,
+                                                               ds_species,
+                                                               ds_tree_basal_areas)
+
         self.ds_ba_weighted_mean_diameter = (
-            (np.sum(
-                trees.stems_per_ha *
-                trees.basal_area *
-                trees.breast_height_diameter)) / self.basal_area) if (self.basal_area > 0) else None
+            (np.sum(ds_stems *
+                    ds_tree_basal_areas *
+                    ds_diameters)) / ds_basal_area) if (ds_basal_area > 0) else None
 
-        self.ds_ba_weighted_mean_height = ((np.sum(trees.stems_per_ha * trees.basal_area * trees.height)) /
-                                           self.basal_area) if (self.basal_area > 0) else None
+        self.ds_ba_weighted_mean_height = (
+            (np.sum(ds_stems *
+                    ds_tree_basal_areas *
+                    ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
-        self.ds_dominant_height = self._calculate_dominant_height()
+        self.ds_dominant_height = calc_storey_dominant_height(trees, Storey.DOMINANT)
 
-    def _calculate_dominant_height(self) -> float | None:
-        if len(self.reference_trees) == 0:
-            return None
-        trees = self.reference_trees
+        ds_biological_age = trees.biological_age[ds_mask]
+        ds_main_species_mask = ds_species == self.ds_main_tree_species
 
-        # Use only non-retention trees by default
-        trees_indices = np.flatnonzero(trees.management_category != TreeManagementCategory.RETENTION_TREE)
-        if len(trees_indices) == 0:
-            # Fallback to using all trees if all are retention trees
-            trees_indices = np.arange(len(trees))
-
-        sorted_trees_indices = np.flip(np.argsort(trees.breast_height_diameter[trees_indices]))
-        sorted_cum_stems = np.cumsum(trees.stems_per_ha[trees_indices][sorted_trees_indices])
-        i_100_largest_arr = np.flatnonzero(sorted_cum_stems >= 100)
-        if len(i_100_largest_arr) == 0:
-            stems_smallest: float = trees.stems_per_ha[trees_indices][sorted_trees_indices][-1]
-            i_100_largest: int = len(trees_indices) - 1
-        elif i_100_largest_arr[0] == 0:
-            stems_smallest = 100.0
-            i_100_largest = 0
-        else:
-            i_100_largest = i_100_largest_arr[0]
-            stems_smallest = 100 - sorted_cum_stems[i_100_largest - 1]
-
-        numerator_1 = np.sum(trees.stems_per_ha[trees_indices][sorted_trees_indices][:i_100_largest] *
-                             trees.height[trees_indices][sorted_trees_indices][:i_100_largest])
-        numerator_2: float = stems_smallest * trees.height[trees_indices][sorted_trees_indices][i_100_largest]
-        denominator = min(100, sorted_cum_stems[i_100_largest])
-
-        return (numerator_1 + numerator_2) / denominator
+        self.ds_main_tree_species_biological_age = calc_mean_biological_age(
+            ds_biological_age[ds_main_species_mask],
+            ds_stems[ds_main_species_mask],
+            ds_tree_basal_areas[ds_main_species_mask],
+            ds_diameters[ds_main_species_mask])
 
     @classmethod
     @override
@@ -822,7 +822,7 @@ class ForestStand(Finalizable, ComputationalUnit):
             sea_effect=stand_row["sea_effect"],
             lake_effect=stand_row["lake_effect"],
             basal_area=stand_row["basal_area"],
-            main_tree_species_dominant_storey=conv(stand_row["main_tree_species_dominant_storey"], TreeSpecies),
+            ds_main_tree_species=conv(stand_row["ds_main_tree_species"], TreeSpecies),
             ds_dominant_height=stand_row["ds_dominant_height"],
             region=stand_row["region"],
             peatland_type=conv(stand_row["peatland_type"], PeatlandForestType),
@@ -875,7 +875,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     sea_effect REAL,
                     lake_effect REAL,
                     basal_area REAL,
-                    main_tree_species_dominant_storey INTEGER,
+                    ds_main_tree_species INTEGER,
                     ds_dominant_height REAL,
                     region INTEGER,
                     peatland_type INTEGER,
@@ -1074,7 +1074,7 @@ def stand_as_internal_row(stand: ForestStand):
         stand.stand_id,
         stand.basal_area,
         stand.ds_main_tree_species_biological_age,
-        stand.main_tree_species_dominant_storey,
+        stand.ds_main_tree_species,
         stand.region,
         stand.peatland_type,
         stand.drained_peatland_type,

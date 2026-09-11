@@ -110,7 +110,7 @@ _storey_map = {
     ForestCentreStratumStorey.DOMINANT: Storey.DOMINANT,
     ForestCentreStratumStorey.UNDER: Storey.UNDER,
     ForestCentreStratumStorey.OVER: Storey.OVER,
-    ForestCentreStratumStorey.SPARE: Storey.SPARE,
+    ForestCentreStratumStorey.SPARE: Storey.RETENTION,
     ForestCentreStratumStorey.REMOTE: Storey.REMOTE,
     ForestCentreStratumStorey.REMOVAL: Storey.REMOVAL
 }

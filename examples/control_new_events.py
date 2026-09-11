@@ -5,7 +5,7 @@ from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
-from lukefi.metsi.domain.pre_ops import generate_reference_trees
+from lukefi.metsi.domain.pre_ops import generate_reference_trees, supplement_storey_information
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.core.transition import Transition, Initialization
@@ -27,6 +27,7 @@ control_structure = MetsiControl[ForestStand](
     preprocessing=Preprocessing[ForestStand](
         operations=[
             generate_reference_trees,
+            supplement_storey_information
         ],
         params={
             generate_reference_trees: [

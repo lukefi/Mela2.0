@@ -1,6 +1,8 @@
 from typing import Any
 
-from lukefi.metsi.data.enums.internal import CuttingMethod
+import numpy as np
+
+from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_util import (
     reconcile_reference_trees_from_motti)
@@ -38,6 +40,11 @@ def seedtree_cutting_fn(stand: ForestStand,
             stand,
             seed_tree_class,
         )
+
+    # Set all remaining trees to OVER storey and designate as seeding trees
+    trees = stand.reference_trees
+    trees.storey = np.full(len(trees), Storey.OVER)
+    trees.management_category = np.full(len(trees), TreeManagementCategory.SEEDING_TREE)
 
     return stand, collected
 

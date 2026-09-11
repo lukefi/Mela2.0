@@ -3,7 +3,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime as dt
 
-from lukefi.metsi.data.enums.internal import SiteType, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import SiteType, Storey, StratumRank, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats.util import get_or_default, parse_float, parse_int, parse_type
 from lukefi.metsi.core.exceptions import MetsiException
@@ -396,18 +396,28 @@ def determine_stratum_age_values(biological_age_source: str,
     return (computational_age, breast_height_age)
 
 
-def determine_storey_for_stratum(source: str) -> Optional[Storey]:
+def determine_storey_for_stratum(source: StratumRank) -> Storey:
     """Determinates storey for stratum based on vmi source value 'ositteen asema'."""
-    parsed = parse_int(source)
-    if parsed in [0, 1]:
+    if source in [StratumRank.UNPRODUCTIVE_SEEDLINGS, StratumRank.DOMINANT_TREE_STOREY]:
         return Storey.DOMINANT
-    if parsed in [2, 3, 4]:
+
+    if source in [StratumRank.OVER_STOREY, StratumRank.NURSE_CROP]:
         return Storey.OVER
-    if parsed in [5, 6, 7, 9]:
+
+    if source in [
+            StratumRank.UNDER_STOREY_DEVELOPMENT_CAPABLE,
+            StratumRank.UNDER_STOREY_NOT_DEVELOPMENT_CAPABLE,
+            StratumRank.NON_ESTABLISHED_SEEDLINGS,
+            StratumRank.SEEDLING_STRATUM]:
         return Storey.UNDER
-    if parsed in [8]:
+
+    if source in [StratumRank.DAMAGED_TREE_STRATUM]:
         return Storey.INDETERMINATE
-    return None
+
+    if source == StratumRank.RETENTION_TREE_STOREY:
+        return Storey.RETENTION
+
+    return Storey.INDETERMINATE
 
 
 def determine_storey_for_tree(source: str) -> Optional[Storey]:

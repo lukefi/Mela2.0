@@ -4,7 +4,12 @@ from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.events import GrowActa, GrowMetsi
-from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight
+from lukefi.metsi.domain.pre_ops import (
+    filter_stands,
+    filter_trees,
+    generate_reference_trees,
+    scale_area_weight,
+    supplement_storey_information)
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.generators import Alternatives
 from lukefi.metsi.core.operations import do_nothing
@@ -22,7 +27,8 @@ control_structure = MetsiControl[ForestStand](
             scale_area_weight,
             generate_reference_trees,
             filter_stands,
-            filter_trees
+            filter_trees,
+            supplement_storey_information
         ],
         params={
             generate_reference_trees: [

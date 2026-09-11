@@ -1,5 +1,7 @@
+import numpy as np
+
 from lukefi.metsi.data.conversion.internal2motti import convert_species
-from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, RegenerationType, Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
@@ -11,6 +13,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, calc_storey_mean_height
 
 
 def regeneration_fn(input_: ForestStand,
@@ -90,23 +93,38 @@ def regeneration_fn(input_: ForestStand,
             clearing=clearing,
             seed_tree_species=seed_tree_species,
         )
-        return stand, []
+    else:
+        per_tree_stems = stems_per_ha / float(ntrees)
 
-    per_tree_stems = stems_per_ha / float(ntrees)
+        for _ in range(ntrees):
+            identifier, tree_number = new_reference_tree_identity(stand)
+            stand.reference_trees.create({
+                "identifier": identifier,
+                "tree_number": tree_number,
+                "species": species,
+                "origin": origin,
+                "stems_per_ha": per_tree_stems,
+                "height": height,
+                "biological_age": biological_age,
+                "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
+                "breast_height_age": None if breast_height_age is None else float(breast_height_age),
+            })
 
-    for _ in range(ntrees):
-        identifier, tree_number = new_reference_tree_identity(stand)
-        stand.reference_trees.create({
-            "identifier": identifier,
-            "tree_number": tree_number,
-            "species": species,
-            "origin": origin,
-            "stems_per_ha": per_tree_stems,
-            "height": height,
-            "biological_age": biological_age,
-            "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
-            "breast_height_age": None if breast_height_age is None else float(breast_height_age),
-        })
+    # Handle storeys ----------------------------------------------------------------------------------------------
+
+    trees = stand.reference_trees
+    if np.any(trees.storey == Storey.DOMINANT):
+        # Pre-calculate basal area for all trees
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in (Storey.DOMINANT, Storey.UNSET)}
+        diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
+        if diff >= 5.0:
+            # Merge old DOMINANT into OVER
+            trees.storey[trees.storey == Storey.DOMINANT] = Storey.OVER
+
+    # Promote new trees to DOMINANT storey
+    trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
 
     return stand, []
 

@@ -114,8 +114,8 @@ class VMI11Builder(VMIBuilder):
         result.year = vmi_util.parse_date(row["date"]).year
         result.start_year = result.year
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
-        result.main_tree_species_dominant_storey = vmi_util.determine_main_tree_species_dominant_storey(
-            row["main_tree_species_dominant_storey"],
+        result.ds_main_tree_species = vmi_util.determine_main_tree_species_dominant_storey(
+            row["ds_main_tree_species"],
             result.site_type_category,
         )
 
@@ -303,8 +303,8 @@ class VMI11Builder(VMIBuilder):
 
         basal_area = util.parse_type(row["basal_area"], float)
         stratum_number = util.parse_int(row["stratum_number"])
-        storey = vmi_util.determine_storey_for_stratum(row["stratum_rank"])
         stratum_rank = vmi2internal.convert_stratum_rank(row["stratum_rank"])
+        storey = vmi_util.determine_storey_for_stratum(stratum_rank)
 
         strata.identifier[i] = identifier
         strata.species[i] = species
@@ -318,11 +318,9 @@ class VMI11Builder(VMIBuilder):
             strata.origin[i] = origin
         if stratum_number is not None:
             strata.stratum_number[i] = stratum_number
-        if storey is not None:
-            strata.storey[i] = storey
+        strata.storey[i] = storey
         strata.sapling_stems_per_ha[i] = sapling_stems_per_ha
-        if stratum_rank is not None:
-            strata.stratum_rank[i] = stratum_rank
+        strata.stratum_rank[i] = stratum_rank
 
     @staticmethod
     def _convert_tree_entry(trees: ReferenceTrees,

@@ -27,6 +27,12 @@ from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_lo
 from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.forestry.storey import (
+    calc_tree_basal_areas,
+    calc_storey_mean_height,
+    promote_either_storey_to_dominant,
+    stand_has_only_retention_storey,
+    stand_has_only_seeding_tree_storey)
 
 
 def filter_stands(stands: StandList,
@@ -230,7 +236,7 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
         new_strata.mean_height = retention_trees.height
         new_strata.breast_height_age = retention_trees.breast_height_age
         new_strata.biological_age = retention_trees.biological_age
-        new_strata.storey = np.repeat(Storey.SPARE, len(retention_trees))
+        new_strata.storey = np.repeat(Storey.RETENTION, len(retention_trees))
         new_strata.stems_per_ha = retention_trees.stems_per_ha
         new_strata.basal_area = retention_trees.stems_per_ha * np.pi * \
             ((retention_trees.breast_height_diameter / 200) ** 2)
@@ -485,14 +491,133 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
     return stands
 
 
-__all__ = ['filter_stands',
-           'filter_trees',
-           'filter_strata',
-           'compute_location_metadata',
-           'generate_reference_trees',
-           'scale_basal_area_at_county_level',
-           'update_strata_to_match_trees',
-           'scale_area_weight',
-           'area_ha_to_1000ha',
-           'scale_trees_by_area_weight_factors',
-           'convert_coordinates']
+def supplement_storey_information(stands: StandList) -> StandList:
+    for stand in stands:
+        trees = stand.reference_trees
+
+        if len(trees) == 0:
+            continue
+
+        # Pre-calculate basal areas for all trees
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        # Ensure proper management category for REMOVAL trees
+        trees.management_category[trees.storey == Storey.REMOVAL] = TreeManagementCategory.REMOVAL_TREE
+
+        storeys = np.unique(trees.storey)
+        has_dominant_storey = Storey.DOMINANT in storeys
+        has_under_storey = Storey.UNDER in storeys
+        has_over_storey = Storey.OVER in storeys
+        has_remote_storey = Storey.REMOTE in storeys
+        has_removal_storey = Storey.REMOVAL in storeys
+        has_indeterminate_storey = Storey.INDETERMINATE in storeys
+        has_unset_storey = Storey.UNSET in storeys
+        has_non_seeding_over_storey = has_over_storey and np.any(
+            trees.management_category != TreeManagementCategory.SEEDING_TREE)
+
+        def fallback_using_under_storey(trees: ReferenceTrees, compare_under_by_ba: bool):
+            _ = compare_under_by_ba
+            trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+        def fallback_using_removal_storey(trees: ReferenceTrees, compare_remote_by_ba: bool):
+            _ = compare_remote_by_ba
+            trees.storey[trees.storey == Storey.REMOVAL] = Storey.DOMINANT
+
+        def fallback_using_height(trees: ReferenceTrees, compare_indeterminate_by_ba: bool):
+            # Assume that the storey with the larger mean diameter also has larger mean height
+            # and promote the one with the smaller height to DOMINANT.
+            if compare_indeterminate_by_ba:
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+            else:
+                trees.storey[trees.storey == Storey.INDETERMINATE] = Storey.DOMINANT
+
+        if not has_dominant_storey:
+            if stand_has_only_retention_storey(trees) or stand_has_only_seeding_tree_storey(trees):
+                # Retention storey or seeding tree over storey can exists alone
+                continue
+
+            # Promote new DOMINANT storey --------------------------------------------
+
+            if has_under_storey and not has_non_seeding_over_storey:
+                # Promote UNDER storey to DOMINANT
+                trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+            elif not has_under_storey and has_non_seeding_over_storey:
+                # Promote non-seeding OVER storey to DOMINANT
+                trees.storey[(trees.storey == Storey.OVER) &
+                             (trees.management_category != TreeManagementCategory.SEEDING_TREE)] = Storey.DOMINANT
+
+            elif has_under_storey and has_non_seeding_over_storey:
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.UNDER,
+                    (trees.storey == Storey.OVER) &
+                    (trees.management_category != TreeManagementCategory.SEEDING_TREE),
+                    fallback_using_under_storey
+                )
+
+            elif has_remote_storey and not has_removal_storey:
+                # Promote REMOTE storey to DOMINANT
+                trees.storey[trees.storey == Storey.REMOTE] = Storey.DOMINANT
+
+            elif not has_remote_storey and has_removal_storey:
+                # Promote REMOVAL storey to DOMINANT
+                trees.storey[trees.storey == Storey.REMOVAL] = Storey.DOMINANT
+
+            elif has_remote_storey and has_removal_storey:
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.REMOTE,
+                    trees.storey == Storey.REMOVAL,
+                    fallback_using_removal_storey
+                )
+
+            elif has_indeterminate_storey and not has_unset_storey:
+                # Promote INDETERMINATE storey to DOMINANT
+                trees.storey[trees.storey == Storey.INDETERMINATE] = Storey.DOMINANT
+
+            elif not has_indeterminate_storey and has_unset_storey:
+                # Promote UNSET storey to DOMINANT
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+
+            else:
+                promote_either_storey_to_dominant(
+                    trees,
+                    trees.storey == Storey.INDETERMINATE,
+                    trees.storey == Storey.UNSET,
+                    fallback_using_height
+                )
+
+        # Merge storeys ----------------------------------------------------------
+
+        storeys = np.unique(trees.storey[trees.storey != Storey.RETENTION])
+
+        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in storeys}
+
+        dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
+
+        if Storey.UNDER in storeys:
+            if abs(dominant_storey_mean_height - mean_heights[Storey.UNDER]) < 5.0:
+                # Merge UNDER into DOMINANT
+                trees.storey[trees.storey == Storey.UNDER] = Storey.DOMINANT
+
+        if Storey.OVER in storeys:
+            if abs(mean_heights[Storey.OVER] - dominant_storey_mean_height) < 5.0:
+                # Merge OVER into DOMINANT
+                trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
+
+        for storey in (Storey.REMOTE, Storey.REMOVAL, Storey.INDETERMINATE, Storey.UNSET):
+            if storey in storeys:
+                diff = mean_heights[storey] - dominant_storey_mean_height
+                if abs(diff) < 5.0:
+                    # Merge storey into DOMINANT
+                    new_storey = Storey.DOMINANT
+                elif diff > 0.0:
+                    # Merge storey into OVER
+                    new_storey = Storey.OVER
+                else:
+                    # Merge storey into UNDER
+                    new_storey = Storey.UNDER
+                trees.storey[trees.storey == storey] = new_storey
+
+    return stands
