@@ -26,6 +26,8 @@ from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.forestry.storey import (
+    _should_use_ba_for_storey,
+    calc_mean_biological_age,
     calc_storey_basal_area,
     calc_tree_basal_areas,
     calc_storey_dominant_height,
@@ -678,12 +680,12 @@ class ForestStand(Finalizable, ComputationalUnit):
         ds_tree_basal_areas = trees.basal_area[ds_mask]
         ds_diameters = trees.breast_height_diameter[ds_mask]
         ds_heights = trees.height[ds_mask]
-
+        ds_species = trees.species[ds_mask]
         ds_basal_area = calc_storey_basal_area(ds_tree_basal_areas, ds_stems)
 
         self.ds_main_tree_species = determine_dominant_species(ds_diameters,
                                                                ds_stems,
-                                                               trees.species[ds_mask],
+                                                               ds_species,
                                                                ds_tree_basal_areas)
 
         self.ds_ba_weighted_mean_diameter = (
@@ -697,6 +699,15 @@ class ForestStand(Finalizable, ComputationalUnit):
                     ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
         self.ds_dominant_height = calc_storey_dominant_height(trees, Storey.DOMINANT)
+
+        ds_biological_age = trees.biological_age[ds_mask]
+        ds_main_species_mask = ds_species == self.ds_main_tree_species
+
+        self.ds_main_tree_species_biological_age = calc_mean_biological_age(
+            ds_biological_age[ds_main_species_mask],
+            ds_stems[ds_main_species_mask],
+            ds_tree_basal_areas[ds_main_species_mask],
+            ds_diameters[ds_main_species_mask])
 
     @classmethod
     @override
