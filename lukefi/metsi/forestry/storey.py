@@ -77,14 +77,39 @@ def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float 
     return (numerator_1 + numerator_2) / denominator
 
 
-def _should_use_ba_for_storey(diameters: npt.NDArray[np.float64],
-                              basal_areas: npt.NDArray[np.float64],
-                              stems_per_ha: npt.NDArray[np.float64]) -> bool:
-    if np.sum(basal_areas) == 0:
-        return False
+def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
+                             stems: npt.NDArray[np.float64],
+                             basal_areas: npt.NDArray[np.float64],
+                             diameters: npt.NDArray[np.float64]) -> float | None:
+    if not np.any(stems > 0):
+        return None
 
-    storey_mean_diameter = np.sum(diameters * basal_areas * stems_per_ha) / np.sum(basal_areas * stems_per_ha)
-    return bool(storey_mean_diameter >= 8.0)
+    if _should_use_ba_for_storey(diameters, basal_areas, stems):
+        return np.sum(biological_ages * basal_areas * stems) / np.sum(basal_areas * stems)
+
+    return np.sum(biological_ages * stems) / np.sum(stems)
+
+
+def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
+    storey_mask = trees.storey == storey
+
+    if not np.any(storey_mask):
+        return 0.0
+
+    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
+
+    if not np.any(tree_stems_per_ha > 0):
+        return 0.0
+
+    tree_diameters = trees.breast_height_diameter[storey_mask]
+    tree_basal_areas = trees.basal_area[storey_mask]
+    tree_heights = trees.height[storey_mask]
+
+    should_use_ba = _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha)
+    if should_use_ba:
+        return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
+            np.sum(tree_basal_areas * tree_stems_per_ha)
+    return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
 
 
 def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
@@ -212,57 +237,6 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
     trees.storey[mask2] = Storey.DOMINANT
 
 
-def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
-    storey_mask = trees.storey == storey
-
-    if not np.any(storey_mask):
-        return 0.0
-
-    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
-
-    if not np.any(tree_stems_per_ha > 0):
-        return 0.0
-
-    tree_diameters = trees.breast_height_diameter[storey_mask]
-    tree_basal_areas = trees.basal_area[storey_mask]
-    tree_heights = trees.height[storey_mask]
-
-    should_use_ba = _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha)
-    if should_use_ba:
-        return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
-            np.sum(tree_basal_areas * tree_stems_per_ha)
-    return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
-
-
-def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
-    if np.all(trees.storey != Storey.DOMINANT):
-        # No DOMINANT storey at all
-        return True
-
-    dominant_storey_mask = trees.storey == Storey.DOMINANT
-    dominant_storey_diameters = trees.breast_height_diameter[dominant_storey_mask]
-    dominant_storey_basal_areas = trees.basal_area[dominant_storey_mask]
-    dominant_storey_stems_per_ha = trees.stems_per_ha[dominant_storey_mask]
-
-    should_use_ba = _should_use_ba_for_storey(
-        dominant_storey_diameters,
-        dominant_storey_basal_areas,
-        dominant_storey_stems_per_ha
-    )
-
-    if should_use_ba:
-        storey_basal_area = calc_storey_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
-        if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
-            return True
-        return False
-
-    storey_stems_per_ha = np.sum(dominant_storey_stems_per_ha)
-    if storey_stems_per_ha < DOMINANT_STOREY_STEMS_LIMIT:
-        return True
-
-    return False
-
-
 def manage_existing_storeys(trees: ReferenceTrees):
 
     # Check diminished DOMINANT storey ------------------------------------------------------------------
@@ -354,3 +328,42 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn["For
         return unit, cd
 
     return wrapper
+
+
+def _should_use_ba_for_storey(diameters: npt.NDArray[np.float64],
+                              basal_areas: npt.NDArray[np.float64],
+                              stems_per_ha: npt.NDArray[np.float64]) -> bool:
+    if np.sum(basal_areas) == 0:
+        return False
+
+    storey_mean_diameter = np.sum(diameters * basal_areas * stems_per_ha) / np.sum(basal_areas * stems_per_ha)
+    return bool(storey_mean_diameter >= 8.0)
+
+
+def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
+    if np.all(trees.storey != Storey.DOMINANT):
+        # No DOMINANT storey at all
+        return True
+
+    dominant_storey_mask = trees.storey == Storey.DOMINANT
+    dominant_storey_diameters = trees.breast_height_diameter[dominant_storey_mask]
+    dominant_storey_basal_areas = trees.basal_area[dominant_storey_mask]
+    dominant_storey_stems_per_ha = trees.stems_per_ha[dominant_storey_mask]
+
+    should_use_ba = _should_use_ba_for_storey(
+        dominant_storey_diameters,
+        dominant_storey_basal_areas,
+        dominant_storey_stems_per_ha
+    )
+
+    if should_use_ba:
+        storey_basal_area = calc_storey_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
+        if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
+            return True
+        return False
+
+    storey_stems_per_ha = np.sum(dominant_storey_stems_per_ha)
+    if storey_stems_per_ha < DOMINANT_STOREY_STEMS_LIMIT:
+        return True
+
+    return False
