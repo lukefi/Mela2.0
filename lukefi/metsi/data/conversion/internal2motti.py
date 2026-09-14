@@ -8,18 +8,20 @@ from lukefi.metsi.data.enums.motti import (
 
 
 
-_COMMON_SITE_TYPES = [
-    # Common site type values (same are used also for drained peatlands).
+_MOTTI_COMMON_SITE_TYPES = [
+    # Motti common site type values.
     MottiSiteType.VERY_RICH_SITE,
     MottiSiteType.RICH_SITE,
     MottiSiteType.DAMP_SITE,
     MottiSiteType.SUB_DRY_SITE,
     MottiSiteType.DRY_SITE,
-    MottiSiteType.BARREN_SITE
+    MottiSiteType.BARREN_SITE,
+    MottiSiteType.ROCKY_OR_SANDY_AREA,
+    MottiSiteType.OPEN_MOUNTAINS
 ]
 
 
-_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS = [
+_MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS = [
     # Drained peatland forest type spesification values (from 51-57).
     MottiSiteType.HERB_RICH_TYPE,
     MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_1,
@@ -44,6 +46,7 @@ _SPECIES_MAP = {
 }
 
 
+# TODO: we do not need motti storey, remove?
 _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
@@ -68,7 +71,12 @@ _SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     SiteType.DAMP_SITE: MottiSiteType.DAMP_SITE,
     SiteType.SUB_DRY_SITE: MottiSiteType.SUB_DRY_SITE,
     SiteType.DRY_SITE: MottiSiteType.DRY_SITE,
-    SiteType.BARREN_SITE: MottiSiteType.BARREN_SITE
+    SiteType.BARREN_SITE: MottiSiteType.BARREN_SITE,
+    # TODO: after MottiSC udgrade mapping should be 7->7, and (8,9,10) -> 8
+    SiteType.ROCKY_OR_SANDY_AREA: MottiSiteType.BARREN_SITE,
+    SiteType.OPEN_MOUNTAINS: MottiSiteType.BARREN_SITE,
+    SiteType.TUNTURIKOIVIKKO: MottiSiteType.BARREN_SITE,
+    SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA: MottiSiteType.BARREN_SITE
 }
 
 _DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
@@ -118,17 +126,21 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
     Resolves Motti site type (kasvupaikka) transformation based on internal presentation of the
     drained peatland type or the actual site type variable.
     """
+    _additional_valid_site_types = [SiteType.TUNTURIKOIVIKKO, SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA]
+
     # First tries to resolve with the drained peatland type value
-    if source1 is not None and source1 in _DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS:
+    if source1 is not None and source1 in _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS:
         return _DRAINED_PEATLAND_FOREST_TYPE_MAP[source1]
 
     # Fallback to resolve from common site types
-    if source2 is not None and source2 in _COMMON_SITE_TYPES:
+    if source2 is not None and source2 in (_MOTTI_COMMON_SITE_TYPES + _additional_valid_site_types):
         return _SITE_TYPE_MAP[source2]
 
     # Raise a informative error
     _valid_values = [ str(enum.value)
-                     for enum in _COMMON_SITE_TYPES + _DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS ]
+                     for enum in _MOTTI_COMMON_SITE_TYPES +
+                     _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS +
+                     _additional_valid_site_types ]
     raise MetsiException(f"Unable to resolve internal site type value [{ source2 }] \
                          or drained peatland spesific value [{ source1 }] for Motti site type value. \
                          Correct values for Motti site type are: { _valid_values }")
