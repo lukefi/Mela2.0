@@ -169,8 +169,6 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     if rts_for_update:
         rt.update_many(rts_for_update, idx_for_update)
 
-    return
-
 
 def _build_reference_tree_update(*,
                                  identifier: str,

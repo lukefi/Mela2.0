@@ -46,7 +46,6 @@ _SPECIES_MAP = {
 }
 
 
-# TODO: we do not need motti storey, remove?
 _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
