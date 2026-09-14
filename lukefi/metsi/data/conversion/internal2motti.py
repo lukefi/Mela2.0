@@ -6,8 +6,6 @@ from lukefi.metsi.data.enums.motti import (
     MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType)
 
 
-
-
 _MOTTI_COMMON_SITE_TYPES = [
     # Motti common site type values.
     MottiSiteType.VERY_RICH_SITE,
@@ -33,7 +31,6 @@ _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS = [
 ]
 
 
-
 _SPECIES_MAP = {
     TreeSpecies.PINE: MottiSpecies.PINE,
     TreeSpecies.SPRUCE: MottiSpecies.SPRUCE,
@@ -53,6 +50,7 @@ _STOREY_MAP = {
     Storey.SPARE: MottiStorey.SPARE,
 }
 
+
 _DRAINAGE_CATEGORY_MAP = {
     DrainageCategory.UNDRAINED_MINERAL_SOIL_OR_MIRE: MottiDrainageCategory.OJITTAMATON_KANGAS,
     DrainageCategory.UNDRAINED_MINERAL_SOIL: MottiDrainageCategory.OJITTAMATON_KANGAS,
@@ -63,6 +61,7 @@ _DRAINAGE_CATEGORY_MAP = {
     DrainageCategory.TRANSFORMING_MIRE: MottiDrainageCategory.MUUTTUMA,
     DrainageCategory.TRANSFORMED_MIRE: MottiDrainageCategory.TURVEKANGAS
 }
+
 
 _SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     SiteType.VERY_RICH_SITE: MottiSiteType.VERY_RICH_SITE,
@@ -77,6 +76,7 @@ _SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     SiteType.TUNTURIKOIVIKKO: MottiSiteType.BARREN_SITE,
     SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA: MottiSiteType.BARREN_SITE
 }
+
 
 _DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     DrainedPeatlandForestType.HERB_RICH_TYPE: MottiSiteType.HERB_RICH_TYPE,
@@ -143,3 +143,23 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
     raise MetsiException(f"Unable to resolve internal site type value [{ source2 }] \
                          or drained peatland spesific value [{ source1 }] for Motti site type value. \
                          Correct values for Motti site type are: { _valid_values }")
+
+def convert_storey(source: Storey | None) -> MottiStorey:
+    """
+    Map internal storey values to Motti storey codes.
+
+    Returns the dominant storey by default when the source value is missing.
+    Raises a MetsiException if the provided storey cannot be mapped.
+    """
+    _default_motti_storey = MottiStorey.DOMINANT
+    if source is None:
+        return _default_motti_storey
+
+    try:
+        return _STOREY_MAP[source]
+    except KeyError as e:
+        _valid_values = [str(enum.value) for enum in MottiStorey]
+        raise MetsiException(
+            f"Unable to map internal storey {source} to Motti storey. "
+            f"Valid values are: {_valid_values}. Original error: {e}"
+        ) from e

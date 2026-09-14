@@ -3,20 +3,13 @@ import numpy as np
 from lukefi.metsi.core.transition import Initialization
 from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
+from lukefi.metsi.data.enums.motti import MottiStorey
+from lukefi.metsi.data.conversion.internal2motti import convert_storey
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-
-
-# NOTE: Why not use what is in enum-modules?
-FDM_TO_MOTTI_STOREY = {
-    Storey.DOMINANT: 2,  # ylempi
-    Storey.UNDER: 1,     # alempi
-    Storey.OVER: 3,      # siemenpuu
-    Storey.SPARE: 4,     # säästöpuu
-}
 
 
 def _storey_to_motti(
@@ -48,8 +41,9 @@ def _storey_to_motti(
         Otherwise it is assumed to be a reference_trees row index, and the
         matching stratum row is resolved through rt.stratum -> strata.stratum_number.
     """
-    if fdm_storey in FDM_TO_MOTTI_STOREY:  # NOTE: FDM_TO_MOTTI_STOREY vois vaihtaa interl2motti.py
-        return FDM_TO_MOTTI_STOREY[fdm_storey]
+    if fdm_storey in MottiStorey:
+        return convert_storey(fdm_storey)
+
 
     strata = stand.tree_strata
     if strata is None or strata.size <= 1:
