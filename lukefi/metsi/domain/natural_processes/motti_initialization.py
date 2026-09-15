@@ -1,5 +1,6 @@
 from typing import Optional
 import numpy as np
+from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.transition import Initialization
 from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
@@ -12,70 +13,40 @@ from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
 
+def _get_stratum_with_matching_number(tree_stratum: TreeStrata, stratum_number: int) -> int | None:
+    """  """
+    stratum_index = np.where(tree_stratum.stratum_number == stratum_number)[0]
+    if stratum_index.size == 0:
+        return None
+    if stratum_index.size > 1:
+        raise MetsiException(
+            f"Found multiple index with stratum_number {stratum_number} the result should be single value.")
+    return stratum_index.item()
+
+
 def _storey_to_motti(
-    stand: ForestStand,
-    index: int,
-    fdm_storey: Storey,
-    *,
-    is_stratum_index: bool = False,
-) -> int:
-    """
-    Convert FDM Storey -> Motti puustojakso/puuluokka.
-
-    Exact classes:
-      DOMINANT -> 2
-      UNDER    -> 1
-      OVER     -> 3
-      SPARE    -> 4
-
-    Fallback:
-      - if only one stratum: ylempi=2
-      - if multiple strata and this stratum is clearly lower:
-          height gap > 5m and lower stratum height < 10m -> alempi=1
-      - otherwise ylempi=2
-
-    Parameters
-    ----------
-    index:
-        If is_stratum_index=True, this is a direct tree_strata row index.
-        Otherwise it is assumed to be a reference_trees row index, and the
-        matching stratum row is resolved through rt.stratum -> strata.stratum_number.
-    """
+        stand: ForestStand,
+        fdm_storey: Storey,
+        stratum_index: int | None
+) -> MottiStorey:
     if fdm_storey in MottiStorey:
         return convert_storey(fdm_storey)
 
-
     strata = stand.tree_strata
     if strata is None or strata.size <= 1:
-        return 2
+        return MottiStorey.DOMINANT
 
-    stratum_idx: int | None = None
+    if stratum_index is None:
+        return MottiStorey.DOMINANT
 
-    if is_stratum_index:
-        if 0 <= index < strata.size:
-            stratum_idx = index
-    else:
-        rt = stand.reference_trees
-        if 0 <= index < rt.size:
-            target_sid = int(rt.stratum[index])
-            if target_sid > 0:
-                for j in range(strata.size):
-                    sid = int(strata.stratum_number[j])
-                    if sid == target_sid:
-                        stratum_idx = j
-                        break
+    heights = strata.mean_height
+    curret_height = heights[stratum_index]
+    max_height = np.max(heights)
+    if (max_height - curret_height) > 5.0 and curret_height < 10.0:
+        return MottiStorey.UNDER
 
-    if stratum_idx is None:
-        return 2
+    return MottiStorey.DOMINANT
 
-    heights = np.nan_to_num(strata.mean_height, nan=0.0)
-    current_h = float(heights[stratum_idx])
-    max_h = float(np.max(heights))
-
-    if (max_h - current_h) > 5.0 and current_h < 10.0:
-        return 1
-
-    return 2
 
 
 def _strip_tree_strata(stand: ForestStand):
@@ -187,12 +158,9 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         origin = float(strata.origin[i].item())
         stratum_sid = float(strata.stratum_number[i].item())
         spe = float(internal2motti.convert_species(species))
-        storey = _storey_to_motti(
-            stand,
-            i,
-            Storey(strata.storey[i].item()),
-            is_stratum_index=True)
-
+        storey = _storey_to_motti(stand,
+                                   strata.storey[i].item(),
+                                   i)
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -387,7 +355,13 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     stratum_ids = rt.stratum.tolist()
     if -1 in stratum_ids:
         raise ValueError("ReferenceTrees contains stratum_number=-1, which is invalid for Motti initialization.")
-    storey_vec = [_storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
+    storey_vec = [
+        _storey_to_motti(stand,
+                          rt.storey[i].item(),
+                          _get_stratum_with_matching_number(stand.tree_strata,
+                                                           rt.stratum[i].item()))
+        for i in range(n)
+    ]
     trees_py = [
         {
             "id": int(i),
