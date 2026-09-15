@@ -396,6 +396,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     yo = Motti4DLL.new_strata(strata_py)
 
     buffers = Motti4DLL.alloc_state_buffers()
+    buffers.ctrl.death_forest = 1
     buffers.ctrl.death_tree = 1
 
     ntrees = Motti4DLL.initialize_with_state(
