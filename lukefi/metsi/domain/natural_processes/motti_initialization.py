@@ -333,8 +333,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         year=stand.year - stand.start_year,
         spedom=spedom,  # OK
         spedom2=spedom,  # OK pääpuulajimetsikkö
-        nstorey=1.0,
-        gstorey=1.0,
+        nstorey=1.0 if np.unique(stand.reference_trees.storey).size < 2 else 2.0
     )
 
     compressed_strata = _compress_strata_for_motti(stand, max_strata=10)

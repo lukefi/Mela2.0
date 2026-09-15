@@ -132,8 +132,7 @@ class Motti4DLL:
         year: Optional[float] = 2010.0,   # safe default if caller does not provide
         spedom: Optional[int] = None,
         spedom2: Optional[int] = None,
-        nstorey: float = 1.0,
-        gstorey: float = 1.0,
+        nstorey: float = 1.0
     ):
         """
         IMPORTANT: Matches C flow -> SiteInit first, then fill fields (no dd), then CheckYY.
@@ -175,10 +174,8 @@ class Motti4DLL:
         yy.alr = alr
         if year is not None:
             yy.year = year
-        yy.nstorey = 1.0
-        yy.gstorey = 1.0
         yy.nstorey = nstorey
-        yy.gstorey = gstorey
+        yy.gstorey = 1.0
         if spedom is not None:
             yy.spedom = spedom
         if spedom2 is not None:
