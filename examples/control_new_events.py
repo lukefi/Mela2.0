@@ -8,7 +8,7 @@ from lukefi.metsi.domain.natural_processes.motti_initialization import motti_ini
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
-from lukefi.metsi.core.transition import Transition, Initialization
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
 
 from examples.declarations.sqlite import sqlite_decl

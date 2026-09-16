@@ -3,7 +3,7 @@ from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.core.operations import do_nothing
 from lukefi.metsi.core.sim_control import Resimulation
-from lukefi.metsi.core.transition import Transition, Initialization
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
