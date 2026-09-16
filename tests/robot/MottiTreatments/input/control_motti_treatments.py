@@ -8,7 +8,7 @@ from lukefi.metsi.domain.pre_ops import (
     generate_reference_trees,
     scale_area_weight)
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
-from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.generators import Alternatives, Event, Sequence
@@ -114,7 +114,7 @@ control_structure = MetsiControl[ForestStand](
         max_step=5,
         db_output_state=False,
         db_output_cd=False,
-        initialization=Initialization(initialize_motti),
+        initialization=motti_init,
     ),
     end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
     )

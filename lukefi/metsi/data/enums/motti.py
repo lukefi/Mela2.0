@@ -8,7 +8,8 @@ class MottiSpecies(IntEnum):
     SILVER_BIRCH = 3
     DOWNY_BIRCH = 4
     ASPEN = 5
-    ALDER = 6
+    GREY_ALDER = 6
+    COMMON_ALDER = 7 # Miksi tämä puuttui?
     OTHER_CONIFEROUS = 8
     OTHER_DECIDUOUS = 9
 
@@ -42,6 +43,8 @@ class MottiSiteType(IntEnum):
     SUB_DRY_SITE = 4
     DRY_SITE = 5
     BARREN_SITE = 6
+    ROCKY_OR_SANDY_AREA = 7
+    OPEN_MOUNTAINS = 8
     HERB_RICH_TYPE = 51
     VACCINIUM_MYRTILLUS_TYPE_1 = 52
     VACCINIUM_MYRTILLUS_TYPE_2 = 53

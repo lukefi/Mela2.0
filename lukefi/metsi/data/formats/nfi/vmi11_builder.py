@@ -292,8 +292,10 @@ class VMI11Builder(VMIBuilder):
         stems_per_ha = util.get_or_default(util.parse_type(row["stems_per_ha"], float), 0.0)
         sapling_stems_per_ha = util.get_or_default(util.parse_type(row["sapling_stems_per_ha"], float), 0.0)
 
-        mean_diameter = util.parse_type(row["avg_diameter"], float)
-        mean_height = vmi_util.determine_stratum_tree_height(row["avg_height"])
+        mean_diameter = util.get_or_default(
+            util.parse_type(row["avg_diameter"], float), 0.0)
+        mean_height = util.get_or_default(
+            vmi_util.determine_stratum_tree_height(row["avg_height"]), 0.0)
 
         biological_age, breast_height_age = vmi_util.determine_stratum_age_values(
             row["biological_age"],

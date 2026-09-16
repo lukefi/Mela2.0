@@ -40,6 +40,6 @@ def grow_motti_fn(input_: ForestStand, step: int = 5) -> OpTuple[ForestStand]:
 
     stand.year = (stand.year or 0) + step
 
-    reconcile_reference_trees_from_motti(stand, init_mode=False)
+    reconcile_reference_trees_from_motti(stand)
 
     return stand, []

@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.enums.internal import Origin, Storey, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -76,19 +76,6 @@ def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[in
     return retval
 
 
-def _find_non_sapling_reference_tree_index(rt: ReferenceTrees, osid: int, tree_number: int) -> int | None:
-    target_tree_number = tree_number
-    for i in _reference_tree_indices_by_stratum(rt, osid):
-        if bool(rt.sapling[i]):
-            continue
-        try:
-            if int(rt.tree_number[i]) == target_tree_number:
-                return i
-        except (TypeError, ValueError):
-            continue
-    return None
-
-
 def _storey_from_layer(stand: ForestStand, layer: int) -> int:
     # NOTE: This can't be right! Check.
     strata = getattr(stand, "tree_strata", None)
@@ -118,63 +105,69 @@ def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | N
 
 
 def sync_yp_to_reference_trees(stand: ForestStand) -> None:
-    ms = stand.motti_state
-    if ms is None or ms.yp is None:
-        return
+    """ Synchronize Motti tree vector into stand reference trees. """
 
+    if stand.motti_state is None:
+        raise ValueError("Cannot sync Motti tree vector into stand reference trees." \
+        "MottiState is not initialized for the stand.")
+
+    ms = stand.motti_state
     yp = ms.yp
     rt = stand.reference_trees
 
+    rts_for_create: list[dict[str, Any]] = []
+    rts_for_update: dict[str, list[Any]] = {
+        "stems_per_ha": [],
+        "height": [],
+        "breast_height_diameter": [],
+        "biological_age": [],
+        "breast_height_age": [],
+        "basal_area": [],
+        "volume": []
+    }
+    idx_for_update: list[int] = []
+    itree_number: int = np.max(rt.tree_number).item() if rt.size > 0 else 0
+
     for i in range(ms.ntrees):
         t = yp[0][i]
-
-        sid = int(t.sid)
-        if sid <= 0:
-            continue
         yp_tree_id = int(t.id)
 
-        if yp_tree_id <= 0:
-            identifier, tree_number = new_reference_tree_identity(stand)
-            yp_tree_id = tree_number
-            t.id = float(tree_number)
-            idx = None
-            storey = int(Storey.UNSET)
+        yp_in_rt = np.any(rt.tree_number == yp_tree_id)
+
+        if not yp_in_rt:
+            itree_number += 1
+            t.id = itree_number
+            rts_for_create.append(
+                {
+                    "identifier": f"{stand.identifier}-{itree_number}-tree",
+                    "tree_number": itree_number,
+                    "species": TreeSpecies(int(t.spe)),
+                    "breast_height_diameter": t.d13,
+                    "height": t.h,
+                    "breast_height_age": t.age13,
+                    "biological_age": t.age,
+                    "stems_per_ha": t.f,
+                    "origin": Origin(int(t.snt) - 1),
+                    "management_category": TreeManagementCategory.NO_RESTRICTION,
+                    "basal_area": t.ba,
+                    "volume": t.vol,
+                    "stratum": int(t.sid)
+                }
+            )
         else:
-            idx = _find_non_sapling_reference_tree_index(rt, sid, yp_tree_id)
+            idx_for_update.append(np.where(rt.tree_number == yp_tree_id)[0][0].item())
+            rts_for_update["stems_per_ha"].append(t.f)
+            rts_for_update["height"].append(t.h)
+            rts_for_update["breast_height_diameter"].append(t.d13)
+            rts_for_update["biological_age"].append(t.age)
+            rts_for_update["breast_height_age"].append(t.age13)
+            rts_for_update["basal_area"].append(t.ba / 10000.0) # cm2 -> m2
+            rts_for_update["volume"].append(t.vol)
 
-            if idx is None:
-                identifier, tree_number = new_reference_tree_identity(stand)
-                yp_tree_id = tree_number
-                t.id = float(tree_number)
-                storey = int(Storey.UNSET)
-            else:
-                identifier = str(rt.identifier[idx])
-                tree_number = int(rt.tree_number[idx])
-                storey = int(rt.storey[idx]) if int(rt.storey[idx]) >= 0 else int(Storey.UNSET)
-
-        row = {
-            "identifier": identifier, # NOTE: should not be updated
-            "tree_number": yp_tree_id, # NOTE: should not be updated
-            "stratum": str(sid), # NOTE: should not be updated
-            "species": int(t.spe), # NOTE: should not be updated
-            "stems_per_ha": t.f,
-            "origin": int(t.snt) - 1, # NOTE: should not be updated
-            "height": t.h,
-            "breast_height_diameter": t.d13,
-            "biological_age": t.age,
-            "breast_height_age": t.age13,
-            "sapling": False, # Tarviiko tätä ollenkaan?
-            "tree_category": "", # Tarviiko tätä olla tässä jos kerran tyhjä?
-            "management_category": 1, # NOTE: should not be updated
-            "storey": storey, # NOTE: should not be updated
-            "basal_area": (t.ba / 10000.0) if getattr(t, "ba", None) is not None else 0.0,
-            "volume": t.vol if getattr(t, "vol", None) is not None else 0.0,
-        }
-
-        if idx is None:
-            rt.create(row)
-        else:
-            rt.update(row, idx)
+    if rts_for_create:
+        rt.create(rts_for_create)
+    if rts_for_update:
+        rt.update_many(rts_for_update, idx_for_update)
 
 
 def _build_reference_tree_update(*,
@@ -286,7 +279,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
 
 def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
     """
-    Delete old sapling RFs if SID exists in YP vector.
+    Delete sapling reference trees that exist in the YP vector.
     """
     ms = stand.motti_state
     rt = stand.reference_trees
@@ -317,48 +310,9 @@ def _prune_promoted_sapling_reference_trees(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def _prune_reference_trees_not_in_yp(stand: ForestStand) -> None:
-    """
-    Keep only ReferenceTrees that have a live in the YP vector.
-    Used after Motti4Init init.
-    """
-    rt = stand.reference_trees
-    ms = stand.motti_state
-
-    if rt.size == 0:
-        return
-
-    live_yp: set[tuple[int, int]] = set()
-    if ms is not None and ms.yp is not None:
-        for i in range(ms.ntrees):
-            t = ms.yp[0][i]
-            sid = int(t.sid)
-            tree_id = int(t.id)
-            if sid > 0 and tree_id > 0:
-                live_yp.add((sid, tree_id))
-
-    delete_idx: list[int] = []
-    for i in range(rt.size):
-        sid = int(rt.stratum[i])
-        try: # NOTE: Unnecessary try-except?
-            tree_number = int(rt.tree_number[i])
-        except (TypeError, ValueError):
-            tree_number = -1
-
-        if sid <= 0 or tree_number <= 0 or (sid, tree_number) not in live_yp:
-            delete_idx.append(i)
-
-    if delete_idx:
-        rt.delete(np.array(delete_idx, dtype=int))
-
-# reconcile_reference_trees_from_motti
-def reconcile_reference_trees_from_motti(stand: ForestStand, *, init_mode: bool = False) -> None:
+def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
     sync_yp_to_reference_trees(stand)
     _prune_promoted_sapling_reference_trees(stand)
-
-    if init_mode:
-        _prune_reference_trees_not_in_yp(stand)
-
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
@@ -430,7 +384,7 @@ def apply_motti_yp_reduction_from_removed_reference_trees(stand: ForestStand,
         _refresh_reference_trees_from_motti_after_yp_change(stand)
     return changed
 
-# reconcile_reference_trees_from_motti
+
 def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:
     live: set[tuple[str, int, int | None]] = set()
 
