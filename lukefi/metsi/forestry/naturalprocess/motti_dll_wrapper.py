@@ -123,7 +123,6 @@ class Motti4DLL:
         cls,
         *,
         Y: float, X: float, Z: float = -1.0,
-        lake: float = 0.0, sea: float = 0.0,
         mal: int = 1, mty: int = 3, verl: int = 2, verlt: int = 0,
         xt_regen: int = 1, xt_muok: int = 1, xt_raiv: int = 1, sid: int = 1,
         fthin: bool = False, xt_thin: int = 1, xt_fert: int = 1,
@@ -152,11 +151,6 @@ class Motti4DLL:
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SiteInit failed (rv={rv[0]})")
 
-        yy.Y = Y
-        yy.X = X
-        yy.Z = Z
-        yy.lake = lake
-        yy.sea = sea
         yy.mal = mal
         yy.mty = mty
         yy.verl = verl

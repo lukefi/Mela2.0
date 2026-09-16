@@ -296,8 +296,6 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         Y=y_km,
         X=x_km,
         Z=z,
-        lake=stand.lake_effect if stand.lake_effect is not None else 0.0,
-        sea=stand.sea_effect if stand.sea_effect is not None else 0.0,
         mal=stand.land_use_category.value if stand.land_use_category is not None else 0,
         mty=internal2motti.resolve_site_type(
             stand.drained_peatland_type,
