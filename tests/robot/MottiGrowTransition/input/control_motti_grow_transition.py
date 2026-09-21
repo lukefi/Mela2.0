@@ -4,7 +4,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import TimePoints
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
-from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
 from lukefi.metsi.domain.events import DoNothing
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
@@ -70,7 +70,7 @@ control_structure = MetsiControl[ForestStand](
                               name="grow_motti",
                               db_output_state=True,
                               db_output_cd=True,
-                              initialization=Initialization(initialize_motti)
+                              initialization=motti_init
         ),
         end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
     )

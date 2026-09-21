@@ -3,10 +3,10 @@ from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.core.operations import do_nothing
 from lukefi.metsi.core.sim_control import Resimulation
-from lukefi.metsi.core.transition import Transition, Initialization
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import NaturalProcessInfo
-from lukefi.metsi.domain.natural_processes.motti_initialization import initialize_motti
+from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
 from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
@@ -26,7 +26,7 @@ control_structure = MetsiControl[ForestStand](
                               name="grow_motti",
                               db_output_state=False,
                               db_output_cd=True,
-                              initialization=Initialization(initialize_motti)
+                              initialization=motti_init
         ),
         schedules_file="examples/selected_schedules.csv",
         treatment_map={

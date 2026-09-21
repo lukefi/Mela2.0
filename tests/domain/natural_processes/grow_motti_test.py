@@ -88,6 +88,7 @@ def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
         artificial_regeneration_year=1,
         soil_surface_preparation_year=2,
         regeneration_area_cleaning_year=3,
+        main_tree_species_dominant_storey=TreeSpecies.COMMON_ALDER,
         stand_id=12345,
         cutting_year=1999,
         method_of_last_cutting=5,
@@ -321,9 +322,7 @@ class TestMottiPathResolversAndWrapperUtils(unittest.TestCase):
 class TestGrowMottiDLLVec(unittest.TestCase):
 
     def test_species_mapping_and_euref(self) -> None:
-        # NOTE: Siis eikö tämän kannattas olla jossain tests\...\enum hakemistossa?
-        # species mapping: alder collapse (7 -> 6); others pass-through or bucketed
-        self.assertEqual(internal2motti.convert_species(TreeSpecies(7)), 6)
+        self.assertEqual(internal2motti.convert_species(TreeSpecies(7)), 7)
         self.assertEqual(internal2motti.convert_species(TreeSpecies(3)), 3)
 
         # auto_euref_km conversion logic
@@ -335,7 +334,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
             motti_initialization._auto_euref_km(_geo_location)  # pylint: disable=protected-access
 
     def test_predictor_builds_tree_payload_and_species_mapping(self) -> None:
-        rt = _make_rt(species=(3, 7))  # 7 -> 6
+        rt = _make_rt(species=(3, 7))
         stand = _make_stand_vec(rt)
         fake_dll = FakeDLL()
 
@@ -355,7 +354,7 @@ class TestGrowMottiDLLVec(unittest.TestCase):
         self.assertEqual(trees_py[0]["id"], 1)
         self.assertEqual(trees_py[1]["id"], 2)
         self.assertEqual(trees_py[0]["spe"], 3)
-        self.assertEqual(trees_py[1]["spe"], 6)  # alder collapsed
+        self.assertEqual(trees_py[1]["spe"], 7)
 
     def test_vector_grow_applies_deltas_and_handles_deaths(self) -> None:
         # Two trees; DLL returns growth only for tree 1; tree 2 "dies" (missing -> stems=0)
