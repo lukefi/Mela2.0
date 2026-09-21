@@ -106,6 +106,7 @@ def regeneration_fn(input_: ForestStand,
             "biological_age": biological_age,
             "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
             "breast_height_age": None if breast_height_age is None else float(breast_height_age),
+            "management_category": TreeManagementCategory.NO_RESTRICTION
         })
 
     return stand, []
