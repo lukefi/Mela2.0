@@ -76,42 +76,6 @@ def _strip_tree_strata(stand: ForestStand):
     stand.tree_strata = stripped
 
 
-def _spedom(rt: ReferenceTrees) -> int:
-    """
-    Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
-    If trees are empty fall back to PINE, we need to give valid value for growth.
-
-    NOTE: This should be generalized to ForestStand.spedom like solution.
-    """
-    if rt.size == 0:
-        return TreeSpecies.PINE
-
-    # Convert species to Motti codes (will raise if invalid)
-    spe_codes = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
-
-    # Basal area per tree: stems_per_ha * π * (0.5 * d_cm * 0.01 m/cm)^2
-    d_cm = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
-    f_ha = np.nan_to_num(rt.stems_per_ha, nan=0.0)
-    ba_per_tree = f_ha * np.pi * (0.5 * d_cm * 0.01) ** 2  # m²/ha contribution
-
-    # Sum BA per species code
-    ba_per_species: dict[int, float] = {}
-    for code, ba in zip(spe_codes, ba_per_tree.tolist()):
-        ba_per_species[code] = ba_per_species.get(code, 0.0) + float(ba)
-
-    use_basal = any(v > 0.0 for v in ba_per_species.values())
-    if not use_basal:
-        ba_per_species.clear()
-        # Fallback: stems/ha totals per species
-        for code, stems in zip(spe_codes, f_ha.tolist()):
-            ba_per_species[code] = ba_per_species.get(code, 0.0) + float(stems)
-
-    if not ba_per_species:
-        return TreeSpecies.PINE
-
-    return max(ba_per_species.items(), key=lambda kv: kv[1])[0]
-
-
 def _auto_euref_km(geo_location:
                    Optional[tuple[float | None,
                                   float | None,
@@ -281,7 +245,7 @@ def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> Tree
 def _init_motti_state(stand: ForestStand) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
-    spedom = _spedom(stand.reference_trees)
+    spedom = internal2motti.convert_species(stand.main_tree_species_dominant_storey)
 
     y_km, x_km = _auto_euref_km(stand.geo_location)
 

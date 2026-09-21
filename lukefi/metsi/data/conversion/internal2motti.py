@@ -89,22 +89,25 @@ _DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
 }
 
 
-def convert_species(source: TreeSpecies) -> MottiSpecies:
+def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     """
     Map internal TreeSpecies -> Motti species codes directly.
-    - Keep main species 1..5 as-is
-    - Collapse both alders (GREY_ALDER, COMMON_ALDER) to 6
+    - Keep main species 1..7 as-is
     - If in CONIFEROUS_SPECIES -> 8
     - If in DECIDUOUS_SPECIES -> 9
+    - Unknown species 0 -> 0
     """
-    if source in _SPECIES_MAP:
-        return _SPECIES_MAP[source]
-    if source in CONIFEROUS_SPECIES:
-        return MottiSpecies.OTHER_CONIFEROUS
-    if source in DECIDUOUS_SPECIES:
-        return MottiSpecies.OTHER_DECIDUOUS
+    try:
+        if source in _SPECIES_MAP:
+            return _SPECIES_MAP[source]
+        if source in CONIFEROUS_SPECIES:
+            return MottiSpecies.OTHER_CONIFEROUS
+        if source in DECIDUOUS_SPECIES:
+            return MottiSpecies.OTHER_DECIDUOUS
+        raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
+    except Exception as e:
+        raise RuntimeError("Unable to convert internal tree species to Motti tree species") from e
 
-    raise MetsiException(f"Unable to map internal species {source} to Motti species")
 
 
 def convert_drainage_category(source: DrainageCategory | None) ->  MottiDrainageCategory:
