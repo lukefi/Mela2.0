@@ -8,7 +8,7 @@ from lukefi.metsi.data.enums.motti import MottiStorey
 from lukefi.metsi.data.conversion.internal2motti import convert_storey
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.vector_model import TreeStrata
 from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
