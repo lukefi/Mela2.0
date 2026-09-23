@@ -47,13 +47,14 @@ def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
 # - https://github.com/lukefi/Mela2.0/pull/151
 # def _resolve_seeding_tree_spe(rt: ReferenceTrees) -> MottiSpecies:
 #     """ In-place resolution of Motti seeding tree value """
-#     retention_species = rt.species[rt.management_category == TreeManagementCategory.SEEDING_TREE]
-#     all_possible_species = np.unique(retention_species)
-#     seeding_spe = all_possible_species[0]
+#     seeding_species = rt.species[rt.management_category == TreeManagementCategory.SEEDING_TREE]
+#     all_possible_species, idx = np.unique(seeding_species, return_inverse=True)
+#     result = all_possible_species[0]
 #     if all_possible_species.size > 1:
 #         # resolve which species has the larges basal area
-#         seeding_spe = np.bincount(all_possible_species, weights=rt.basal_area).max()
-#     return convert_species(seeding_spe)
+#         sums = np.bincount(idx, weights=(rt.basal_area * rt.stems_per_ha))
+#         result = all_possible_species[sums.argmax()]
+#     return convert_species(result.item())
 
 
 def _regeneration_via_motti(stand: ForestStand,
@@ -110,7 +111,7 @@ def regeneration_fn(input_: ForestStand,
                     istep_motti: int = 0, # Jos realisoituu out parametriksi, niin pois
                     survival_percent_motti: float = 100.0,
                     soil_preparation_type_motti: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
-                    clearing_motti: bool = False
+                    clearing_motti: bool = False # regeneration_area_cleaning_year jos vuosi myöhemmin kun hakkuuvuosi, niin True
                     ) -> OpTuple[ForestStand]:
     """
     Regeneration treatment adds reference trees to a stand based on origin type
