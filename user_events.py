@@ -1,27 +1,27 @@
 from typing import Any, Optional
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.data.enums.internal import SiteType, TreeManagementCategory
-from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
+from lukefi.metsi.data.enums.internal import SiteType, TreeManagementCategory, TreeSpecies, Origin
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.domain.forestry_types import ForestCondition
-from lukefi.metsi.core.condition import Condition
-from lukefi.metsi.core.simulation_payload import SimulationPayload
-from lukefi.metsi.core.generators import Event
-from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
-from lukefi.metsi.forestry.harvest.cutting import cutting
-from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
+from lukefi.metsi.domain.conditions import TimeSinceTreatment
+from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
-from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
-from lukefi.metsi.domain.domain_tables import min_stems_table
+from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
 from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
 from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization
+from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
+from lukefi.metsi.forestry.harvest.cutting import cutting
+from lukefi.metsi.core.generators import Event
+from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.simulation_payload import SimulationPayload
+from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
@@ -394,12 +394,11 @@ class PlantingPines(Event[ForestStand]):
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
         default_params: dict[str, Any] = {
-            "origin": 2, # uudistuksen syntytapa
-            "species": 1,          # Pine
+            "origin": Origin.PLANTED,
+            "species": TreeSpecies.PINE,
             "stems_per_ha": 1500.0,
             "height": 0.7,
-            "biological_age": 3.0,
-            "regen_type": "artificial",
+            "biological_age": 3.0
         }
 
         merged = default_params | (parameters or {})

@@ -1,7 +1,7 @@
 from lukefi.metsi.data.conversion.internal2motti import convert_species
 from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
+from lukefi.metsi.data.enums.motti import MottiRegenerationMethod, MottiSpecies
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.domain.natural_processes.motti_util import (
@@ -43,46 +43,107 @@ def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
     return result
 
 
+# TODO: take the lower into use after storey PR is merged as it contains the TreeManagementCategory.SEEDING_TREE value.
+# - https://github.com/lukefi/Mela2.0/pull/151
+# def _resolve_seeding_tree_spe(rt: ReferenceTrees) -> MottiSpecies:
+#     """ In-place resolution of Motti seeding tree value """
+#     retention_species = rt.species[rt.management_category == TreeManagementCategory.SEEDING_TREE]
+#     all_possible_species = np.unique(retention_species)
+#     seeding_spe = all_possible_species[0]
+#     if all_possible_species.size > 1:
+#         # resolve which species has the larges basal area
+#         seeding_spe = np.bincount(all_possible_species, weights=rt.basal_area).max()
+#     return convert_species(seeding_spe)
+
+
+def _regeneration_via_motti(stand: ForestStand,
+                            *,
+                            origin: Origin,
+                            species: TreeSpecies,
+                            stems_per_ha: float,
+                            step: int,
+                            survival_percent: float = 100.0,
+                            soil_preparation_type: int = 0,
+                            clearing: bool = False
+                            ) -> None:
+    assert stand.motti_state
+    ms = stand.motti_state
+
+    seed_tree_species = MottiSpecies.UNKNOWN
+    # TODO: look the comments in the out commented function definition
+    # if origin == Origin.NATURAL:
+    #   seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
+
+    regen_type = _resolve_regeneration_type_from_origin(origin)
+    if regen_type == RegenerationType.ARTIFICIAL:
+        # NOTE: Should this be after the actual treatment call?
+        stand.artificial_regeneration_year = stand.year
+
+    motti_regeneration_params = [
+        float(_resolve_method_from_origin(origin)),
+        survival_percent,
+        float(convert_species(species)),
+        stems_per_ha,
+        soil_preparation_type,
+        float(clearing),
+        float(seed_tree_species),
+    ]
+
+    ms.ntrees = Motti4DLL.regenerate_with_state(
+        ms.yy,
+        ms.yp,
+        int(ms.ntrees),
+        ms.buffers,
+        method_vec=motti_regeneration_params,
+        step=int(step),
+    )
+
+    sync_ut_to_reference_trees(stand)
+    prune_reference_trees_not_in_motti(stand) # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
+
+
 def regeneration_fn(input_: ForestStand,
                     /,
-                    origin: Origin | None = None,
-                    species: TreeSpecies | None = None,
-                    stems_per_ha: float | None = None,
+                    origin: Origin = Origin.UNSET,
+                    species: TreeSpecies = TreeSpecies.UNSET,
+                    stems_per_ha: float | None= None,
                     height: float | None = None,
                     biological_age: float | None = None,
                     breast_height_diameter: float | None = None,
                     breast_height_age: float | None = None,
                     ntrees: int = 10,
-                    survival_percent: float = 100.0,
-                    istep: int = 0, # Jos realisoituu out parametriksi, niin pois
-                    soil_preparation_type: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
-                    clearing: int = 0,
-                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN # Siemenpuutieto maskilla rt:stä ja päättely max(pl. ppa for all rt)
+                    istep_motti: int = 0, # Jos realisoituu out parametriksi, niin pois
+                    survival_percent_motti: float = 100.0,
+                    soil_preparation_type_motti: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
+                    clearing_motti: bool = False
                     ) -> OpTuple[ForestStand]:
     """
-    Regeneration treatment: add *reference trees*.
-    - No cdata collection by design.
+    Regeneration treatment adds reference trees to a stand based on origin type
     - Parameters:
-        origin: int                 # e.g. 2 (planted)
-        method: Optional[int]       # accepted, unused
-        species: int                # tree species code
-        stems_per_ha: float         # total stems/ha to distribute to created trees
-        height: float               # initial height (m)
-        biological_age: float       # biological age (years)
-        breast_height_diameter: Optional[float] = None
-        breast_height_age: Optional[float] = None
-        ntrees: Optional[int] = 10  # number of reference trees to create
-        labels: Optional[list[str]] = None  # accepted, unused
-        type: str                   # "artificial" | "natural"
-
-    - Motti path: if stand.motti_state exists, delegate sapling regeneration to Motti4Regenerate
+        origin:                         # e.g. 1 (natural), 2 (seeded) or 3 (planted)
+        species:                        # tree species code
+        stems_per_ha:                   # total stems/ha to distribute to created trees
+        height:                         # initial height (m)
+        biological_age:                 # biological age (years)
+        breast_height_diameter:         # diameter (dm)
+        breast_height_age:              # age at breat height (years)
+        ntrees:                         # number of reference trees to create
+    - If Motti defined as transition, delegates sapling regeneration to Motti4Regenerate with additional params:
+        istep_motti:                    # ??? 
+        survival_percent_motti:         # value from 0.0 to 100.0
+        soil_preparation_type_motti:    #  value from 0 to 6
+        clearing_motti: bool            # Done or not done
+    
     """
     stand = input_
 
-    if origin is None:
-        raise MetsiException("Origin missing")
-    if species is None:
-        raise MetsiException("Species is missing")
+
+    # ----- obligatory params ----
+
+    if origin is None or origin == Origin.UNSET:
+        raise MetsiException("Origin missing or not set")
+    if species is None or species == TreeSpecies.UNSET:
+        raise MetsiException("Species is missing or not set")
     if stems_per_ha is None:
         raise MetsiException("stems_per_ha is missing")
     if height is None:
@@ -90,7 +151,7 @@ def regeneration_fn(input_: ForestStand,
     if biological_age is None:
         raise MetsiException("Biological age is missing")
 
-    # ---- optional ----
+    # ---- optional  params ----
 
     if height <= 0:
         raise MetsiException("Regeneration: Height can not be negative or zero")
@@ -99,22 +160,16 @@ def regeneration_fn(input_: ForestStand,
     if stems_per_ha <= 0:
         raise MetsiException("Parameter 'stems_per_ha' must be > 0")
 
-    regen_type = _resolve_regeneration_type_from_origin(origin)
-
-    # NOTE: Should this be after the actual treatment call?
-    if regen_type == RegenerationType.ARTIFICIAL:
-        stand.artificial_regeneration_year = stand.year
-
+    if stand.motti_state is not None:
         _regeneration_via_motti(
             stand,
-            method=_resolve_method_from_origin(origin),
+            origin=origin,
             species=species,
             stems_per_ha=stems_per_ha,
-            step=istep,
-            survival_percent=survival_percent,
-            soil_preparation_type=soil_preparation_type,
-            clearing=clearing,
-            seed_tree_species=seed_tree_species,
+            step=istep_motti,
+            survival_percent=survival_percent_motti,
+            soil_preparation_type=soil_preparation_type_motti,
+            clearing=clearing_motti
         )
         return stand, []
 
@@ -136,47 +191,6 @@ def regeneration_fn(input_: ForestStand,
         })
 
     return stand, []
-
-
-def _regeneration_via_motti(stand: ForestStand,
-                            *,
-                            method: MottiRegenerationMethod,
-                            species: TreeSpecies,
-                            stems_per_ha: float,
-                            step: int,
-                            survival_percent: float = 100.0,
-                            soil_preparation_type: int = 0,
-                            clearing: int = 0,
-                            seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN,
-                            ) -> None:
-    ms = stand.motti_state
-    if ms is None or ms.buffers is None:
-        raise MetsiException("Motti regeneration requested but stand has no initialized motti_state")
-
-    cultivated_species = convert_species(species)
-    seed_species = convert_species(seed_tree_species)
-
-    method_vec = [
-        float(method),
-        survival_percent,
-        float(cultivated_species),
-        stems_per_ha,
-        soil_preparation_type,
-        clearing,
-        float(seed_species),
-    ]
-
-    ms.ntrees = Motti4DLL.regenerate_with_state(
-        ms.yy,
-        ms.yp,
-        int(ms.ntrees),
-        ms.buffers,
-        method=method_vec,
-        step=int(step),
-    )
-
-    sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand) # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
 
 
 regeneration = Treatment(regeneration_fn, "regeneration")

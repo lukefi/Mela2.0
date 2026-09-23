@@ -90,6 +90,7 @@ def convert_species(source: TreeSpecies) -> MottiSpecies:
     - If in CONIFEROUS_SPECIES -> 8
     - If in DECIDUOUS_SPECIES -> 9
     """
+    # NOTE: THIS MOTTI SPE CONVERSION DOES NOT HAVE FALLBACK WITH UNSET NOR TREELESS!?
     if source in _SPECIES_MAP:
         return _SPECIES_MAP[source]
     if source in CONIFEROUS_SPECIES:
