@@ -12,12 +12,21 @@ from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
+
+def _is_cleared_after_cutting(stand: ForestStand) -> bool:
+    if (stand.cutting_year is None or
+        stand.regeneration_area_cleaning_year is None):
+        return False
+    if stand.cutting_year <= stand.regeneration_area_cleaning_year:
+        return True
+    return False
+
+
 def _resolve_regeneration_type_from_origin(origin: Origin) -> RegenerationType:
     """ In-place resolution from origin to Motti regeneration type coding """
     _natural_origins = (Origin.UNSET, Origin.NATURAL)
     _artificial_origins = (Origin.SEEDED, Origin.PLANTED)
 
-    # NOTE: Should Motti have its own RegenerationType enum although it would be the same as internal?
     if origin in _natural_origins:
         return RegenerationType.NATURAL
     if origin in _artificial_origins:
@@ -27,9 +36,7 @@ def _resolve_regeneration_type_from_origin(origin: Origin) -> RegenerationType:
 
 def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
     """ In-place resolution from origin to Motti regeneration method coding """
-    # NOTE: Should this be in internal2motti?
     method_map = {
-        # NOTE: Should we also check unset to natural? I think it is mainly done earlier?
         Origin.NATURAL: MottiRegenerationMethod.NATURAL,
         Origin.SEEDED: MottiRegenerationMethod.SOWING,
         Origin.PLANTED: MottiRegenerationMethod.PLANTING
@@ -65,7 +72,6 @@ def _regeneration_via_motti(stand: ForestStand,
                             step: int,
                             survival_percent: float = 100.0,
                             soil_preparation_type: int = 0,
-                            clearing: bool = False
                             ) -> None:
     assert stand.motti_state
     ms = stand.motti_state
@@ -81,7 +87,7 @@ def _regeneration_via_motti(stand: ForestStand,
         float(convert_species(species)),
         stems_per_ha,
         soil_preparation_type,
-        float(clearing),
+        float(_is_cleared_after_cutting(stand)),
         float(seed_tree_species),
     ]
 
@@ -111,7 +117,6 @@ def regeneration_fn(input_: ForestStand,
                     istep_motti: int = 0, # Jos realisoituu out parametriksi, niin pois
                     survival_percent_motti: float = 100.0,
                     soil_preparation_type_motti: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
-                    clearing_motti: bool = False # regeneration_area_cleaning_year jos vuosi myöhemmin kun hakkuuvuosi, niin True
                     ) -> OpTuple[ForestStand]:
     """
     Regeneration treatment adds reference trees to a stand based on origin type
@@ -156,6 +161,8 @@ def regeneration_fn(input_: ForestStand,
     if stems_per_ha <= 0:
         raise MetsiException("Parameter 'stems_per_ha' must be > 0")
 
+    regen_type = _resolve_regeneration_type_from_origin(origin)
+
     if stand.motti_state is not None:
         _regeneration_via_motti(
             stand,
@@ -164,31 +171,26 @@ def regeneration_fn(input_: ForestStand,
             stems_per_ha=stems_per_ha,
             step=istep_motti,
             survival_percent=survival_percent_motti,
-            soil_preparation_type=soil_preparation_type_motti,
-            clearing=clearing_motti
+            soil_preparation_type=soil_preparation_type_motti
         )
-        return stand, []
+    else:
+        per_tree_stems = stems_per_ha / float(ntrees)
+        for _ in range(ntrees):
+            identifier, tree_number = new_reference_tree_identity(stand)
+            stand.reference_trees.create({
+                "identifier": identifier,
+                "tree_number": tree_number,
+                "species": species,
+                "origin": origin,
+                "stems_per_ha": per_tree_stems,
+                "height": height,
+                "biological_age": biological_age,
+                "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
+                "breast_height_age": None if breast_height_age is None else float(breast_height_age),
+                "management_category": TreeManagementCategory.NO_RESTRICTION
+            })
 
-    per_tree_stems = stems_per_ha / float(ntrees)
-
-    for _ in range(ntrees):
-        identifier, tree_number = new_reference_tree_identity(stand)
-        stand.reference_trees.create({
-            "identifier": identifier,
-            "tree_number": tree_number,
-            "species": species,
-            "origin": origin,
-            "stems_per_ha": per_tree_stems,
-            "height": height,
-            "biological_age": biological_age,
-            "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
-            "breast_height_age": None if breast_height_age is None else float(breast_height_age),
-            "management_category": TreeManagementCategory.NO_RESTRICTION
-        })
-
-    regen_type = _resolve_regeneration_type_from_origin(origin)
     if regen_type == RegenerationType.ARTIFICIAL:
-        # NOTE: Should this be after the actual treatment call?
         stand.artificial_regeneration_year = stand.year
 
     return stand, []
