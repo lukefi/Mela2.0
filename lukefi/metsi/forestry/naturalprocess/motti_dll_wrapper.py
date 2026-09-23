@@ -434,8 +434,8 @@ class Motti4DLL:
                 buffers.kor_state,
                 buffers.vcr_state,
                 buffers.apv_state,
-                ntrees_p,
-                step_p,
+                ntrees_p, # tää myös *1
+                step_p, # Debuggerilla vois tarkastella tämän, että onko in vai out muuttuja? *1
                 rv,
             )
 

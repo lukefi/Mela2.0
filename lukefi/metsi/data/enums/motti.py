@@ -20,9 +20,10 @@ class MottiStorey(IntEnum):
     SPARE = 4
 
 
+# NOTE ONKO TÄMÄ IHAN TURHA?
 class MottiRegenerationMethod(IntEnum):
     NATURAL = 1
-    SOWING = 2
+    SOWING = 2 # kylvetty
     PLANTING = 3
 
 

@@ -1,5 +1,5 @@
 from lukefi.metsi.data.conversion.internal2motti import convert_species
-from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
@@ -12,6 +12,36 @@ from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
+def _resolve_regeneration_type_from_origin(origin: Origin) -> RegenerationType:
+    """ In-place resolution from origin to Motti regeneration type coding """
+    _natural_origins = (Origin.UNSET, Origin.NATURAL)
+    _artificial_origins = (Origin.SEEDED, Origin.PLANTED)
+
+    # NOTE: Should Motti have its own RegenerationType enum although it would be the same as internal?
+    if origin in _natural_origins:
+        return RegenerationType.NATURAL
+    if origin in _artificial_origins:
+        return RegenerationType.ARTIFICIAL
+
+    raise MetsiException(f"Unable to solve Motti regeneration type base on stand origin value {origin}")
+
+def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
+    """ In-place resolution from origin to Motti regeneration method coding """
+    # NOTE: Should this be in internal2motti?
+    method_map = {
+        # NOTE: Should we also check unset to natural? I think it is mainly done earlier?
+        Origin.NATURAL: MottiRegenerationMethod.NATURAL,
+        Origin.SEEDED: MottiRegenerationMethod.SOWING,
+        Origin.PLANTED: MottiRegenerationMethod.PLANTING
+    }
+    try:
+        result = method_map[origin]
+    except KeyError as e:
+        raise MetsiException(
+            f"Unable to resolve Motti regeneration method coding based on stand origin value {origin}"
+        ) from e
+    return result
+
 
 def regeneration_fn(input_: ForestStand,
                     /,
@@ -20,16 +50,15 @@ def regeneration_fn(input_: ForestStand,
                     stems_per_ha: float | None = None,
                     height: float | None = None,
                     biological_age: float | None = None,
-                    regen_type: RegenerationType | None = None,
-                    method: MottiRegenerationMethod | None = None,
                     breast_height_diameter: float | None = None,
                     breast_height_age: float | None = None,
                     ntrees: int = 10,
-                    istep: int = 0,
                     survival_percent: float = 100.0,
-                    soil_preparation_type: int = 0,
+                    istep: int = 0, # Jos realisoituu out parametriksi, niin pois
+                    soil_preparation_type: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
                     clearing: int = 0,
-                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN) -> OpTuple[ForestStand]:
+                    seed_tree_species: TreeSpecies = TreeSpecies.UNKNOWN # Siemenpuutieto maskilla rt:stä ja päättely max(pl. ppa for all rt)
+                    ) -> OpTuple[ForestStand]:
     """
     Regeneration treatment: add *reference trees*.
     - No cdata collection by design.
@@ -60,8 +89,6 @@ def regeneration_fn(input_: ForestStand,
         raise MetsiException("Height is missing")
     if biological_age is None:
         raise MetsiException("Biological age is missing")
-    if regen_type is None:
-        raise MetsiException("regen_type is missing")
 
     # ---- optional ----
 
@@ -72,16 +99,15 @@ def regeneration_fn(input_: ForestStand,
     if stems_per_ha <= 0:
         raise MetsiException("Parameter 'stems_per_ha' must be > 0")
 
+    regen_type = _resolve_regeneration_type_from_origin(origin)
+
+    # NOTE: Should this be after the actual treatment call?
     if regen_type == RegenerationType.ARTIFICIAL:
         stand.artificial_regeneration_year = stand.year
 
-    if stand.motti_state is not None:
-        if method is None:
-            raise MetsiException("Regeneration method missing")
-
         _regeneration_via_motti(
             stand,
-            method=method,
+            method=_resolve_method_from_origin(origin),
             species=species,
             stems_per_ha=stems_per_ha,
             step=istep,
@@ -150,7 +176,7 @@ def _regeneration_via_motti(stand: ForestStand,
     )
 
     sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand)
+    prune_reference_trees_not_in_motti(stand) # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
 
 
 regeneration = Treatment(regeneration_fn, "regeneration")
