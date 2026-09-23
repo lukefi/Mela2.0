@@ -74,11 +74,6 @@ def _regeneration_via_motti(stand: ForestStand,
     # if origin == Origin.NATURAL:
     #   seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
 
-    regen_type = _resolve_regeneration_type_from_origin(origin)
-    if regen_type == RegenerationType.ARTIFICIAL:
-        # NOTE: Should this be after the actual treatment call?
-        stand.artificial_regeneration_year = stand.year
-
     motti_regeneration_params = [
         float(_resolve_method_from_origin(origin)),
         survival_percent,
@@ -189,6 +184,11 @@ def regeneration_fn(input_: ForestStand,
             "breast_height_age": None if breast_height_age is None else float(breast_height_age),
             "management_category": TreeManagementCategory.NO_RESTRICTION
         })
+
+    regen_type = _resolve_regeneration_type_from_origin(origin)
+    if regen_type == RegenerationType.ARTIFICIAL:
+        # NOTE: Should this be after the actual treatment call?
+        stand.artificial_regeneration_year = stand.year
 
     return stand, []
 
