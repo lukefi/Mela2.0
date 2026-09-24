@@ -51,7 +51,8 @@ VMI9_STAND_COMMON: dict[str, slice] = {
     "jakso1_sivulaji1": slice(147, 149),                # sivplaji1 148-149
     "jakso1_sivulaji1_osuus": slice(149, 151),          # sivplaji1os 150-151
     "jakso1_sivulaji2": slice(151, 153),                # sivplaji2 152-153
-    "maanmuokkaus_aika": slice(194, 194),               # maakasaika
+    "maanmuokkaus_tyyppi": slice(193, 194),             # maakas
+    "maanmuokkaus_aika": slice(194, 194),               # maakasaika NOTE: bug? sould be 194-195
     "basal_area": slice(215, 217),                      # kuvppa, kuvion ppa
     "jakso2_ppa": slice(217, 219),                      # j2ppa 218-219
     "jakso2_asema": slice(220, 221),                    # j2asema 221
@@ -171,6 +172,7 @@ VMI10_STAND_INDICES: dict[str, slice] = {
     "metsikon_ika": slice(255, 258),  # metika (cols 256-258)
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus_tyyppi": slice(268, 269),
     "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
@@ -274,6 +276,7 @@ VMI11_STAND_INDICES: dict[str, slice] = {
     "vallitsevanjakson_ikalisays": slice(250, 252),
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus_tyyppi": slice(268, 269),
     "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
@@ -374,6 +377,7 @@ VMI12_STAND_INDICES: dict[str, slice] = {
     "vallitsevanjakson_ikalisays": slice(250, 252),
     "hakkuu_tapa": slice(262, 263),
     "hakkuu_aika": slice(263, 264),
+    "maanmuokkaus_tyyppi": slice(268, 269),
     "maanmuokkaus_aika": slice(269, 270),
     "viljely": slice(270, 271),
     "viljely_aika": slice(271, 272),
@@ -470,6 +474,7 @@ VMI13_STAND_INDICES: dict[str, int] = {
     "vallitsevanjaksonika": 95,
     "hakkuu_tapa": 102,
     "hakkuu_aika": 103,
+    "maanmuokkaus_tyyppi": 108,
     "maanmuokkaus_aika": 109,
     "viljely": 110,
     "viljely_aika": 111,

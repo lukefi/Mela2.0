@@ -21,7 +21,8 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
     DrainageCategory,
     PeatlandForestType,
-    DrainedPeatlandForestType)
+    DrainedPeatlandForestType,
+    SoilPreparationType)
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
@@ -133,7 +134,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Starting time for the simulation unit [a].
     """
-
     identifier: str = ""
     """
     Unique free-form identifier for the forest stand.
@@ -234,6 +234,10 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Method of the last performed cutting.
     """
+    soil_preparation_type: Optional[SoilPreparationType] = None
+    """
+    Type of the mechanical soil preparation procedure made on stand 
+    """
     municipality_id: Optional[int] = None
     """
     ID of the municipality the stand is located in.
@@ -246,7 +250,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Dominant height in the dominant storey.
     """
-
     area_weight_factors: tuple[float, float] = (1.0, 1.0)
     """
     Proportions of the areas of the smaller and larger sample plot covered by the stand.
@@ -255,12 +258,10 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     NFI FRA class.
     """
-
     auxiliary_stand: bool = False
     """
     NFI stand number > 1 (meaning sivukoeala, auxiliary stand).
     """
-
     sea_effect: Optional[float] = None
     """
     Sea effect.
@@ -269,7 +270,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Lake effect.
     """
-
     basal_area: Optional[float] = None
     """
     Basal area of the stand [m^2/ha].
@@ -294,7 +294,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Scanning type for Ahvenanmaa.
     """
-
     peatland_type: Optional[PeatlandForestType] = None
     """
     Peatland type.
@@ -311,7 +310,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Whether the stand contains an over storey.
     """
-
     sqlite_decl: Optional[dict[str, list[str]]] = None
     """
     Declarations for SQLite output database columns.

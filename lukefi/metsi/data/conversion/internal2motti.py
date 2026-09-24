@@ -1,9 +1,10 @@
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.enums.internal import (
     MetsiEnum, CONIFEROUS_SPECIES, DECIDUOUS_SPECIES,
-    DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType)
+    DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType,
+    SoilPreparationType)
 from lukefi.metsi.data.enums.motti import (
-    MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType)
+    MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType, MottiSoilPreparationType)
 
 
 
@@ -81,6 +82,28 @@ _DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     DrainedPeatlandForestType.CLADONIA_TYPE: MottiSiteType.CLADONIA_TYPE
 }
 
+_SOIL_PREPARATION_TYPE_MAP: dict[MetsiEnum | None, MottiSoilPreparationType] = {
+    SoilPreparationType.UNSET: MottiSoilPreparationType.NO_PREPARATION,
+    SoilPreparationType.NO_PREPARATION: MottiSoilPreparationType.NO_PREPARATION,
+    SoilPreparationType.SCREEFING: MottiSoilPreparationType.SCREEFING,
+    SoilPreparationType.MOUNDING: MottiSoilPreparationType.SPOT_MOUNDING,
+    SoilPreparationType.INVERSION_MOUNDING: MottiSoilPreparationType.INVERSION_MOUNDING,
+    SoilPreparationType.SPOT_MOUNDING: MottiSoilPreparationType.SPOT_MOUNDING,
+    SoilPreparationType.DITCH_MOUNDING: MottiSoilPreparationType.TRENCH_MOUNDING,
+    SoilPreparationType.TRENCH_MOUNDING: MottiSoilPreparationType.TRENCH_MOUNDING,
+    SoilPreparationType.HARROWING: MottiSoilPreparationType.HARROWING,
+    SoilPreparationType.PLOWING: MottiSoilPreparationType.OTHER,
+    SoilPreparationType.BURNING: MottiSoilPreparationType.OTHER,
+    SoilPreparationType.OTHER: MottiSoilPreparationType.OTHER
+}
+
+
+def convert_soil_preparation_type(source: SoilPreparationType | None) -> MottiSoilPreparationType:
+    if source is None:
+        return MottiSoilPreparationType.NO_PREPARATION
+    if source in _SOIL_PREPARATION_TYPE_MAP:
+        return _SOIL_PREPARATION_TYPE_MAP[source]
+    raise MetsiException(f"Unable to convert internal soil preparation type {source} into Motti coding")
 
 def convert_species(source: TreeSpecies) -> MottiSpecies:
     """

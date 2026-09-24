@@ -380,6 +380,21 @@ class RegenerationType(StrEnum):
     NATURAL = "natural"
 
 
+class SoilPreparationType(MetsiEnum):
+    UNSET = -1
+    NO_PREPARATION = 0
+    SCREEFING = 1
+    MOUNDING = 2
+    INVERSION_MOUNDING = 3
+    SPOT_MOUNDING = 4
+    DITCH_MOUNDING = 5
+    TRENCH_MOUNDING = 6
+    HARROWING = 7
+    PLOWING = 8
+    BURNING = 9
+    OTHER = 10
+
+
 EPSG_3067_ALIASES = {"EPSG:3067", "ERTS-TM35", "ETRS-TM35FIN"}
 EPSG_2393_ALIASES = {"EPSG:2393", "YKJ"}
 class CRS(StrEnum):

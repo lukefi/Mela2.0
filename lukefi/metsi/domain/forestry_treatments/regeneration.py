@@ -1,4 +1,4 @@
-from lukefi.metsi.data.conversion.internal2motti import convert_species
+from lukefi.metsi.data.conversion.internal2motti import convert_species, convert_soil_preparation_type
 from lukefi.metsi.data.enums.internal import Origin, RegenerationType, TreeSpecies, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod, MottiSpecies
@@ -70,8 +70,7 @@ def _regeneration_via_motti(stand: ForestStand,
                             species: TreeSpecies,
                             stems_per_ha: float,
                             step: int,
-                            survival_percent: float = 100.0,
-                            soil_preparation_type: int = 0,
+                            survival_percent: float = 100.0
                             ) -> None:
     assert stand.motti_state
     ms = stand.motti_state
@@ -86,7 +85,7 @@ def _regeneration_via_motti(stand: ForestStand,
         survival_percent,
         float(convert_species(species)),
         stems_per_ha,
-        soil_preparation_type,
+        float(convert_soil_preparation_type(stand.soil_preparation_type)),
         float(_is_cleared_after_cutting(stand)),
         float(seed_tree_species),
     ]
@@ -115,8 +114,7 @@ def regeneration_fn(input_: ForestStand,
                     breast_height_age: float | None = None,
                     ntrees: int = 10,
                     istep_motti: int = 0, # Jos realisoituu out parametriksi, niin pois
-                    survival_percent_motti: float = 100.0,
-                    soil_preparation_type_motti: int = 0, # Tämä pois ja katsotaan standista suoraan. (Kunhan ensin lisätään FDM)
+                    survival_percent_motti: float = 100.0
                     ) -> OpTuple[ForestStand]:
     """
     Regeneration treatment adds reference trees to a stand based on origin type
@@ -170,9 +168,7 @@ def regeneration_fn(input_: ForestStand,
             species=species,
             stems_per_ha=stems_per_ha,
             step=istep_motti,
-            survival_percent=survival_percent_motti,
-            soil_preparation_type=soil_preparation_type_motti
-        )
+            survival_percent=survival_percent_motti)
     else:
         per_tree_stems = stems_per_ha / float(ntrees)
         for _ in range(ntrees):

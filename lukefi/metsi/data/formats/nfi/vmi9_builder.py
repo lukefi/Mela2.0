@@ -3,8 +3,8 @@ from typing import Generator, override
 import numpy as np
 
 from lukefi.metsi.data.conversion import vmi2internal
-from lukefi.metsi.data.enums.internal import Origin, Storey, CRS
-from lukefi.metsi.data.enums.vmi import VmiIteration
+from lukefi.metsi.data.enums.internal import Origin, Storey, CRS, SoilPreparationType
+from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSoilPreparationType
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder
@@ -95,6 +95,28 @@ class VMI9Builder(VMIBuilder):
 
         return list(result.values())
 
+    @staticmethod
+    def _convert_soil_preparation_type(source: str) -> SoilPreparationType:
+        """ In-place static function for VMI9 spesific soil preparation type conversion fro internal presentation"""
+        _vmi9_soil_preparation_type_mapping = {
+            '0': SoilPreparationType.NO_PREPARATION,
+            '1': SoilPreparationType.HARROWING,
+            '2': SoilPreparationType.PLOWING,
+            '3': SoilPreparationType.PLOWING,
+            '4': SoilPreparationType.MOUNDING,
+            '5': SoilPreparationType.BURNING,
+            '6': SoilPreparationType.HARROWING,
+            '7': SoilPreparationType.PLOWING,
+            '8': SoilPreparationType.MOUNDING,
+            '9': SoilPreparationType.SCREEFING
+        }
+        if source in ('.', '', ' '):
+            return SoilPreparationType.UNSET
+        if source in _vmi9_soil_preparation_type_mapping:
+            return _vmi9_soil_preparation_type_mapping[source]
+        raise MetsiException(
+            f"Unable to convert VMI9 soil preparation type value {source} to internal presentation")
+
     def _convert_stand_entry(self, row: dict[str, str], stand_id: int | None = None) -> ForestStand:
         result = ForestStand()
 
@@ -145,6 +167,7 @@ class VMI9Builder(VMIBuilder):
         height_dm = util.get_or_default(util.parse_type(row["height_above_sea_level"], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, CRS.EPSG_2393)
 
+        result.soil_preparation_type = VMI9Builder._convert_soil_preparation_type(row['maanmuokkaus_tyyppi'])
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
             row["maanmuokkaus_aika"],
             result.year
