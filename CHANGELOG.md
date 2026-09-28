@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.0.1] - 2026-09-28
+
+### Fixed
+
+- Fixed possible data corruption from post-conditions failing for events nested inside a `First` generator
+- Removed unnecessary copy/finalization of the simulation payload in `evaluate`
+
 ## [3.0.0] - 2026-09-02
 
 ### Changed
