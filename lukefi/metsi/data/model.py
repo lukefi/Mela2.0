@@ -699,11 +699,11 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         self.ds_dominant_height = calc_storey_dominant_height(trees, Storey.DOMINANT)
 
-        ds_biological_age = trees.biological_age[ds_mask]
+        ds_biological_ages = trees.biological_age[ds_mask]
         ds_main_species_mask = ds_species == self.ds_main_tree_species
 
         self.ds_main_tree_species_biological_age = calc_mean_biological_age(
-            ds_biological_age[ds_main_species_mask],
+            ds_biological_ages[ds_main_species_mask],
             ds_stems[ds_main_species_mask],
             ds_tree_basal_areas[ds_main_species_mask],
             ds_diameters[ds_main_species_mask])
