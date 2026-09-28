@@ -492,6 +492,12 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
 
 
 def supplement_storey_information(stands: StandList) -> StandList:
+    """
+    Preprocess storey information for reference trees.
+
+    - Checks for existence of a dominant storey and attempts to promote another storey to dominant if there isn't one.
+    - Eliminates unset, indeterminate, remote and removal storeys by merging into dominant, under or over storey.
+    """
     for stand in stands:
         trees = stand.reference_trees
 
