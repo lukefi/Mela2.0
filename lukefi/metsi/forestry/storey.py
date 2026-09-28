@@ -42,13 +42,7 @@ def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float 
     if np.all(trees.storey != storey):
         return None
 
-    # Use only non-retention trees by default
-    trees_mask = (
-        trees.management_category != TreeManagementCategory.RETENTION_TREE) & (trees.storey == storey)
-
-    if not np.any(trees_mask):
-        # Fallback to using all trees if all are retention trees
-        trees_mask = trees.storey == storey
+    trees_mask = trees.storey == storey
 
     stems = trees.stems_per_ha[trees_mask]
     diameter = trees.breast_height_diameter[trees_mask]
