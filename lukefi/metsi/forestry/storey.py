@@ -285,6 +285,29 @@ def manage_existing_storeys(trees: ReferenceTrees):
             trees.storey[trees.storey == Storey.OVER] = Storey.DOMINANT
 
 
+def update_storeys(trees: ReferenceTrees):
+    if np.any(trees.storey == Storey.UNSET):
+        storeys = np.unique(trees.storey)
+        has_dominant_storey = Storey.DOMINANT in storeys
+
+        # Merge new trees into DOMINANT or UNDER storey
+        if not has_dominant_storey:
+            # Mark new trees as DOMINANT
+            trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+        else:
+            # Check if should merge new trees into DOMINANT
+            diff = calc_storey_mean_height(trees, Storey.DOMINANT) - \
+                calc_storey_mean_height(trees, Storey.UNSET)
+            if abs(diff) < 5.0:
+                # Merge into DOMINANT
+                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
+            else:
+                # Merge into UNDER
+                trees.storey[trees.storey == Storey.UNSET] = Storey.UNDER
+
+    manage_existing_storeys(trees)
+
+
 def handle_storeys_after_natural_process(natural_process_func: TransitionFn["ForestStand"]):
 
     @wraps(natural_process_func)
@@ -302,28 +325,7 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn["For
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        # Handle new trees' storeys --------------------------------------------------------------------------
-
-        if np.any(trees.storey == Storey.UNSET):
-            storeys = np.unique(trees.storey)
-            has_dominant_storey = Storey.DOMINANT in storeys
-
-            # Merge new trees into DOMINANT or UNDER storey
-            if not has_dominant_storey:
-                # Mark new trees as DOMINANT
-                trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
-            else:
-                # Check if should merge new trees into DOMINANT
-                diff = calc_storey_mean_height(trees, Storey.DOMINANT) - \
-                    calc_storey_mean_height(trees, Storey.UNSET)
-                if abs(diff) < 5.0:
-                    # Merge into DOMINANT
-                    trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
-                else:
-                    # Merge into UNDER
-                    trees.storey[trees.storey == Storey.UNSET] = Storey.UNDER
-
-        manage_existing_storeys(trees)
+        update_storeys(trees)
 
         return unit, cd
 
