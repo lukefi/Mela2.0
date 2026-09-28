@@ -12,7 +12,7 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import CollectedData, OpTuple
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, update_storeys
 
 
 def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
@@ -60,7 +60,8 @@ def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
 
     # Pre-calculate basal area for all trees and handle storey changes
     trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
-    manage_existing_storeys(stand.reference_trees)
+
+    update_storeys(stand.reference_trees)
 
     # Collect removed trees for CollectedData
     cd: list[CollectedData] = []
