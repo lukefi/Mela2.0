@@ -412,7 +412,7 @@ def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | No
                 s: Motti4SaplingStratum = getattr(ut[0][layer], spe_name)
                 for cat_code, _ in UT_CATEGORIES:
                     stems = float(getattr(s, f"f_{cat_code}"))
-                    if stems <= 0.0:
+                    if stems <= 0.0 or s.year == -1:
                         continue
                     osid = int(getattr(s, f"osid_{cat_code}"))
                     if osid > 0:
