@@ -131,10 +131,13 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
     for i in range(ms.ntrees):
         t = yp[0][i]
         yp_tree_id = int(t.id)
+        yp_stratum_id = str(int(t.sid))
 
-        yp_in_rt = np.any(rt.tree_number == yp_tree_id)
+        _matching_stratum = rt.stratum == yp_stratum_id
+        yp_not_in_rt = (np.any(_matching_stratum) and
+                        np.any(rt.sapling[_matching_stratum]))
 
-        if not yp_in_rt:
+        if yp_not_in_rt:
             itree_number += 1
             t.id = itree_number
             rts_for_create.append(
