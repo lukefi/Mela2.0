@@ -154,9 +154,8 @@ def convert_storey(source: Storey | None) -> MottiStorey:
     Returns the dominant storey by default when the source value is missing.
     Raises a MetsiException if the provided storey cannot be mapped.
     """
-    _default_motti_storey = MottiStorey.DOMINANT
     if source is None:
-        return _default_motti_storey
+        return MottiStorey.DOMINANT
 
     try:
         return _STOREY_MAP[source]
