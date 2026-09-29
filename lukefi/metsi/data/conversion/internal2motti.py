@@ -97,17 +97,13 @@ def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     - If in DECIDUOUS_SPECIES -> 9
     - Unknown species 0 -> 0
     """
-    try:
-        if source in _SPECIES_MAP:
-            return _SPECIES_MAP[source]
-        if source in CONIFEROUS_SPECIES:
-            return MottiSpecies.OTHER_CONIFEROUS
-        if source in DECIDUOUS_SPECIES:
-            return MottiSpecies.OTHER_DECIDUOUS
-        raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
-    except Exception as e:
-        raise RuntimeError("Unable to convert internal tree species to Motti tree species") from e
-
+    if source in _SPECIES_MAP:
+        return _SPECIES_MAP[source]
+    if source in CONIFEROUS_SPECIES:
+        return MottiSpecies.OTHER_CONIFEROUS
+    if source in DECIDUOUS_SPECIES:
+        return MottiSpecies.OTHER_DECIDUOUS
+    raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
 
 
 def convert_drainage_category(source: DrainageCategory | None) ->  MottiDrainageCategory:
