@@ -152,7 +152,7 @@ def sync_yp_to_reference_trees(stand: ForestStand) -> None:
                     "stems_per_ha": t.f,
                     "origin": Origin(int(t.snt) - 1),
                     "management_category": TreeManagementCategory.NO_RESTRICTION,
-                    "basal_area": t.ba,
+                    "basal_area": (t.ba / 10000.0),  # cm2 -> m2
                     "volume": t.vol,
                     "stratum": int(t.sid)
                 }
