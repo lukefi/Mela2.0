@@ -127,11 +127,11 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
     _additional_valid_site_types = [SiteType.TUNTURIKOIVIKKO, SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA]
 
     # First tries to resolve with the drained peatland type value
-    if source1 is not None and source1 in _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS:
+    if source1 is not None and source1 in _DRAINED_PEATLAND_FOREST_TYPE_MAP:
         return _DRAINED_PEATLAND_FOREST_TYPE_MAP[source1]
 
     # Fallback to resolve from common site types
-    if source2 is not None and source2 in (_MOTTI_COMMON_SITE_TYPES + _additional_valid_site_types):
+    if source2 is not None and source2 in _SITE_TYPE_MAP:
         return _SITE_TYPE_MAP[source2]
 
     # Raise a informative error
