@@ -1,87 +1,52 @@
-from typing import Any, Optional
-
+from typing import Optional
 import numpy as np
+from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.transition import Initialization
 from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
+from lukefi.metsi.data.enums.motti import MottiStorey
+from lukefi.metsi.data.conversion.internal2motti import convert_storey
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import MottiState
-from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
+from lukefi.metsi.data.vector_model import TreeStrata
 from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 
 
-# NOTE: Why not use what is in enum-modules?
-FDM_TO_MOTTI_STOREY = {
-    Storey.DOMINANT: 2,  # ylempi
-    Storey.UNDER: 1,     # alempi
-    Storey.OVER: 3,      # siemenpuu
-    Storey.SPARE: 4,     # säästöpuu
-}
+def _get_stratum_with_matching_number(tree_stratum: TreeStrata, stratum_number: int) -> int | None:
+    """  """
+    stratum_index = np.where(tree_stratum.stratum_number == stratum_number)[0]
+    if stratum_index.size == 0:
+        return None
+    if stratum_index.size > 1:
+        raise MetsiException(
+            f"Found multiple index with stratum_number {stratum_number} the result should be single value.")
+    return stratum_index.item()
 
 
 def _storey_to_motti(
-    stand: ForestStand,
-    index: int,
-    fdm_storey: Storey,
-    *,
-    is_stratum_index: bool = False,
-) -> int:
-    """
-    Convert FDM Storey -> Motti puustojakso/puuluokka.
-
-    Exact classes:
-      DOMINANT -> 2
-      UNDER    -> 1
-      OVER     -> 3
-      SPARE    -> 4
-
-    Fallback:
-      - if only one stratum: ylempi=2
-      - if multiple strata and this stratum is clearly lower:
-          height gap > 5m and lower stratum height < 10m -> alempi=1
-      - otherwise ylempi=2
-
-    Parameters
-    ----------
-    index:
-        If is_stratum_index=True, this is a direct tree_strata row index.
-        Otherwise it is assumed to be a reference_trees row index, and the
-        matching stratum row is resolved through rt.stratum -> strata.stratum_number.
-    """
-    if fdm_storey in FDM_TO_MOTTI_STOREY:  # NOTE: FDM_TO_MOTTI_STOREY vois vaihtaa interl2motti.py
-        return FDM_TO_MOTTI_STOREY[fdm_storey]
+        stand: ForestStand,
+        fdm_storey: Storey,
+        stratum_index: int | None
+) -> MottiStorey:
+    if fdm_storey in MottiStorey:
+        return convert_storey(fdm_storey)
 
     strata = stand.tree_strata
     if strata is None or strata.size <= 1:
-        return 2
+        return MottiStorey.DOMINANT
 
-    stratum_idx: int | None = None
+    if stratum_index is None:
+        return MottiStorey.DOMINANT
 
-    if is_stratum_index:
-        if 0 <= index < strata.size:
-            stratum_idx = index
-    else:
-        rt = stand.reference_trees
-        if 0 <= index < rt.size:
-            target_sid = int(rt.stratum[index])
-            if target_sid > 0:
-                for j in range(strata.size):
-                    sid = int(strata.stratum_number[j])
-                    if sid == target_sid:
-                        stratum_idx = j
-                        break
+    heights = strata.mean_height
+    curret_height = heights[stratum_index]
+    max_height = np.max(heights)
+    if (max_height - curret_height) > 5.0 and curret_height < 10.0:
+        return MottiStorey.UNDER
 
-    if stratum_idx is None:
-        return 2
+    return MottiStorey.DOMINANT
 
-    heights = np.nan_to_num(strata.mean_height, nan=0.0)
-    current_h = float(heights[stratum_idx])
-    max_h = float(np.max(heights))
-
-    if (max_h - current_h) > 5.0 and current_h < 10.0:
-        return 1
-
-    return 2
 
 
 def _strip_tree_strata(stand: ForestStand):
@@ -109,42 +74,6 @@ def _strip_tree_strata(stand: ForestStand):
     stripped.number_of_generated_trees[:] = 0
 
     stand.tree_strata = stripped
-
-
-def _spedom(rt: ReferenceTrees) -> int:
-    """
-    Prefer basal area totals; if BA totals are all zero/missing, fall back to stems/ha.
-    If trees are empty fall back to PINE, we need to give valid value for growth.
-
-    NOTE: This should be generalized to ForestStand.spedom like solution.
-    """
-    if rt.size == 0:
-        return TreeSpecies.PINE
-
-    # Convert species to Motti codes (will raise if invalid)
-    spe_codes = [internal2motti.convert_species(TreeSpecies(int(s))) for s in rt.species]
-
-    # Basal area per tree: stems_per_ha * π * (0.5 * d_cm * 0.01 m/cm)^2
-    d_cm = np.nan_to_num(rt.breast_height_diameter, nan=0.0)
-    f_ha = np.nan_to_num(rt.stems_per_ha, nan=0.0)
-    ba_per_tree = f_ha * np.pi * (0.5 * d_cm * 0.01) ** 2  # m²/ha contribution
-
-    # Sum BA per species code
-    ba_per_species: dict[int, float] = {}
-    for code, ba in zip(spe_codes, ba_per_tree.tolist()):
-        ba_per_species[code] = ba_per_species.get(code, 0.0) + float(ba)
-
-    use_basal = any(v > 0.0 for v in ba_per_species.values())
-    if not use_basal:
-        ba_per_species.clear()
-        # Fallback: stems/ha totals per species
-        for code, stems in zip(spe_codes, f_ha.tolist()):
-            ba_per_species[code] = ba_per_species.get(code, 0.0) + float(stems)
-
-    if not ba_per_species:
-        return TreeSpecies.PINE
-
-    return max(ba_per_species.items(), key=lambda kv: kv[1])[0]
 
 
 def _auto_euref_km(geo_location:
@@ -193,12 +122,9 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         origin = float(strata.origin[i].item())
         stratum_sid = float(strata.stratum_number[i].item())
         spe = float(internal2motti.convert_species(species))
-        storey = _storey_to_motti(
-            stand,
-            i,
-            Storey(strata.storey[i].item()),
-            is_stratum_index=True)
-
+        storey = _storey_to_motti(stand,
+                                   strata.storey[i].item(),
+                                   i)
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -319,7 +245,7 @@ def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> Tree
 def _init_motti_state(stand: ForestStand) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
-    spedom = _spedom(stand.reference_trees)
+    spedom = internal2motti.convert_species(stand.main_tree_species_dominant_storey)
 
     y_km, x_km = _auto_euref_km(stand.geo_location)
 
@@ -334,8 +260,6 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         Y=y_km,
         X=x_km,
         Z=z,
-        lake=stand.lake_effect if stand.lake_effect is not None else 0.0,
-        sea=stand.sea_effect if stand.sea_effect is not None else 0.0,
         mal=stand.land_use_category.value if stand.land_use_category is not None else 0,
         mty=internal2motti.resolve_site_type(
             stand.drained_peatland_type,
@@ -371,8 +295,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         year=stand.year - stand.start_year,
         spedom=spedom,  # OK
         spedom2=spedom,  # OK pääpuulajimetsikkö
-        nstorey=1.0,
-        gstorey=1.0,
+        nstorey=1.0 if np.unique(stand.reference_trees.storey).size < 2 else 2.0
     )
 
     compressed_strata = _compress_strata_for_motti(stand, max_strata=10)
@@ -393,7 +316,13 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     stratum_ids = rt.stratum.tolist()
     if -1 in stratum_ids:
         raise ValueError("ReferenceTrees contains stratum_number=-1, which is invalid for Motti initialization.")
-    storey_vec = [_storey_to_motti(stand, idx, Storey(int(rt.storey[idx]))) for idx in range(n)]
+    storey_vec = [
+        _storey_to_motti(stand,
+                          rt.storey[i].item(),
+                          _get_stratum_with_matching_number(stand.tree_strata,
+                                                           rt.stratum[i].item()))
+        for i in range(n)
+    ]
     trees_py = [
         {
             "id": int(i),
@@ -428,6 +357,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     yo = Motti4DLL.new_strata(strata_py)
 
     buffers = Motti4DLL.alloc_state_buffers()
+    buffers.ctrl.death_forest = 1
     buffers.ctrl.death_tree = 1
 
     ntrees = Motti4DLL.initialize_with_state(
@@ -443,11 +373,33 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
     return MottiState(yy=yy, yp=yp, ntrees=ntrees, buffers=buffers, )
 
 
-def initialize_motti(stand: ForestStand, **_: dict[str, Any]) -> None:
+def _prune_reference_trees(stand: ForestStand) -> None:
+    """ 
+    Keeps only ReferenceTrees that have a matching tree in YP vector.
+    """
+    rt = stand.reference_trees
+    ms = stand.motti_state
+
+    if ms is None:
+        raise ValueError("Cannot prune ReferenceTrees. MottiState is not initialized for the stand.")
+
+    if rt.size == 0:
+        return
+
+    in_yp_mask = np.zeros(rt.size, dtype=bool)
+    for t in ms.yp[0][0:ms.ntrees]:
+        in_yp_mask |= (rt.tree_number == t.id)
+
+    trees_not_in_yp = np.where(~in_yp_mask)[0]
+    if trees_not_in_yp.size > 0:
+        rt.delete(trees_not_in_yp)
+
+
+def _initialize_motti(stand: ForestStand) -> None:
     """ Initialize MottiState for forest stand if missing. Does nothing if already initialized. """
-    if stand.motti_state is None:
-        stand.motti_state = _init_motti_state(stand)
-        motti_util.reconcile_reference_trees_from_motti(stand, init_mode=True)
+    stand.motti_state = _init_motti_state(stand)
+    _prune_reference_trees(stand)
+    motti_util.sync_ut_to_reference_trees(stand)
 
 
-__all__ = ["initialize_motti"]
+motti_init = Initialization(_initialize_motti)

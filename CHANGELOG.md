@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.0.1] - 2026-09-30
+
+- Refactor MottiState initialization by harmonizing workflow
+- Refactored Motti workflow related utility functions to use more numpy:
+    - Fix creating and updating yp-to-rt sync
+    - Motti site type mapping refactored (One Todo to wait for upgrade in MottiSC.dll)
+- Motti related parameter and variable fixes:
+    - Forest level mortality flag
+    - Storey count
+    - Basal area scaling
+    - Classification refinement for Alder in MottiSpecies
+
 ## [4.0.0] - 2026-09-28
 
 ### Removed
