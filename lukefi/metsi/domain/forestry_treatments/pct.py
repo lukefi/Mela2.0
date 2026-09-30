@@ -1,3 +1,4 @@
+from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
@@ -10,7 +11,9 @@ from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.exceptions import MetsiException
 
 
-def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
+def pct_fn(stand: ForestStand,
+           /,
+           remaining_n: list[int] | dict[MottiSpecies, int] | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only sapling treatment.
 
@@ -38,6 +41,8 @@ def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None
         remaining_n=remaining_n,
     )
 
+    # TODO: Poistettujen puiden lisääminen RemoveTreesiin
+
     # Keep Python-side vectors aligned with Motti after the treatment.
     sync_yp_to_reference_trees(stand)
     sync_ut_to_reference_trees(stand)
@@ -48,7 +53,7 @@ def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None
     return stand, []
 
 
-def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int] | None) -> list[int]:
+def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[MottiSpecies, int] | None) -> list[int]:
     """
     Preferred flow:
       1) ask Motti for guideline array
@@ -70,19 +75,22 @@ def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int]
     return guidelines
 
 
-def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
+def _normalize_species_array(value: list[int] | dict[MottiSpecies, int]) -> list[int]:
     """
     Normalize caller-provided species-wise remaining counts into a 10-slot list.
     Slots 1..9 are species, slot 0 is unused.
     """
     if isinstance(value, dict):
-        arr = [0] * 10
-        for key, stems in value.items():
-            idx = int(key)
-            if not 1 <= idx <= 9:
-                raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
-            arr[idx] = max(int(stems), 0)
-        return arr
+        if all(isinstance(key, MottiSpecies) for key in value.keys()):
+            arr = [0] * 10
+            for key, stems in value.items():
+                idx = int(key)
+                if not 1 <= idx <= 9:
+                    raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
+                arr[idx] = max(int(stems), 0)
+            return arr
+        else:
+            raise MetsiException(f"all dict keys should correspond to MottiSpecies enum in {value}")
 
     vals = [int(x) for x in value]
     if len(vals) == 9:
