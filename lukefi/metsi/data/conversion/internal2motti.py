@@ -47,7 +47,7 @@ _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
     Storey.OVER: MottiStorey.OVER,
-    Storey.RETENTION: MottiStorey.SPARE,
+    Storey.RETENTION: MottiStorey.RETENTION,
 }
 
 
