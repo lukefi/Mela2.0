@@ -222,8 +222,8 @@ _TREE_STOREY_MAP = {
     VmiTreeStorey.DOMINANT_SPARE_2: Storey.INDETERMINATE,
     VmiTreeStorey.DOMINANT_SPARE_3: Storey.INDETERMINATE,
     VmiTreeStorey.UNDER_SPARE_1: Storey.INDETERMINATE,
-    VmiTreeStorey.OVER_SPARE_1: Storey.SPARE,
-    VmiTreeStorey.OVER_SPARE_2: Storey.SPARE
+    VmiTreeStorey.OVER_SPARE_1: Storey.RETENTION,
+    VmiTreeStorey.OVER_SPARE_2: Storey.RETENTION
 }
 
 _ORIGIN_MAP = {
@@ -372,9 +372,12 @@ _CROWN_CLASS_MAP = {
 }
 
 
+_EMPTY_VALUES = {'', ' ', '  ', '.'}
+
+
 def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]:
     def inner(code: str):
-        if code in ('', ' ', '  ', '.'):
+        if code in _EMPTY_VALUES:
             return None
         return func(code)
     return inner
@@ -442,8 +445,9 @@ def convert_owner(owner_code: str) -> OwnerCategory:
     return _OWNER_MAP[vmi_owner]
 
 
-@check_empty_vmi
 def convert_stratum_rank(rank_code: str) -> StratumRank:
+    if rank_code in _EMPTY_VALUES:
+        return StratumRank.UNSET
     vmi_rank = VmiStratumRank(rank_code)
     return _STRATUM_RANK_MAP[vmi_rank]
 

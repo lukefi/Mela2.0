@@ -88,7 +88,7 @@ def _make_stand_vec(rt: ReferenceTrees) -> SimpleNamespace:
         artificial_regeneration_year=1,
         soil_surface_preparation_year=2,
         regeneration_area_cleaning_year=3,
-        main_tree_species_dominant_storey=TreeSpecies.COMMON_ALDER,
+        ds_main_tree_species=TreeSpecies.COMMON_ALDER,
         stand_id=12345,
         cutting_year=1999,
         method_of_last_cutting=5,
@@ -111,7 +111,7 @@ def _make_rt(
     bh_age=(20.0, 22.0),
     crown_ratio=(0.3, 0.4),
     origin=(0, 0),
-    storey=(0, 0),
+    storey=(1, 1),
     stratum=(1, 2)
 ) -> ReferenceTrees:
     """Build a real ReferenceTrees vector container for Motti sync tests.

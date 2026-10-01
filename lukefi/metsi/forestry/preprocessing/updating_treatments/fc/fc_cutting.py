@@ -50,23 +50,23 @@ def _ft_remaining_stems(stand: ForestStand) -> float:
     '''
     Roughly based on https://metsanhoidonsuositukset.fi/fi/toimenpiteet/ensiharvennus/toteutus#section-387
     '''
-    if stand.main_tree_species_dominant_storey == TreeSpecies.PINE:
+    if stand.ds_main_tree_species == TreeSpecies.PINE:
         if stand.site_type_category in (SiteType.VERY_RICH_SITE,
                                         SiteType.RICH_SITE,
                                         SiteType.DAMP_SITE,
                                         SiteType.SUB_DRY_SITE):
             return 1100
         return 1000
-    if stand.main_tree_species_dominant_storey == TreeSpecies.SPRUCE:
+    if stand.ds_main_tree_species == TreeSpecies.SPRUCE:
         if stand.region is not None and 17 <= stand.region <= 19:
             return 1200
         return 1000
-    if stand.main_tree_species_dominant_storey == TreeSpecies.SILVER_BIRCH:
+    if stand.ds_main_tree_species == TreeSpecies.SILVER_BIRCH:
         return 800
-    if stand.main_tree_species_dominant_storey == TreeSpecies.DOWNY_BIRCH:
+    if stand.ds_main_tree_species == TreeSpecies.DOWNY_BIRCH:
         return 1200
 
-    raise MetsiException(f"Unsupported ds_main_tree_species {stand.main_tree_species_dominant_storey}")
+    raise MetsiException(f"Unsupported ds_main_tree_species {stand.ds_main_tree_species}")
 
 
 def _ft_tree_base_set_fn(stand: ForestStand, _: ReferenceTrees | None = None) -> np.ndarray:
@@ -80,7 +80,7 @@ def _ft_nstems_not_included(stand: ForestStand) -> float:
 
 
 def _ft_tree_set1_fn(stand: ForestStand, trees: ReferenceTrees) -> np.ndarray:
-    trees_in_set = np.logical_and(trees.species != stand.main_tree_species_dominant_storey,
+    trees_in_set = np.logical_and(trees.species != stand.ds_main_tree_species,
                                   _ft_tree_base_set_fn(stand))
     return trees_in_set
 
@@ -137,7 +137,7 @@ first_thinning = PredeterminedTreatment(
 def _ba_after_thinning_below(stand: ForestStand, _: ReferenceTrees | None = None) -> float:
     _site = stand.site_type_category
     _hdom = stand.ds_dominant_height
-    _spe = stand.main_tree_species_dominant_storey
+    _spe = stand.ds_main_tree_species
 
     assert _hdom is not None
 

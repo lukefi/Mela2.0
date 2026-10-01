@@ -8,6 +8,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
 
 
 def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
@@ -44,6 +45,13 @@ def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None
     prune_reference_trees_not_in_motti(stand)
 
     stand.young_stand_tending_year = stand.year
+
+    trees = stand.reference_trees
+
+    # Pre-calculate basal areas for all trees
+    trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+    manage_existing_storeys(trees)
 
     return stand, []
 
