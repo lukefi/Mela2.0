@@ -94,6 +94,9 @@ def fillinplanting_fn(stand: ForestStand,
         # No previous DOMINANT storey exists, promote new trees to DOMINANT
         storey_for_new_trees = Storey.DOMINANT
 
+    if not trees.storey.flags.writeable:
+        trees.storey = np.copy(trees.storey)
+
     trees.storey[trees.storey == Storey.UNSET] = storey_for_new_trees
 
     return stand, []
