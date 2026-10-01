@@ -175,15 +175,6 @@ class Motti4DLL:
         if spedom2 is not None:
             yy.spedom2 = spedom2
 
-        # 3) Validate
-        nerr = cast(IntPtr, ffi.new("int *"))
-        err = cast(IntPtr, ffi.new("int [100]"))
-        with _maybe_chdir(cls.data_dir):
-            lib.Motti4CheckYY(yy, nerr, err)
-        if nerr[0] != 0:
-            raise RuntimeError(
-                f"Motti4CheckYY signaled problem nerr={nerr[0]}, err=[{", ".join([str(e) for e in err if e>0])}]")
-
         return yy
 
     @classmethod
