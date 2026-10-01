@@ -103,7 +103,10 @@ class Motti4DLL:
             for p in (lib_path.parent, cls.data_dir):
                 if p:
                     ps = str(Path(p).resolve())
-                    os.add_dll_directory(ps)
+                    try:
+                        os.add_dll_directory(ps)
+                    except FileNotFoundError as e:
+                        print(f"Error occurred while adding DLL directory: {e}")
 
         lib = ffi.dlopen(str(lib_path))
         cls.ffi, cls.lib = ffi, lib
@@ -120,7 +123,6 @@ class Motti4DLL:
         cls,
         *,
         Y: float, X: float, Z: float = -1.0,
-        lake: float = 0.0, sea: float = 0.0,
         mal: int = 1, mty: int = 3, verl: int = 2, verlt: int = 0,
         xt_regen: int = 1, xt_muok: int = 1, xt_raiv: int = 1, sid: int = 1,
         fthin: bool = False, xt_thin: int = 1, xt_fert: int = 1,
@@ -129,8 +131,7 @@ class Motti4DLL:
         year: Optional[float] = 2010.0,   # safe default if caller does not provide
         spedom: Optional[int] = None,
         spedom2: Optional[int] = None,
-        nstorey: float = 1.0,
-        gstorey: float = 1.0,
+        nstorey: float = 1.0
     ):
         """
         IMPORTANT: Matches C flow -> SiteInit first, then fill fields (no dd), then CheckYY.
@@ -150,11 +151,6 @@ class Motti4DLL:
         if rv[0] != 0:
             raise RuntimeError(f"Motti4SiteInit failed (rv={rv[0]})")
 
-        yy.Y = Y
-        yy.X = X
-        yy.Z = Z
-        yy.lake = lake
-        yy.sea = sea
         yy.mal = mal
         yy.mty = mty
         yy.verl = verl
@@ -172,10 +168,8 @@ class Motti4DLL:
         yy.alr = alr
         if year is not None:
             yy.year = year
-        yy.nstorey = 1.0
-        yy.gstorey = 1.0
         yy.nstorey = nstorey
-        yy.gstorey = gstorey
+        yy.gstorey = 1.0
         if spedom is not None:
             yy.spedom = spedom
         if spedom2 is not None:

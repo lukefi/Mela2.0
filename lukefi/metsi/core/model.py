@@ -195,7 +195,7 @@ class VectorData():
 
     def update_many(
         self,
-        new: dict[str, Any | npt.NDArray | list[Any]],
+        new: dict[str, Any],
         index: int | list[int] | npt.NDArray[np.int_] | npt.NDArray[np.bool_],
     ):
         """
