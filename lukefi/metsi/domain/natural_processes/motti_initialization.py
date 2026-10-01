@@ -245,7 +245,7 @@ def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> Tree
 def _init_motti_state(stand: ForestStand) -> MottiState:
     """Initialize and attach persistent MottiState to stand if missing."""
 
-    spedom = internal2motti.convert_species(stand.main_tree_species_dominant_storey)
+    spedom = internal2motti.convert_species(stand.ds_main_tree_species)
 
     y_km, x_km = _auto_euref_km(stand.geo_location)
 
