@@ -124,7 +124,19 @@ class StoreySupplementingTest(unittest.TestCase):
             Storey.UNDER,
             Storey.OVER,
             Storey.OVER
-        ])
+        ]),
+        ([1000.0] * 6,
+         [38.0, 40.0, 30.0, 2.0, 54.0, 46.0],
+         [0.0] * 6,
+         [
+            Storey.DOMINANT,
+            Storey.DOMINANT,
+            Storey.UNDER,
+            Storey.UNDER,
+            Storey.OVER,
+            Storey.OVER
+        ]
+        )
     ])
     def test_supplement_storey_information(self, stems_per_ha, height, breast_height_diameter, expected):
         trees = ReferenceTrees()
