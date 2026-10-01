@@ -196,6 +196,16 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
                                                            storey_2_tree_species,
                                                            storey_2_tree_basal_areas)
 
+    if storey_1_dominant_species == TreeSpecies.TREELESS and storey_2_dominant_species == TreeSpecies.TREELESS:
+        fallback(trees, compare_storey_1_by_ba)
+        return
+    if storey_1_dominant_species == TreeSpecies.TREELESS:
+        trees.storey[mask2] = Storey.DOMINANT
+        return
+    if storey_2_dominant_species == TreeSpecies.TREELESS:
+        trees.storey[mask1] = Storey.DOMINANT
+        return
+
     storey_1_dominant_species_mask = storey_1_tree_species == storey_1_dominant_species
     storey_2_dominant_species_mask = storey_2_tree_species == storey_2_dominant_species
 
@@ -219,8 +229,8 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
         return
 
     # Compare by stems
-    storey_1_dominant_species_stems = storey_1_tree_stems_per_ha[storey_1_dominant_species_mask]
-    storey_2_dominant_species_stems = storey_2_tree_stems_per_ha[storey_2_dominant_species_mask]
+    storey_1_dominant_species_stems = np.sum(storey_1_tree_stems_per_ha[storey_1_dominant_species_mask])
+    storey_2_dominant_species_stems = np.sum(storey_2_tree_stems_per_ha[storey_2_dominant_species_mask])
 
     if storey_1_dominant_species_stems >= storey_2_dominant_species_stems:
         # Promote storey 1
