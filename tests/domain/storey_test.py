@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
 
+from parameterized import parameterized
+
 from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -100,32 +102,49 @@ class StoreySupplementingTest(unittest.TestCase):
 
         self.assertTrue(np.all(trees.storey == Storey.RETENTION))
 
-    def test_promote_dominant_from_many(self):
+    @parameterized.expand([
+        ([10.0] * 6,
+         [10.0, 40.0, 30.0, 2.0, 14.0, 2.0],
+         [5.0] * 6,
+         [
+            Storey.DOMINANT,
+            Storey.OVER,
+            Storey.OVER,
+            Storey.UNDER,
+            Storey.DOMINANT,
+            Storey.UNDER
+        ]),
+        ([1000.0] * 6,
+         [10.0, 40.0, 30.0, 2.0, 54.0, 46.0],
+         [9.0, 15.0, 5.0, 4.0, 12.0, 18.0],
+         [
+            Storey.UNDER,
+            Storey.DOMINANT,
+            Storey.UNDER,
+            Storey.UNDER,
+            Storey.OVER,
+            Storey.OVER
+        ])
+    ])
+    def test_supplement_storey_information(self, stems_per_ha, height, breast_height_diameter, expected):
         trees = ReferenceTrees()
         trees.vectorize(
             {
                 "identifier": [f"tree{i}" for i in range(1, 7)],
-                "storey": [Storey.UNDER,
-                           Storey.OVER,
-                           Storey.INDETERMINATE,
-                           Storey.UNSET,
-                           Storey.REMOVAL,
-                           Storey.REMOTE],
-                "stems_per_ha": [10.0] * 6,
-                "height": [10.0, 40.0, 30.0, 2.0, 14.0, 2.0],
+                "storey": [
+                    Storey.UNDER,
+                    Storey.OVER,
+                    Storey.INDETERMINATE,
+                    Storey.UNSET,
+                    Storey.REMOVAL,
+                    Storey.REMOTE],
+                "stems_per_ha": stems_per_ha,
+                "height": height,
                 "species": [TreeSpecies.PINE] * 6,
-                "breast_height_diameter": [5.0] * 6
+                "breast_height_diameter": breast_height_diameter
             }
         )
         stand = ForestStand(trees, identifier="test")
         stand = supplement_storey_information([stand])[0]
 
-        self.assertTrue(np.all(trees.storey == np.asarray(
-            [
-                Storey.DOMINANT,
-                Storey.OVER,
-                Storey.OVER,
-                Storey.UNDER,
-                Storey.DOMINANT,
-                Storey.UNDER
-            ])))
+        self.assertTrue(np.all(trees.storey == np.asarray(expected)))
