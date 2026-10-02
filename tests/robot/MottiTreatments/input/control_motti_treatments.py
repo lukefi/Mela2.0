@@ -13,7 +13,7 @@ from lukefi.metsi.domain.natural_processes.motti_initialization import motti_ini
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.generators import Alternatives, Event, Sequence
-from lukefi.metsi.core.transition import Initialization, Transition
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.core.treatment import do_nothing
@@ -101,7 +101,7 @@ control_structure = MetsiControl[ForestStand](
                                                                       MottiSpecies.SILVER_BIRCH: 1800,
                                                                       MottiSpecies.DOWNY_BIRCH: 1800,
                                                                       MottiSpecies.ASPEN: 1800,
-                                                                      MottiSpecies.ALDER: 1800, }}),
+                                                                      MottiSpecies.GREY_ALDER: 1800, }}),
                     FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
                     SeedtreeCutting(parameters={
                         "cutting_method": 7,
