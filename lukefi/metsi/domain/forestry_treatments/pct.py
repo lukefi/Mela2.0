@@ -1,7 +1,5 @@
 from copy import deepcopy
 
-import numpy as np
-
 from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand, MottiState
 from lukefi.metsi.domain.collected_data import RemovedTrees
@@ -10,7 +8,7 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )
-from lukefi.metsi.domain.forestry_treatments.motti_treatment_util import collect_removed_trees
+from lukefi.metsi.domain.forestry_treatments.treatment_util import collect_removed_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.treatment import Treatment

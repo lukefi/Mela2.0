@@ -3,7 +3,7 @@ from copy import deepcopy
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.domain.forestry_treatments.motti_treatment_util import collect_removed_trees
+from lukefi.metsi.domain.forestry_treatments.treatment_util import collect_removed_trees
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
