@@ -4,7 +4,6 @@ import numpy as np
 
 from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand, MottiState
-from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
@@ -56,7 +55,7 @@ def pct_fn(stand: ForestStand,
     sync_yp_to_reference_trees(stand)
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
-    
+
     stand.young_stand_tending_year = stand.year
 
     cd: list[RemovedTrees] = []
