@@ -1,5 +1,6 @@
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
+from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import (
     compute_location_metadata,
@@ -12,7 +13,7 @@ from lukefi.metsi.domain.natural_processes.motti_initialization import motti_ini
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.generators import Alternatives, Event, Sequence
-from lukefi.metsi.core.transition import Initialization, Transition
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.core.treatment import do_nothing
@@ -95,12 +96,12 @@ control_structure = MetsiControl[ForestStand](
                     ]),
                     EarlyCareMotti(parameters={"imode": 0}),
                     Harvest20percent(),
-                    SaplingTreatmentMotti(parameters={"remaining_n": {1: 1800,
-                                                                      2: 1800,
-                                                                      3: 1800,
-                                                                      4: 1800,
-                                                                      5: 1800,
-                                                                      6: 1800, }}),
+                    SaplingTreatmentMotti(parameters={"remaining_n": {MottiSpecies.PINE: 1800,
+                                                                      MottiSpecies.SPRUCE: 1800,
+                                                                      MottiSpecies.SILVER_BIRCH: 1800,
+                                                                      MottiSpecies.DOWNY_BIRCH: 1800,
+                                                                      MottiSpecies.ASPEN: 1800,
+                                                                      MottiSpecies.GREY_ALDER: 1800, }}),
                     FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
                     SeedtreeCutting(parameters={
                         "cutting_method": 7,
