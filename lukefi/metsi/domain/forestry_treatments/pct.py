@@ -102,8 +102,7 @@ def _normalize_species_array(value: list[int] | dict[MottiSpecies, int]) -> list
                     raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
                 arr[idx] = max(int(stems), 0)
             return arr
-        else:
-            raise MetsiException(f"all dict keys should correspond to MottiSpecies enum in {value}")
+        raise MetsiException(f"all dict keys should correspond to MottiSpecies enum in {value}")
 
     vals = [int(x) for x in value]
     if len(vals) == 9:
