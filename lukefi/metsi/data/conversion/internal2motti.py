@@ -64,7 +64,7 @@ _DRAINAGE_CATEGORY_MAP = {
 }
 
 
-_SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
+_SITE_TYPE_MAP: dict[MetsiEnum, MottiSiteType] = {
     SiteType.VERY_RICH_SITE: MottiSiteType.VERY_RICH_SITE,
     SiteType.RICH_SITE: MottiSiteType.RICH_SITE,
     SiteType.DAMP_SITE: MottiSiteType.DAMP_SITE,
@@ -79,7 +79,7 @@ _SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
 }
 
 
-_DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
+_DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum, MottiSiteType] = {
     DrainedPeatlandForestType.HERB_RICH_TYPE: MottiSiteType.HERB_RICH_TYPE,
     DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_1,
     DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_2,
@@ -159,10 +159,11 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
         return _SITE_TYPE_MAP[source2]
 
     # Raise a informative error
-    _valid_values = [ str(enum.value)
-                     for enum in _MOTTI_COMMON_SITE_TYPES +
-                     _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS +
-                     _additional_valid_site_types ]
+    _valid_values = [str(enum.value)
+                     for enum in
+                        list(_SITE_TYPE_MAP.keys()) +
+                        list(_DRAINED_PEATLAND_FOREST_TYPE_MAP.keys()) +
+                        _additional_valid_site_types]
     raise MetsiException(f"Unable to resolve internal site type value [{ source2 }] \
                          or drained peatland spesific value [{ source1 }] for Motti site type value. \
                          Correct values for Motti site type are: { _valid_values }")
