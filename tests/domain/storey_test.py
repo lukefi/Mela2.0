@@ -9,9 +9,12 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.pre_ops import supplement_storey_information
 from lukefi.metsi.forestry.storey import (
+    calc_mean_biological_age,
     calc_storey_basal_area,
     calc_storey_dominant_height,
+    calc_storey_mean_height,
     calc_tree_basal_areas,
+    determine_dominant_species,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
 
@@ -273,3 +276,101 @@ class StoreyUtilitiesTest(unittest.TestCase):
         assert dh is not None
 
         self.assertAlmostEqual(dh, 13.7)
+
+    def test_calc_mean_biological_age_using_stems(self):
+        ages = np.asarray([1.0, 2.0, 3.0, 4.0])
+        stems = np.asarray([3.0, 2.0, 1.0, 4.0])
+        d = np.asarray([2.0, 4.0, 1.0, 6.0])
+        ba = calc_tree_basal_areas(d)
+
+        mean_age = calc_mean_biological_age(ages, stems, ba, d)
+
+        assert mean_age is not None
+
+        self.assertAlmostEqual(mean_age, 2.6)
+
+    def test_calc_mean_biological_age_using_ba(self):
+        ages = np.asarray([1.0, 2.0, 3.0, 4.0])
+        stems = np.asarray([3.0, 2.0, 1.0, 4.0])
+        d = np.asarray([9.0, 7.0, 6.0, 10.0])
+        ba = calc_tree_basal_areas(d)
+
+        mean_age = calc_mean_biological_age(ages, stems, ba, d)
+
+        assert mean_age is not None
+
+        self.assertAlmostEqual(mean_age, 2.763191763191763)
+
+    def test_calc_storey_mean_heigth_using_stems(self):
+        trees = ReferenceTrees()
+        trees.vectorize(
+            {
+                "stems_per_ha": [10.0, 20.0, 30.0],
+                "breast_height_diameter": [0.0, 0.0, 0.0],
+                "height": [9.0, 10.0, 11.0],
+                "storey": [Storey.DOMINANT] * 3
+            }
+        )
+
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+
+        self.assertAlmostEqual(mean_height, 10.3333333333)
+
+    def test_calc_storey_mean_heigth_using_ba(self):
+        trees = ReferenceTrees()
+        trees.vectorize(
+            {
+                "stems_per_ha": [10.0, 20.0, 30.0],
+                "breast_height_diameter": [11.0, 10.0, 9.0],
+                "height": [9.0, 10.0, 11.0],
+                "storey": [Storey.DOMINANT] * 3
+            }
+        )
+
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+
+        self.assertAlmostEqual(mean_height, 10.2163120567)
+
+    def test_determine_dominant_species_treeless_using_stems(self):
+        d = np.asarray([0.0, 0.0, 0.0, 0.0])
+        stems = np.asarray([10.0, 20.0, 30.0, 40.0])
+        species = np.asarray([TreeSpecies.PINE] * 4)
+        ba = np.asarray([0.0,0.0,0.0,0.0])
+
+        dominant_species = determine_dominant_species(d, stems, species, ba)
+
+        self.assertEqual(dominant_species, TreeSpecies.TREELESS)
+
+    def test_determine_dominant_species_using_stems(self):
+        d = np.asarray([0.0, 0.0, 0.0, 0.0])
+        stems = np.asarray([100.0, 200.0, 300.0, 400.0])
+        species = np.asarray([TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.DOUGLAS_FIR, TreeSpecies.DOWNY_BIRCH])
+        ba = calc_tree_basal_areas(d)
+
+        dominant_species = determine_dominant_species(d, stems, species, ba)
+
+        self.assertEqual(dominant_species, TreeSpecies.DOUGLAS_FIR)
+
+    def test_determine_dominant_species_treeless_using_ba(self):
+        d = np.asarray([8.0, 8.0, 8.0, 8.0])
+        stems = np.asarray([1.0, 2.0, 3.0, 4.0])
+        species = np.asarray([TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.DOUGLAS_FIR, TreeSpecies.DOWNY_BIRCH])
+        ba = calc_tree_basal_areas(d)
+
+        dominant_species = determine_dominant_species(d, stems, species, ba)
+
+        self.assertEqual(dominant_species, TreeSpecies.TREELESS)
+
+    def test_determine_dominant_species_using_ba(self):
+        d = np.asarray([8.0, 9.0, 10.0, 11.0])
+        stems = np.asarray([100.0, 100.0, 100.0, 100.0])
+        species = np.asarray([TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.DOUGLAS_FIR, TreeSpecies.DOWNY_BIRCH])
+        ba = calc_tree_basal_areas(d)
+
+        dominant_species = determine_dominant_species(d, stems, species, ba)
+
+        self.assertEqual(dominant_species, TreeSpecies.DOUGLAS_FIR)
