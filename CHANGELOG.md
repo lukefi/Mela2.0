@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.0.2] - 2026-10-06
+
+### Changed
+
+- Collect RemovedTrees from pct and earlycare Motti treatments.
+
+
 ## [4.0.1] - 2026-09-30
+
+### Changed
 
 - Refactor MottiState initialization by harmonizing workflow
 - Refactored Motti workflow related utility functions to use more numpy:
