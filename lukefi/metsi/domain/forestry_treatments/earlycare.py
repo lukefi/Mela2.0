@@ -10,7 +10,7 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.collected_data import CollectedData, OpTuple
 from lukefi.metsi.core.treatment import Treatment
 
 
@@ -56,7 +56,7 @@ def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
     stand.young_stand_tending_year = stand.year
 
     # Collect removed trees for CollectedData
-    cd: list[RemovedTrees] = []
+    cd: list[CollectedData] = []
     rmt = RemovedTrees()
     removed_trees = collect_removed_trees(original_rts, stand.reference_trees)
     rmt.removed_trees = removed_trees

@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand, MottiState
-from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.domain.collected_data import RemovedTrees, CollectedData
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
@@ -56,7 +56,7 @@ def pct_fn(stand: ForestStand,
 
     stand.young_stand_tending_year = stand.year
 
-    cd: list[RemovedTrees] = []
+    cd: list[CollectedData] = []
     rmt = RemovedTrees()
     removed_trees = collect_removed_trees(rts_original, stand.reference_trees)
     rmt.removed_trees = removed_trees
