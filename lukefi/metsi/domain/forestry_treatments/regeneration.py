@@ -69,7 +69,7 @@ def _regeneration_via_motti(stand: ForestStand,
                             origin: Origin,
                             species: TreeSpecies,
                             stems_per_ha: float,
-                            step: int,
+                            motti_delay: int,
                             survival_percent: float = 100.0
                             ) -> None:
     assert stand.motti_state
@@ -96,7 +96,7 @@ def _regeneration_via_motti(stand: ForestStand,
         int(ms.ntrees),
         ms.buffers,
         method_vec=motti_regeneration_params,
-        step=int(step),
+        motti_delay=motti_delay,
     )
 
     sync_ut_to_reference_trees(stand)
@@ -113,7 +113,7 @@ def regeneration_fn(input_: ForestStand,
                     breast_height_diameter: float | None = None,
                     breast_height_age: float | None = None,
                     ntrees: int = 10,
-                    istep_motti: int = 0, # Jos realisoituu out parametriksi, niin pois
+                    motti_delay: int = 0,
                     survival_percent_motti: float = 100.0
                     ) -> OpTuple[ForestStand]:
     """
@@ -128,7 +128,7 @@ def regeneration_fn(input_: ForestStand,
         breast_height_age:              # age at breat height (years)
         ntrees:                         # number of reference trees to create
     - If Motti defined as transition, delegates sapling regeneration to Motti4Regenerate with additional params:
-        istep_motti:                    # ??? 
+        motti_delay:                    # delay in years before regeneration is realized for Motti saplings
         survival_percent_motti:         # value from 0.0 to 100.0
         soil_preparation_type_motti:    #  value from 0 to 6
         clearing_motti: bool            # Done or not done
@@ -167,7 +167,7 @@ def regeneration_fn(input_: ForestStand,
             origin=origin,
             species=species,
             stems_per_ha=stems_per_ha,
-            step=istep_motti,
+            motti_delay=motti_delay,
             survival_percent=survival_percent_motti)
     else:
         per_tree_stems = stems_per_ha / float(ntrees)
