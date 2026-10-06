@@ -94,15 +94,13 @@ def _normalize_species_array(value: list[int] | dict[MottiSpecies, int]) -> list
     Slots 1..9 are species, slot 0 is unused.
     """
     if isinstance(value, dict):
-        if all(isinstance(key, MottiSpecies) for key in value.keys()):
-            arr = [0] * 10
-            for key, stems in value.items():
-                idx = int(key)
-                if not 1 <= idx <= 9:
-                    raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
-                arr[idx] = max(int(stems), 0)
-            return arr
-        raise MetsiException(f"all dict keys should correspond to MottiSpecies enum in {value}")
+        arr = [0] * 10
+        for key, stems in value.items():
+            idx = int(key)
+            if not 1 <= idx <= 9:
+                raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
+            arr[idx] = max(int(stems), 0)
+        return arr
 
     vals = [int(x) for x in value]
     if len(vals) == 9:
