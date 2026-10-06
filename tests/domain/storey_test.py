@@ -256,3 +256,20 @@ class StoreyUtilitiesTest(unittest.TestCase):
         assert dh is not None
 
         self.assertAlmostEqual(dh, 16.333333333333332)
+
+    def test_calc_storey_dominant_height_standard_case(self):
+        trees = ReferenceTrees()
+        trees.vectorize(
+            {
+                "stems_per_ha": [10.0, 30.0, 5.0, 60.0, 40.0],
+                "breast_height_diameter": [17.0, 2.0, 4.0, 9.0, 7.0],
+                "height": [20.0, 14.0, 14.0, 12.0, 15.0],
+                "storey": [Storey.DOMINANT] * 5
+            }
+        )
+
+        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+
+        assert dh is not None
+
+        self.assertAlmostEqual(dh, 13.7)
