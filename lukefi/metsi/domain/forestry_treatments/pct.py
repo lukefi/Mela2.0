@@ -1,16 +1,23 @@
+from copy import deepcopy
+
+from lukefi.metsi.data.enums.motti import MottiSpecies
 from lukefi.metsi.data.model import ForestStand, MottiState
+from lukefi.metsi.domain.collected_data import RemovedTrees, CollectedData
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )
+from lukefi.metsi.domain.forestry_treatments.treatment_util import collect_removed_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.exceptions import MetsiException
 
 
-def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None = None) -> OpTuple[ForestStand]:
+def pct_fn(stand: ForestStand,
+           /,
+           remaining_n: list[int] | dict[MottiSpecies, int] | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only sapling treatment.
 
@@ -27,6 +34,10 @@ def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None
             "Motti PCT requested but stand has no initialized motti_state. "
             "Use Motti transition / bootstrap so state exists before this event."
         )
+    if stand.reference_trees.size == 0:
+        return stand, []
+
+    rts_original = deepcopy(stand.reference_trees)
 
     remaining_n = _resolve_remaining_n(ms, remaining_n)
 
@@ -45,10 +56,17 @@ def pct_fn(stand: ForestStand, /, remaining_n: list[int] | dict[int, int] | None
 
     stand.young_stand_tending_year = stand.year
 
-    return stand, []
+    cd: list[CollectedData] = []
+    rmt = RemovedTrees()
+    removed_trees = collect_removed_trees(rts_original, stand.reference_trees)
+    rmt.removed_trees = removed_trees
+    if removed_trees.size > 0:
+        cd.append(rmt)
+
+    return stand, cd
 
 
-def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int] | None) -> list[int]:
+def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[MottiSpecies, int] | None) -> list[int]:
     """
     Preferred flow:
       1) ask Motti for guideline array
@@ -70,7 +88,7 @@ def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[int, int]
     return guidelines
 
 
-def _normalize_species_array(value: list[int] | dict[int, int]) -> list[int]:
+def _normalize_species_array(value: list[int] | dict[MottiSpecies, int]) -> list[int]:
     """
     Normalize caller-provided species-wise remaining counts into a 10-slot list.
     Slots 1..9 are species, slot 0 is unused.

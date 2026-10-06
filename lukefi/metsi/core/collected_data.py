@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 import sqlite3
 
-
 class CollectedData(ABC):
 
     @classmethod
