@@ -8,7 +8,12 @@ from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, Tre
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.pre_ops import supplement_storey_information
-from lukefi.metsi.forestry.storey import calc_storey_basal_area, calc_tree_basal_areas, stand_has_only_retention_storey, stand_has_only_seeding_tree_storey
+from lukefi.metsi.forestry.storey import (
+    calc_storey_basal_area,
+    calc_storey_dominant_height,
+    calc_tree_basal_areas,
+    stand_has_only_retention_storey,
+    stand_has_only_seeding_tree_storey)
 
 
 class StoreySupplementingTest(unittest.TestCase):
@@ -216,3 +221,38 @@ class StoreyUtilitiesTest(unittest.TestCase):
         ba = calc_storey_basal_area(bas, stems)
 
         self.assertAlmostEqual(30.0, ba)
+
+    def test_calc_storey_dominant_height_one_tree_dominates(self):
+        trees = ReferenceTrees()
+        trees.vectorize(
+            {
+                "identifier": [f"tree{i}" for i in range(10)],
+                "stems_per_ha": [600, 600, 200, 200, 100, 100, 100, 100, 100, 100],
+                "breast_height_diameter": [10, 5, 20, 30, 10, 10, 5, 5, 5, 15],
+                "height": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "storey": [Storey.DOMINANT] * 10
+            }
+        )
+
+        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+
+        assert dh is not None
+
+        self.assertAlmostEqual(4.0, dh)
+
+    def test_calc_storey_dominant_height_less_than_100_stems(self):
+        trees = ReferenceTrees()
+        trees.vectorize(
+            {
+                "stems_per_ha": [10.0, 20.0, 30.0],
+                "breast_height_diameter": [5, 6, 4],
+                "height": [15, 16, 17],
+                "storey": [Storey.DOMINANT] * 3
+            }
+        )
+
+        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+
+        assert dh is not None
+
+        self.assertAlmostEqual(dh, 16.333333333333332)
