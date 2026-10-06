@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import numpy.testing as nptest
 
 from parameterized import parameterized
 
@@ -7,6 +8,7 @@ from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, Tre
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.pre_ops import supplement_storey_information
+from lukefi.metsi.forestry.storey import calc_storey_basal_area, calc_tree_basal_areas, stand_has_only_retention_storey, stand_has_only_seeding_tree_storey
 
 
 class StoreySupplementingTest(unittest.TestCase):
@@ -160,3 +162,57 @@ class StoreySupplementingTest(unittest.TestCase):
         stand = supplement_storey_information([stand])[0]
 
         self.assertTrue(np.all(trees.storey == np.asarray(expected)))
+
+
+class StoreyUtilitiesTest(unittest.TestCase):
+
+    def test_stand_has_only_retention_storey(self):
+        trees1 = ReferenceTrees(3)
+        trees1.storey[:] = Storey.RETENTION
+
+        trees2 = ReferenceTrees(3)
+        trees2.storey[0] = Storey.DOMINANT
+        trees2.storey[1:] = Storey.RETENTION
+
+        trees3 = ReferenceTrees(3)
+        trees3.storey[0] = Storey.UNDER
+        trees3.storey[1] = Storey.OVER
+        trees3.storey[2] = Storey.REMOTE
+
+        self.assertTrue(stand_has_only_retention_storey(trees1))
+        self.assertFalse(stand_has_only_retention_storey(trees2))
+        self.assertFalse(stand_has_only_retention_storey(trees3))
+
+    def test_stand_has_only_seeding_tree_storey(self):
+        trees1 = ReferenceTrees(3)
+        trees1.storey[:] = Storey.OVER
+        trees1.management_category[:] = TreeManagementCategory.SEEDING_TREE
+
+        trees2 = ReferenceTrees(3)
+        trees2.storey[:] = Storey.OVER
+        trees2.management_category[0] = TreeManagementCategory.NO_RESTRICTION
+        trees2.management_category[1:] = TreeManagementCategory.SEEDING_TREE
+
+        trees3 = ReferenceTrees(3)
+        trees3.storey[0] = Storey.UNDER
+        trees3.storey[1:] = Storey.OVER
+        trees3.management_category[:] = TreeManagementCategory.SEEDING_TREE
+
+        self.assertTrue(stand_has_only_seeding_tree_storey(trees1))
+        self.assertFalse(stand_has_only_seeding_tree_storey(trees2))
+        self.assertFalse(stand_has_only_seeding_tree_storey(trees3))
+
+    def test_calc_tree_basal_areas(self):
+        diameters = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0], dtype=np.float64)
+        bas = calc_tree_basal_areas(diameters)
+
+        nptest.assert_allclose(bas, [7.85398163e-05, 3.14159265e-04, 7.06858347e-04, 1.25663706e-03,
+                                     1.96349541e-03, 2.82743339e-03, 3.84845100e-03, 5.02654825e-03])
+
+    def test_calc_storey_basal_area(self):
+        bas = np.asarray([1.0, 2.0, 3.0, 4.0], dtype=np.float64)
+        stems = np.asarray([5.0, 4.0, 3.0, 2.0], dtype=np.float64)
+
+        ba = calc_storey_basal_area(bas, stems)
+
+        self.assertAlmostEqual(30.0, ba)
