@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.1.0] - 2026-10-06
+
+### Added
+
+- Implemented storey handling:
+    - Added new preprocessing operation `supplement_storey_information` for cleaning up storeys from source data
+    - Added handling of potential storey changes after natural processes and treatments
+    - Added several utility functions for calculating various storey-wide quantities
+
+### Fixed
+
+- Changed calculation of `ds_dominant_height` to only consider trees in the dominant storey
+
 ## [4.0.2] - 2026-10-06
 
 ### Changed
