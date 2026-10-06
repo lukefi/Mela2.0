@@ -39,7 +39,8 @@ _SPECIES_MAP = {
     TreeSpecies.ASPEN: MottiSpecies.ASPEN,
     TreeSpecies.GREY_ALDER: MottiSpecies.GREY_ALDER,
     TreeSpecies.COMMON_ALDER: MottiSpecies.COMMON_ALDER,
-    TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN
+    TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN,
+    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN
 }
 
 
@@ -47,7 +48,7 @@ _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
     Storey.OVER: MottiStorey.OVER,
-    Storey.SPARE: MottiStorey.SPARE,
+    Storey.RETENTION: MottiStorey.RETENTION,
 }
 
 
@@ -106,12 +107,12 @@ def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
 
 
-def convert_drainage_category(source: DrainageCategory | None) ->  MottiDrainageCategory:
+def convert_drainage_category(source: DrainageCategory | None) -> MottiDrainageCategory:
     """
     Drainage category transformation from internal to motti value.
-     
-    defaults undrained mineral soil which is valued as zero. 
-     """
+
+    defaults undrained mineral soil which is valued as zero.
+    """
     if source is None:
         return MottiDrainageCategory.OJITTAMATON_KANGAS
     if source in _DRAINAGE_CATEGORY_MAP:
@@ -135,13 +136,14 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
         return _SITE_TYPE_MAP[source2]
 
     # Raise a informative error
-    _valid_values = [ str(enum.value)
+    _valid_values = [str(enum.value)
                      for enum in _MOTTI_COMMON_SITE_TYPES +
                      _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS +
-                     _additional_valid_site_types ]
-    raise MetsiException(f"Unable to resolve internal site type value [{ source2 }] \
-                         or drained peatland spesific value [{ source1 }] for Motti site type value. \
-                         Correct values for Motti site type are: { _valid_values }")
+                     _additional_valid_site_types]
+    raise MetsiException(f"Unable to resolve internal site type value [{source2}] \
+                         or drained peatland spesific value [{source1}] for Motti site type value. \
+                         Correct values for Motti site type are: {_valid_values}")
+
 
 def convert_storey(source: Storey | None) -> MottiStorey:
     """

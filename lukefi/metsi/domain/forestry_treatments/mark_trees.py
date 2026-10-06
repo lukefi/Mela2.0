@@ -10,6 +10,7 @@ from lukefi.metsi.core.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
 
 
 def mark_trees_fn(input_: ForestStand,
@@ -112,6 +113,14 @@ def mark_trees_fn(input_: ForestStand,
             new_rows.append(row)
 
         stand.reference_trees.create(new_rows)
+
+    trees = stand.reference_trees
+
+    # Pre-calculate basal area for all trees
+    trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+    # TODO: Should user-marked storeys get special treatment?
+    manage_existing_storeys(trees)
 
     return stand, []
 

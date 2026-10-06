@@ -238,7 +238,7 @@ def calculate_stand_basal_area(strata: TreeStrata) -> float:
     return float(np.sum(strata.basal_area))
 
 
-def determine_main_tree_species_dominant_storey(site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
+def determine_ds_main_tree_species(site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
     if site_type_category is None:
         return None
     if site_type_category <= SiteType.DAMP_SITE:
