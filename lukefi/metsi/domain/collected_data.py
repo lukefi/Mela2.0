@@ -152,6 +152,10 @@ class NaturalProcessInfo(CollectedData):
 
         # Tree not found, try to find trees with same stratum number
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return 0.0
+
         return np.sum(after.stems_per_ha[split_mask])
 
     def _get_breast_height_diameter_after(self, index: int) -> float:
@@ -165,6 +169,10 @@ class NaturalProcessInfo(CollectedData):
 
         # BA-weighted average of split tree diameters
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return before.breast_height_diameter[index]
+
         stems = after.stems_per_ha[split_mask]
         bhd = after.breast_height_diameter[split_mask]
 
@@ -186,6 +194,10 @@ class NaturalProcessInfo(CollectedData):
 
         # BA-weighted average of split tree heights
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return before.height[index]
+
         stems = after.stems_per_ha[split_mask]
         h = after.height[split_mask]
         bhd = after.breast_height_diameter[split_mask]
