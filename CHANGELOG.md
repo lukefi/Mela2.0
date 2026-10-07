@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.1.1] - 2026-10-07
+
+### Removed
+
+- Deleted unused functions `_next_reference_tree_number` and `_next_reference_tree_identifier_suffix`
+
 ## [4.1.0] - 2026-10-06
 
 ### Added
