@@ -141,9 +141,9 @@ def regeneration_fn(input_: ForestStand,
 
     # ----- obligatory params ----
 
-    if origin is None or origin == Origin.UNSET:
+    if origin == Origin.UNSET:
         raise MetsiException("Origin missing or not set")
-    if species is None or species == TreeSpecies.UNSET:
+    if species == TreeSpecies.UNSET:
         raise MetsiException("Species is missing or not set")
     if stems_per_ha is None:
         raise MetsiException("stems_per_ha is missing")
