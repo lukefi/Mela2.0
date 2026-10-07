@@ -7,31 +7,6 @@ from lukefi.metsi.data.enums.motti import (
     MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType, MottiSoilPreparationType)
 
 
-_MOTTI_COMMON_SITE_TYPES = [
-    # Motti common site type values.
-    MottiSiteType.VERY_RICH_SITE,
-    MottiSiteType.RICH_SITE,
-    MottiSiteType.DAMP_SITE,
-    MottiSiteType.SUB_DRY_SITE,
-    MottiSiteType.DRY_SITE,
-    MottiSiteType.BARREN_SITE,
-    MottiSiteType.ROCKY_OR_SANDY_AREA,
-    MottiSiteType.OPEN_MOUNTAINS
-]
-
-
-_MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS = [
-    # Drained peatland forest type spesification values (from 51-57).
-    MottiSiteType.HERB_RICH_TYPE,
-    MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_1,
-    MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_2,
-    MottiSiteType.VACCINIUM_VITIS_IDAEA_TYPE,
-    MottiSiteType.DEV_FROM_GENUINE_FORESTED_MIRE,
-    MottiSiteType.DWARF_SHRUB_TYPE,
-    MottiSiteType.CLADONIA_TYPE
-]
-
-
 _SPECIES_MAP = {
     TreeSpecies.PINE: MottiSpecies.PINE,
     TreeSpecies.SPRUCE: MottiSpecies.SPRUCE,
