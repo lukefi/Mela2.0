@@ -17,7 +17,8 @@ class NaturalProcessInfoTest(unittest.TestCase):
                 "stratum": [1, 2],
                 "stems_per_ha": [1.0, 2.0],
                 "breast_height_diameter": [1.0, 1.5],
-                "height": [5.0, 5.0]
+                "height": [5.0, 5.0],
+                "sapling": [False, True]
             }
         )
 
