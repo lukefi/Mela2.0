@@ -73,7 +73,7 @@ def _regeneration_via_motti(stand: ForestStand,
                             origin: Origin,
                             species: TreeSpecies,
                             stems_per_ha: float,
-                            motti_delay: int,
+                            delay: int,
                             survival_percent: float = 100.0
                             ) -> None:
     assert stand.motti_state
@@ -99,7 +99,7 @@ def _regeneration_via_motti(stand: ForestStand,
         int(ms.ntrees),
         ms.buffers,
         method_vec=motti_regeneration_params,
-        motti_delay=motti_delay,
+        delay=delay,
     )
 
     sync_ut_to_reference_trees(stand)
@@ -116,7 +116,7 @@ def regeneration_fn(input_: ForestStand,
                     breast_height_diameter: float | None = None,
                     breast_height_age: float | None = None,
                     ntrees: int = 10,
-                    motti_delay: int = 0,
+                    delay: int = 0,
                     survival_percent_motti: float = 100.0
                     ) -> OpTuple[ForestStand]:
     """
@@ -130,15 +130,14 @@ def regeneration_fn(input_: ForestStand,
         breast_height_diameter:         # diameter (dm)
         breast_height_age:              # age at breat height (years)
         ntrees:                         # number of reference trees to create
+        delay:                          # delay in years before regeneration is done
     - If Motti defined as transition, delegates sapling regeneration to Motti4Regenerate with additional params:
-        motti_delay:                    # delay in years before regeneration is realized for Motti saplings
         survival_percent_motti:         # value from 0.0 to 100.0
-        soil_preparation_type_motti:    #  value from 0 to 6
+        soil_preparation_type_motti:    # value from 0 to 6
         clearing_motti: bool            # Done or not done
     
     """
     stand = input_
-
 
     # ----- obligatory params ----
 
@@ -170,12 +169,13 @@ def regeneration_fn(input_: ForestStand,
             origin=origin,
             species=species,
             stems_per_ha=stems_per_ha,
-            motti_delay=motti_delay,
+            delay=delay,
             survival_percent=survival_percent_motti)
     else:
         per_tree_stems = stems_per_ha / float(ntrees)
         for _ in range(ntrees):
             identifier, tree_number = new_reference_tree_identity(stand)
+            delayed_age = biological_age - delay
             stand.reference_trees.create({
                 "identifier": identifier,
                 "tree_number": tree_number,
@@ -183,14 +183,14 @@ def regeneration_fn(input_: ForestStand,
                 "origin": origin,
                 "stems_per_ha": per_tree_stems,
                 "height": height,
-                "biological_age": biological_age,
+                "biological_age": delayed_age if delayed_age > 0 else 0,
                 "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
                 "breast_height_age": None if breast_height_age is None else float(breast_height_age),
                 "management_category": TreeManagementCategory.NO_RESTRICTION
             })
 
     if regen_type == RegenerationType.ARTIFICIAL:
-        stand.artificial_regeneration_year = stand.year
+        stand.artificial_regeneration_year = stand.year + delay
 
     # Handle storeys ----------------------------------------------------------------------------------------------
 

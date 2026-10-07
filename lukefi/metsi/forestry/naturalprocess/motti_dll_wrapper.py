@@ -383,7 +383,7 @@ class Motti4DLL:
         buffers: MottiStateBuffers,
         *,
         method_vec: list[float],
-        motti_delay: int = 0,
+        delay: int = 0,
     ) -> int:
         """
         Call Motti4Regenerate against persistent state buffers.
@@ -407,7 +407,7 @@ class Motti4DLL:
         method_p = cast(list[float], ffi.new("float[10]", method_vec))
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        istep_p = cast(IntPtr, ffi.new("int *", motti_delay))
+        istep_p = cast(IntPtr, ffi.new("int *", delay))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
