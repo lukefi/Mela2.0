@@ -3,7 +3,7 @@ import unittest
 
 from lukefi.metsi.domain.conditions import _get_tag_last_run, _get_treatment_last_run
 from lukefi.metsi.core.collected_data import OpTuple
-from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.condition import Condition, PostCondition
 from lukefi.metsi.core.generators import Alternatives, Sequence, Event
 from lukefi.metsi.core.simulation_payload import SimulationPayload
 from lukefi.metsi.core.treatment import Treatment
@@ -14,23 +14,23 @@ class ConditionTest(unittest.TestCase):
     def test_condition_combinations(self):
 
         @Condition[ToyModel]
-        def c2(x: ToyModel) -> bool:
-            return x.value < 5
+        def c2(x: SimulationPayload[ToyModel]) -> bool:
+            return x.unit.value < 5
 
-        c1 = Condition[ToyModel](lambda x: x.time >= 2)
+        c1 = Condition[ToyModel](lambda x: x.unit.time >= 2)
 
         c_and = c1 & c2
         c_or = c1 | c2
 
-        self.assertTrue(c_and(ToyModel("", 4, 2)))
-        self.assertFalse(c_and(ToyModel("", 4, 1)))
-        self.assertFalse(c_and(ToyModel("", 5, 2)))
-        self.assertFalse(c_and(ToyModel("", 6, 1)))
+        self.assertTrue(c_and(SimulationPayload(ToyModel("", 4, 2))))
+        self.assertFalse(c_and(SimulationPayload(ToyModel("", 4, 1))))
+        self.assertFalse(c_and(SimulationPayload(ToyModel("", 5, 2))))
+        self.assertFalse(c_and(SimulationPayload(ToyModel("", 6, 1))))
 
-        self.assertTrue(c_or(ToyModel("", 4, 3)))
-        self.assertTrue(c_or(ToyModel("", 3, 1)))
-        self.assertTrue(c_or(ToyModel("", 6, 5)))
-        self.assertFalse(c_or(ToyModel("", 6, 1)))
+        self.assertTrue(c_or(SimulationPayload(ToyModel("", 4, 3))))
+        self.assertTrue(c_or(SimulationPayload(ToyModel("", 3, 1))))
+        self.assertTrue(c_or(SimulationPayload(ToyModel("", 6, 5))))
+        self.assertFalse(c_or(SimulationPayload(ToyModel("", 6, 1))))
 
     def test_condition_checking(self):
         def _step(x: ToyModel) -> OpTuple[ToyModel]:
@@ -42,23 +42,23 @@ class ConditionTest(unittest.TestCase):
 
         generator = Alternatives[ToyModel]([
             Sequence([
-                Event(step, preconditions=[Condition(lambda x: x.unit.value <= 2)]),
-                Event(step, preconditions=[Condition(lambda x: x.unit.value >= 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.unit.value == 4)]),
+                Event(step, preconditions=[Condition[ToyModel](lambda x: x.unit.value <= 2)]),
+                Event(step, preconditions=[Condition[ToyModel](lambda x: x.unit.value >= 2)]),
+                Event(step, postconditions=[PostCondition[ToyModel](lambda x, _: x.unit.value == 4)]),
             ]),
             Sequence([
-                Event(step, preconditions=[Condition(lambda x: x.unit.value < 2)]),
-                Event(step, preconditions=[Condition(lambda x: x.unit.value >= 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.unit.value == 3)]),
+                Event(step, preconditions=[Condition[ToyModel](lambda x: x.unit.value < 2)]),
+                Event(step, preconditions=[Condition[ToyModel](lambda x: x.unit.value >= 2)]),
+                Event(step, postconditions=[PostCondition[ToyModel](lambda x, _: x.unit.value == 3)]),
             ]),
             Sequence([
-                Event(step, postconditions=[Condition(lambda x: x.unit.value == 2)]),
-                Event(step, postconditions=[Condition(lambda x: x.unit.value < 5)]),
+                Event(step, postconditions=[PostCondition[ToyModel](lambda x, _: x.unit.value == 2)]),
+                Event(step, postconditions=[PostCondition[ToyModel](lambda x, _: x.unit.value < 5)]),
             ]),
-            Event(step, preconditions=[Condition(lambda _: True)]),
-            Event(step, preconditions=[Condition(lambda _: False)]),
-            Event(step, postconditions=[Condition(lambda _: True)]),
-            Event(step, postconditions=[Condition(lambda _: False)]),
+            Event(step, preconditions=[Condition[ToyModel](lambda _: True)]),
+            Event(step, preconditions=[Condition[ToyModel](lambda _: False)]),
+            Event(step, postconditions=[PostCondition[ToyModel](lambda _1, _2: True)]),
+            Event(step, postconditions=[PostCondition[ToyModel](lambda _1, _2: False)]),
         ])
 
         result: list[SimulationPayload[ToyModel]] = []
