@@ -21,7 +21,6 @@ class MottiStorey(IntEnum):
     RETENTION = 4
 
 
-# NOTE ONKO TÄMÄ IHAN TURHA?
 class MottiRegenerationMethod(IntEnum):
     NATURAL = 1
     SOWING = 2 # kylvetty
