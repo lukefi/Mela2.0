@@ -6,6 +6,7 @@ from lukefi.metsi.data.enums.internal import (
     Origin, RegenerationType, Storey, TreeSpecies, TreeManagementCategory
 )
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod, MottiSpecies
+from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.domain.natural_processes.motti_util import (
@@ -55,18 +56,16 @@ def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
     return result
 
 
-# TODO: take the lower into use after storey PR is merged as it contains the TreeManagementCategory.SEEDING_TREE value.
-# - https://github.com/lukefi/Mela2.0/pull/151
-# def _resolve_seeding_tree_spe(rt: ReferenceTrees) -> MottiSpecies:
-#     """ In-place resolution of Motti seeding tree value """
-#     seeding_species = rt.species[rt.management_category == TreeManagementCategory.SEEDING_TREE]
-#     all_possible_species, idx = np.unique(seeding_species, return_inverse=True)
-#     result = all_possible_species[0]
-#     if all_possible_species.size > 1:
-#         # resolve which species has the larges basal area
-#         sums = np.bincount(idx, weights=(rt.basal_area * rt.stems_per_ha))
-#         result = all_possible_species[sums.argmax()]
-#     return convert_species(result.item())
+def _resolve_seeding_tree_spe(rt: ReferenceTrees) -> MottiSpecies:
+    """ In-place resolution of Motti seeding tree value """
+    seeding_species = rt.species[rt.management_category == TreeManagementCategory.SEEDING_TREE]
+    all_possible_species, idx = np.unique(seeding_species, return_inverse=True)
+    result = all_possible_species[0]
+    if all_possible_species.size > 1:
+        # resolve which species has the larges basal area
+        sums = np.bincount(idx, weights=rt.basal_area * rt.stems_per_ha)
+        result = all_possible_species[sums.argmax()]
+    return convert_species(result.item())
 
 
 def _regeneration_via_motti(stand: ForestStand,
@@ -81,9 +80,8 @@ def _regeneration_via_motti(stand: ForestStand,
     ms = stand.motti_state
 
     seed_tree_species = MottiSpecies.UNKNOWN
-    # TODO: look the comments in the out commented function definition
-    # if origin == Origin.NATURAL:
-    #   seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
+    if origin == Origin.NATURAL:
+      seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
 
     motti_regeneration_params = [
         float(_resolve_method_from_origin(origin)),
