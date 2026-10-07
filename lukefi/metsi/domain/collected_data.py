@@ -177,7 +177,7 @@ class NaturalProcessInfo(CollectedData):
         bhd = after.breast_height_diameter[split_mask]
 
         if np.any(bhd):
-            ba = _basal_area(stems, bhd)
+            ba = _basal_area_per_ha(stems, bhd)
             return np.sum(ba * bhd) / np.sum(ba)
 
         # Avoid division by zero if diameters are all zero
@@ -203,13 +203,13 @@ class NaturalProcessInfo(CollectedData):
         bhd = after.breast_height_diameter[split_mask]
 
         if np.any(bhd):
-            ba = _basal_area(stems, bhd)
+            ba = _basal_area_per_ha(stems, bhd)
             return np.sum(ba * h) / np.sum(ba)
 
         # Fallback to stems-weighted average if all diameters are zero
         return np.sum(stems * h) / np.sum(stems)
 
 
-def _basal_area(stems_per_ha: npt.NDArray[np.float64],
-                breast_height_diameter: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+def _basal_area_per_ha(stems_per_ha: npt.NDArray[np.float64],
+                       breast_height_diameter: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     return np.pi * stems_per_ha * ((breast_height_diameter / 200) ** 2)
