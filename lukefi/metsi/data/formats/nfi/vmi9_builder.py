@@ -4,7 +4,7 @@ import numpy as np
 
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import Origin, Storey, CRS, SoilPreparationType
-from lukefi.metsi.data.enums.vmi import VmiIteration, VmiSoilPreparationType
+from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.formats import util
 from lukefi.metsi.data.formats.declarative_conversion import Conversion
 from lukefi.metsi.data.formats.forest_builder_base import RowKind, VMIBuilder

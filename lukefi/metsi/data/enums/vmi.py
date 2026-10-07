@@ -419,4 +419,3 @@ class VmiSoilPreparationType(Enum):
     MOUNDING = '4'
     TRENCH_MOUNDING = '5'
     BURNING = '6'
-
