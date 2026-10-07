@@ -34,7 +34,7 @@ def species_group_for(_stand: ForestStand) -> int:
     return TreeSpecies.PINE.value
 
 
-def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
+def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand, int]:
     """
     Factory for the min stems lookup table.
 
@@ -46,7 +46,7 @@ def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
     else:
         csv_path = Path(csv_path)
 
-    return LookupTable[ForestStand](
+    return LookupTable[ForestStand, int](
         csv_path=str(csv_path),
         key_columns=[
             "site_type_category",
@@ -54,7 +54,7 @@ def min_stems_table(csv_path: str | Path = "") -> LookupTable[ForestStand]:
             "degree_days",
         ],
         value_column="min_stems",
-        transforms={
+        key_transforms={
             "degree_days": dd_group_for,
             "site_type_category": site_group_for,
             "development_class": species_group_for,

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 import csv
 
 
 @dataclass(slots=True)
-class LookupTable[T]:
+class LookupTable[T, V]:
     """
     Generic CSV-backed lookup.
 
@@ -17,32 +17,32 @@ class LookupTable[T]:
         If present, we call transform[column](stand.<column>) before matching.
         If not present, we use stand.<column> raw.
 
-      - CSV value_column is returned, and cast with value_cast (default: int).
+      - CSV value_column is returned, and cast with value_cast.
     """
 
     csv_path: str
     key_columns: Sequence[str]
     value_column: str
-    transforms: Mapping[str, Callable[[Any], Any]] | None
-    value_cast: Callable[[str], Any]
+    key_transforms: Mapping[str, Callable[[Any], Any]] | None
+    value_cast: Callable[[str], V]
 
-    _index: Dict[tuple[str, ...], str]
+    _index: dict[tuple[str, ...], str]
 
     def __init__(self,
                  csv_path: str,
                  key_columns: Sequence[str],
                  value_column: str,
-                 transforms: Mapping[str, Callable[[Any], Any]] | None = None,
-                 value_cast: Callable[[str], Any] = int):
+                 value_cast: Callable[[str], V],
+                 key_transforms: Mapping[str, Callable[[Any], Any]] | None = None):
 
         self.csv_path = csv_path
         self.key_columns = key_columns
         self.value_column = value_column
-        self.transforms = transforms
+        self.key_transforms = key_transforms
         self.value_cast = value_cast
 
         csv_p = Path(self.csv_path).resolve()
-        idx: Dict[tuple[str, ...], str] = {}
+        idx: dict[tuple[str, ...], str] = {}
 
         with csv_p.open(newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -69,15 +69,15 @@ class LookupTable[T]:
 
         self._index = idx
 
-    def __call__(self, stand: T) -> Any:
+    def __call__(self, unit: T) -> V:
         key_parts: list[str] = []
         debug_pairs: list[tuple[str, Any, Any]] = []
 
         for col in self.key_columns:
-            original = getattr(stand, col)
+            original = getattr(unit, col)
 
-            if self.transforms and col in self.transforms:
-                transformed = self.transforms[col](original)
+            if self.key_transforms and col in self.key_transforms:
+                transformed = self.key_transforms[col](original)
             else:
                 transformed = original
 
@@ -90,8 +90,7 @@ class LookupTable[T]:
         except KeyError as e:
             csv_p = Path(self.csv_path).resolve()
             details = ", ".join(
-                f"{col}=original:{orig!r} -> transformed:{trans!r}"
-                for col, orig, trans in debug_pairs
+                f"{col}=original:{orig!r} -> transformed:{trans!r}" for col, orig, trans in debug_pairs
             )
             raise ValueError(f"No matching row in CSV {csv_p} for keys: {details}") from e
 
