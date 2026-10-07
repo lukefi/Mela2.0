@@ -218,9 +218,8 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
                         stand, new_trees + stand.reference_trees[retention_trees_mask], new_trees.get_tree(i), 10)
                     breast_height_age = round(breast_height_age, 1)
                     biological_age = round(biological_age, 1)
-                    if new_trees.height[i] > 1.3:
-                        new_trees.breast_height_age[i] = max(1.0, breast_height_age)
-                        new_trees.biological_age[i] = max(1.0, biological_age)
+                    new_trees.breast_height_age[i] = max(1.0, breast_height_age)
+                    new_trees.biological_age[i] = max(1.0, biological_age)
             adjust_ages(stand, new_trees)
 
         retention_trees = trees[retention_trees_mask]
