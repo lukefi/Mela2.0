@@ -1,0 +1,13 @@
+site_type_category,species_to_be_planted,min_seedlings
+1,pine,2400
+1,spruce,2000
+1,silver_birch,1600
+1,downy_birch,1600
+1,other_deciduous,1600
+2,pine,2400
+2,spruce,2000
+2,silver_birch,1600
+2,downy_birch,1600
+2,other_deciduous,1600
+3,pine,2200
+3,spruce,1800

@@ -2,6 +2,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
+from lukefi.metsi.data.util.lookup_table import LookupTable
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.data.enums.internal import SiteType
 from lukefi.metsi.data.model import ForestStand
@@ -68,3 +69,23 @@ class TestLookupTableMinStems(unittest.TestCase):
         )
         with self.assertRaises(ValueError):
             _ = self.table(cast(ForestStand, stand))
+
+
+class LookupTableTest(unittest.TestCase):
+
+    def test_external_keys(self):
+        lut = LookupTable[ForestStand, int](
+            "tests/data/resources/lut_test.csv",
+            key_columns=["site_type_category", "species_to_be_planted"],
+            value_column="min_seedlings",
+            value_cast=int,
+            key_transforms={"site_type_category": int}
+        )
+
+        stand = ForestStand(site_type_category=SiteType.VERY_RICH_SITE)
+
+        self.assertEqual(lut(stand, species_to_be_planted="pine"), 2400)
+        self.assertEqual(lut(stand, species_to_be_planted="spruce"), 2000)
+        self.assertEqual(lut(stand, species_to_be_planted="silver_birch"), 1600)
+        self.assertEqual(lut(stand, species_to_be_planted="downy_birch"), 1600)
+        self.assertEqual(lut(stand, species_to_be_planted="other_deciduous"), 1600)
