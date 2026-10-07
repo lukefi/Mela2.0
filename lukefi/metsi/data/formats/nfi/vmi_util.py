@@ -45,13 +45,13 @@ def determine_artificial_regeneration_year(regeneration: str, regeneration_year:
 def determine_main_tree_species_dominant_storey(species_source: str,
                                                 site_type_category: Optional[SiteType]) -> Optional[TreeSpecies]:
     if species_source in [' ', '.']:
-        return TreeSpecies.UNKNOWN
+        return TreeSpecies.UNSET
     parsed_int = parse_int(species_source)
     if parsed_int is None:
-        return TreeSpecies.UNKNOWN
+        return TreeSpecies.UNSET
     if parsed_int == 0:
         if site_type_category is None:
-            return TreeSpecies.UNKNOWN
+            return TreeSpecies.UNSET
         if site_type_category <= SiteType.DAMP_SITE:
             return TreeSpecies.SPRUCE
         return TreeSpecies.PINE

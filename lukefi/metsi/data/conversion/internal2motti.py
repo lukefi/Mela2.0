@@ -127,6 +127,8 @@ def convert_species(source: TreeSpecies | None) -> MottiSpecies:
         return MottiSpecies.OTHER_CONIFEROUS
     if source in DECIDUOUS_SPECIES:
         return MottiSpecies.OTHER_DECIDUOUS
+    if source is TreeSpecies.UNSET:
+        return MottiSpecies.UNKNOWN
     raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
 
 
