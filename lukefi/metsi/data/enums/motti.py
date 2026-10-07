@@ -18,7 +18,7 @@ class MottiStorey(IntEnum):
     UNDER = 1
     DOMINANT = 2
     OVER = 3
-    SPARE = 4
+    RETENTION = 4
 
 
 # NOTE ONKO TÄMÄ IHAN TURHA?

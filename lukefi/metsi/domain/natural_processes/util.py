@@ -1,41 +1,6 @@
-import re
 import numpy as np
 import numpy.typing as npt
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.vector_model import ReferenceTrees
-
-
-def _next_reference_tree_number(rt: ReferenceTrees) -> int:
-    vals = []
-    for v in rt.tree_number.tolist():
-        try:
-            iv = int(v)
-            if iv > 0:
-                vals.append(iv)
-        except (TypeError, ValueError):
-            pass
-    return (max(vals) + 1) if vals else 1
-
-
-def _next_reference_tree_identifier_suffix(stand: ForestStand) -> int:
-    rt = stand.reference_trees
-    used = set()
-
-    suffix_re = re.compile(rf"^{re.escape(stand.identifier)}-(\d+)-tree$")
-
-    for ident in rt.identifier.tolist():
-        s = str(ident)
-        m = suffix_re.match(s)
-        if m:
-            try:
-                used.add(int(m.group(1)))
-            except ValueError:
-                pass
-
-    n = 1
-    while n in used:
-        n += 1
-    return n
 
 
 def new_reference_tree_identity(stand: ForestStand) -> tuple[str, int]:

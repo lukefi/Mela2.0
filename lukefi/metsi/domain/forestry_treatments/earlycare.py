@@ -1,13 +1,18 @@
+from copy import deepcopy
+
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.collected_data import RemovedTrees
+from lukefi.metsi.domain.forestry_treatments.treatment_util import collect_removed_trees
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.core.collected_data import OpTuple
+from lukefi.metsi.core.collected_data import CollectedData, OpTuple
 from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.forestry.storey import calc_tree_basal_areas, update_storeys
 
 
 def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
@@ -34,6 +39,8 @@ def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
     if imode not in (0, 1):
         raise MetsiException("EarlyCare parameter 'imode' must be 0 or 1")
 
+    original_rts = deepcopy(stand.reference_trees)
+
     _ = Motti4DLL.earlycare_with_state(
         ms.yy,
         ms.yp,
@@ -49,7 +56,21 @@ def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
 
     stand.young_stand_tending_year = stand.year
 
-    return stand, []
+    trees = stand.reference_trees
 
+    # Pre-calculate basal area for all trees and handle storey changes
+    trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+    update_storeys(stand.reference_trees)
+
+    # Collect removed trees for CollectedData
+    cd: list[CollectedData] = []
+    rmt = RemovedTrees()
+    removed_trees = collect_removed_trees(original_rts, trees)
+    rmt.removed_trees = removed_trees
+    if removed_trees.size > 0:
+        cd.append(rmt)
+
+    return stand, []
 
 earlycare = Treatment(earlycare_fn, "earlycare")

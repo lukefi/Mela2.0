@@ -40,7 +40,8 @@ _SPECIES_MAP = {
     TreeSpecies.ASPEN: MottiSpecies.ASPEN,
     TreeSpecies.GREY_ALDER: MottiSpecies.GREY_ALDER,
     TreeSpecies.COMMON_ALDER: MottiSpecies.COMMON_ALDER,
-    TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN
+    TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN,
+    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN
 }
 
 
@@ -48,7 +49,7 @@ _STOREY_MAP = {
     Storey.DOMINANT: MottiStorey.DOMINANT,
     Storey.UNDER: MottiStorey.UNDER,
     Storey.OVER: MottiStorey.OVER,
-    Storey.SPARE: MottiStorey.SPARE,
+    Storey.RETENTION: MottiStorey.RETENTION,
 }
 
 
@@ -132,12 +133,12 @@ def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
 
 
-def convert_drainage_category(source: DrainageCategory | None) ->  MottiDrainageCategory:
+def convert_drainage_category(source: DrainageCategory | None) -> MottiDrainageCategory:
     """
     Drainage category transformation from internal to motti value.
-     
-    defaults undrained mineral soil which is valued as zero. 
-     """
+
+    defaults undrained mineral soil which is valued as zero.
+    """
     if source is None:
         return MottiDrainageCategory.OJITTAMATON_KANGAS
     if source in _DRAINAGE_CATEGORY_MAP:

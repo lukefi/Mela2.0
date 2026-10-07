@@ -120,7 +120,7 @@ class XMLBuilder(ForestCentreBuilder):
             stand_basic_data.CuttingRestriction) or 1  # 30
         stand.municipality_id = None  # RST record 32
         # RST record 33 and 34 unused
-        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
+        stand.ds_main_tree_species = smk_util.determine_ds_main_tree_species(
             stand.site_type_category)
         return stand
 
@@ -237,7 +237,7 @@ class GeoPackageBuilder(ForestCentreBuilder):
             str(util.parse_type(restrictioncode, int, str)))  # 30
         stand.municipality_id = None  # RST record 32
         # RST record 33 and 34 unused
-        stand.main_tree_species_dominant_storey = smk_util.determine_main_tree_species_dominant_storey(
+        stand.ds_main_tree_species = smk_util.determine_ds_main_tree_species(
             stand.site_type_category)
         return stand
 
