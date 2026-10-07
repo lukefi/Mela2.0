@@ -7,7 +7,7 @@ from typing import Sequence as Sequence_
 from collections.abc import Callable, Generator
 
 from lukefi.metsi.core.collected_data import CollectableDataTypes
-from lukefi.metsi.core.condition import Condition
+from lukefi.metsi.core.condition import Condition, PostCondition
 from lukefi.metsi.core.db_utils import output_node_to_db
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit
@@ -166,7 +166,7 @@ class Event(EventGeneratorBase[T]):
     dynamic_parameters: Mapping[str, Callable[[T], Any]]
     file_parameters: dict[str, str]
     preconditions: list[Condition[T]]
-    postconditions: list[Condition[T]]
+    postconditions: list[PostCondition[T]]
     tags: set[str]
     db_output: bool
 
@@ -175,7 +175,7 @@ class Event(EventGeneratorBase[T]):
                  static_parameters: dict[str, Any] | None = None,
                  dynamic_parameters: Mapping[str, Callable[[T], Any]] | None = None,
                  preconditions: list[Condition[T]] | None = None,
-                 postconditions: list[Condition[T]] | None = None,
+                 postconditions: list[PostCondition[T]] | None = None,
                  file_parameters: dict[str, str] | None = None,
                  tags: set[str] | None = None,
                  db_output: bool = True) -> None:
@@ -233,8 +233,8 @@ class Event(EventGeneratorBase[T]):
             node_id=deepcopy(payload.node_id)
         )
 
-        for condition in self.postconditions:
-            if not condition(new_payload):
+        for postcondition in self.postconditions:
+            if not postcondition(new_payload, new_collected_data):
                 return
 
         new_payload.operation_history.append(
