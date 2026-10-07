@@ -1,7 +1,9 @@
+import numpy as np
+
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.conversion.internal2motti import convert_species, convert_soil_preparation_type
 from lukefi.metsi.data.enums.internal import (
-    Origin, RegenerationType, TreeSpecies, TreeManagementCategory
+    Origin, RegenerationType, Storey, TreeSpecies, TreeManagementCategory
 )
 from lukefi.metsi.data.enums.motti import MottiRegenerationMethod, MottiSpecies
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees
@@ -13,6 +15,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.forestry.storey import calc_storey_mean_height, calc_tree_basal_areas
 
 
 def _is_cleared_after_cutting(stand: ForestStand) -> bool:
@@ -190,6 +193,22 @@ def regeneration_fn(input_: ForestStand,
 
     if regen_type == RegenerationType.ARTIFICIAL:
         stand.artificial_regeneration_year = stand.year
+
+    # Handle storeys ----------------------------------------------------------------------------------------------
+
+    trees = stand.reference_trees
+    if np.any(trees.storey == Storey.DOMINANT):
+        # Pre-calculate basal area for all trees
+        trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
+
+        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in (Storey.DOMINANT, Storey.UNSET)}
+        diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
+        if diff >= 5.0:
+            # Merge old DOMINANT into OVER
+            trees.storey[trees.storey == Storey.DOMINANT] = Storey.OVER
+
+    # Promote new trees to DOMINANT storey
+    trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
 
     return stand, []
 
