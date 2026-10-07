@@ -81,7 +81,7 @@ def _regeneration_via_motti(stand: ForestStand,
 
     seed_tree_species = MottiSpecies.UNKNOWN
     if origin == Origin.NATURAL:
-      seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
+        seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
 
     motti_regeneration_params = [
         float(_resolve_method_from_origin(origin)),
