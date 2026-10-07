@@ -16,7 +16,8 @@ _SPECIES_MAP = {
     TreeSpecies.GREY_ALDER: MottiSpecies.GREY_ALDER,
     TreeSpecies.COMMON_ALDER: MottiSpecies.COMMON_ALDER,
     TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN,
-    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN
+    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN,
+    TreeSpecies.UNSET: MottiSpecies.UNKNOWN
 }
 
 
@@ -96,15 +97,12 @@ def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     - If in DECIDUOUS_SPECIES -> 9
     - Unknown species 0 -> 0
     """
-    # NOTE: THIS MOTTI SPE CONVERSION DOES NOT HAVE FALLBACK WITH UNSET NOR TREELESS!?
     if source in _SPECIES_MAP:
         return _SPECIES_MAP[source]
     if source in CONIFEROUS_SPECIES:
         return MottiSpecies.OTHER_CONIFEROUS
     if source in DECIDUOUS_SPECIES:
         return MottiSpecies.OTHER_DECIDUOUS
-    if source is TreeSpecies.UNSET:
-        return MottiSpecies.UNKNOWN
     raise MetsiException(f"Unable to map internal species value \"{source}\" to Motti species")
 
 
