@@ -11,8 +11,7 @@ class LookupTable[T, V]:
 
     Assumptions (simple version):
       - key_columns are column names in the CSV.
-      - Those same names must exist as attributes on the stand
-        (e.g. CSV has 'degree_days' -> stand must have stand.degree_days).
+      - Keys must either exists as `unit` attributes or be provided per-call as external keys.
       - Optionally, per-column transform functions can be provided.
         If present, we call transform[column](stand.<column>) before matching.
         If not present, we use stand.<column> raw.
@@ -69,12 +68,15 @@ class LookupTable[T, V]:
 
         self._index = idx
 
-    def __call__(self, unit: T) -> V:
+    def __call__(self, unit: T, **external_keys) -> V:
         key_parts: list[str] = []
         debug_pairs: list[tuple[str, Any, Any]] = []
 
         for col in self.key_columns:
-            original = getattr(unit, col)
+            if hasattr(unit, col):
+                original = getattr(unit, col)
+            else:
+                original = external_keys[col]
 
             if self.key_transforms and col in self.key_transforms:
                 transformed = self.key_transforms[col](original)
