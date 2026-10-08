@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.3.2] - 2026-10-08
+
+### Fixed
+
+- Added minimum value of 1.0 for rounded age of generated trees over 1.3 m tall
+
 ## [4.3.1] - 2026-10-08
 
 ### Fixed
