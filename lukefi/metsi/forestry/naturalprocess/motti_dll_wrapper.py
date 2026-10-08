@@ -382,13 +382,13 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
-        method: list[float],
-        step: int = 0,
+        method_vec: list[float],
+        delay: int = 0,
     ) -> int:
         """
         Call Motti4Regenerate against persistent state buffers.
 
-        method:
+        method_vec contents:
         [0] regeneration method (1 natural, 2 sowing, 3 planting)
         [1] survival percent [0..100]
         [2] cultivated tree species
@@ -400,14 +400,14 @@ class Motti4DLL:
         """
         ffi, lib = cls.ffi, cls.lib
 
-        if len(method) > 10:
-            raise ValueError("Motti4Regenerate method vector may contain at most 10 values")
+        if len(method_vec) > 10:
+            raise ValueError("Motti4Regenerate method_vec vector may contain at most 10 values")
 
-        method_vec = method + [0.0] * (10 - len(method))
+        method_vec = method_vec + [0.0] * (10 - len(method_vec))
         method_p = cast(list[float], ffi.new("float[10]", method_vec))
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        step_p = cast(IntPtr, ffi.new("int *", int(step)))
+        istep_p = cast(IntPtr, ffi.new("int *", delay))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
@@ -420,7 +420,7 @@ class Motti4DLL:
                 buffers.vcr_state,
                 buffers.apv_state,
                 ntrees_p,
-                step_p,
+                istep_p,
                 rv,
             )
 

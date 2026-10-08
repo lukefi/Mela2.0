@@ -149,6 +149,7 @@ class VMI10Builder(VMIBuilder):
         height_dm = util.get_or_default(util.parse_type(row["height_above_sea_level"], float), 0.0)
         result.set_geo_location(lat, lon, height_dm / 10.0, CRS.EPSG_2393)
 
+        result.soil_preparation_type = vmi2internal.convert_soil_preparation_type(row['maanmuokkaus_tyyppi'])
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
             row["maanmuokkaus_aika"],
             result.year

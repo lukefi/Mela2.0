@@ -1,6 +1,7 @@
 import unittest
 
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.data.enums.internal import Origin, TreeSpecies
 from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration_fn
 from lukefi.metsi.core.exceptions import MetsiException
 
@@ -14,13 +15,11 @@ class RegenerationTest(unittest.TestCase):
     def test_artificial_regeneration_adds_trees_and_sets_year(self):
         stand = self.make_stand()
         params = {
-            "origin": 2,
-            "method": 2,
-            "species": 1,
+            "origin": Origin.PLANTED,
+            "species": TreeSpecies.PINE,
             "stems_per_ha": 1500.0,
             "height": 0.7,
             "biological_age": 3.0,
-            "regen_type": "artificial",
             "ntrees": 5,
         }
         start_size = stand.reference_trees.size
@@ -42,12 +41,11 @@ class RegenerationTest(unittest.TestCase):
     def test_natural_regeneration_does_not_set_artificial_year(self):
         stand = self.make_stand()
         params = {
-            "origin": 1,
-            "species": 2,
+            "origin": Origin.NATURAL,
+            "species": TreeSpecies.SPRUCE,
             "stems_per_ha": 900.0,
             "height": 0.6,
             "biological_age": 2.0,
-            "regen_type": "natural",
             "ntrees": 3,
         }
         start_size = stand.reference_trees.size
@@ -68,12 +66,20 @@ class RegenerationTest(unittest.TestCase):
         stand = self.make_stand()
         # First regeneration adds 2 trees -> identifiers ...-1-tree, ...-2-tree
         regeneration_fn(stand,
-                     origin=2, species=1, stems_per_ha=200.0,
-                     height=0.5, biological_age=1.0, regen_type="artificial", ntrees=2)
+                        origin=Origin.PLANTED,
+                        species=TreeSpecies.PINE,
+                        stems_per_ha=200.0,
+                        height=0.5,
+                        biological_age=1.0,
+                        ntrees=2)
         # Second regeneration adds 3 more -> identifiers start at 3
         updated, _ = regeneration_fn(stand,
-                                  origin=2, species=1, stems_per_ha=300.0,
-                                  height=0.6, biological_age=2.0, regen_type="artificial", ntrees=3)
+                                     origin=Origin.PLANTED,
+                                     species=TreeSpecies.PINE,
+                                     stems_per_ha=300.0,
+                                     height=0.6,
+                                     biological_age=2.0,
+                                     ntrees=3)
         ids = list(updated.reference_trees.identifier)
         self.assertIn(f"{stand.identifier}-3-tree", ids)
         self.assertIn(f"{stand.identifier}-4-tree", ids)
@@ -82,18 +88,15 @@ class RegenerationTest(unittest.TestCase):
     def test_optional_parameters_are_propagated(self):
         stand = self.make_stand()
         start_size = stand.reference_trees.size
-        updated, _ = regeneration_fn(
-            stand,
-            origin=2,
-            species=1,
-            stems_per_ha=1000.0,
-            height=0.8,
-            biological_age=4.0,
-            regen_type="artificial",
-            ntrees=2,
-            breast_height_diameter=1.2,
-            breast_height_age=1.0,
-        )
+        updated, _ = regeneration_fn(stand,
+                                     origin=Origin.PLANTED,
+                                     species=TreeSpecies.PINE,
+                                     stems_per_ha=1000.0,
+                                     height=0.8,
+                                     biological_age=4.0,
+                                     ntrees=2,
+                                     breast_height_diameter=1.2,
+                                     breast_height_age=1.0,)
         self.assertEqual(start_size + 2, updated.reference_trees.size)
         new_idx = slice(-2, None)
         self.assertTrue(all(v == 1.2 for v in updated.reference_trees.breast_height_diameter[new_idx]))
@@ -104,23 +107,30 @@ class RegenerationTest(unittest.TestCase):
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                         origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.0, biological_age=3.0, regen_type="artificial", ntrees=5)
+                            origin=Origin.PLANTED,
+                            species=TreeSpecies.PINE,
+                            stems_per_ha=1000.0,
+                            height=0.0,
+                            biological_age=3.0,
+                            ntrees=5)
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                         origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.5, biological_age=3.0, ntrees=5)
+                            origin=2,
+                            species=1,
+                            stems_per_ha=1000.0,
+                            height=0.5,
+                            biological_age=3.0,
+                            ntrees=0)
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                         origin=2, species=1, stems_per_ha=1000.0,
-                         height=0.5, biological_age=3.0, regen_type="natural", ntrees=0)
-
-        with self.assertRaises(MetsiException):
-            regeneration_fn(stand,
-                         origin=2, species=1, stems_per_ha=0.0,
-                         height=0.5, biological_age=3.0, regen_type="natural", ntrees=5)
+                            origin=2,
+                            species=1,
+                            stems_per_ha=0.0,
+                            height=0.5,
+                            biological_age=3.0,
+                            ntrees=5)
 
 if __name__ == "__main__":
     unittest.main()

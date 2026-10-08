@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.3.0] - 2026-10-08
+
+### Added
+
+- Refactored Motti regeneration treatments variables and arguments
+    - Added soil_preparation_type attribute to model
+    - Resolving auxilliary functions for variable resolvation
+
 ## [4.2.0] - 2026-10-07
 
 ### Added

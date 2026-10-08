@@ -1,34 +1,10 @@
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.enums.internal import (
     MetsiEnum, CONIFEROUS_SPECIES, DECIDUOUS_SPECIES,
-    DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType)
+    DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType,
+    SoilPreparationType)
 from lukefi.metsi.data.enums.motti import (
-    MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType)
-
-
-_MOTTI_COMMON_SITE_TYPES = [
-    # Motti common site type values.
-    MottiSiteType.VERY_RICH_SITE,
-    MottiSiteType.RICH_SITE,
-    MottiSiteType.DAMP_SITE,
-    MottiSiteType.SUB_DRY_SITE,
-    MottiSiteType.DRY_SITE,
-    MottiSiteType.BARREN_SITE,
-    MottiSiteType.ROCKY_OR_SANDY_AREA,
-    MottiSiteType.OPEN_MOUNTAINS
-]
-
-
-_MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS = [
-    # Drained peatland forest type spesification values (from 51-57).
-    MottiSiteType.HERB_RICH_TYPE,
-    MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_1,
-    MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_2,
-    MottiSiteType.VACCINIUM_VITIS_IDAEA_TYPE,
-    MottiSiteType.DEV_FROM_GENUINE_FORESTED_MIRE,
-    MottiSiteType.DWARF_SHRUB_TYPE,
-    MottiSiteType.CLADONIA_TYPE
-]
+    MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType, MottiSoilPreparationType)
 
 
 _SPECIES_MAP = {
@@ -40,7 +16,8 @@ _SPECIES_MAP = {
     TreeSpecies.GREY_ALDER: MottiSpecies.GREY_ALDER,
     TreeSpecies.COMMON_ALDER: MottiSpecies.COMMON_ALDER,
     TreeSpecies.UNKNOWN: MottiSpecies.UNKNOWN,
-    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN
+    TreeSpecies.TREELESS: MottiSpecies.UNKNOWN,
+    TreeSpecies.UNSET: MottiSpecies.UNKNOWN
 }
 
 
@@ -64,7 +41,7 @@ _DRAINAGE_CATEGORY_MAP = {
 }
 
 
-_SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
+_SITE_TYPE_MAP: dict[MetsiEnum, MottiSiteType] = {
     SiteType.VERY_RICH_SITE: MottiSiteType.VERY_RICH_SITE,
     SiteType.RICH_SITE: MottiSiteType.RICH_SITE,
     SiteType.DAMP_SITE: MottiSiteType.DAMP_SITE,
@@ -79,7 +56,7 @@ _SITE_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
 }
 
 
-_DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
+_DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum, MottiSiteType] = {
     DrainedPeatlandForestType.HERB_RICH_TYPE: MottiSiteType.HERB_RICH_TYPE,
     DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_1: MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_1,
     DrainedPeatlandForestType.VACCINIUM_MYRTILLUS_TYPE_2: MottiSiteType.VACCINIUM_MYRTILLUS_TYPE_2,
@@ -89,6 +66,28 @@ _DRAINED_PEATLAND_FOREST_TYPE_MAP: dict[MetsiEnum | None, MottiSiteType] = {
     DrainedPeatlandForestType.CLADONIA_TYPE: MottiSiteType.CLADONIA_TYPE
 }
 
+_SOIL_PREPARATION_TYPE_MAP: dict[MetsiEnum | None, MottiSoilPreparationType] = {
+    SoilPreparationType.UNSET: MottiSoilPreparationType.NO_PREPARATION,
+    SoilPreparationType.NO_PREPARATION: MottiSoilPreparationType.NO_PREPARATION,
+    SoilPreparationType.SCREEFING: MottiSoilPreparationType.SCREEFING,
+    SoilPreparationType.MOUNDING: MottiSoilPreparationType.SPOT_MOUNDING,
+    SoilPreparationType.INVERSION_MOUNDING: MottiSoilPreparationType.INVERSION_MOUNDING,
+    SoilPreparationType.SPOT_MOUNDING: MottiSoilPreparationType.SPOT_MOUNDING,
+    SoilPreparationType.DITCH_MOUNDING: MottiSoilPreparationType.TRENCH_MOUNDING,
+    SoilPreparationType.TRENCH_MOUNDING: MottiSoilPreparationType.TRENCH_MOUNDING,
+    SoilPreparationType.HARROWING: MottiSoilPreparationType.HARROWING,
+    SoilPreparationType.PLOWING: MottiSoilPreparationType.OTHER,
+    SoilPreparationType.BURNING: MottiSoilPreparationType.OTHER,
+    SoilPreparationType.OTHER: MottiSoilPreparationType.OTHER
+}
+
+
+def convert_soil_preparation_type(source: SoilPreparationType | None) -> MottiSoilPreparationType:
+    if source is None:
+        return MottiSoilPreparationType.NO_PREPARATION
+    if source in _SOIL_PREPARATION_TYPE_MAP:
+        return _SOIL_PREPARATION_TYPE_MAP[source]
+    raise MetsiException(f"Unable to convert internal soil preparation type {source} into Motti coding")
 
 def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     """
@@ -137,13 +136,13 @@ def resolve_site_type(source1: DrainedPeatlandForestType | None, source2: SiteTy
 
     # Raise a informative error
     _valid_values = [str(enum.value)
-                     for enum in _MOTTI_COMMON_SITE_TYPES +
-                     _MOTTI_DRAINED_PEATLAND_SITE_TYPE_SPESIFICATIONS +
-                     _additional_valid_site_types]
-    raise MetsiException(f"Unable to resolve internal site type value [{source2}] \
-                         or drained peatland spesific value [{source1}] for Motti site type value. \
-                         Correct values for Motti site type are: {_valid_values}")
-
+                     for enum in
+                        list(_SITE_TYPE_MAP.keys()) +
+                        list(_DRAINED_PEATLAND_FOREST_TYPE_MAP.keys()) +
+                        _additional_valid_site_types]
+    raise MetsiException(f"Unable to resolve internal site type value [{ source2 }] \
+                         or drained peatland spesific value [{ source1 }] for Motti site type value. \
+                         Correct values for Motti site type are: { _valid_values }")
 
 def convert_storey(source: Storey | None) -> MottiStorey:
     """

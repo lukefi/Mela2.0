@@ -20,6 +20,7 @@ from lukefi.metsi.data.enums.vmi import (
     VmiTreeType,
     VmiDrainedPeatlandForestType,
     VmiPeatlandForestType,
+    VmiSoilPreparationType
 )
 from lukefi.metsi.data.enums.internal import (
     CrownClass,
@@ -39,6 +40,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeType,
     PeatlandForestType,
     DrainedPeatlandForestType,
+    SoilPreparationType
 )
 
 _PEATLAND_FOREST_TYPE_MAP = {
@@ -371,6 +373,16 @@ _CROWN_CLASS_MAP = {
         CrownClass.RETENTION_INTERMEDIATE_OR_SUPPRESSED_TREE_IN_OVER_STOREY
 }
 
+_SOIL_PREPARATION_TYPE_MAP = {
+    VmiSoilPreparationType.NO_PREPARATION:  SoilPreparationType.NO_PREPARATION,
+    VmiSoilPreparationType.HARROWING:       SoilPreparationType.HARROWING,
+    VmiSoilPreparationType.SCREEFING:       SoilPreparationType.SCREEFING,
+    VmiSoilPreparationType.PLOWING:         SoilPreparationType.PLOWING,
+    VmiSoilPreparationType.MOUNDING:        SoilPreparationType.MOUNDING,
+    VmiSoilPreparationType.TRENCH_MOUNDING: SoilPreparationType.TRENCH_MOUNDING,
+    VmiSoilPreparationType.BURNING:         SoilPreparationType.BURNING
+}
+
 
 _EMPTY_VALUES = {'', ' ', '  ', '.'}
 
@@ -381,6 +393,20 @@ def check_empty_vmi[T](func: Callable[[str], T]) -> Callable[[str], Optional[T]]
             return None
         return func(code)
     return inner
+
+
+@check_empty_vmi
+def convert_soil_preparation_type(source: str) -> SoilPreparationType:
+    """
+    Converts soil preparation type from vmi to internal presentation.
+    Values A-E are normalized to 1-6
+
+    Used for VMI10-13    
+    """
+    _normalizing_map = {'A': '1', 'B': '2', 'C': '3', 'D': '4', 'E': '5'}
+    value = _normalizing_map.get(source, source)
+    vmi_code = VmiSoilPreparationType(value)
+    return _SOIL_PREPARATION_TYPE_MAP[vmi_code]
 
 
 @check_empty_vmi

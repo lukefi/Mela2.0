@@ -131,6 +131,7 @@ class VMI12Builder(VMIBuilder):
         height = VMI12Builder._transform_height_above_sea_level(row["height_above_sea_level"])
         result.set_geo_location(lat, lon, height, CRS.EPSG_2393)
         result.drainage_year = vmi_util.determine_drainage_year(row["ojitus_aika"], result.year)
+        result.soil_preparation_type = vmi2internal.convert_soil_preparation_type(row['maanmuokkaus_tyyppi'])
         result.soil_surface_preparation_year = vmi_util.determine_soil_surface_preparation_year(
             row["maanmuokkaus_aika"],
             result.year)

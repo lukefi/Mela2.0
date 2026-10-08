@@ -23,7 +23,7 @@ class MottiStorey(IntEnum):
 
 class MottiRegenerationMethod(IntEnum):
     NATURAL = 1
-    SOWING = 2
+    SOWING = 2 # kylvetty
     PLANTING = 3
 
 
@@ -52,3 +52,13 @@ class MottiSiteType(IntEnum):
     DEV_FROM_GENUINE_FORESTED_MIRE = 55
     DWARF_SHRUB_TYPE = 56
     CLADONIA_TYPE = 57
+
+
+class MottiSoilPreparationType(IntEnum):
+    NO_PREPARATION = 0
+    SCREEFING = 1
+    HARROWING = 2
+    SPOT_MOUNDING = 3
+    TRENCH_MOUNDING = 4
+    INVERSION_MOUNDING = 5
+    OTHER = 6
