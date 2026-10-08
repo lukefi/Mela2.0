@@ -1,3 +1,5 @@
+from lukefi.metsi.data.conversion.internal2motti import convert_fertilization_type
+from lukefi.metsi.data.enums.internal import FertilizationType
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
@@ -9,10 +11,10 @@ from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 
-# TODO: ftype enumit interanla ja Motti
+
 def mineral_soils_fertilization_fn(stand: ForestStand,
                                    /,
-                                   fertilization_type: int | None = None,
+                                   fertilization_type: int | FertilizationType | None = None,
                                    amount_n: float | None = None,
                                    phosphorus: bool = False) -> OpTuple[ForestStand]:
     """
@@ -22,7 +24,7 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
 
     Parameters in Motti use case:
     ----------
-    fertilization_type : int | None
+    fertilization_type : int | FertilizationType | None
         Fertilization type code passed to Motti.
     amount_n : float | None
         Nitrogen amount for the Motti treatment.
@@ -47,7 +49,7 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
             ms.yp,
             ms.ntrees,
             ms.buffers,
-            ftype=fertilization_type,
+            ftype=convert_fertilization_type(FertilizationType(fertilization_type)),
             amount_n=amount_n,
             bool_phosphorus=int(bool(phosphorus)),
         )
