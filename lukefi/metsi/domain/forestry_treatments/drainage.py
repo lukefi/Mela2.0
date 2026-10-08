@@ -4,7 +4,7 @@ from lukefi.metsi.data.enums.internal import DrainageCategory, SoilPeatlandCateg
 from lukefi.metsi.data.model import ForestStand
 
 
-def peatland_drainage_fn(stand: ForestStand) -> OpTuple[ForestStand]:
+def drainage_fn(stand: ForestStand) -> OpTuple[ForestStand]:
     stand.drainage_year = stand.year
 
     if stand.drainage_category == DrainageCategory.UNDRAINED_MIRE:
@@ -22,4 +22,4 @@ def peatland_drainage_fn(stand: ForestStand) -> OpTuple[ForestStand]:
     return stand, []
 
 
-peatland_drainage = Treatment(peatland_drainage_fn, "peatland_drainage", {"drainage", "ditching"})
+peatland_drainage = Treatment(drainage_fn, "drainage", {"drainage", "ditching"})
