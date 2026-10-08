@@ -9,52 +9,54 @@ from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 
-
+# TODO: ftype enumit interanla ja Motti
 def mineral_soils_fertilization_fn(stand: ForestStand,
                                    /,
-                                   ftype: int | None = None,
+                                   fertilization_type: int | None = None,
                                    amount_n: float | None = None,
-                                   phosphorus: int = 0) -> OpTuple[ForestStand]:
+                                   phosphorus: bool = False) -> OpTuple[ForestStand]:
     """
-    Motti-only mineral-soils fertilization treatment.
+    Mineral soils fertilization treatment function that applies fertilization to a forest stand.
 
-    Parameters
+    Usable also with Motti as transition, but for Motti use case needs the motti related parameters.
+
+    Parameters in Motti use case:
     ----------
-    ftype : int
-        Fertilization type code passed through to Motti.
-    amount_n : float
-        Nitrogen amount. Alias: amountN
-    bool_phosphorus : int
-        0/1 flag indicating whether phosphorus is included.
-        Aliases: boolPhosporus, phosphorus
-    """
+    fertilization_type : int | None
+        Fertilization type code passed to Motti.
+    amount_n : float | None
+        Nitrogen amount for the Motti treatment.
+    phosphorus : bool, default False
+        Whether phosphorus is included in the fertilization.
 
-    ms = stand.motti_state
-    if ms is None or ms.buffers is None:
-        raise MetsiException(
-            "Motti mineral-soils fertilization requested but stand has no initialized motti_state. "
+    Updates the stand's motti_state and sets the fertilization year to the current year in ForestStand.
+    """
+    if stand.motti_state is not None:
+        ms = stand.motti_state
+        if ms is None or ms.buffers is None:
+            raise MetsiException(
+                "Motti mineral-soils fertilization requested but stand has no initialized motti_state. "
+            )
+        if fertilization_type is None:
+            raise MetsiException("Fertilization parameter 'fertilization_type' is required")
+        if amount_n is None:
+            raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
+
+        _ = Motti4DLL.mineral_soils_fertilization_with_state( # NOTE: tarviiko paluu arvoa?
+            ms.yy,
+            ms.yp,
+            ms.ntrees,
+            ms.buffers,
+            ftype=fertilization_type,
+            amount_n=amount_n,
+            bool_phosphorus=int(bool(phosphorus)),
         )
 
-    if ftype is None:
-        raise MetsiException("Fertilization parameter 'ftype' is required")
-
-    if amount_n is None:
-        raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
-
-    _ = Motti4DLL.mineral_soils_fertilization_with_state(
-        ms.yy,
-        ms.yp,
-        ms.ntrees,
-        ms.buffers,
-        ftype=ftype,
-        amount_n=amount_n,
-        bool_phosphorus=int(bool(phosphorus)),
-    )
-
-    # Keep Python-side vectors aligned in case the DLL updated state immediately.
-    sync_yp_to_reference_trees(stand)
-    sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand)
+        # Keep Python-side vectors aligned in case the DLL updated state immediately.
+        # NOTE: Muuttaako lannoitus puustoa?
+        sync_yp_to_reference_trees(stand)
+        sync_ut_to_reference_trees(stand)
+        prune_reference_trees_not_in_motti(stand)
 
     stand.fertilization_year = stand.year
 
