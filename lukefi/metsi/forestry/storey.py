@@ -56,7 +56,7 @@ def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float 
     i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
     if len(i_100_largest_arr) == 0:
         stems_smallest: float = sorted_stems[-1]
-        i_100_largest: int = np.count_nonzero(trees_mask) - 1
+        i_100_largest: int = int(np.count_nonzero(trees_mask) - 1)
     elif i_100_largest_arr[0] == 0:
         stems_smallest = 100.0
         i_100_largest = 0
