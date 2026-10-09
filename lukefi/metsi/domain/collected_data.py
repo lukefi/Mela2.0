@@ -152,6 +152,10 @@ class NaturalProcessInfo(CollectedData):
 
         # Tree not found, try to find trees with same stratum number
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return 0.0
+
         return np.sum(after.stems_per_ha[split_mask])
 
     def _get_breast_height_diameter_after(self, index: int) -> float:
@@ -165,11 +169,15 @@ class NaturalProcessInfo(CollectedData):
 
         # BA-weighted average of split tree diameters
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return before.breast_height_diameter[index]
+
         stems = after.stems_per_ha[split_mask]
         bhd = after.breast_height_diameter[split_mask]
 
         if np.any(bhd):
-            ba = _basal_area(stems, bhd)
+            ba = _basal_area_per_ha(stems, bhd)
             return np.sum(ba * bhd) / np.sum(ba)
 
         # Avoid division by zero if diameters are all zero
@@ -186,18 +194,22 @@ class NaturalProcessInfo(CollectedData):
 
         # BA-weighted average of split tree heights
         split_mask = after.stratum == before.stratum[index]
+
+        if (before.sapling[index] and not np.any(split_mask)) or not before.sapling[index]:
+            return before.height[index]
+
         stems = after.stems_per_ha[split_mask]
         h = after.height[split_mask]
         bhd = after.breast_height_diameter[split_mask]
 
         if np.any(bhd):
-            ba = _basal_area(stems, bhd)
+            ba = _basal_area_per_ha(stems, bhd)
             return np.sum(ba * h) / np.sum(ba)
 
         # Fallback to stems-weighted average if all diameters are zero
         return np.sum(stems * h) / np.sum(stems)
 
 
-def _basal_area(stems_per_ha: npt.NDArray[np.float64],
-                breast_height_diameter: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+def _basal_area_per_ha(stems_per_ha: npt.NDArray[np.float64],
+                       breast_height_diameter: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
     return np.pi * stems_per_ha * ((breast_height_diameter / 200) ** 2)
