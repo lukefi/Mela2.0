@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [4.3.3] - 2026-10-09
+
+### Fixed
+
+Added check for storey vector writability in storey update
+
 ## [4.3.2] - 2026-10-08
 
 ### Fixed
