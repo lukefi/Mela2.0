@@ -243,6 +243,10 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
 
 def manage_existing_storeys(trees: ReferenceTrees):
 
+    if trees.storey.flags.writeable is False:
+        trees.storey = np.copy(trees.storey)
+        trees.storey.flags.writeable = True
+
     # Check diminished DOMINANT storey ------------------------------------------------------------------
 
     storeys = np.unique(trees.storey)
@@ -290,6 +294,11 @@ def manage_existing_storeys(trees: ReferenceTrees):
 
 
 def update_storeys(trees: ReferenceTrees):
+
+    if trees.storey.flags.writeable is False:
+        trees.storey = np.copy(trees.storey)
+        trees.storey.flags.writeable = True
+
     if np.any(trees.storey == Storey.UNSET):
         storeys = np.unique(trees.storey)
         has_dominant_storey = Storey.DOMINANT in storeys
