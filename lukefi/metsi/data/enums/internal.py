@@ -417,3 +417,4 @@ class FertilizationType(MetsiEnum):
     UNSET = -1
     AMMONIUM_SULFITE = 1
     CARBAMIDE = 2
+    

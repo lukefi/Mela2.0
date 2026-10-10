@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.data.enums.internal import SiteType, TreeManagementCategory, TreeSpecies, Origin
+from lukefi.metsi.data.enums.internal import FertilizationType, SiteType, SoilPreparationType, TreeManagementCategory, TreeSpecies, Origin
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
@@ -227,6 +227,9 @@ class Mounding(Event[ForestStand]):
         merged_preconds = default_preconds + (preconditions or [])
 
         super().__init__(
+            static_parameters={
+                "soil_preparation_param": SoilPreparationType.MOUNDING
+            },
             treatment=soil_surface_preparation,
             preconditions=merged_preconds,
             postconditions=postconditions,
@@ -675,9 +678,9 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
 
     Thin wrapper around the Motti-backed fertilization treatment for mineral soils.
     Parameters are passed through to the DLL wrapper:
-      ftype = fertilization type code
+      fertilization_type = fertilization type code
       amount_n = nitrogen amount
-      bool_phosphorus = 0/1 phosphorus flag
+      bool_phosphorus = True/False for phosphorus addition
 
     Aliases amountN and boolPhosporus are also accepted for easier mapping
     from the Motti documentation.
@@ -690,7 +693,11 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params = {"ftype": 1, "amount_n": 150.0, "bool_phosphorus": 0}
+        default_params = {
+            "fertilization_type": FertilizationType.AMMONIUM_SULFITE,
+            "amount_n": 150.0,
+            "phosphorus": False
+        }
 
         merged_params = default_params | (parameters or {})
 
