@@ -44,18 +44,20 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
         if amount_n is None:
             raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
 
-        _ = Motti4DLL.mineral_soils_fertilization_with_state( # NOTE: tarviiko paluu arvoa?
+        if isinstance(fertilization_type, int):
+            fertilization_type = FertilizationType(fertilization_type)
+
+        Motti4DLL.mineral_soils_fertilization_with_state(
             ms.yy,
             ms.yp,
             ms.ntrees,
             ms.buffers,
-            ftype=convert_fertilization_type(FertilizationType(fertilization_type)),
+            ftype=convert_fertilization_type(fertilization_type).value,
             amount_n=amount_n,
-            bool_phosphorus=int(bool(phosphorus)),
+            phosphorus=int(phosphorus)
         )
 
         # Keep Python-side vectors aligned in case the DLL updated state immediately.
-        # NOTE: Muuttaako lannoitus puustoa?
         sync_yp_to_reference_trees(stand)
         sync_ut_to_reference_trees(stand)
         prune_reference_trees_not_in_motti(stand)

@@ -101,6 +101,7 @@ def convert_soil_preparation_type(source: SoilPreparationType | None) -> MottiSo
         return _SOIL_PREPARATION_TYPE_MAP[source]
     raise MetsiException(f"Unable to convert internal soil preparation type {source} into Motti coding")
 
+
 def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     """
     Map internal TreeSpecies -> Motti species codes directly.

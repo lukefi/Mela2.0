@@ -671,8 +671,8 @@ class Motti4DLL:
         *,
         ftype: int,
         amount_n: float,
-        bool_phosphorus: int = 0,
-    ) -> list[float]:
+        phosphorus: int = 0,
+    ):
         """
         Call Motti4MineralSoilsFertilization against persistent state buffers.
 
@@ -682,21 +682,20 @@ class Motti4DLL:
             Fertilization type code passed through to Motti.
         amount_n
             Nitrogen amount.
-        bool_phosphorus
+        phosphorus
             0/1 flag for phosphorus fertilization.
 
         Returns
         -------
-        list[float]
-            Raw 10-slot response vector returned by Motti.
+        None. Motti updates the persistent buffers in-place.
         """
         ffi, lib = cls.ffi, cls.lib
 
-        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        ftype_p = cast(IntPtr, ffi.new("float *", float(ftype)))
-        amount_n_p = cast(FloatPtr, ffi.new("float *", float(amount_n)))
-        bool_phosphorus_p = cast(IntPtr, ffi.new("int *", int(bool(bool_phosphorus))))
-        response_p = cast(list[float], ffi.new("float[10]", [0.0] * 10))
+        ntrees_p = cast(IntPtr, ffi.new("int *", numtrees))
+        ftype_p = cast(IntPtr, ffi.new("int *", ftype))
+        amount_n_p = cast(FloatPtr, ffi.new("float *", amount_n))
+        bool_phosphorus_p = cast(IntPtr, ffi.new("int *", phosphorus))
+        response_p = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
             lib.Motti4MineralSoilsFertilization(
@@ -715,7 +714,6 @@ class Motti4DLL:
                 response_p,
             )
 
-        return [float(response_p[i]) for i in range(10)]
 
     @classmethod
     def pct_with_state(
