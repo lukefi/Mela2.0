@@ -62,6 +62,19 @@ class SelectionSet[T, V: VectorData]:
                  profile_y: npt.NDArray[np.float64] | Sequence[int | float],
                  profile_xmode: ProfileXMode,
                  profile_xscale: ProfileXScale | None = None):
+
+        if target_amount < 0 or (
+            target_type in (
+                TargetType.RELATIVE,
+                TargetType.RELATIVE_REMAIN) and target_amount > 1):
+            raise MetsiException(f"Bad target_amount value: {target_amount}")
+        if len(profile_x) < 2:
+            raise MetsiException(f"Bad profile_x length: {len(profile_x)}")
+        if len(profile_x) != len(profile_y):
+            raise MetsiException(f"profile_x vs. profile_y length mismatch: {len(profile_x)} vs. {len(profile_y)}")
+        if np.any(np.diff(profile_x) <= 0.0):
+            raise MetsiException("profile_x must be strictly increasing")
+
         self.sfunction = sfunction
         self.order_var = order_var
         self.target_var = target_var
@@ -110,6 +123,9 @@ class SelectionTarget:
     amount: float
 
     def __init__(self, target_type: TargetType, var: str, amount: float):
+        if amount < 0 or (target_type in (TargetType.RELATIVE, TargetType.RELATIVE_REMAIN) and amount > 1):
+            raise MetsiException(f"Bad value for amount: {amount}")
+
         self.target_type = target_type
         self.var = var
         self.amount = amount
