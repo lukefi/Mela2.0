@@ -281,7 +281,25 @@ def select_units[T, V: VectorData](context: T,
                 # absolute#
                 prof_x = sets[i_set].profile_x
 
-            prof_y = sets[i_set].profile_y
+            # As relative x-profiles are transformed into absolute scale, duplicate x values may appear.
+            # The repeated values should be pruned, and the corresponding y-profile modified so that y values originally
+            # corresponding to repeated x-values are averaged over the span of the repeat.
+
+            prof_x, orig_indices = np.unique(prof_x, return_index=True)
+            prof_y_orig = sets[i_set].profile_y
+            prof_y = np.empty(len(prof_x))
+
+            diffs = np.diff(orig_indices, append=len(prof_x) - 1)
+
+            i_prof_y = 0
+            i_prof_y_orig = 0
+            for diff in diffs:
+                if diff > 0:
+                    prof_y[i_prof_y] = np.average(prof_y_orig[i_prof_y_orig:i_prof_y_orig + diff])
+                else:
+                    prof_y[i_prof_y] = prof_y_orig[i_prof_y_orig]
+                i_prof_y += 1
+                i_prof_y_orig += diff
 
             tmp_total_target = total_target_selected
             tmp_cur_set_target = 0.0
