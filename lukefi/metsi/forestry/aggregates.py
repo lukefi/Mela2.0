@@ -1,7 +1,12 @@
+from lukefi.metsi.data.enums.internal import CONIFEROUS_SPECIES, DECIDUOUS_SPECIES, TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTrees
 
 import numpy as np
 import numpy.typing as npt
+
+
+BA_LIMIT = 1.0  # m^2/ha
+STEMS_LIMIT = 400.0  # 1/ha
 
 
 def calc_tree_basal_areas(diameters: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
@@ -84,3 +89,54 @@ def calc_mean_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> floa
         return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
             np.sum(tree_basal_areas * tree_stems_per_ha)
     return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
+
+
+def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
+                               tree_stems_per_ha: npt.NDArray[np.float64],
+                               tree_species: npt.NDArray[np.int32],
+                               tree_basal_areas: npt.NDArray[np.float64]) -> TreeSpecies:
+
+    if should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha):
+        # Use basal area for comparing
+        storey_basal_area = calc_basal_area(tree_basal_areas, tree_stems_per_ha)
+        if storey_basal_area < BA_LIMIT:
+            return TreeSpecies.TREELESS
+
+        coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
+        coniferous_diameters = tree_diameters[coniferous_mask]
+        coniferous_stems_per_ha = tree_stems_per_ha[coniferous_mask]
+        coniferous_ba = np.pi * np.sum(((coniferous_diameters / 200) ** 2) * coniferous_stems_per_ha)
+
+        if coniferous_ba >= storey_basal_area / 2:
+            # Coniferous dominated storey
+            species_list = CONIFEROUS_SPECIES
+        else:
+            # Deciduous dominated storey
+            species_list = DECIDUOUS_SPECIES
+
+        species_bas = {species: calc_basal_area(
+            tree_basal_areas[tree_species == species], tree_stems_per_ha[tree_species == species])
+            for species in species_list}
+
+        # Species with maximum basal area
+        return max(species_bas, key=lambda key: species_bas[key])
+
+    # Use stems per ha for comparing
+    storey_stems_per_ha = np.sum(tree_stems_per_ha)
+    if storey_stems_per_ha < STEMS_LIMIT:
+        return TreeSpecies.TREELESS
+
+    coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
+    coniferous_total_stems_per_ha = np.sum(tree_stems_per_ha[coniferous_mask])
+
+    if coniferous_total_stems_per_ha >= storey_stems_per_ha / 2:
+        # Coniferous dominated storey
+        species_list = CONIFEROUS_SPECIES
+    else:
+        # Deciduous dominated storey
+        species_list = DECIDUOUS_SPECIES
+
+    species_stems = {species: np.sum(tree_stems_per_ha[tree_species == species]) for species in species_list}
+
+    # Species with maximum stems per ha
+    return max(species_stems, key=lambda key: species_stems[key])

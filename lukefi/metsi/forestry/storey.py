@@ -7,13 +7,11 @@ import numpy.typing as npt
 from lukefi.metsi.core.collected_data import CollectedData
 from lukefi.metsi.core.transition import TransitionFn
 from lukefi.metsi.data.enums.internal import (
-    CONIFEROUS_SPECIES,
-    DECIDUOUS_SPECIES,
     Storey,
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_mean_height, calc_tree_basal_areas, should_use_ba_as_weight
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_mean_height, calc_tree_basal_areas, determine_dominant_species, should_use_ba_as_weight
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
@@ -29,59 +27,6 @@ def stand_has_only_retention_storey(trees: ReferenceTrees) -> bool:
 def stand_has_only_seeding_tree_storey(trees: ReferenceTrees) -> bool:
     return bool(np.all(
         (trees.storey == Storey.OVER) & (trees.management_category == TreeManagementCategory.SEEDING_TREE)))
-
-
-
-
-def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
-                               tree_stems_per_ha: npt.NDArray[np.float64],
-                               tree_species: npt.NDArray[np.int32],
-                               tree_basal_areas: npt.NDArray[np.float64]) -> TreeSpecies:
-
-    if should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha):
-        # Use basal area for comparing
-        storey_basal_area = calc_basal_area(tree_basal_areas, tree_stems_per_ha)
-        if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
-            return TreeSpecies.TREELESS
-
-        coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
-        coniferous_diameters = tree_diameters[coniferous_mask]
-        coniferous_stems_per_ha = tree_stems_per_ha[coniferous_mask]
-        coniferous_ba = np.pi * np.sum(((coniferous_diameters / 200) ** 2) * coniferous_stems_per_ha)
-
-        if coniferous_ba >= storey_basal_area / 2:
-            # Coniferous dominated storey
-            species_list = CONIFEROUS_SPECIES
-        else:
-            # Deciduous dominated storey
-            species_list = DECIDUOUS_SPECIES
-
-        species_bas = {species: calc_basal_area(
-            tree_basal_areas[tree_species == species], tree_stems_per_ha[tree_species == species])
-            for species in species_list}
-
-        # Species with maximum basal area
-        return max(species_bas, key=lambda key: species_bas[key])
-
-    # Use stems per ha for comparing
-    storey_stems_per_ha = np.sum(tree_stems_per_ha)
-    if storey_stems_per_ha < DOMINANT_STOREY_STEMS_LIMIT:
-        return TreeSpecies.TREELESS
-
-    coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
-    coniferous_total_stems_per_ha = np.sum(tree_stems_per_ha[coniferous_mask])
-
-    if coniferous_total_stems_per_ha >= storey_stems_per_ha / 2:
-        # Coniferous dominated storey
-        species_list = CONIFEROUS_SPECIES
-    else:
-        # Deciduous dominated storey
-        species_list = DECIDUOUS_SPECIES
-
-    species_stems = {species: np.sum(tree_stems_per_ha[tree_species == species]) for species in species_list}
-
-    # Species with maximum stems per ha
-    return max(species_stems, key=lambda key: species_stems[key])
 
 
 def promote_either_storey_to_dominant(trees: ReferenceTrees,
