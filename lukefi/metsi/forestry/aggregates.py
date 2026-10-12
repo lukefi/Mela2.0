@@ -4,6 +4,10 @@ import numpy as np
 import numpy.typing as npt
 
 
+def calc_tree_basal_areas(diameters: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    return np.pi * (diameters / 200) ** 2
+
+
 def calc_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_ha: npt.NDArray[np.float64]) -> float:
     return np.sum(tree_basal_areas * stems_per_ha)
 

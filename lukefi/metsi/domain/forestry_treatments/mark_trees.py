@@ -10,7 +10,8 @@ from lukefi.metsi.core.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
+from lukefi.metsi.forestry.aggregates import calc_tree_basal_areas
+from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def mark_trees_fn(input_: ForestStand,

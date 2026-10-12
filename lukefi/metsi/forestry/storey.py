@@ -13,6 +13,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_tree_basal_areas
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
@@ -28,10 +29,6 @@ def stand_has_only_retention_storey(trees: ReferenceTrees) -> bool:
 def stand_has_only_seeding_tree_storey(trees: ReferenceTrees) -> bool:
     return bool(np.all(
         (trees.storey == Storey.OVER) & (trees.management_category == TreeManagementCategory.SEEDING_TREE)))
-
-
-def calc_tree_basal_areas(diameters: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
-    return np.pi * (diameters / 200) ** 2
 
 
 def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
