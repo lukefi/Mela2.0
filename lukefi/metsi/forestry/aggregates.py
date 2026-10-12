@@ -140,3 +140,20 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
 
     # Species with maximum stems per ha
     return max(species_stems, key=lambda key: species_stems[key])
+
+
+def calc_ba_weighted_mean(quantity: npt.NDArray[np.float64],
+                          tree_stems: npt.NDArray[np.float64],
+                          basal_areas: npt.NDArray[np.float64]) -> float | None:
+    ba = np.sum(tree_stems * basal_areas)
+    if ba <= 0:
+        return None
+    return np.sum(tree_stems * basal_areas * quantity) / ba
+
+
+def calc_arithmetic_mean(quantity: npt.NDArray[np.float64],
+                         tree_stems: npt.NDArray[np.float64]) -> float | None:
+    stems = np.sum(tree_stems)
+    if stems <= 0:
+        return None
+    return np.sum(tree_stems * quantity) / stems
