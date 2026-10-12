@@ -64,3 +64,23 @@ def calc_dominant_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> 
     denominator = min(100, cumulative_sorted_stems[i_100_largest])
 
     return (numerator_1 + numerator_2) / denominator
+
+
+def calc_mean_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float:
+    if not np.any(mask):
+        return 0.0
+
+    tree_stems_per_ha = trees.stems_per_ha[mask]
+
+    if not np.any(tree_stems_per_ha > 0):
+        return 0.0
+
+    tree_diameters = trees.breast_height_diameter[mask]
+    tree_basal_areas = trees.basal_area[mask]
+    tree_heights = trees.height[mask]
+
+    should_use_ba = should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha)
+    if should_use_ba:
+        return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
+            np.sum(tree_basal_areas * tree_stems_per_ha)
+    return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)

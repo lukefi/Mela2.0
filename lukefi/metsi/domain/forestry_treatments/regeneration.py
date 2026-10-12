@@ -12,12 +12,11 @@ from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identi
 from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
-from lukefi.metsi.forestry.aggregates import calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates import calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_storey_mean_height
 
 
 def _is_cleared_after_cutting(stand: ForestStand) -> bool:
@@ -201,7 +200,8 @@ def regeneration_fn(input_: ForestStand,
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in (Storey.DOMINANT, Storey.UNSET)}
+        mean_heights = {storey: calc_mean_height(trees, trees.storey == storey)
+                        for storey in (Storey.DOMINANT, Storey.UNSET)}
         diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
         if diff >= 5.0:
             # Merge old DOMINANT into OVER

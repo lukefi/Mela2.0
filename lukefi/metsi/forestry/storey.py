@@ -13,7 +13,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_tree_basal_areas, should_use_ba_as_weight
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_mean_height, calc_tree_basal_areas, should_use_ba_as_weight
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
@@ -31,26 +31,6 @@ def stand_has_only_seeding_tree_storey(trees: ReferenceTrees) -> bool:
         (trees.storey == Storey.OVER) & (trees.management_category == TreeManagementCategory.SEEDING_TREE)))
 
 
-def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
-    storey_mask = trees.storey == storey
-
-    if not np.any(storey_mask):
-        return 0.0
-
-    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
-
-    if not np.any(tree_stems_per_ha > 0):
-        return 0.0
-
-    tree_diameters = trees.breast_height_diameter[storey_mask]
-    tree_basal_areas = trees.basal_area[storey_mask]
-    tree_heights = trees.height[storey_mask]
-
-    should_use_ba = should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha)
-    if should_use_ba:
-        return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
-            np.sum(tree_basal_areas * tree_stems_per_ha)
-    return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
 
 
 def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
@@ -225,7 +205,7 @@ def manage_existing_storeys(trees: ReferenceTrees):
     # Merge existing storeys ----------------------------------------------------------------------------
 
     storeys = np.unique(trees.storey[np.isin(trees.storey, (Storey.DOMINANT, Storey.UNDER, Storey.OVER))])
-    mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in storeys}
+    mean_heights = {storey: calc_mean_height(trees, trees.storey == storey) for storey in storeys}
 
     dominant_storey_mean_height = mean_heights.get(Storey.DOMINANT, 0.0)
 
@@ -256,8 +236,8 @@ def update_storeys(trees: ReferenceTrees):
             trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
         else:
             # Check if should merge new trees into DOMINANT
-            diff = calc_storey_mean_height(trees, Storey.DOMINANT) - \
-                calc_storey_mean_height(trees, Storey.UNSET)
+            diff = calc_mean_height(trees, trees.storey == Storey.DOMINANT) - \
+                calc_mean_height(trees, trees.storey == Storey.UNSET)
             if abs(diff) < 5.0:
                 # Merge into DOMINANT
                 trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT

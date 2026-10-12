@@ -8,9 +8,8 @@ from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, Tre
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.pre_ops import supplement_storey_information
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height, calc_mean_biological_age, calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height, calc_mean_biological_age, calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import (
-    calc_storey_mean_height,
     determine_dominant_species,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
@@ -311,7 +310,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
 
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+        mean_height = calc_mean_height(trees, trees.storey == Storey.DOMINANT)
 
         self.assertAlmostEqual(mean_height, 10.3333333333)
 
@@ -328,7 +327,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
 
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+        mean_height = calc_mean_height(trees, trees.storey == Storey.DOMINANT)
 
         self.assertAlmostEqual(mean_height, 10.2163120567)
 
