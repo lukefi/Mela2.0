@@ -30,7 +30,7 @@ from lukefi.metsi.forestry.storey import (
     calc_mean_biological_age,
     calc_storey_basal_area,
     calc_tree_basal_areas,
-    calc_storey_dominant_height,
+    calc_dominant_height,
     determine_dominant_species)
 from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
@@ -242,7 +242,7 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     soil_preparation_type: Optional[SoilPreparationType] = None
     """
-    Type of the mechanical soil preparation procedure made on stand 
+    Type of the mechanical soil preparation procedure made on stand
     """
     municipality_id: Optional[int] = None
     """
@@ -695,7 +695,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     ds_tree_basal_areas *
                     ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
-        self.ds_dominant_height = calc_storey_dominant_height(trees, Storey.DOMINANT)
+        self.ds_dominant_height = calc_dominant_height(trees, ds_mask)
 
         ds_biological_ages = trees.biological_age[ds_mask]
         ds_main_species_mask = ds_species == self.ds_main_tree_species

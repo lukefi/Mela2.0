@@ -38,15 +38,13 @@ def calc_storey_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_
     return np.sum(tree_basal_areas * stems_per_ha)
 
 
-def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float | None:
-    if np.all(trees.storey != storey):
+def calc_dominant_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
+    if not np.any(mask):
         return None
 
-    trees_mask = trees.storey == storey
-
-    stems = trees.stems_per_ha[trees_mask]
-    diameter = trees.breast_height_diameter[trees_mask]
-    height = trees.height[trees_mask]
+    stems = trees.stems_per_ha[mask]
+    diameter = trees.breast_height_diameter[mask]
+    height = trees.height[mask]
 
     sorting = np.flip(np.argsort(diameter))
     sorted_stems = stems[sorting]
@@ -56,7 +54,7 @@ def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float 
     i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
     if len(i_100_largest_arr) == 0:
         stems_smallest: float = sorted_stems[-1]
-        i_100_largest: int = int(np.count_nonzero(trees_mask) - 1)
+        i_100_largest: int = int(np.count_nonzero(mask) - 1)
     elif i_100_largest_arr[0] == 0:
         stems_smallest = 100.0
         i_100_largest = 0
