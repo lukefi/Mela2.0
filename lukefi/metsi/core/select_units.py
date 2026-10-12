@@ -235,7 +235,6 @@ def select_units[T, V: VectorData](context: T,
     total_target_selected: float = 0.0
     tmp_total_target: float = 0.0
     cur_set_target_var = ""
-    tmp_cur_set_target: float = 0.0
 
     # selection sets, only iterate through sets needed for total target
     i_set = 0
@@ -337,7 +336,7 @@ def select_units[T, V: VectorData](context: T,
             if select_from_all:
                 units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
             else:
-                units = np.maximum(0.0, y * (data[freq_var] - selected_units))
+                units = y * (data[freq_var] - selected_units)
 
             # special case: select all units from set
             if cur_set_target_var == freq_var:
@@ -354,12 +353,11 @@ def select_units[T, V: VectorData](context: T,
                 target = np.sum(units * data[target_var])
 
             if cur_set_target_var is None or cur_set_target_var == freq_var:
-                sub_target = np.sum(units)
+                tmp_cur_set_target = np.sum(units)
             else:
-                sub_target = np.sum(units * data[cur_set_target_var])
+                tmp_cur_set_target = np.sum(units * data[cur_set_target_var])
 
             tmp_total_target = tmp_total_target + target
-            tmp_cur_set_target = tmp_cur_set_target + sub_target
             tmp_units = selected_units + units
 
             # if selection set target is given, search for final profile with binary search
@@ -393,7 +391,6 @@ def select_units[T, V: VectorData](context: T,
                 while (select_more_units or select_less_units) and step > eps_step:
 
                     tmp_total_target = total_target_selected
-                    tmp_cur_set_target = 0
 
                     # new share candidate
                     y = _scale_y(mode,
@@ -412,7 +409,7 @@ def select_units[T, V: VectorData](context: T,
                     if select_from_all:
                         units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
                     else:
-                        units = np.maximum(0.0, y * (data[freq_var] - selected_units))
+                        units = y * (data[freq_var] - selected_units)
 
                     if target_var is None or target_var == freq_var:
                         target = np.sum(units)
@@ -420,12 +417,11 @@ def select_units[T, V: VectorData](context: T,
                         target = np.sum(units * data[target_var])
 
                     if cur_set_target_var is None or cur_set_target_var == freq_var:
-                        sub_target = np.sum(units)
+                        tmp_cur_set_target = np.sum(units)
                     else:
-                        sub_target = np.sum(units * data[cur_set_target_var])
+                        tmp_cur_set_target = np.sum(units * data[cur_set_target_var])
 
                     tmp_total_target = tmp_total_target + target
-                    tmp_cur_set_target = tmp_cur_set_target + sub_target
                     tmp_units = selected_units + units
 
                     # scaling/constant for next round
