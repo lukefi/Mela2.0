@@ -346,7 +346,7 @@ def select_units[T, V: VectorData](context: T,
                 max_avail = np.sum(data[freq_var][cur_set_idx] * data[cur_set_target_var][cur_set_idx])
             if (max_avail <= cur_set_target) and (max_avail <= (total_target - total_target_selected)):
                 units = np.repeat(0.0, data.size)
-                units[cur_set_idx] = data[freq_var][cur_set_idx]
+                units[cur_set_idx] = data[freq_var][cur_set_idx] - selected_units[cur_set_idx]
 
             if target_var is None or target_var == freq_var:
                 target = np.sum(units)
