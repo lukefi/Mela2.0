@@ -11,7 +11,12 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_mean_height, calc_tree_basal_areas, determine_dominant_species, should_use_ba_as_weight
+from lukefi.metsi.forestry.aggregates import (
+    calc_basal_area,
+    calc_mean_height,
+    calc_tree_basal_areas,
+    determine_dominant_species,
+    should_use_ba_as_weight)
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
