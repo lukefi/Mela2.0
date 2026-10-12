@@ -26,10 +26,9 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.aggregates import calc_dominant_height
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height
 from lukefi.metsi.forestry.storey import (
     calc_mean_biological_age,
-    calc_storey_basal_area,
     calc_tree_basal_areas,
     determine_dominant_species)
 from lukefi.metsi.forestry.volume import calc_tree_volumes
@@ -678,7 +677,7 @@ class ForestStand(Finalizable, ComputationalUnit):
         ds_diameters = trees.breast_height_diameter[ds_mask]
         ds_heights = trees.height[ds_mask]
         ds_species = trees.species[ds_mask]
-        ds_basal_area = calc_storey_basal_area(ds_tree_basal_areas, ds_stems)
+        ds_basal_area = calc_basal_area(ds_tree_basal_areas, ds_stems)
 
         self.ds_main_tree_species = determine_dominant_species(ds_diameters,
                                                                ds_stems,

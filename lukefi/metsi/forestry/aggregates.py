@@ -4,6 +4,10 @@ import numpy as np
 import numpy.typing as npt
 
 
+def calc_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_ha: npt.NDArray[np.float64]) -> float:
+    return np.sum(tree_basal_areas * stems_per_ha)
+
+
 def calc_dominant_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
     if not np.any(mask):
         return None
