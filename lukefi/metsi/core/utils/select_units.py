@@ -367,13 +367,15 @@ def select_units[T, V: VectorData](context: T,
 
             if not np.isinf(cur_set_target):
                 # initial values for binary search
-                scale, step, y0 = _init_search(mode,
-                                               y,
-                                               prof_y,
-                                               total_target,
-                                               tmp_total_target,
-                                               cur_set_target,
-                                               tmp_cur_set_target)
+                scale, y0 = _init_search(mode,
+                                         y,
+                                         prof_y,
+                                         total_target,
+                                         tmp_total_target,
+                                         cur_set_target,
+                                         tmp_cur_set_target)
+
+                step = abs(scale)
 
                 # binary search
                 # continue until close enough to target (total or selection set)
@@ -507,7 +509,7 @@ def _init_search(mode: str,
                  total_target: float,
                  tmp_total_target: float,
                  cur_set_target: float,
-                 tmp_cur_set_target: float) -> tuple[float, float, npt.NDArray[np.float64]]:
+                 tmp_cur_set_target: float) -> tuple[float, npt.NDArray[np.float64]]:
 
     # Limits for binary search
 
@@ -520,33 +522,26 @@ def _init_search(mode: str,
         y0 = odds_y0
 
         if tmp_total_target > total_target or tmp_cur_set_target > cur_set_target:
-            scale = 0.500001
-            step = 1.0
+            scale = 1.0
         else:
-            scale = 501.0
-            step = 1000.0
+            scale = 1000
 
     elif mode == "scale":
         scalemax = np.max(1 / y[y > 0])
         if np.any(y == 0):
             scalemax = np.maximum(scalemax, 100.0)
         scale = scalemax / 2
-        step = scalemax / 2
         y0 = y
 
     elif mode == "level":
-        a_max = np.max(1 - y)
         a_min = np.min(-1 * y)
-        scale = (a_max + a_min) / 2
-        step = min(1.0, np.maximum(a_max, -a_min))
-        if step < 0.001:
-            step = a_max
+        scale = 2 * a_min
         y0 = y
 
     else:
         raise MetsiException(f"Unknown mode {mode}")
 
-    return scale, step, y0
+    return scale, y0
 
 
 def _scale_y(mode: Mode,
