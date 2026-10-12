@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.0.0] - 2026-10-12
+
+### Changed
+
+- Added separate `PostCondition` type for post-conditions
+- Post-conditions can now access the list of `CollectedData` from the performed treatment
+
 ## [4.3.3] - 2026-10-09
 
 ### Fixed
