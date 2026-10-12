@@ -1,8 +1,8 @@
-from lukefi.metsi.data.enums.internal import CONIFEROUS_SPECIES, DECIDUOUS_SPECIES, TreeSpecies
-from lukefi.metsi.data.vector_model import ReferenceTrees
-
 import numpy as np
 import numpy.typing as npt
+
+from lukefi.metsi.data.enums.internal import CONIFEROUS_SPECIES, DECIDUOUS_SPECIES, TreeSpecies
+from lukefi.metsi.data.vector_model import ReferenceTrees
 
 
 BA_LIMIT = 1.0  # m^2/ha
