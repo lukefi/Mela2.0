@@ -22,4 +22,4 @@ def drainage_fn(stand: ForestStand) -> OpTuple[ForestStand]:
     return stand, []
 
 
-peatland_drainage = Treatment(drainage_fn, "drainage", {"drainage", "ditching"})
+drainage = Treatment(drainage_fn, "drainage", {"drainage", "ditching"})
