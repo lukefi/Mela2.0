@@ -26,7 +26,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height, calc_mean_biological_age, calc_tree_basal_areas, determine_dominant_species
+from lukefi.metsi.forestry.aggregates import calc_ba_weighted_mean, calc_basal_area, calc_dominant_height, calc_mean_biological_age, calc_tree_basal_areas, determine_dominant_species
 from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.model import ComputationalUnit, Finalizable
@@ -247,6 +247,10 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Current biological age of the main tree species in the dominant storey.
     """
+    ds_ba_weighted_mean_biological_age: Optional[float] = None
+    """
+    BA weighted biological age of trees in the dominant storey.
+    """
     ds_dominant_height: Optional[float] = None
     """
     Dominant height in the dominant storey.
@@ -275,9 +279,17 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Basal area of the stand [m^2/ha].
     """
+    ds_basal_area: Optional[float] = None
+    """
+    Basal area of the dominant storey [m^2/ha].
+    """
     stems_per_ha: Optional[float] = None
     """
     Number of stems per hectare in the stand [1/ha].
+    """
+    ds_stems_per_ha: Optional[float] = None
+    """
+    Number of stems per hectare in the dominant storey [1/ha].
     """
     ds_ba_weighted_mean_diameter: Optional[float] = None
     """
@@ -668,25 +680,27 @@ class ForestStand(Finalizable, ComputationalUnit):
         self.basal_area = np.sum(trees.stems_per_ha * trees.basal_area)
 
         ds_mask = trees.storey == Storey.DOMINANT
-        ds_stems = trees.stems_per_ha[ds_mask]
+        ds_tree_stems = trees.stems_per_ha[ds_mask]
         ds_tree_basal_areas = trees.basal_area[ds_mask]
         ds_diameters = trees.breast_height_diameter[ds_mask]
         ds_heights = trees.height[ds_mask]
         ds_species = trees.species[ds_mask]
-        ds_basal_area = calc_basal_area(ds_tree_basal_areas, ds_stems)
+        ds_basal_area = calc_basal_area(ds_tree_basal_areas, ds_tree_stems)
 
+        self.ds_stems_per_ha = np.sum(ds_tree_stems)
+        self.ds_basal_area = ds_basal_area
         self.ds_main_tree_species = determine_dominant_species(ds_diameters,
-                                                               ds_stems,
+                                                               ds_tree_stems,
                                                                ds_species,
                                                                ds_tree_basal_areas)
 
         self.ds_ba_weighted_mean_diameter = (
-            (np.sum(ds_stems *
+            (np.sum(ds_tree_stems *
                     ds_tree_basal_areas *
                     ds_diameters)) / ds_basal_area) if (ds_basal_area > 0) else None
 
         self.ds_ba_weighted_mean_height = (
-            (np.sum(ds_stems *
+            (np.sum(ds_tree_stems *
                     ds_tree_basal_areas *
                     ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
@@ -697,9 +711,13 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         self.ds_main_tree_species_biological_age = calc_mean_biological_age(
             ds_biological_ages[ds_main_species_mask],
-            ds_stems[ds_main_species_mask],
+            ds_tree_stems[ds_main_species_mask],
             ds_tree_basal_areas[ds_main_species_mask],
             ds_diameters[ds_main_species_mask])
+
+        self.ds_ba_weighted_mean_biological_age = calc_ba_weighted_mean(ds_biological_ages,
+                                                                        ds_tree_stems,
+                                                                        ds_tree_basal_areas)
 
     @classmethod
     @override
