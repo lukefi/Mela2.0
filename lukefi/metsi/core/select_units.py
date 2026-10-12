@@ -378,11 +378,17 @@ def select_units[T, V: VectorData](context: T,
                 # binary search
                 # continue until close enough to target (total or selection set)
                 # or until all units in the selection set have been selected
-                while ((tmp_cur_set_target < (cur_set_target - eps_set) and
-                        tmp_total_target < (total_target - eps_total) and
-                        np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])) or
-                       ((cur_set_target + eps_set) < tmp_cur_set_target or
-                        (total_target + eps_total) < tmp_total_target)) and step > eps_step:
+
+                cur_set_target_not_fulfilled = tmp_cur_set_target < (cur_set_target - eps_set)
+                total_target_not_fulfilled = tmp_total_target < (total_target - eps_total)
+                cur_set_units_left = np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])
+                cur_set_target_exceeded = (cur_set_target + eps_set) < tmp_cur_set_target
+                total_target_exceeded = (total_target + eps_total) < tmp_total_target
+
+                select_more_units = cur_set_target_not_fulfilled and total_target_not_fulfilled and cur_set_units_left
+                select_less_units = cur_set_target_exceeded or total_target_exceeded
+
+                while (select_more_units or select_less_units) and step > eps_step:
 
                     tmp_total_target = total_target_selected
                     tmp_cur_set_target = 0
@@ -426,6 +432,17 @@ def select_units[T, V: VectorData](context: T,
                         scale = scale - step
                     else:
                         scale = scale + step
+
+                    cur_set_target_not_fulfilled = tmp_cur_set_target < (cur_set_target - eps_set)
+                    total_target_not_fulfilled = tmp_total_target < (total_target - eps_total)
+                    cur_set_units_left = np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])
+                    cur_set_target_exceeded = (cur_set_target + eps_set) < tmp_cur_set_target
+                    total_target_exceeded = (total_target + eps_total) < tmp_total_target
+
+                    select_more_units = cur_set_target_not_fulfilled and \
+                        total_target_not_fulfilled and  \
+                        cur_set_units_left
+                    select_less_units = cur_set_target_exceeded or total_target_exceeded
 
                 # while searching
             # if not set has target
