@@ -12,6 +12,29 @@ def calc_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_ha: npt
     return np.sum(tree_basal_areas * stems_per_ha)
 
 
+def should_use_ba_as_weight(diameters: npt.NDArray[np.float64],
+                            basal_areas: npt.NDArray[np.float64],
+                            stems_per_ha: npt.NDArray[np.float64]) -> bool:
+    if np.sum(basal_areas) == 0:
+        return False
+
+    storey_mean_diameter = np.sum(diameters * basal_areas * stems_per_ha) / np.sum(basal_areas * stems_per_ha)
+    return bool(storey_mean_diameter >= 8.0)
+
+
+def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
+                             stems: npt.NDArray[np.float64],
+                             basal_areas: npt.NDArray[np.float64],
+                             diameters: npt.NDArray[np.float64]) -> float | None:
+    if not np.any(stems > 0):
+        return None
+
+    if should_use_ba_as_weight(diameters, basal_areas, stems):
+        return np.sum(biological_ages * basal_areas * stems) / np.sum(basal_areas * stems)
+
+    return np.sum(biological_ages * stems) / np.sum(stems)
+
+
 def calc_dominant_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
     if not np.any(mask):
         return None

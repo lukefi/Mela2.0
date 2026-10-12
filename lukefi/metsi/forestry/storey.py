@@ -13,7 +13,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_tree_basal_areas, should_use_ba_as_weight
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
@@ -31,19 +31,6 @@ def stand_has_only_seeding_tree_storey(trees: ReferenceTrees) -> bool:
         (trees.storey == Storey.OVER) & (trees.management_category == TreeManagementCategory.SEEDING_TREE)))
 
 
-def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
-                             stems: npt.NDArray[np.float64],
-                             basal_areas: npt.NDArray[np.float64],
-                             diameters: npt.NDArray[np.float64]) -> float | None:
-    if not np.any(stems > 0):
-        return None
-
-    if _should_use_ba_for_storey(diameters, basal_areas, stems):
-        return np.sum(biological_ages * basal_areas * stems) / np.sum(basal_areas * stems)
-
-    return np.sum(biological_ages * stems) / np.sum(stems)
-
-
 def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
     storey_mask = trees.storey == storey
 
@@ -59,7 +46,7 @@ def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
     tree_basal_areas = trees.basal_area[storey_mask]
     tree_heights = trees.height[storey_mask]
 
-    should_use_ba = _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha)
+    should_use_ba = should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha)
     if should_use_ba:
         return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
             np.sum(tree_basal_areas * tree_stems_per_ha)
@@ -71,7 +58,7 @@ def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
                                tree_species: npt.NDArray[np.int32],
                                tree_basal_areas: npt.NDArray[np.float64]) -> TreeSpecies:
 
-    if _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha):
+    if should_use_ba_as_weight(tree_diameters, tree_basal_areas, tree_stems_per_ha):
         # Use basal area for comparing
         storey_basal_area = calc_basal_area(tree_basal_areas, tree_stems_per_ha)
         if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
@@ -132,11 +119,11 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
     storey_2_tree_species = trees.species[mask2]
     storey_2_tree_stems_per_ha = trees.stems_per_ha[mask2]
 
-    compare_storey_1_by_ba = _should_use_ba_for_storey(
+    compare_storey_1_by_ba = should_use_ba_as_weight(
         storey_1_tree_diameters,
         storey_1_tree_basal_areas,
         storey_1_tree_stems_per_ha)
-    compare_storey_2_by_ba = _should_use_ba_for_storey(
+    compare_storey_2_by_ba = should_use_ba_as_weight(
         storey_2_tree_diameters,
         storey_2_tree_basal_areas,
         storey_2_tree_stems_per_ha
@@ -305,16 +292,6 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn["For
     return wrapper
 
 
-def _should_use_ba_for_storey(diameters: npt.NDArray[np.float64],
-                              basal_areas: npt.NDArray[np.float64],
-                              stems_per_ha: npt.NDArray[np.float64]) -> bool:
-    if np.sum(basal_areas) == 0:
-        return False
-
-    storey_mean_diameter = np.sum(diameters * basal_areas * stems_per_ha) / np.sum(basal_areas * stems_per_ha)
-    return bool(storey_mean_diameter >= 8.0)
-
-
 def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
     if np.all(trees.storey != Storey.DOMINANT):
         # No DOMINANT storey at all
@@ -325,7 +302,7 @@ def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
     dominant_storey_basal_areas = trees.basal_area[dominant_storey_mask]
     dominant_storey_stems_per_ha = trees.stems_per_ha[dominant_storey_mask]
 
-    should_use_ba = _should_use_ba_for_storey(
+    should_use_ba = should_use_ba_as_weight(
         dominant_storey_diameters,
         dominant_storey_basal_areas,
         dominant_storey_stems_per_ha

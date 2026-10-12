@@ -26,9 +26,8 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height, calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates import calc_basal_area, calc_dominant_height, calc_mean_biological_age, calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import (
-    calc_mean_biological_age,
     determine_dominant_species)
 from lukefi.metsi.forestry.volume import calc_tree_volumes
 from lukefi.metsi.core.exceptions import MetsiException
