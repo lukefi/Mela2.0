@@ -10,7 +10,7 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
-from lukefi.metsi.core.select_units import Mode
+from lukefi.metsi.core.utils.select_units import Mode
 
 
 def seedtree_cutting_fn(stand: ForestStand,
