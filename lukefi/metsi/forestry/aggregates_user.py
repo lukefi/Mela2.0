@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.enums.internal import TreeSpecies
+from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.aggregates_internal import (
     calc_arithmetic_mean,
@@ -82,3 +82,7 @@ def calc_arithmetic_mean_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool
 def calc_arithmetic_mean_biological_age(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
     return calc_arithmetic_mean(trees.biological_age[mask],
                                 trees.stems_per_ha[mask])
+
+
+def has_storey(storey: Storey, trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> bool:
+    return bool(np.any(trees.storey[mask] == storey))
