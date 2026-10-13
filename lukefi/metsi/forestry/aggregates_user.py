@@ -3,12 +3,16 @@ import numpy.typing as npt
 
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates_internal import calc_arithmetic_mean, calc_ba_weighted_mean, calc_tree_basal_areas as calc_tree_basal_areas_internal
-from lukefi.metsi.forestry.aggregates_internal import calc_basal_area as calc_basal_area_internal
-from lukefi.metsi.forestry.aggregates_internal import calc_mean_biological_age as calc_mean_biological_age_internal
-from lukefi.metsi.forestry.aggregates_internal import calc_dominant_height as calc_dominant_height_internal
-from lukefi.metsi.forestry.aggregates_internal import calc_mean_height as calc_mean_height_internal
-from lukefi.metsi.forestry.aggregates_internal import determine_dominant_species as determine_dominant_species_internal
+from lukefi.metsi.forestry.aggregates_internal import (
+    calc_arithmetic_mean,
+    calc_ba_weighted_mean,
+    calc_tree_basal_areas as calc_tree_basal_areas_internal,
+    calc_basal_area as calc_basal_area_internal,
+    calc_mean_biological_age as calc_mean_biological_age_internal,
+    calc_dominant_height as calc_dominant_height_internal,
+    calc_mean_height as calc_mean_height_internal,
+    determine_dominant_species as determine_dominant_species_internal
+)
 
 
 def calc_tree_basal_areas(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> npt.NDArray[np.float64]:
