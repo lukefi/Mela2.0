@@ -17,7 +17,7 @@ from lukefi.metsi.domain.pre_ops import (
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from lukefi.metsi.core.condition import Condition
-from lukefi.metsi.core.transition import Initialization, Transition
+from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
 
 Motti4DLL.load()
@@ -72,9 +72,9 @@ control_structure = MetsiControl[ForestStand](
                               collected_data={NaturalProcessInfo},
                               name="grow_motti",
                               db_output_state=True,
-                              db_output_cd=True,
-                              initialization=motti_init
-        ),
+                              db_output_cd=True
+                              ),
+        initialization=motti_init,
         end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
     )
 )
