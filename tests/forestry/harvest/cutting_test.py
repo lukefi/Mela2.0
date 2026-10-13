@@ -3,7 +3,7 @@ from typing import cast
 import numpy as np
 from lukefi.metsi.data.enums.internal import CuttingMethod, Storey
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.core.select_units import Mode, ProfileXMode, SelectionSet, SelectionTarget, TargetType
+from lukefi.metsi.core.utils.select_units import Mode, ProfileXMode, SelectionSet, SelectionTarget, TargetType
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.forestry.harvest.cutting import cutting_fn
 from lukefi.metsi.domain.collected_data import RemovedTrees
