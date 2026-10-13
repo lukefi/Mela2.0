@@ -26,8 +26,8 @@ control_structure = MetsiControl[ForestStand](
                               name="grow_motti",
                               db_output_state=False,
                               db_output_cd=True,
-                              initialization=motti_init
-        ),
+                              ),
+        initialization=motti_init,
         schedules_file="examples/selected_schedules.csv",
         treatment_map={
             "do_nothing": do_nothing,
