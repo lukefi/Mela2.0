@@ -13,8 +13,8 @@ class LookupTable[T, V]:
       - key_columns are column names in the CSV.
       - Keys must either exists as `unit` attributes or be provided per-call as external keys.
       - Optionally, per-column transform functions can be provided.
-        If present, we call transform[column](stand.<column>) before matching.
-        If not present, we use stand.<column> raw.
+        If present, we call transform[column](unit.<column>) before matching.
+        If not present, we use unit.<column> raw.
 
       - CSV value_column is returned, and cast with value_cast.
     """

@@ -1,7 +1,7 @@
 from typing import Any
 from pathlib import Path
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.util.lookup_table import LookupTable
+from lukefi.metsi.core.lookup_table import LookupTable
 from lukefi.metsi.data.enums.internal import SiteType, TreeSpecies
 
 

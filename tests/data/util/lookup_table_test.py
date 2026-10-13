@@ -2,7 +2,7 @@ import unittest
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
-from lukefi.metsi.data.util.lookup_table import LookupTable
+from lukefi.metsi.core.lookup_table import LookupTable
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.data.enums.internal import SiteType
 from lukefi.metsi.data.model import ForestStand
