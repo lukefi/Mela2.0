@@ -710,7 +710,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                     ds_tree_basal_areas *
                     ds_heights)) / ds_basal_area) if (ds_basal_area > 0) else None
 
-        self.ds_dominant_height = calc_dominant_height(trees, ds_mask)
+        self.ds_dominant_height = calc_dominant_height(ds_tree_stems, ds_diameters, ds_heights)
 
         ds_biological_ages = trees.biological_age[ds_mask]
         ds_main_species_mask = ds_species == self.ds_main_tree_species

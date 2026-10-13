@@ -40,23 +40,21 @@ def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
     return np.sum(biological_ages * stems) / np.sum(stems)
 
 
-def calc_dominant_height(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
-    if not np.any(mask):
+def calc_dominant_height(tree_stems: npt.NDArray[np.float64],
+                         diameters: npt.NDArray[np.float64],
+                         heights: npt.NDArray[np.float64]) -> float | None:
+    if len(tree_stems) <= 0:
         return None
 
-    stems = trees.stems_per_ha[mask]
-    diameter = trees.breast_height_diameter[mask]
-    height = trees.height[mask]
-
-    sorting = np.flip(np.argsort(diameter))
-    sorted_stems = stems[sorting]
-    sorted_height = height[sorting]
+    sorting = np.flip(np.argsort(diameters))
+    sorted_stems = tree_stems[sorting]
+    sorted_height = heights[sorting]
     cumulative_sorted_stems = np.cumsum(sorted_stems)
 
     i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
     if len(i_100_largest_arr) == 0:
         stems_smallest: float = sorted_stems[-1]
-        i_100_largest: int = int(np.count_nonzero(mask) - 1)
+        i_100_largest: int = len(tree_stems) - 1
     elif i_100_largest_arr[0] == 0:
         stems_smallest = 100.0
         i_100_largest = 0

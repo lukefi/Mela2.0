@@ -238,7 +238,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_dominant_height(trees, trees.storey == Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
@@ -255,7 +255,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_dominant_height(trees, trees.storey == Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
@@ -272,7 +272,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_dominant_height(trees, trees.storey == Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
