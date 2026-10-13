@@ -9,25 +9,12 @@ from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 type TransitionFn[T: ComputationalUnit] = Callable[[T, int], OpTuple[T]]
-type TransitionInitFn[T: ComputationalUnit] = Callable[[T], None]
-
-class Initialization[T: ComputationalUnit]:
-    init_fn: TransitionInitFn[T]
-    params: dict[str, Any]
-
-    def __init__(self, init_fn: TransitionInitFn[T], init_params: dict[str, Any] | None = None) -> None:
-        self.init_fn = init_fn
-        self.params = init_params or {}
-
-    def __call__(self, unit: T):
-        self.init_fn(unit, **self.params)
 
 
 class Transition[T: ComputationalUnit]:
 
     __slots__ = ("transition_fn",
                  "parameters",
-                 "initialization",
                  "name",
                  "collected_data",
                  "db_output_state",
@@ -36,7 +23,6 @@ class Transition[T: ComputationalUnit]:
 
     transition_fn: TransitionFn[T]
     parameters: dict[str, Any]
-    initialization: Initialization[T] | None
     name: str
     collected_data: CollectableDataTypes
     db_output_state: bool
@@ -51,7 +37,6 @@ class Transition[T: ComputationalUnit]:
         name: Optional[str] = None,
         db_output_state: bool = False,
         db_output_cd: bool = True,
-        initialization: Optional[Initialization[T]] = None,
         **parameters,
     ):
         self.transition_fn = transition_fn
@@ -59,7 +44,6 @@ class Transition[T: ComputationalUnit]:
         self.parameters = parameters
         self.db_output_state = db_output_state
         self.db_output_cd = db_output_cd
-        self.initialization = initialization
         self.parameters = parameters
 
         if name is not None:
