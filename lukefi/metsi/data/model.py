@@ -26,7 +26,7 @@ from lukefi.metsi.data.enums.internal import (
 from lukefi.metsi.data.formats.util import convert_str_to_type as conv
 from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
-from lukefi.metsi.forestry.aggregates import (
+from lukefi.metsi.forestry.aggregates_internal import (
     calc_ba_weighted_mean,
     calc_basal_area,
     calc_dominant_height,

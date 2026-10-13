@@ -21,7 +21,7 @@ from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
 from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
-from lukefi.metsi.forestry.aggregates import calc_mean_height, calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates_internal import calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
 from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj

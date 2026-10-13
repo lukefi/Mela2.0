@@ -11,7 +11,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.forestry.aggregates import (
+from lukefi.metsi.forestry.aggregates_internal import (
     calc_basal_area,
     calc_mean_height,
     calc_tree_basal_areas,

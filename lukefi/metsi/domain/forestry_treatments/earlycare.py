@@ -9,7 +9,7 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti,
 )
-from lukefi.metsi.forestry.aggregates import calc_tree_basal_areas
+from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import CollectedData, OpTuple
 from lukefi.metsi.core.treatment import Treatment
