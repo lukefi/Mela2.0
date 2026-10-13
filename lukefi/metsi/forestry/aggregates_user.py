@@ -23,6 +23,10 @@ def calc_basal_area(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float
     return calc_basal_area_internal(trees.basal_area[mask], trees.stems_per_ha[mask])
 
 
+def calc_stems_per_ha(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float:
+    return np.sum(trees.stems_per_ha[mask])
+
+
 def calc_mean_biological_age(trees: ReferenceTrees, mask: npt.NDArray[np.bool_]) -> float | None:
     return calc_mean_biological_age_internal(trees.biological_age[mask],
                                              trees.stems_per_ha[mask],
