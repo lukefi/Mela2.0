@@ -47,10 +47,7 @@ def fillinplanting_fn(stand: ForestStand,
     filled_species = convert_species(species)
 
     ms.ntrees = Motti4DLL.fillin_planting_with_state(
-        ms.yy,
-        ms.yp,
-        ms.buffers,
-        number_of_reference_trees=ms.ntrees,
+        ms,
         filled_species=filled_species,
         stems_per_ha=stems_per_ha,
     )

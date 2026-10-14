@@ -359,7 +359,7 @@ class Motti4DLL:
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
-            lib.Motti4UpdateAfterImport( # NOTE: Oliko niin, että tämä oli turha? Tsekkaa manuaalista.
+            lib.Motti4UpdateAfterImport( # TODO:: Oliko niin, että tämä oli turha? Tsekkaa manuaalista.
                 yy,
                 yp,
                 buffers.saplings,
@@ -542,11 +542,8 @@ class Motti4DLL:
     @classmethod
     def fillin_planting_with_state(
         cls,
-        yy: Motti4Site,
-        yp: Motti4Trees,
-        buffers: MottiStateBuffers,
+        ms: MottiState,
         /,
-        number_of_reference_trees: int,
         filled_species: int,
         stems_per_ha: float,
     ) -> int:
@@ -555,8 +552,6 @@ class Motti4DLL:
 
         Parameters
         ----------
-        number_of_reference_trees:
-             # NOTE: Q: YP-Kuvauspuiden määrä tällä hetkellä? Miksi? Luulis että ite vois kaivaa.
         filled_species:
             Motti species slot for planted species.
         stems_per_ha:
@@ -566,7 +561,7 @@ class Motti4DLL:
 
         ffi, lib = cls.ffi, cls.lib
 
-        ntrees_p = cast(IntPtr, ffi.new("int *", int(number_of_reference_trees))) # NOTE: Onko tää vaan out?
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(ms.ntrees)))
         rspe_p = cast(IntPtr, ffi.new("int *", int(filled_species)))
         num_p = cast(FloatPtr, ffi.new("float *", float(stems_per_ha)))
         stratum_id_p = cast(IntPtr, ffi.new("int *", _default_for_automatic_id_handeling_by_motti))
@@ -574,12 +569,12 @@ class Motti4DLL:
 
         with _maybe_chdir(cls.data_dir):
             lib.Motti4FillinPlanting(
-                yy,
-                yp,
-                buffers.saplings,
-                buffers.kor_state,
-                buffers.vcr_state,
-                buffers.apv_state,
+                ms.yy,
+                ms.yp,
+                ms.buffers.saplings,
+                ms.buffers.kor_state,
+                ms.buffers.vcr_state,
+                ms.buffers.apv_state,
                 ntrees_p,
                 rspe_p,
                 num_p,
