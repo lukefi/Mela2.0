@@ -5,7 +5,6 @@ from lukefi.metsi.data.enums.internal import Storey, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
-    sync_yp_to_reference_trees,
     prune_reference_trees_not_in_motti
 )
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -56,7 +55,6 @@ def fillinplanting_fn(stand: ForestStand,
         stems_per_ha=stems_per_ha,
     )
 
-    sync_yp_to_reference_trees(stand) # NOTE: Onko ypn synkkaus tarpeellinen? mitä Motti4Fillingpalnting tekee yp_llä?
     sync_ut_to_reference_trees(stand)
     prune_reference_trees_not_in_motti(stand)
 
