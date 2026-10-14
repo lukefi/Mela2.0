@@ -544,31 +544,32 @@ class Motti4DLL:
         cls,
         yy: Motti4Site,
         yp: Motti4Trees,
-        numtrees: int,
         buffers: MottiStateBuffers,
-        *,
-        rspe: int,
-        num: float,
-        osite_id: int,
+        /,
+        number_of_reference_trees: int,
+        filled_species: int,
+        stems_per_ha: float,
     ) -> int:
         """
         Call Motti4FillinPlanting against persistent state buffers.
 
         Parameters
         ----------
-        rspe : int
+        number_of_reference_trees:
+             # NOTE: Q: YP-Kuvauspuiden määrä tällä hetkellä? Miksi? Luulis että ite vois kaivaa.
+        filled_species:
             Motti species slot for planted species.
-        num : float
+        stems_per_ha:
             Number of planted saplings per hectare.
-        osite_id : int
-            Identifier for the planted sapling cohort / stratum.
         """
+        _default_for_automatic_id_handeling_by_motti = 0
+
         ffi, lib = cls.ffi, cls.lib
 
-        ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        rspe_p = cast(IntPtr, ffi.new("int *", int(rspe)))
-        num_p = cast(FloatPtr, ffi.new("float *", float(num)))
-        osite_id_p = cast(IntPtr, ffi.new("int *", int(osite_id)))
+        ntrees_p = cast(IntPtr, ffi.new("int *", int(number_of_reference_trees))) # NOTE: Onko tää vaan out?
+        rspe_p = cast(IntPtr, ffi.new("int *", int(filled_species)))
+        num_p = cast(FloatPtr, ffi.new("float *", float(stems_per_ha)))
+        stratum_id_p = cast(IntPtr, ffi.new("int *", _default_for_automatic_id_handeling_by_motti))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
@@ -582,7 +583,7 @@ class Motti4DLL:
                 ntrees_p,
                 rspe_p,
                 num_p,
-                osite_id_p,
+                stratum_id_p,
                 rv,
             )
 
