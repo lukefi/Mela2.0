@@ -1,11 +1,17 @@
 from typing import Any, Optional
 from pathlib import Path
 import numpy as np
-from lukefi.metsi.data.enums.internal import FertilizationType, SiteType, SoilPreparationType, TreeManagementCategory, TreeSpecies, Origin
+from lukefi.metsi.data.enums.internal import (
+    FertilizationType,
+    SiteType,
+    SoilPreparationType,
+    TreeManagementCategory,
+    TreeSpecies,
+    Origin
+)
+from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.enums.mela import MelaMethodOfTheLastCutting
-from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
@@ -16,6 +22,7 @@ from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
 from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
 from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization
+from lukefi.metsi.domain.forestry_types import ForestCondition, ForestPostCondition
 from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
 from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.core.generators import Event
@@ -106,7 +113,7 @@ class MarkRetentionTrees(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         params = parameters or {}
@@ -216,7 +223,7 @@ class Mounding(Event[ForestStand]):
     def __init__(
         self,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         # Default preconditions: at least 20 years since this treatment last ran
@@ -335,7 +342,7 @@ class Tracks(Event[ForestStand]):
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestPostCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  **kw) -> None:
         params = parameters or {}
@@ -393,7 +400,7 @@ class PlantingPines(Event[ForestStand]):
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestPostCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
         default_params: dict[str, Any] = {
@@ -418,7 +425,7 @@ class Harvest20percent(Event[ForestStand]):
     def __init__(self,
                  parameters: Optional[dict[str, Any]] = None,
                  preconditions: Optional[list[ForestCondition]] = None,
-                 postconditions: Optional[list[ForestCondition]] = None,
+                 postconditions: Optional[list[ForestPostCondition]] = None,
                  file_parameters: Optional[dict[str, str]] = None,
                  **kw) -> None:
 
@@ -468,7 +475,7 @@ class SeedtreeCutting(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
         **kw,
     ) -> None:
@@ -535,7 +542,7 @@ class SaplingTreatmentMotti(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         default_params: dict[str, Any] = {}
@@ -571,7 +578,7 @@ class EarlyCareMotti(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         default_params = {"imode": 0}
@@ -610,7 +617,7 @@ class FillinPlantingMotti(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         default_params = {
@@ -651,7 +658,7 @@ class SeedlingDelayMotti(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         default_params = {"istep": 1}
@@ -690,7 +697,7 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
         self,
         parameters: Optional[dict[str, Any]] = None,
         preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
         default_params = {
