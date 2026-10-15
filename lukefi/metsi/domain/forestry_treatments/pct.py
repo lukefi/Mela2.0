@@ -9,11 +9,12 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
 from lukefi.metsi.domain.forestry_treatments.treatment_util import collect_removed_trees
+from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.exceptions import MetsiException
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
+from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def pct_fn(stand: ForestStand,
