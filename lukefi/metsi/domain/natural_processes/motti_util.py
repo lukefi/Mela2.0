@@ -189,7 +189,6 @@ def _build_reference_tree_update(*,
                                  volume: float,
                                  storey: int,
                                  ) -> dict[str, Any]:
-    # NOTE: This could be raised into upper function stack
     return {
         "identifier": identifier,
         "tree_number": tree_number,
