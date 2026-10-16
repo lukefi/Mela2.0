@@ -557,14 +557,14 @@ class Motti4DLL:
         stems_per_ha:
             Number of planted saplings per hectare.
         """
-        _default_for_automatic_id_handeling_by_motti = 0
+        _automatic_id_handeling = 0
 
         ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(ms.ntrees)))
         rspe_p = cast(IntPtr, ffi.new("int *", int(filled_species)))
         num_p = cast(FloatPtr, ffi.new("float *", float(stems_per_ha)))
-        stratum_id_p = cast(IntPtr, ffi.new("int *", _default_for_automatic_id_handeling_by_motti))
+        stratum_id_p = cast(IntPtr, ffi.new("int *", _automatic_id_handeling))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):

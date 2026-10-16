@@ -235,7 +235,7 @@ class Mounding(Event[ForestStand]):
 
         super().__init__(
             static_parameters={
-                "soil_preparation_param": SoilPreparationType.MOUNDING
+                "soil_preparation_method": SoilPreparationType.MOUNDING
             },
             treatment=soil_surface_preparation,
             preconditions=merged_preconds,
