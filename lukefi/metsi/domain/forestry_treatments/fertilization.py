@@ -14,7 +14,7 @@ from lukefi.metsi.core.exceptions import MetsiException
 
 def mineral_soils_fertilization_fn(stand: ForestStand,
                                    /,
-                                   fertilization_type: int | FertilizationType | None = None,
+                                   fertilization_type: FertilizationType | None = None,
                                    amount_n: float | None = None,
                                    phosphorus: bool = False) -> OpTuple[ForestStand]:
     """
@@ -24,7 +24,7 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
 
     Parameters in Motti use case:
     ----------
-    fertilization_type : int | FertilizationType | None
+    fertilization_type : FertilizationType | None
         Fertilization type code passed to Motti.
     amount_n : float | None
         Nitrogen amount for the Motti treatment.
@@ -40,9 +40,6 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
             raise MetsiException("Fertilization parameter 'fertilization_type' is required for Motti fertilization")
         if amount_n is None:
             raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required for Motti fertilization")
-
-        if isinstance(fertilization_type, int):
-            fertilization_type = FertilizationType(fertilization_type)
 
         Motti4DLL.mineral_soils_fertilization_with_state(
             ms.yy,
