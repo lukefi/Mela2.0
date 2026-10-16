@@ -39,7 +39,7 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
         if fertilization_type is None:
             raise MetsiException("Fertilization parameter 'fertilization_type' is required for Motti fertilization")
         if amount_n is None:
-            raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required for Motti fertilization")
+            raise MetsiException("Fertilization parameter 'amount_n' is required for Motti fertilization")
 
         Motti4DLL.mineral_soils_fertilization_with_state(
             ms.yy,
