@@ -99,12 +99,14 @@ class Motti4DLL:
         ffi = FFI()
         ffi.cdef(cls._cdef_source())
 
-        if hasattr(os, "add_dll_directory"):
+        # `add_dll_directory` only exists in Windows
+        add_dll_directory = getattr(os, "add_dll_directory", None)
+        if add_dll_directory:
             for p in (lib_path.parent, cls.data_dir):
                 if p:
                     ps = str(Path(p).resolve())
                     try:
-                        os.add_dll_directory(ps)
+                        add_dll_directory(ps)
                     except FileNotFoundError as e:
                         print(f"Error occurred while adding DLL directory: {e}")
 
