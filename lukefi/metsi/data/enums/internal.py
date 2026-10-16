@@ -411,3 +411,9 @@ class CRS(StrEnum):
         if value in EPSG_2393_ALIASES:
             return cls.EPSG_2393
         return None # raises ValueError by nature
+
+
+class FertilizationType(MetsiEnum):
+    UNSET = -1
+    AMMONIUM_SULFITE = 1
+    CARBAMIDE = 2

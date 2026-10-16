@@ -10,9 +10,10 @@ class SoilSurfacePreparationTest(unittest.TestCase):
         stand.identifier = "stand-SSP"
         stand.year = 2030
 
-        updated, cdata = soil_surface_preparation_fn(stand)
+        updated, cdata = soil_surface_preparation_fn(stand, soil_preparation_method=1)
         self.assertEqual([], cdata)
         self.assertEqual(2030, updated.soil_surface_preparation_year)
+        self.assertEqual(1, updated.soil_preparation_type)
 
 
 if __name__ == "__main__":

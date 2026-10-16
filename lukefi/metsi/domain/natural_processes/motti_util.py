@@ -3,7 +3,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from lukefi.metsi.data.enums.internal import Origin, Storey, TreeManagementCategory, TreeSpecies
+from lukefi.metsi.data.enums.internal import Origin, Storey, TreeCategory, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
 from lukefi.metsi.data.vector_model import ReferenceTrees
@@ -74,19 +74,6 @@ def _reference_tree_indices_by_stratum(rt: ReferenceTrees, osid: int) -> list[in
         if str(value) == target:
             retval.append(i)
     return retval
-
-
-def _storey_from_layer(stand: ForestStand, layer: int) -> int:
-    # NOTE: This can't be right! Check.
-    strata = getattr(stand, "tree_strata", None)
-    if strata is None or layer >= strata.size:
-        return int(Storey.UNSET)
-
-    try:
-        v = int(strata.storey[layer])
-        return v if v >= 0 else int(Storey.UNSET)
-    except (TypeError, ValueError):
-        return int(Storey.UNSET)
 
 
 def _find_sapling_reference_tree_index(rt: ReferenceTrees, osid: int) -> int | None:
@@ -189,12 +176,11 @@ def _build_reference_tree_update(*,
                                  volume: float,
                                  storey: int,
                                  ) -> dict[str, Any]:
-    # NOTE: This could be raised into upper function stack
     return {
         "identifier": identifier,
         "tree_number": tree_number,
         "stratum": str(osid),
-        "species": int(species),
+        "species": species,
         "stems_per_ha": stems_per_ha,
         "origin": _safe_origin(origin_raw),
         "height": height,
@@ -245,33 +231,31 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     setattr(s, f"osid_{cat_code}", float(osid))
 
                 idx = _find_sapling_reference_tree_index(rt, osid)
+                existing_storey = None
                 if idx is None:
-                    identifier, tree_number = new_reference_tree_identity(stand)
-                    storey = _storey_from_layer(stand, layer)
+                    # Create a new tree
+                    (identifier,
+                    tree_number) = new_reference_tree_identity(stand)
                 else:
-                    identifier = str(rt.identifier[idx])
-                    tree_number = int(rt.tree_number[idx])
-
-                    existing_storey = int(rt.storey[idx])
-                    if existing_storey >= 0:
-                        storey = existing_storey
-                    else:
-                        storey = _storey_from_layer(stand, layer)
+                    # Update a existing tree
+                    identifier = rt.identifier[idx].item()
+                    tree_number = rt.tree_number[idx].item()
+                    existing_storey = rt.storey[idx].item()
 
                 row = _build_reference_tree_update(identifier=identifier,
                                                    tree_number=tree_number,
                                                    osid=osid,
                                                    species=internal_species,
-                                                   category_code="0",  # Small tree
+                                                   category_code=TreeCategory.SMALL_TREE.value,
                                                    stems_per_ha=stems,
-                                                   origin_raw=float(getattr(s, f"N_{cat_code}", -1.0) or -1.0),
-                                                   height=float(getattr(s, f"h_{cat_code}", 0.0) or 0.0),
-                                                   diameter=float(getattr(s, f"d_{cat_code}", 0.0) or 0.0),
-                                                   age=float(getattr(s, f"age_{cat_code}", 0.0) or 0.0),
-                                                   age13=float(getattr(s, f"age13_{cat_code}", 0.0) or 0.0),
-                                                   basal_area=float(getattr(s, f"g_{cat_code}", 0.0) or 0.0),
-                                                   volume=float(getattr(s, f"v_{cat_code}", 0.0) or 0.0),
-                                                   storey=storey,
+                                                   origin_raw=getattr(s, f"N_{cat_code}", -1.0),
+                                                   height=getattr(s, f"h_{cat_code}", 0.0),
+                                                   diameter=getattr(s, f"d_{cat_code}", 0.0),
+                                                   age=getattr(s, f"age_{cat_code}", 0.0),
+                                                   age13=getattr(s, f"age13_{cat_code}", 0.0),
+                                                   basal_area=getattr(s, f"g_{cat_code}", 0.0),
+                                                   volume=getattr(s, f"v_{cat_code}", 0.0),
+                                                   storey=existing_storey or Storey.UNSET.value
                                                    )
 
                 if idx is None:
@@ -328,9 +312,7 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
     ms = stand.motti_state
     if ms is None or ms.yp is None or ms.buffers is None:
         return
-
     Motti4DLL.grow_with_state(ms, step=0)
-
     reconcile_reference_trees_from_motti(stand)
 
 

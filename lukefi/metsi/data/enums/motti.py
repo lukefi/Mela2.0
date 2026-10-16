@@ -62,3 +62,8 @@ class MottiSoilPreparationType(IntEnum):
     TRENCH_MOUNDING = 4
     INVERSION_MOUNDING = 5
     OTHER = 6
+
+
+class MottiFertilizationType(IntEnum):
+    AMMONIUM_SULFITE = 1
+    CARBAMIDE = 2
