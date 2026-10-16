@@ -35,14 +35,11 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
     """
     if stand.motti_state is not None:
         ms = stand.motti_state
-        if ms is None or ms.buffers is None:
-            raise MetsiException(
-                "Motti mineral-soils fertilization requested but stand has no initialized motti_state. "
-            )
+
         if fertilization_type is None:
-            raise MetsiException("Fertilization parameter 'fertilization_type' is required")
+            raise MetsiException("Fertilization parameter 'fertilization_type' is required for Motti fertilization")
         if amount_n is None:
-            raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required")
+            raise MetsiException("Fertilization parameter 'amount_n' (or amountN) is required for Motti fertilization")
 
         if isinstance(fertilization_type, int):
             fertilization_type = FertilizationType(fertilization_type)
