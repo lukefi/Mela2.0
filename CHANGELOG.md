@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [5.2.0] - 2026-10-15
+
+### Added
+
+- Added new aggregate attributes to `ForestStand` and helper functions to calculate aggregates on demand
+
 ## [5.1.0] - 2026-10-13
 
 ### Added

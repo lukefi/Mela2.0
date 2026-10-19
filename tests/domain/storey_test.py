@@ -8,13 +8,14 @@ from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, Tre
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.pre_ops import supplement_storey_information
-from lukefi.metsi.forestry.storey import (
+from lukefi.metsi.forestry.aggregates_internal import (
+    calc_basal_area,
+    calc_dominant_height,
     calc_mean_biological_age,
-    calc_storey_basal_area,
-    calc_storey_dominant_height,
-    calc_storey_mean_height,
+    calc_mean_height,
     calc_tree_basal_areas,
-    determine_dominant_species,
+    determine_dominant_species)
+from lukefi.metsi.forestry.storey import (
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
 
@@ -221,7 +222,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
         bas = np.asarray([1.0, 2.0, 3.0, 4.0], dtype=np.float64)
         stems = np.asarray([5.0, 4.0, 3.0, 2.0], dtype=np.float64)
 
-        ba = calc_storey_basal_area(bas, stems)
+        ba = calc_basal_area(bas, stems)
 
         self.assertAlmostEqual(30.0, ba)
 
@@ -237,7 +238,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
@@ -254,7 +255,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
@@ -271,7 +272,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
             }
         )
 
-        dh = calc_storey_dominant_height(trees, Storey.DOMINANT)
+        dh = calc_dominant_height(trees.stems_per_ha, trees.breast_height_diameter, trees.height)
 
         assert dh is not None
 
@@ -314,7 +315,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
 
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+        mean_height = calc_mean_height(trees, trees.storey == Storey.DOMINANT)
 
         self.assertAlmostEqual(mean_height, 10.3333333333)
 
@@ -331,7 +332,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
 
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_height = calc_storey_mean_height(trees, Storey.DOMINANT)
+        mean_height = calc_mean_height(trees, trees.storey == Storey.DOMINANT)
 
         self.assertAlmostEqual(mean_height, 10.2163120567)
 
@@ -339,7 +340,7 @@ class StoreyUtilitiesTest(unittest.TestCase):
         d = np.asarray([0.0, 0.0, 0.0, 0.0])
         stems = np.asarray([10.0, 20.0, 30.0, 40.0])
         species = np.asarray([TreeSpecies.PINE] * 4)
-        ba = np.asarray([0.0,0.0,0.0,0.0])
+        ba = np.asarray([0.0, 0.0, 0.0, 0.0])
 
         dominant_species = determine_dominant_species(d, stems, species, ba)
 

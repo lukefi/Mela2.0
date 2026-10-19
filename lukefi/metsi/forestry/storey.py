@@ -7,12 +7,16 @@ import numpy.typing as npt
 from lukefi.metsi.core.collected_data import CollectedData
 from lukefi.metsi.core.transition import TransitionFn
 from lukefi.metsi.data.enums.internal import (
-    CONIFEROUS_SPECIES,
-    DECIDUOUS_SPECIES,
     Storey,
     TreeManagementCategory,
     TreeSpecies)
 from lukefi.metsi.data.vector_model import ReferenceTrees
+from lukefi.metsi.forestry.aggregates_internal import (
+    calc_basal_area,
+    calc_mean_height,
+    calc_tree_basal_areas,
+    determine_dominant_species,
+    should_use_ba_as_weight)
 
 if TYPE_CHECKING:
     from lukefi.metsi.data.model import ForestStand
@@ -30,133 +34,6 @@ def stand_has_only_seeding_tree_storey(trees: ReferenceTrees) -> bool:
         (trees.storey == Storey.OVER) & (trees.management_category == TreeManagementCategory.SEEDING_TREE)))
 
 
-def calc_tree_basal_areas(diameters: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
-    return np.pi * (diameters / 200) ** 2
-
-
-def calc_storey_basal_area(tree_basal_areas: npt.NDArray[np.float64], stems_per_ha: npt.NDArray[np.float64]) -> float:
-    return np.sum(tree_basal_areas * stems_per_ha)
-
-
-def calc_storey_dominant_height(trees: ReferenceTrees, storey: Storey) -> float | None:
-    if np.all(trees.storey != storey):
-        return None
-
-    trees_mask = trees.storey == storey
-
-    stems = trees.stems_per_ha[trees_mask]
-    diameter = trees.breast_height_diameter[trees_mask]
-    height = trees.height[trees_mask]
-
-    sorting = np.flip(np.argsort(diameter))
-    sorted_stems = stems[sorting]
-    sorted_height = height[sorting]
-    cumulative_sorted_stems = np.cumsum(sorted_stems)
-
-    i_100_largest_arr = np.flatnonzero(cumulative_sorted_stems >= 100)
-    if len(i_100_largest_arr) == 0:
-        stems_smallest: float = sorted_stems[-1]
-        i_100_largest: int = int(np.count_nonzero(trees_mask) - 1)
-    elif i_100_largest_arr[0] == 0:
-        stems_smallest = 100.0
-        i_100_largest = 0
-    else:
-        i_100_largest = i_100_largest_arr[0]
-        stems_smallest = 100 - cumulative_sorted_stems[i_100_largest - 1]
-
-    numerator_1 = np.sum(sorted_stems[:i_100_largest] * sorted_height[:i_100_largest])
-    numerator_2: float = stems_smallest * sorted_height[i_100_largest]
-    denominator = min(100, cumulative_sorted_stems[i_100_largest])
-
-    return (numerator_1 + numerator_2) / denominator
-
-
-def calc_mean_biological_age(biological_ages: npt.NDArray[np.float64],
-                             stems: npt.NDArray[np.float64],
-                             basal_areas: npt.NDArray[np.float64],
-                             diameters: npt.NDArray[np.float64]) -> float | None:
-    if not np.any(stems > 0):
-        return None
-
-    if _should_use_ba_for_storey(diameters, basal_areas, stems):
-        return np.sum(biological_ages * basal_areas * stems) / np.sum(basal_areas * stems)
-
-    return np.sum(biological_ages * stems) / np.sum(stems)
-
-
-def calc_storey_mean_height(trees: ReferenceTrees, storey: Storey) -> float:
-    storey_mask = trees.storey == storey
-
-    if not np.any(storey_mask):
-        return 0.0
-
-    tree_stems_per_ha = trees.stems_per_ha[storey_mask]
-
-    if not np.any(tree_stems_per_ha > 0):
-        return 0.0
-
-    tree_diameters = trees.breast_height_diameter[storey_mask]
-    tree_basal_areas = trees.basal_area[storey_mask]
-    tree_heights = trees.height[storey_mask]
-
-    should_use_ba = _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha)
-    if should_use_ba:
-        return np.sum(tree_basal_areas * tree_stems_per_ha * tree_heights) / \
-            np.sum(tree_basal_areas * tree_stems_per_ha)
-    return np.sum(tree_heights * tree_stems_per_ha) / np.sum(tree_stems_per_ha)
-
-
-def determine_dominant_species(tree_diameters: npt.NDArray[np.float64],
-                               tree_stems_per_ha: npt.NDArray[np.float64],
-                               tree_species: npt.NDArray[np.int32],
-                               tree_basal_areas: npt.NDArray[np.float64]) -> TreeSpecies:
-
-    if _should_use_ba_for_storey(tree_diameters, tree_basal_areas, tree_stems_per_ha):
-        # Use basal area for comparing
-        storey_basal_area = calc_storey_basal_area(tree_basal_areas, tree_stems_per_ha)
-        if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
-            return TreeSpecies.TREELESS
-
-        coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
-        coniferous_diameters = tree_diameters[coniferous_mask]
-        coniferous_stems_per_ha = tree_stems_per_ha[coniferous_mask]
-        coniferous_ba = np.pi * np.sum(((coniferous_diameters / 200) ** 2) * coniferous_stems_per_ha)
-
-        if coniferous_ba >= storey_basal_area / 2:
-            # Coniferous dominated storey
-            species_list = CONIFEROUS_SPECIES
-        else:
-            # Deciduous dominated storey
-            species_list = DECIDUOUS_SPECIES
-
-        species_bas = {species: calc_storey_basal_area(
-            tree_basal_areas[tree_species == species], tree_stems_per_ha[tree_species == species])
-            for species in species_list}
-
-        # Species with maximum basal area
-        return max(species_bas, key=lambda key: species_bas[key])
-
-    # Use stems per ha for comparing
-    storey_stems_per_ha = np.sum(tree_stems_per_ha)
-    if storey_stems_per_ha < DOMINANT_STOREY_STEMS_LIMIT:
-        return TreeSpecies.TREELESS
-
-    coniferous_mask = np.isin(tree_species, CONIFEROUS_SPECIES)
-    coniferous_total_stems_per_ha = np.sum(tree_stems_per_ha[coniferous_mask])
-
-    if coniferous_total_stems_per_ha >= storey_stems_per_ha / 2:
-        # Coniferous dominated storey
-        species_list = CONIFEROUS_SPECIES
-    else:
-        # Deciduous dominated storey
-        species_list = DECIDUOUS_SPECIES
-
-    species_stems = {species: np.sum(tree_stems_per_ha[tree_species == species]) for species in species_list}
-
-    # Species with maximum stems per ha
-    return max(species_stems, key=lambda key: species_stems[key])
-
-
 def promote_either_storey_to_dominant(trees: ReferenceTrees,
                                       mask1: npt.NDArray[np.bool_],
                                       mask2: npt.NDArray[np.bool_],
@@ -172,11 +49,11 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
     storey_2_tree_species = trees.species[mask2]
     storey_2_tree_stems_per_ha = trees.stems_per_ha[mask2]
 
-    compare_storey_1_by_ba = _should_use_ba_for_storey(
+    compare_storey_1_by_ba = should_use_ba_as_weight(
         storey_1_tree_diameters,
         storey_1_tree_basal_areas,
         storey_1_tree_stems_per_ha)
-    compare_storey_2_by_ba = _should_use_ba_for_storey(
+    compare_storey_2_by_ba = should_use_ba_as_weight(
         storey_2_tree_diameters,
         storey_2_tree_basal_areas,
         storey_2_tree_stems_per_ha
@@ -212,10 +89,10 @@ def promote_either_storey_to_dominant(trees: ReferenceTrees,
     if compare_storey_1_by_ba:  # and compare_storey_2_by_ba
         # Compare by basal area
 
-        storey_1_dominant_species_ba = calc_storey_basal_area(
+        storey_1_dominant_species_ba = calc_basal_area(
             storey_1_tree_basal_areas[storey_1_dominant_species_mask],
             storey_1_tree_stems_per_ha[storey_1_dominant_species_mask])
-        storey_2_dominant_species_ba = calc_storey_basal_area(
+        storey_2_dominant_species_ba = calc_basal_area(
             storey_2_tree_basal_areas[storey_2_dominant_species_mask],
             storey_2_tree_stems_per_ha[storey_2_dominant_species_mask])
 
@@ -278,7 +155,7 @@ def manage_existing_storeys(trees: ReferenceTrees):
     # Merge existing storeys ----------------------------------------------------------------------------
 
     storeys = np.unique(trees.storey[np.isin(trees.storey, (Storey.DOMINANT, Storey.UNDER, Storey.OVER))])
-    mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in storeys}
+    mean_heights = {storey: calc_mean_height(trees, trees.storey == storey) for storey in storeys}
 
     dominant_storey_mean_height = mean_heights.get(Storey.DOMINANT, 0.0)
 
@@ -309,8 +186,8 @@ def update_storeys(trees: ReferenceTrees):
             trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
         else:
             # Check if should merge new trees into DOMINANT
-            diff = calc_storey_mean_height(trees, Storey.DOMINANT) - \
-                calc_storey_mean_height(trees, Storey.UNSET)
+            diff = calc_mean_height(trees, trees.storey == Storey.DOMINANT) - \
+                calc_mean_height(trees, trees.storey == Storey.UNSET)
             if abs(diff) < 5.0:
                 # Merge into DOMINANT
                 trees.storey[trees.storey == Storey.UNSET] = Storey.DOMINANT
@@ -345,16 +222,6 @@ def handle_storeys_after_natural_process(natural_process_func: TransitionFn["For
     return wrapper
 
 
-def _should_use_ba_for_storey(diameters: npt.NDArray[np.float64],
-                              basal_areas: npt.NDArray[np.float64],
-                              stems_per_ha: npt.NDArray[np.float64]) -> bool:
-    if np.sum(basal_areas) == 0:
-        return False
-
-    storey_mean_diameter = np.sum(diameters * basal_areas * stems_per_ha) / np.sum(basal_areas * stems_per_ha)
-    return bool(storey_mean_diameter >= 8.0)
-
-
 def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
     if np.all(trees.storey != Storey.DOMINANT):
         # No DOMINANT storey at all
@@ -365,14 +232,14 @@ def _dominant_storey_is_too_small(trees: ReferenceTrees) -> bool:
     dominant_storey_basal_areas = trees.basal_area[dominant_storey_mask]
     dominant_storey_stems_per_ha = trees.stems_per_ha[dominant_storey_mask]
 
-    should_use_ba = _should_use_ba_for_storey(
+    should_use_ba = should_use_ba_as_weight(
         dominant_storey_diameters,
         dominant_storey_basal_areas,
         dominant_storey_stems_per_ha
     )
 
     if should_use_ba:
-        storey_basal_area = calc_storey_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
+        storey_basal_area = calc_basal_area(dominant_storey_basal_areas, dominant_storey_stems_per_ha)
         if storey_basal_area < DOMINANT_STOREY_BA_LIMIT:
             return True
         return False

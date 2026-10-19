@@ -21,6 +21,7 @@ from lukefi.metsi.domain.forestry_types import StandList
 from lukefi.metsi.domain.utils.filter import filter_stands as filter_stands_
 from lukefi.metsi.domain.utils.filter import filter_trees as filter_trees_
 from lukefi.metsi.domain.utils.filter import filter_strata as filter_strata_
+from lukefi.metsi.forestry.aggregates_internal import calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.forestry_utils import find_matching_storey_stratum_for_tree
 from lukefi.metsi.forestry.preprocessing.ages import ages
 from lukefi.metsi.forestry.preprocessing.coordinate_conversion import convert_location_to_ykj
@@ -28,8 +29,6 @@ from lukefi.metsi.forestry.preprocessing.tree_generation import (
     adjust_ages, adjust_retention_trees, reference_trees_from_tree_stratum)
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.forestry.storey import (
-    calc_tree_basal_areas,
-    calc_storey_mean_height,
     promote_either_storey_to_dominant,
     stand_has_only_retention_storey,
     stand_has_only_seeding_tree_storey)
@@ -600,7 +599,7 @@ def supplement_storey_information(stands: StandList) -> StandList:
 
         storeys = np.unique(trees.storey[trees.storey != Storey.RETENTION])
 
-        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in storeys}
+        mean_heights = {storey: calc_mean_height(trees, trees.storey == storey) for storey in storeys}
 
         dominant_storey_mean_height = mean_heights[Storey.DOMINANT]
 
