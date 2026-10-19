@@ -2,7 +2,7 @@
 from typing import Any
 import numpy as np
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.core.select_units import (
+from lukefi.metsi.core.utils.select_units import (
     SelectionSet,
     SelectionTarget,
     select_units,
