@@ -7,11 +7,11 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
     prune_reference_trees_not_in_motti
 )
+from lukefi.metsi.forestry.aggregates_internal import calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.collected_data import OpTuple
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, calc_storey_mean_height
 
 
 def fillinplanting_fn(stand: ForestStand,
@@ -63,7 +63,8 @@ def fillinplanting_fn(stand: ForestStand,
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        diff = calc_storey_mean_height(trees, Storey.DOMINANT) - calc_storey_mean_height(trees, Storey.UNSET)
+        diff = calc_mean_height(trees, trees.storey == Storey.DOMINANT) - \
+            calc_mean_height(trees, trees.storey == Storey.UNSET)
         if abs(diff) < 5.0:
             # Merge new trees into DOMINANT
             storey_for_new_trees = Storey.DOMINANT

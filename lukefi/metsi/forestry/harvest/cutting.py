@@ -9,10 +9,11 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     apply_motti_yp_reduction_from_removed_reference_trees,
 )
 from lukefi.metsi.core.collected_data import OpTuple, CollectedData
-from lukefi.metsi.core.select_units import select_units, SelectionSet, SelectionTarget, Mode
+from lukefi.metsi.core.utils.select_units import select_units, SelectionSet, SelectionTarget, Mode
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
+from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
+from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def cutting_fn(stand: ForestStand,

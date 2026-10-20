@@ -2,7 +2,7 @@
 from typing import Any
 import numpy as np
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.core.select_units import (
+from lukefi.metsi.core.utils.select_units import (
     SelectionSet,
     SelectionTarget,
     select_units,
@@ -10,7 +10,8 @@ from lukefi.metsi.core.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_tree_basal_areas, manage_existing_storeys
+from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
+from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def mark_trees_fn(input_: ForestStand,

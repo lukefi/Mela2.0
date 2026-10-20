@@ -12,16 +12,16 @@ from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identi
 from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
+from lukefi.metsi.forestry.aggregates_internal import calc_mean_height, calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.storey import calc_storey_mean_height, calc_tree_basal_areas
 
 
 def _is_cleared_after_cutting(stand: ForestStand) -> bool:
     if (stand.cutting_year is None or
-        stand.regeneration_area_cleaning_year is None):
+            stand.regeneration_area_cleaning_year is None):
         return False
     if stand.cutting_year <= stand.regeneration_area_cleaning_year:
         return True
@@ -39,6 +39,7 @@ def _resolve_regeneration_type_from_origin(origin: Origin) -> RegenerationType:
         return RegenerationType.ARTIFICIAL
 
     raise MetsiException(f"Unable to solve Motti regeneration type base on stand origin value {origin}")
+
 
 def _resolve_method_from_origin(origin: Origin) -> MottiRegenerationMethod:
     """ In-place resolution from origin to Motti regeneration method coding """
@@ -103,14 +104,14 @@ def _regeneration_via_motti(stand: ForestStand,
     )
 
     sync_ut_to_reference_trees(stand)
-    prune_reference_trees_not_in_motti(stand) # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
+    prune_reference_trees_not_in_motti(stand)  # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
 
 
 def regeneration_fn(input_: ForestStand,
                     /,
                     origin: Origin = Origin.UNSET,
                     species: TreeSpecies = TreeSpecies.UNSET,
-                    stems_per_ha: float | None= None,
+                    stems_per_ha: float | None = None,
                     height: float | None = None,
                     biological_age: float | None = None,
                     breast_height_diameter: float | None = None,
@@ -135,7 +136,7 @@ def regeneration_fn(input_: ForestStand,
         survival_percent_motti:         # value from 0.0 to 100.0
         soil_preparation_type_motti:    # value from 0 to 6
         clearing_motti: bool            # Done or not done
-    
+
     """
     stand = input_
 
@@ -199,7 +200,8 @@ def regeneration_fn(input_: ForestStand,
         # Pre-calculate basal area for all trees
         trees.basal_area = calc_tree_basal_areas(trees.breast_height_diameter)
 
-        mean_heights = {storey: calc_storey_mean_height(trees, storey) for storey in (Storey.DOMINANT, Storey.UNSET)}
+        mean_heights = {storey: calc_mean_height(trees, trees.storey == storey)
+                        for storey in (Storey.DOMINANT, Storey.UNSET)}
         diff = mean_heights[Storey.DOMINANT] - mean_heights[Storey.UNSET]
         if diff >= 5.0:
             # Merge old DOMINANT into OVER

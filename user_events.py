@@ -28,7 +28,7 @@ from lukefi.metsi.forestry.harvest.cutting import cutting
 from lukefi.metsi.core.generators import Event
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.simulation_payload import SimulationPayload
-from lukefi.metsi.core.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
+from lukefi.metsi.core.utils.select_units import ProfileXMode, SelectionSet, SelectionTarget, TargetType
 
 
 def _min_regeneration_diameter(stand: ForestStand) -> float:
