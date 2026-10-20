@@ -359,7 +359,7 @@ class Motti4DLL:
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
-            lib.Motti4UpdateAfterImport( # TODO:: Oliko niin, että tämä oli turha? Tsekkaa manuaalista.
+            lib.Motti4UpdateAfterImport(
                 yy,
                 yp,
                 buffers.saplings,
