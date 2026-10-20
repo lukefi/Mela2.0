@@ -9,7 +9,7 @@ from collections.abc import Callable, Generator
 from lukefi.metsi.core.collected_data import CollectableDataTypes
 from lukefi.metsi.core.condition import Condition, PostCondition
 from lukefi.metsi.core.db_utils import output_node_to_db
-from lukefi.metsi.core.exceptions import MetsiException
+from lukefi.metsi.core.exceptions import CancelTreatment, MetsiException
 from lukefi.metsi.core.model import ComputationalUnit
 from lukefi.metsi.core.operations import do_nothing
 from lukefi.metsi.core.simulation_payload import SimulationPayload
@@ -224,7 +224,12 @@ class Event(EventGeneratorBase[T]):
 
         combined_params = {**self.static_parameters, **resolved_dynamic}
 
-        new_state, new_collected_data = self.treatment(payload.unit, **combined_params)
+        try:
+            new_state, new_collected_data = self.treatment(payload.unit, **combined_params)
+        except CancelTreatment as e:
+            print(f"Treatment {self.treatment.name} canceled: {e}")
+            return
+
         new_state.update_aggregates()
 
         new_payload = SimulationPayload(
