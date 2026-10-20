@@ -1,10 +1,10 @@
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.data.enums.internal import (
-    MetsiEnum, CONIFEROUS_SPECIES, DECIDUOUS_SPECIES,
+    FertilizationType, MetsiEnum, CONIFEROUS_SPECIES, DECIDUOUS_SPECIES,
     DrainageCategory, DrainedPeatlandForestType, Storey, TreeSpecies, SiteType,
     SoilPreparationType)
 from lukefi.metsi.data.enums.motti import (
-    MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType, MottiSoilPreparationType)
+    MottiFertilizationType, MottiSpecies, MottiStorey, MottiDrainageCategory, MottiSiteType, MottiSoilPreparationType)
 
 
 _SPECIES_MAP = {
@@ -81,6 +81,18 @@ _SOIL_PREPARATION_TYPE_MAP: dict[MetsiEnum | None, MottiSoilPreparationType] = {
     SoilPreparationType.OTHER: MottiSoilPreparationType.OTHER
 }
 
+_FERTILIZATION_TYPE_MAP: dict[MetsiEnum | None, MottiFertilizationType] = {
+    FertilizationType.AMMONIUM_SULFITE: MottiFertilizationType.AMMONIUM_SULFITE,
+    FertilizationType.CARBAMIDE: MottiFertilizationType.CARBAMIDE
+}
+
+
+def convert_fertilization_type(source: FertilizationType) -> MottiFertilizationType:
+    if source == FertilizationType.UNSET:
+        raise MetsiException("Fertilization type is required for Motti treatment")
+    if source in _FERTILIZATION_TYPE_MAP:
+        return _FERTILIZATION_TYPE_MAP[source]
+    raise MetsiException(f"Unable to convert internal fertilization type {source} into Motti coding")
 
 def convert_soil_preparation_type(source: SoilPreparationType | None) -> MottiSoilPreparationType:
     if source is None:
@@ -88,6 +100,7 @@ def convert_soil_preparation_type(source: SoilPreparationType | None) -> MottiSo
     if source in _SOIL_PREPARATION_TYPE_MAP:
         return _SOIL_PREPARATION_TYPE_MAP[source]
     raise MetsiException(f"Unable to convert internal soil preparation type {source} into Motti coding")
+
 
 def convert_species(source: TreeSpecies | None) -> MottiSpecies:
     """

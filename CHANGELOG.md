@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [6.0.0] - 2026-10-20
+
+### Added
+
+- `soil_preparation_method` parameter for `soil_surface_preparation` treatment
+- changed response type and parameter namings in `mineral_soil_fertilization` treatment
+- stratum id is resolved from motti side not as parameter in `fillinplanting` treatment
+
 ## [5.2.1] - 2026-10-19
 
 ### Changed

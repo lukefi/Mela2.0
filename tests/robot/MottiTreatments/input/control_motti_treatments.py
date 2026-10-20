@@ -27,6 +27,7 @@ from user_events import (
     FillinPlantingMotti,
     SeedlingDelayMotti,
     SeedtreeCutting,
+    MineralSoilsFertilizationMotti
 )
 
 
@@ -102,6 +103,7 @@ control_structure = MetsiControl[ForestStand](
                                                                       MottiSpecies.DOWNY_BIRCH: 1800,
                                                                       MottiSpecies.ASPEN: 1800,
                                                                       MottiSpecies.GREY_ALDER: 1800, }}),
+                    MineralSoilsFertilizationMotti(),
                     FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
                     SeedtreeCutting(parameters={
                         "cutting_method": 7,
