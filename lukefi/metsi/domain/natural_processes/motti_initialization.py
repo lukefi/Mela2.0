@@ -11,6 +11,7 @@ from lukefi.metsi.data.motti.motti_types import MottiState
 from lukefi.metsi.data.vector_model import TreeStrata
 from lukefi.metsi.domain.natural_processes import motti_util
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
+from lukefi.metsi.forestry.storey import update_storeys
 
 
 def _get_stratum_with_matching_number(tree_stratum: TreeStrata, stratum_number: int) -> int | None:
@@ -400,6 +401,7 @@ def _initialize_motti(stand: ForestStand) -> None:
     stand.motti_state = _init_motti_state(stand)
     _prune_reference_trees(stand)
     motti_util.sync_ut_to_reference_trees(stand)
+    update_storeys(stand.reference_trees)
 
 
 motti_init = Initialization(_initialize_motti)
