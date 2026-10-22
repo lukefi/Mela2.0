@@ -22,6 +22,8 @@ def pct_fn(stand: ForestStand,
            remaining_n: list[int] | dict[MottiSpecies, int] | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only sapling treatment.
+    
+    Relative to pre-commercial thinnig. Also adds naturally regenerated saplings on the stand.
 
     Preferred parameters:
       remaining_n_by_species:

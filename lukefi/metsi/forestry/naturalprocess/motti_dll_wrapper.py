@@ -658,6 +658,53 @@ class Motti4DLL:
             raise RuntimeError(f"Motti4SeedingAgeShift failed (rv={rv[0]})")
 
     @classmethod
+    def peatland_fertilization_with_state(
+        cls,
+        ms: MottiState,
+        *,
+        ftype: int,
+    ):
+        """
+        Call Motti4MPeatlandFertilization against persistent state buffers.
+
+        Parameters
+        ----------
+        ftype
+            Fertilization type code passed through to Motti.
+
+        Returns
+        -------
+        None. Motti updates the persistent buffers in-place.
+        """
+        ffi, lib = cls.ffi, cls.lib
+
+        # ntrees_p = cast(IntPtr, ffi.new("int *", numtrees))
+        ftype_p = cast(IntPtr, ffi.new("int *", ftype))
+        numtrees_p = cast(IntPtr, ffi.new("int *", ms.ntrees))
+        ierror_p = cast(IntPtr, ffi.new("int *"))
+        rv_p = cast(IntPtr, ffi.new("int *"))
+
+        with _maybe_chdir(cls.data_dir):
+            lib.Motti4PeatlandFertilization(
+                ftype_p,
+                ms.yy,
+                ms.yp,
+                ms.buffers.saplings,
+                ms.buffers.kor_state,
+                ms.buffers.vcr_state,
+                ms.buffers.apv_state,
+                numtrees_p,
+                ms.buffers.fert_array,
+                ms.buffers.numfer,
+                ierror_p,
+                rv_p,
+            )
+
+        if rv_p[0] > 0:
+            raise RuntimeError(f"Motti4PeatlandFertilization failed with return value \
+                               {rv_p[0]} and error value {ierror_p[0]}")
+
+    @classmethod
     def mineral_soils_fertilization_with_state(
         cls,
         yy: Motti4Site,
