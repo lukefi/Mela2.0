@@ -21,7 +21,7 @@ from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
 from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
-from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization
+from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization, peatland_fertilization
 from lukefi.metsi.domain.forestry_types import ForestCondition, ForestPostCondition
 from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
 from lukefi.metsi.forestry.harvest.cutting import cutting
@@ -531,9 +531,9 @@ class SeedtreeCutting(Event[ForestStand]):
         )
 
 
-class SaplingTreatmentMotti(Event[ForestStand]):
+class PctMotti(Event[ForestStand]):
     """
-    Example event that uses Motti4PCT.
+    Example event that uses Motti4PCT - Pre-commercial thinning.
 
     This is a thin wrapper around the Motti-backed treatment.
     """
@@ -661,7 +661,7 @@ class SeedlingDelayMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params = {"istep": 1}
+        default_params = {"delay": 1}
 
         merged_params = default_params | (parameters or {})
 
@@ -691,6 +691,8 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
 
     Aliases amountN and boolPhosporus are also accepted for easier mapping
     from the Motti documentation.
+
+    Can be used with or without Motti as transition.
     """
 
     def __init__(
@@ -722,6 +724,40 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
         )
 
 
+class PeatlandFertilizationMotti(Event[ForestStand]):
+    """ Apply Motti peatland fertilization to a forest stand.
+
+        Only configurable parameter is the fertilization_type with values 3 (PK), 4 (NPK) and 5 (Ash).
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {
+            "fertilization_type": FertilizationType.PK,
+        }
+
+        merged_params = default_params | (parameters or {})
+
+        # default_preconds: list[ForestCondition] = [
+        #     TimeSinceTreatment(10, cutting),
+        # ]
+        default_preconds: list[ForestCondition] = []
+
+        super().__init__(
+            treatment=peatland_fertilization,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_fertilization", "fertilization", "peatland"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -730,7 +766,7 @@ __all__ = [
     "MarkRetentionTrees",
     "Harvest20percent",
     "SeedtreeCutting",
-    "SaplingTreatmentMotti",
+    "PctMotti",
     "EarlyCareMotti",
     "FillinPlantingMotti",
     "SeedlingDelayMotti",

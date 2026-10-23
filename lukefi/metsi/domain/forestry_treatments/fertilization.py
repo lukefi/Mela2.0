@@ -12,6 +12,46 @@ from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 
 
+def peatland_fertilization_fn(stand: ForestStand,
+                              /,
+                              fertilization_type: FertilizationType | None = None
+                              ) -> OpTuple[ForestStand]:
+    """
+    Peatland fertilization treatment function that applies fertilization to a forest stand.
+
+    Usable also with Motti as transition, but for Motti use case needs the motti related parameters.
+
+    Parameters in Motti use case:
+    ----------
+    fertilization_type : FertilizationType | None
+        Fertilization type code passed to Motti.
+
+    Updates the stand's motti_state and sets the fertilization year to the current year in ForestStand.
+    """
+    if stand.motti_state is not None:
+        ms = stand.motti_state
+
+        if fertilization_type is None:
+            raise MetsiException("Fertilization parameter 'fertilization_type' is required for Motti fertilization")
+        if fertilization_type in (FertilizationType.AMMONIUM_SULFITE, FertilizationType.CARBAMIDE):
+            raise MetsiException(f"Fertilization types {(FertilizationType.AMMONIUM_SULFITE,
+                                                         FertilizationType.CARBAMIDE)} \
+                                 are not suitable parameters for Motti peatland fertilization")
+
+        Motti4DLL.peatland_fertilization_with_state(
+            ms,
+            ftype=convert_fertilization_type(fertilization_type).value,
+        )
+
+        sync_yp_to_reference_trees(stand)
+        sync_ut_to_reference_trees(stand)
+        prune_reference_trees_not_in_motti(stand)
+
+    stand.fertilization_year = stand.year
+
+    return stand, []
+
+
 def mineral_soils_fertilization_fn(stand: ForestStand,
                                    /,
                                    fertilization_type: FertilizationType | None = None,
@@ -38,6 +78,10 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
 
         if fertilization_type is None:
             raise MetsiException("Fertilization parameter 'fertilization_type' is required for Motti fertilization")
+        if fertilization_type not in (FertilizationType.AMMONIUM_SULFITE, FertilizationType.CARBAMIDE):
+            raise MetsiException(f"Only fertilization types {(FertilizationType.AMMONIUM_SULFITE,
+                                                              FertilizationType.CARBAMIDE)} \
+                                  are suitable parameters for Motti mineral soil fertilization")
         if amount_n is None:
             raise MetsiException("Fertilization parameter 'amount_n' is required for Motti fertilization")
 
@@ -51,7 +95,6 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
             phosphorus=int(phosphorus)
         )
 
-        # Keep Python-side vectors aligned in case the DLL updated state immediately.
         sync_yp_to_reference_trees(stand)
         sync_ut_to_reference_trees(stand)
         prune_reference_trees_not_in_motti(stand)
@@ -62,3 +105,4 @@ def mineral_soils_fertilization_fn(stand: ForestStand,
 
 
 mineral_soils_fertilization = Treatment(mineral_soils_fertilization_fn, "mineral_soils_fertilization")
+peatland_fertilization = Treatment(peatland_fertilization_fn, "peatland_fertilization")

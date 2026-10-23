@@ -417,3 +417,6 @@ class FertilizationType(MetsiEnum):
     UNSET = -1
     AMMONIUM_SULFITE = 1
     CARBAMIDE = 2
+    PK = 3 # phosporus, potassium
+    NPK = 4 # nitrogen, phosporus, potassium
+    ASH = 5

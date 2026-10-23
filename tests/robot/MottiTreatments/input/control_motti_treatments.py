@@ -22,12 +22,13 @@ from user_events import (
     Harvest20percent,
     FirstThinningMineralSoils,
     PlantingPines,
-    SaplingTreatmentMotti,
+    PctMotti,
     EarlyCareMotti,
     FillinPlantingMotti,
     SeedlingDelayMotti,
     SeedtreeCutting,
-    MineralSoilsFertilizationMotti
+    MineralSoilsFertilizationMotti,
+    PeatlandFertilizationMotti
 )
 
 
@@ -91,19 +92,20 @@ control_structure = MetsiControl[ForestStand](
                     ]),
                     Sequence[ForestStand]([
                         PlantingPines(),
-                        SeedlingDelayMotti(parameters={"istep": 1}),
+                        SeedlingDelayMotti(parameters={"delay": 1}),
                         EarlyCareMotti(parameters={"imode": 0}),
 
                     ]),
                     EarlyCareMotti(parameters={"imode": 0}),
                     Harvest20percent(),
-                    SaplingTreatmentMotti(parameters={"remaining_n": {MottiSpecies.PINE: 1800,
-                                                                      MottiSpecies.SPRUCE: 1800,
-                                                                      MottiSpecies.SILVER_BIRCH: 1800,
-                                                                      MottiSpecies.DOWNY_BIRCH: 1800,
-                                                                      MottiSpecies.ASPEN: 1800,
-                                                                      MottiSpecies.GREY_ALDER: 1800, }}),
+                    PctMotti(parameters={"remaining_n": {MottiSpecies.PINE: 1800,
+                                                         MottiSpecies.SPRUCE: 1800,
+                                                         MottiSpecies.SILVER_BIRCH: 1800,
+                                                         MottiSpecies.DOWNY_BIRCH: 1800,
+                                                         MottiSpecies.ASPEN: 1800,
+                                                         MottiSpecies.GREY_ALDER: 1800,}}),
                     MineralSoilsFertilizationMotti(),
+                    PeatlandFertilizationMotti(),
                     FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
                     SeedtreeCutting(parameters={
                         "cutting_method": 7,

@@ -11,13 +11,13 @@ from lukefi.metsi.core.exceptions import MetsiException
 
 def seedlingdelay_fn(stand: ForestStand,
                      /,
-                     istep: int | None = None) -> OpTuple[ForestStand]:
+                     delay: int | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only seedling delay treatment.
 
     Parameters
     ----------
-    istep : int
+    delay : int
         Age change in years.
         Positive values increase age, negative values decrease age.
 
@@ -33,13 +33,13 @@ def seedlingdelay_fn(stand: ForestStand,
             "Motti SeedlingDelay requested but stand has no initialized motti_state. "
         )
 
-    if istep is None:
-        raise MetsiException("SeedlingDelay parameter 'istep' is required")
+    if delay is None:
+        raise MetsiException("SeedlingDelay parameter 'delay' is required")
 
     Motti4DLL.seedling_delay_with_state(
         ms.yy,
         ms.buffers,
-        istep=istep,
+        istep=delay,
     )
 
     sync_ut_to_reference_trees(stand)
