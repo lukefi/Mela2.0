@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [6.2.0] - 2026-10-23
+
+### Added
+
+- peatland fertilization treatment wrapping the `Motti4PeatlandFertilization` function
+- enabled MottiTreatments robot test
+- included try-except TypeError in robot testing `_compre` function
+- included explisite validation of table column names into `_compra` 
+
 ## [6.1.0] - 2026-10-22
 
 ### Added
