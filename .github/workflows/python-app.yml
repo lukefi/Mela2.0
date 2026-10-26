@@ -130,6 +130,7 @@ jobs:
 
     - name: Clear executable stack
       run: |
+        sudo apt-get update
         sudo apt-get install prelink -y
         execstack -c ./data/motti/libadvvfc.so
 
