@@ -128,12 +128,10 @@ jobs:
         ls -al "$DEST" || true
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GITHUB_WORKSPACE}/data/motti" >> $GITHUB_ENV
 
-    - name: Clear executable stack
+    - name: Clear executable stack flag
       run: |
-        sudo add-apt-repository universe
-        sudo apt-get update
-        sudo apt-get install execstack -y
-        execstack -c ./data/motti/libadvvfc.so
+        pip install patchelf
+        patchelf --clear-execstack ./data/motti/libadvvfc.so
 
     - name: Run Robot Tests
       run: |
