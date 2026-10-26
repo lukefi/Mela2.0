@@ -132,7 +132,7 @@ jobs:
       run: |
         sudo add-apt-repository universe
         sudo apt-get update
-        sudo apt-get install prelink -y
+        sudo apt-get install execstack -y
         execstack -c ./data/motti/libadvvfc.so
 
     - name: Run Robot Tests
