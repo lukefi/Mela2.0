@@ -128,6 +128,11 @@ jobs:
         ls -al "$DEST" || true
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GITHUB_WORKSPACE}/data/motti" >> $GITHUB_ENV
 
+    - name: Clear executable stack
+      run: |
+        apt-get install prelink -y
+        execstack -c ./data/motti/libadvvfc.so
+
     - name: Run Robot Tests
       run: |
         export PYTHONPATH=${GITHUB_WORKSPACE}
