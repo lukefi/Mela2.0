@@ -88,12 +88,8 @@ def main() -> int:
     force_delete = bool(cli_arguments.pop("delete", False))
 
     control_file = "control.py" if cli_arguments["control_file"] is None else cli_arguments['control_file']
-    try:
-        control: MetsiControl[ForestStand] = read_control_module(control_file, cli_arguments)
-        app_config = control.app_configuration
-    except IOError:
-        print(f"Application control file path '{control_file}' can not be read. Aborting....")
-        return 1
+    control: MetsiControl[ForestStand] = read_control_module(control_file, cli_arguments)
+    app_config = control.app_configuration
 
     prepare_target_directory(app_config.target_directory)
 
