@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [7.1.0] - 2026-10-28
+
+### Added
+
+- Added printout for remaining Motti license days in `Motti4DLL.load()`
+
 ## [7.0.0] - 2026-10-28
 
 ### Changed
