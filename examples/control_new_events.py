@@ -7,7 +7,7 @@ from lukefi.metsi.domain.natural_processes.grow_motti import grow_motti_fn
 from lukefi.metsi.domain.natural_processes.motti_initialization import motti_init
 from lukefi.metsi.domain.pre_ops import generate_reference_trees, supplement_storey_information
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.core.sim_control import Preprocessing, Simulation
+from lukefi.metsi.core.sim_control import Preprocessing, PreprocessingOperation, Simulation
 from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
 
@@ -26,18 +26,14 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            generate_reference_trees,
-            supplement_storey_information
+            PreprocessingOperation(generate_reference_trees, {
+                "n_trees": 10,
+                "method": "weibull",
+                "debug": False
+            }),
+            PreprocessingOperation(supplement_storey_information)
         ],
-        params={
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "method": "weibull",
-                    "debug": False
-                }
-            ]
-        }),
+    ),
     simulation=Simulation[ForestStand](
         instructions=[
             SimulationInstruction(

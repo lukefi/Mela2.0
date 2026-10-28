@@ -10,13 +10,28 @@ from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.treatment import TreatmentFn
 
 
-type PreprocessingOperation[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
+type PreprocessingFn[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
+
+
+@dataclass(init=False, slots=True)
+class PreprocessingOperation[T: ComputationalUnit]:
+    operation: PreprocessingFn[T]
+    params: dict[str, Any]
+
+    def __init__(self, operation: PreprocessingFn[T], params: dict[str, Any] | None = None):
+        self.operation = operation
+        if params is not None:
+            self.params = params
+        else:
+            self.params = {}
+
+    def __call__(self, units: Sequence[T]) -> Sequence[T]:
+        return self.operation(units, **self.params)
 
 
 @dataclass(slots=True)
 class Preprocessing[T:ComputationalUnit]:
     operations: Sequence[PreprocessingOperation[T]]
-    params: dict[PreprocessingOperation[T], list[dict[str, Any]]]
 
 
 @dataclass(slots=True)

@@ -15,7 +15,7 @@ from lukefi.metsi.domain.pre_ops import (
     scale_area_weight,
     supplement_storey_information)
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.core.sim_control import Preprocessing, Simulation
+from lukefi.metsi.core.sim_control import Preprocessing, PreprocessingOperation, Simulation
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.instructions import SimulationInstruction
@@ -29,34 +29,23 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            scale_area_weight,
-            generate_reference_trees,
-            compute_location_metadata,
-            filter_stands,
-            filter_trees,
-            supplement_storey_information
+            PreprocessingOperation(scale_area_weight),
+            PreprocessingOperation(generate_reference_trees, {
+                "n_trees": 10,
+                "method": "weibull",
+                "debug": False,
+                "delete_strata": False
+            }),
+            PreprocessingOperation(compute_location_metadata),
+            PreprocessingOperation(filter_stands, {
+                "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+            }),
+            PreprocessingOperation(filter_trees, {
+                "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                              (stand.reference_trees.stems_per_ha == 0)))
+            }),
+            PreprocessingOperation(supplement_storey_information)
         ],
-        params={
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "method": "weibull",
-                    "debug": False,
-                    "delete_strata": False
-                }
-            ],
-            filter_stands: [
-                {
-                    "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
-                }
-            ],
-            filter_trees: [
-                {
-                    "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                                  (stand.reference_trees.stems_per_ha == 0)))
-                }
-            ]
-        }
     ),
     simulation=Simulation[ForestStand](
         instructions=[
