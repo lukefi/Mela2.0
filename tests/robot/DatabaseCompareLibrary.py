@@ -20,6 +20,8 @@ def _as_set_if_set_string(v):
 def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
     ref_db = sqlite3.connect(ref)
     res_db = sqlite3.connect(res)
+    ref_db.row_factory = sqlite3.Row
+    res_db.row_factory = sqlite3.Row
     ref_cur = ref_db.cursor()
     res_cur = res_db.cursor()
     ref_rows = ref_cur.execute(select)
@@ -28,21 +30,28 @@ def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
         res_row = res_rows.fetchone()
         if res_row is None:
             raise AssertionError(f"Row {i} missing from test output: {ref_row} != {res_row}")
-        for j, ref_col in enumerate(ref_row):
+        keys = ref_row.keys()
+        for key in keys:
+            ref_col = ref_row[key]
+            try:
+                res_col = res_row[key]
+            except IndexError as e:
+                raise AssertionError(f"Column `{key}` missing from test output") from e
+
             if isinstance(ref_col, (int, float)):
-                if not ref_col - numeric_tolerance <= res_row[j] <= ref_col + numeric_tolerance:
-                    raise AssertionError(f"Difference in row {i}, column {j}: "
-                                         f"{ref_col} != {res_row[j]}, tolerance {numeric_tolerance}")
+                if not ref_col - numeric_tolerance <= res_col <= ref_col + numeric_tolerance:
+                    raise AssertionError(f"Difference in row {i}, column `{key}`: "
+                                         f"{ref_col} != {res_col}, tolerance {numeric_tolerance}")
             else:
-                if ref_col != res_row[j]:
+                if ref_col != res_col:
                     ref_set = _as_set_if_set_string(ref_col)
-                    res_set = _as_set_if_set_string(res_row[j])
+                    res_set = _as_set_if_set_string(res_col)
                     if ref_set is not None and res_set is not None:
                         if ref_set != res_set:
-                            raise AssertionError(f"Difference in row {i}, column {j}: {ref_col} != {res_row[j]}")
+                            raise AssertionError(f"Difference in row {i}, column `{key}`: {ref_col} != {res_col}")
                     else:
-                        if ref_col != res_row[j]:
-                            raise AssertionError(f"Difference in row {i}, column {j}: {ref_col} != {res_row[j]}")
+                        if ref_col != res_col:
+                            raise AssertionError(f"Difference in row {i}, column `{key}`: {ref_col} != {res_col}")
 
 
 def node_tables_should_be_equal(ref: str, res: str):
