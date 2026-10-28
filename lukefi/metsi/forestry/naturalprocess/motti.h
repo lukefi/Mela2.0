@@ -10,7 +10,8 @@ typedef struct
 
 typedef struct
 {
-    float trunk, waste, branch_live, branch_dead, leaf, base, root_dense, root_thin;
+    float trunk, waste, branch_live, branch_dead, leaf, base, root_dense,
+        root_thin;
 } Motti4Biomass;
 
 typedef struct
@@ -120,9 +121,11 @@ typedef struct
     Motti4Spev9 si;
     float tkg;
     Motti4Spev9 hd50;
-    float year, step, sid, _53, xt_perk, prt, fthin, xt_thin, xt_fert, fert_peat;
+    float year, step, sid, _53, xt_perk, prt, fthin, xt_thin, xt_fert,
+        fert_peat;
     float xt_thoit, drain, xt_ndrain, xt_rdrain, _64, _65, _66, _67, _68;
-    float xt_kar, xt_fthin, agedom, agedom13, ndom, spedom, spedom2, dcond, kehl, nstorey, gstorey;
+    float xt_kar, xt_fthin, agedom, agedom13, ndom, spedom, spedom2, dcond,
+        kehl, nstorey, gstorey;
     Motti4StoreyInfo st1, st2, st3, st4, st12;
     Motti4Spev10 hdom100, hdom_j, hg, hf, ddom100, ddom_latv, dg, df;
     float h100_perk, crdom, crerror, rimp, vg, v1, v2, v3, v4, v12;
@@ -248,7 +251,10 @@ void Motti4AfterSeedtreeCutting(Motti4Site* yy,
                                 int* ierror,
                                 int* rv);
 
-void Motti4SeedingAgeShift(Motti4Site* yy, Motti4Saplings* ut, int* istep, int* rv);
+void Motti4SeedingAgeShift(Motti4Site* yy,
+                           Motti4Saplings* ut,
+                           int* istep,
+                           int* rv);
 
 void Motti4MineralSoilsFertilization(int* ftype,
                                      float* amountN,
@@ -263,3 +269,5 @@ void Motti4MineralSoilsFertilization(int* ftype,
                                      Motti4FerArray* fer,
                                      int* numfer,
                                      int* rv);
+
+int GetLicenseDays(void);

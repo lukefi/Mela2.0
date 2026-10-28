@@ -111,6 +111,8 @@ class Motti4DLL:
         lib = ffi.dlopen(str(lib_path))
         cls.ffi, cls.lib = ffi, lib
 
+        print(f"Motti license days remaining: {cls.lib.GetLicenseDays()}")
+
     # ---------- FFI ----------
     @classmethod
     def _cdef_source(cls) -> str:
@@ -709,7 +711,6 @@ class Motti4DLL:
                 buffers.numfer,
                 response_p,
             )
-
 
     @classmethod
     def pct_with_state(
