@@ -63,63 +63,63 @@ control_structure = MetsiControl[ForestStand](
             filter_trees: [
                 {
                     "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                                (stand.reference_trees.stems_per_ha == 0)))
+                                                  (stand.reference_trees.stems_per_ha == 0)))
                 }
             ]
         }
     ),
     simulation=Simulation[ForestStand](
         instructions=[
-        SimulationInstruction(
-            events=[
-                Alternatives[ForestStand]([
-                    Event[ForestStand](treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
-                    Sequence[ForestStand]([
-                        Event[ForestStand](treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
-                        Event[ForestStand](
-                            treatment=do_nothing,
-                            static_parameters={"n": 3},
-                            dynamic_parameters={
-                                "m": lambda s: (s.site_type_category.value if s.site_type_category is not None else 0) + 100
-                            },
-                            tags={"third_type"},
-                        ),
-                        Harvest20percent(),
-                        FirstThinningMineralSoils(),
+            SimulationInstruction(
+                events=[
+                    Alternatives[ForestStand]([
+                        Event[ForestStand](treatment=do_nothing, static_parameters={"n": 1}, tags={"first_type"}),
+                        Sequence[ForestStand]([
+                            Event[ForestStand](treatment=do_nothing, static_parameters={"n": 2}, tags={"second_type"}),
+                            Event[ForestStand](
+                                treatment=do_nothing,
+                                static_parameters={"n": 3},
+                                dynamic_parameters={
+                                    "m": lambda s: (s.site_type_category.value if s.site_type_category is not None else 0) + 100
+                                },
+                                tags={"third_type"},
+                            ),
+                            Harvest20percent(),
+                            FirstThinningMineralSoils(),
 
 
-                    ]),
-                    Sequence[ForestStand]([
-                        PlantingPines(),
-                        SeedlingDelayMotti(parameters={"istep": 1}),
+                        ]),
+                        Sequence[ForestStand]([
+                            PlantingPines(),
+                            SeedlingDelayMotti(parameters={"istep": 1}),
+                            EarlyCareMotti(parameters={"imode": 0}),
+
+                        ]),
                         EarlyCareMotti(parameters={"imode": 0}),
-
-                    ]),
-                    EarlyCareMotti(parameters={"imode": 0}),
-                    Harvest20percent(),
-                    SaplingTreatmentMotti(parameters={"remaining_n": {MottiSpecies.PINE: 1800,
-                                                                      MottiSpecies.SPRUCE: 1800,
-                                                                      MottiSpecies.SILVER_BIRCH: 1800,
-                                                                      MottiSpecies.DOWNY_BIRCH: 1800,
-                                                                      MottiSpecies.ASPEN: 1800,
-                                                                      MottiSpecies.GREY_ALDER: 1800, }}),
-                    MineralSoilsFertilizationMotti(),
-                    FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
-                    SeedtreeCutting(parameters={
-                        "cutting_method": 7,
-                    })
-                ])
-            ]
-        )
-    ],
-    transition=Transition(
-        grow_motti_fn,
-        max_step=5,
-        db_output_state=False,
-        db_output_cd=False,
+                        Harvest20percent(),
+                        SaplingTreatmentMotti(parameters={"remaining_n": {MottiSpecies.PINE: 1800,
+                                                                          MottiSpecies.SPRUCE: 1800,
+                                                                          MottiSpecies.SILVER_BIRCH: 1800,
+                                                                          MottiSpecies.DOWNY_BIRCH: 1800,
+                                                                          MottiSpecies.ASPEN: 1800,
+                                                                          MottiSpecies.GREY_ALDER: 1800, }}),
+                        MineralSoilsFertilizationMotti(),
+                        FillinPlantingMotti(parameters={"species": 1, "stems_per_ha": 400.0}),
+                        SeedtreeCutting(parameters={
+                            "cutting_method": 7,
+                        })
+                    ])
+                ]
+            )
+        ],
+        transition=Transition(
+            grow_motti_fn,
+            max_step=5,
+            db_output_state=False,
+            db_output_cd=False,
+        ),
         initialization=motti_init,
-    ),
-    end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
+        end_condition=Condition[ForestStand](lambda x: x.unit.year > 2030)
     )
 )
 

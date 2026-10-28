@@ -1,7 +1,7 @@
 from typing import Optional
 import numpy as np
 from lukefi.metsi.core.exceptions import MetsiException
-from lukefi.metsi.core.transition import Initialization
+from lukefi.metsi.core.initialization import Initialization
 from lukefi.metsi.data.conversion import internal2motti
 from lukefi.metsi.data.enums.internal import CRS, CuttingMethod, Storey, TreeSpecies
 from lukefi.metsi.data.enums.motti import MottiStorey
@@ -375,7 +375,7 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
 
 
 def _prune_reference_trees(stand: ForestStand) -> None:
-    """ 
+    """
     Keeps only ReferenceTrees that have a matching tree in YP vector.
     """
     rt = stand.reference_trees
