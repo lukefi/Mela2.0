@@ -89,7 +89,7 @@ class CuttingTest(unittest.TestCase):
         updated, cdata = cutting_fn(
             stand,
             tree_selection={"target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0), "sets": []},
-            mode="odds_units",
+            mode=Mode.ODDS_UNITS,
             select_from_all=True,
         )
 
@@ -103,7 +103,7 @@ class CuttingTest(unittest.TestCase):
 
         # Missing tree_selection
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, mode="odds_units", select_from_all=True)
+            cutting_fn(stand, mode=Mode.ODDS_UNITS, select_from_all=True)
 
         # Empty sets
         with self.assertRaises(MetsiException):
@@ -113,36 +113,38 @@ class CuttingTest(unittest.TestCase):
                        mode=Mode.ODDS_UNITS, select_from_all=True)
 
         # Mismatched profile shapes
-        bad = {
-            "tree_selection": {
-                "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
-                "sets": [
-                    SelectionSet[ForestStand, ReferenceTrees](
-                        _all_trees,
-                        "height",
-                        "stems_per_ha",
-                        TargetType.ABSOLUTE,
-                        10.0,
-                        [0.0, 1.0, 2.0],
-                        [0.5, 0.5],  # length mismatch
-                        ProfileXMode.RELATIVE,
-                    )
-
-                ]
-            },
-            "mode": Mode.ODDS_UNITS,
-            "select_from_all": True,
-        }
         with self.assertRaises(MetsiException):
+            bad = {
+                "tree_selection": {
+                    "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
+                    "sets": [
+                        SelectionSet[ForestStand, ReferenceTrees](
+                            _all_trees,
+                            "height",
+                            "stems_per_ha",
+                            TargetType.ABSOLUTE,
+                            10.0,
+                            [0.0, 1.0, 2.0],
+                            [0.5, 0.5],  # length mismatch
+                            ProfileXMode.RELATIVE,
+                        )
+
+                    ]
+                },
+                "mode": Mode.ODDS_UNITS,
+                "select_from_all": True,
+            }
             cutting_fn(stand, **bad)
 
         # Missing mode
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection=bad["tree_selection"], select_from_all=True)
+            cutting_fn(stand, tree_selection={"target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
+                                              "sets": []}, select_from_all=True)
 
         # Missing select_from_all
         with self.assertRaises(MetsiException):
-            cutting_fn(stand, tree_selection=bad["tree_selection"], mode=Mode.ODDS_UNITS)
+            cutting_fn(stand, tree_selection={"target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 10.0),
+                                              "sets": []}, mode=Mode.ODDS_UNITS)
 
 
 if __name__ == "__main__":

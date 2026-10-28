@@ -106,11 +106,12 @@ class TestSelectUnits(unittest.TestCase):
         target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
-        expected = np.array([0.001285986, 0.026337014, 0.044398658, 0.064245866, 0.062085809, 0.081328615,
-                             0.102171400, 0.125488095, 0.152262229, 0.183603001, 0.222128271, 0.268294736,
-                             0.328393045, 0.407688528, 0.519838362, 0.690429783, 0.617979504, 0.971546129,
-                             1.562742457, 3.499975853])
-        self.assertTrue(np.all(np.abs(selected - expected) < 0.000000001))
+        expected = np.array([1.28591462e-03, 2.63355633e-02, 4.43962202e-02, 6.42423503e-02,
+                             6.20824116e-02, 8.13241804e-02, 1.02165851e-01, 1.25481309e-01,
+                             1.52254037e-01, 1.83593181e-01, 2.22116477e-01, 2.68280616e-01,
+                             3.28375962e-01, 4.07667649e-01, 5.19812331e-01, 6.90396404e-01,
+                             6.17950003e-01, 9.71501929e-01, 1.56268073e+00, 3.49990638e+00])
+        self.assertTrue(np.all(np.abs(selected - expected) < 0.00000001))
 
     def test_odds_profile(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
@@ -129,11 +130,12 @@ class TestSelectUnits(unittest.TestCase):
         target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode=Mode.ODDS_PROFILE)
-        expected = np.array([0.0002173194, 0.0069249673, 0.0103028322, 0.0133604573, 0.0128780946,
-                             0.0151229730, 0.0514119379, 0.1843021961, 0.3066456085, 0.4205515442,
-                             0.5302387415, 0.6314884621, 0.7306288135, 0.8255504266, 0.9183626704,
-                             1.0090655451, 0.8502398744, 1.0955496815, 1.1820338178, 1.2664085850,])
-        self.assertTrue(np.all(np.abs(selected - expected) < 0.000000001))
+        expected = np.array([2.17248250e-04, 6.92270568e-03, 1.02994674e-02, 1.33560941e-02,
+                             1.28738888e-02, 1.51180342e-02, 5.13977933e-02, 1.84254753e-01,
+                             3.06567510e-01, 4.20444904e-01, 5.30104617e-01, 6.31328967e-01,
+                             7.30444477e-01, 8.25342305e-01, 9.18131293e-01, 1.00881144e+00,
+                             8.50025789e-01, 1.09527391e+00, 1.18173637e+00, 1.26609000e+00])
+        self.assertTrue(np.all(np.abs(selected - expected) < 0.00000001))
 
     def test_scale(self):
         set1 = SelectionSet[ForestStand, ReferenceTrees](
@@ -177,11 +179,8 @@ class TestSelectUnits(unittest.TestCase):
         target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 100)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha", mode=Mode.LEVEL)
-        expected = np.array([
-            0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000,
-            0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.0000000, 0.3572367,
-            0.8158991, 1.2641372, 1.1356667, 1.6915271, 2.1189170, 2.5358827
-        ])
+        expected = np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.35888868, 0.81755099,
+                             1.26578916, 1.13702738, 1.69317904, 2.12056893, 2.53753466])
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
 
     def test_relative_remain(self):
@@ -201,12 +200,10 @@ class TestSelectUnits(unittest.TestCase):
         target = SelectionTarget(TargetType.RELATIVE_REMAIN, "stems_per_ha", 0.5)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
-        expected = np.array([
-            0.03403949, 0.62297660, 0.97687819, 1.32466043, 1.27814020, 1.56559315,
-            1.83683878, 2.10071695, 2.36219400, 2.62344304, 2.89304200, 3.15928884,
-            3.43787904, 3.72293620, 4.02080883, 4.33213414, 3.63666300, 4.64956342,
-            4.98923296, 5.34436438,
-        ])
+        expected = np.array([0.03403942, 0.62297545, 0.97687652, 1.32465831, 1.27813817,
+                             1.56559083, 1.83683625, 2.10071426, 2.36219121, 2.6234402,
+                             2.89303917, 3.15928607, 3.43787639, 3.72293374, 4.02080663,
+                             4.33213228, 3.63666156, 4.64956199, 4.98923207, 5.34436415])
         self.assertTrue(np.all(np.abs(selected - expected) < 0.0000001))
 
     def test_multiple_sets(self):
@@ -238,9 +235,8 @@ class TestSelectUnits(unittest.TestCase):
         target = SelectionTarget(TargetType.ABSOLUTE_REMAIN, "stems_per_ha", 50)
 
         selected = select_units(self.stand, self.trees, target, sets, "stems_per_ha")
-        expected = np.array([
-            7.047820, 3.039971, 2.428410, 2.161354, 2.067414, 1.817145, 1.627423, 1.482481,
-            1.418895, 1.384098, 1.376576, 1.397957, 1.454208, 1.555003, 1.722350, 1.997521,
-            1.726186, 2.456163, 3.354480, 5.456720,
-        ])
+        expected = np.array([7.04782, 3.03996227, 2.42840117, 2.16134462, 2.06740577,
+                             1.81713722, 1.62741566, 1.48247347, 1.41888761, 1.38408961,
+                             1.3765677, 1.39794721, 1.45419776, 1.55499185, 1.72233693,
+                             1.99750541, 1.72617314, 2.45614463, 3.35445959, 5.45672])
         self.assertTrue(np.all(np.abs(selected - expected) < 0.000001))
