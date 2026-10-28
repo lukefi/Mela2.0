@@ -111,7 +111,7 @@ class Motti4DLL:
         lib = ffi.dlopen(str(lib_path))
         cls.ffi, cls.lib = ffi, lib
 
-        print(f"License days remaining: {cls.lib.GetLicenseDays()}")
+        print(f"Motti license days remaining: {cls.lib.GetLicenseDays()}")
 
     # ---------- FFI ----------
     @classmethod
