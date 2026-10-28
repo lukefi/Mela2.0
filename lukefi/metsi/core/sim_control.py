@@ -1,32 +1,14 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence
+from typing import Sequence
 
 from lukefi.metsi.core.collected_data import CollectableDataTypes
 from lukefi.metsi.core.condition import Condition
 from lukefi.metsi.core.initialization import Initialization
 from lukefi.metsi.core.instructions import SimulationInstruction
 from lukefi.metsi.core.model import ComputationalUnit
+from lukefi.metsi.core.preop import PreprocessingOperation
 from lukefi.metsi.core.transition import Transition
 from lukefi.metsi.core.treatment import TreatmentFn
-
-
-type PreprocessingFn[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]]
-
-
-@dataclass(init=False, slots=True)
-class PreprocessingOperation[T: ComputationalUnit]:
-    operation: PreprocessingFn[T]
-    params: dict[str, Any]
-
-    def __init__(self, operation: PreprocessingFn[T], params: dict[str, Any] | None = None):
-        self.operation = operation
-        if params is not None:
-            self.params = params
-        else:
-            self.params = {}
-
-    def __call__(self, units: Sequence[T]) -> Sequence[T]:
-        return self.operation(units, **self.params)
 
 
 @dataclass(slots=True)

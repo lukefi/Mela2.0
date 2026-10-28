@@ -4,6 +4,7 @@ from typing import Any, Optional
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from lukefi.metsi.core.preop import pre_op
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import (
     EPSG_2393_ALIASES,
@@ -34,6 +35,7 @@ from lukefi.metsi.forestry.storey import (
     stand_has_only_seeding_tree_storey)
 
 
+@pre_op
 def filter_stands(stands: StandList,
                   *,
                   select: Optional[Callable[[ForestStand], bool]] = None,
@@ -54,6 +56,7 @@ def filter_stands(stands: StandList,
     return stands
 
 
+@pre_op
 def filter_trees(stands: StandList,
                  *,
                  predicate: Callable[[ForestStand],
@@ -73,7 +76,11 @@ def filter_trees(stands: StandList,
     return stands
 
 
-def filter_strata(stands: StandList, *, predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> StandList:
+@pre_op
+def filter_strata(stands: StandList,
+                  *,
+                  predicate: Callable[[ForestStand],
+                                      npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter tree strata for each stand in list based on given predicate. The predicate should be a
 
     Args:
@@ -84,11 +91,13 @@ def filter_strata(stands: StandList, *, predicate: Callable[[ForestStand], npt.N
     Returns:
         StandList: the list of stands with the strata filtered (also modified in-place)
     """
+    assert predicate is not None
     stands = filter_strata_(stands, predicate)
     return stands
 
 
-def compute_location_metadata(stands: StandList, **operation_params) -> StandList:
+@pre_op
+def compute_location_metadata(stands: StandList) -> StandList:
     """
     This operation sets in-place the location based metadata properties for each given ForestStand, where missing.
     These properties are: height above sea level, temperature sum, sea effect, lake effect
@@ -98,8 +107,6 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.lasum import ilmanor  # pylint: disable=import-outside-toplevel
     from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.coord import etrs_tm35_to_ykj as conv  # pylint: disable=import-outside-toplevel
     from lukefi.metsi.forestry.naturalprocess.MetsiGrow.metsi_grow.kor import xkor  # pylint: disable=import-outside-toplevel
-
-    _ = operation_params
 
     for stand in stands:
 
@@ -137,6 +144,7 @@ def compute_location_metadata(stands: StandList, **operation_params) -> StandLis
     return stands
 
 
+@pre_op
 def generate_reference_trees(stands: StandList, /, **operation_params) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
@@ -255,6 +263,7 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
     return stands
 
 
+@pre_op
 def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration | None = None) -> StandList:
     """
     Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
@@ -357,9 +366,8 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     return stands
 
 
-def update_strata_to_match_trees(stands: StandList, **operation_params) -> StandList:
-    _ = operation_params
-
+@pre_op
+def update_strata_to_match_trees(stands: StandList) -> StandList:
     for stand in stands:
         i_tree = -1
         stand_ba = 0
@@ -423,29 +431,30 @@ def update_strata_to_match_trees(stands: StandList, **operation_params) -> Stand
     return stands
 
 
-def scale_area_weight(stands: StandList, /, **operation_params):
+@pre_op
+def scale_area_weight(stands: StandList):
     """
     Scales area weight of a stand.
 
     Especially necessary for VMI tree generation cases.
     Should be used as precesing operation before the generation of reference trees.
     """
-    _ = operation_params
     for stand in stands:
         stand.area_weight = stand.area_weight * stand.area_weight_factors[1]
     return stands
 
 
-def area_ha_to_1000ha(stands: StandList, **operation_params):
+@pre_op
+def area_ha_to_1000ha(stands: StandList):
     # Converts area of a stand from ha to 1000 ha
-    _ = operation_params
     for stand in stands:
         stand.area_weight = stand.area_weight / 1000
         stand.area = stand.area / 1000
     return stands
 
 
-def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
+@pre_op
+def scale_trees_by_area_weight_factors(stands: StandList):
     """
     Scale the number of stems of the (measured) trees according to the stand's
     proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
@@ -458,7 +467,6 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
     Returns:
         StandList: the modified stands
     """
-    _ = operation_params
     for stand in stands:
         trees = stand.reference_trees
         if len(trees) > 0:
@@ -472,14 +480,14 @@ def scale_trees_by_area_weight_factors(stands: StandList, **operation_params):
     return stands
 
 
-def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -> StandList:
+@pre_op
+def convert_coordinates(stands: StandList, *, target_system: CRS = CRS.EPSG_2393) -> StandList:
     """
     Preprocessing operation for converting the current coordinate system to target system
 
     :target_system (optional): Spesified target system. Default is EPSG:2393
     """
     defaults = EPSG_2393_ALIASES
-    target_system = operation_params.get('target_system', CRS.EPSG_2393)
     if target_system in defaults:
         for s in stands:
             if s.geo_location is not None:
@@ -492,6 +500,7 @@ def convert_coordinates(stands: StandList, **operation_params: dict[str, Any]) -
     return stands
 
 
+@pre_op
 def supplement_storey_information(stands: StandList) -> StandList:
     """
     Preprocess storey information for reference trees.

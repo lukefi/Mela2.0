@@ -3,7 +3,7 @@
 from examples.declarations.export_prepro import default_csv
 from lukefi.metsi.app.metsi_control import AppConfiguration, MetsiControl
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
-from lukefi.metsi.core.sim_control import Preprocessing, PreprocessingOperation
+from lukefi.metsi.core.sim_control import Preprocessing
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import generate_reference_trees
 
@@ -14,10 +14,9 @@ control_structure = MetsiControl[ForestStand](
         run_modes=[RunMode.PREPROCESS, RunMode.EXPORT_PREPRO]
     ),
     preprocessing=Preprocessing(
-        operations=[PreprocessingOperation(generate_reference_trees, {
-                    "n_trees": 10,
-                    "method": "weibull"
-                    })]
+        operations=[generate_reference_trees(
+                    n_trees=10,
+                    method="weibull")]
     ),
     export_prepro=default_csv
 )
