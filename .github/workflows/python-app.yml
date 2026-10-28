@@ -127,6 +127,7 @@ jobs:
         chmod +x "$DEST"/* 2>/dev/null || true
         ls -al "$DEST" || true
         echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${GITHUB_WORKSPACE}/data/motti" >> $GITHUB_ENV
+        echo "MOTTI_INST_PATH=${GITHUB_WORKSPACE}/data/motti" >> $GITHUB_ENV
 
     - name: Run Robot Tests
       run: |
