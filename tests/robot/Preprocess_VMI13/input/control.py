@@ -15,7 +15,6 @@ control_structure = MetsiControl[ForestStand](
             scale_area_weight(),
             generate_reference_trees(n_trees=10,
                                      method="weibull",
-                                     debug=False,
                                      delete_strata=True),
             filter_stands(remove=(lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))),
             filter_trees(predicate=(lambda stand: ~((stand.reference_trees.sapling != 0) |

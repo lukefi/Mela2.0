@@ -31,7 +31,6 @@ control_structure = MetsiControl[ForestStand](
             generate_reference_trees(
                 n_trees=10,
                 method="weibull",
-                debug=False,
                 delete_strata=False
             ),
             compute_location_metadata(),

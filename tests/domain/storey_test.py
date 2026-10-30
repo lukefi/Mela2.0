@@ -7,7 +7,7 @@ from parameterized import parameterized
 from lukefi.metsi.data.enums.internal import Storey, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
-from lukefi.metsi.domain.pre_ops import supplement_storey_information
+from lukefi.metsi.domain.pre_ops import supplement_storey_information_fn
 from lukefi.metsi.forestry.aggregates_internal import (
     calc_basal_area,
     calc_dominant_height,
@@ -31,7 +31,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.DOMINANT))
 
@@ -44,7 +44,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.DOMINANT))
 
@@ -57,7 +57,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.DOMINANT))
 
@@ -70,7 +70,7 @@ class StoreySupplementingTest(unittest.TestCase):
                          "stems_per_ha": [1.0] * 10, "height": [20.0] * 5 + [30.0] * 5
                          })
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == np.asarray([Storey.DOMINANT] * 5 + [Storey.OVER] * 5, dtype=np.int32)))
 
@@ -83,7 +83,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.DOMINANT))
 
@@ -96,7 +96,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.DOMINANT))
 
@@ -109,7 +109,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == Storey.RETENTION))
 
@@ -168,7 +168,7 @@ class StoreySupplementingTest(unittest.TestCase):
             }
         )
         stand = ForestStand(trees, identifier="test")
-        stand = supplement_storey_information([stand])[0]
+        stand = supplement_storey_information_fn([stand])[0]
 
         self.assertTrue(np.all(trees.storey == np.asarray(expected)))
 

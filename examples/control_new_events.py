@@ -29,7 +29,6 @@ control_structure = MetsiControl[ForestStand](
             generate_reference_trees(
                 n_trees= 10,
                 method= "weibull",
-                debug= False
             ),
             supplement_storey_information()
         ],

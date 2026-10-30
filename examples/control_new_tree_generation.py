@@ -43,12 +43,11 @@ control_structure = MetsiControl[ForestStand](
             ),
             scale_trees_by_area_weight_factors(),
             generate_reference_trees(
-                n_trees=10,
                 stratum_association_diameter_threshold=2.5,
                 ng_scale_factor=1.0,
                 method="lm",
                 lm_n_trees_mode="calc",  # param (use n_trees), calc (number of generated trees depends on g)
-                lm_n_trees=15,  # (about) max number of generated trees. if not set n_trees is used as defaul
+                n_trees=15,  # (about) max number of generated trees.
                 lm_gos_div=0.5,  # number of generated trees ~ stratum_g/gos_div
                 lm_stems_mode="lkm0",  # lkm (restricted), lkm0 (unrestricted)
                 lm_stems_nmax=20000,
@@ -57,7 +56,7 @@ control_structure = MetsiControl[ForestStand](
                 lm_shdef=5,
                 age_model=True,  # käytetäänkö kuvauspuulle ikämallin ikää (true) vai ositteen ikää (false)
                 nfi_iteration=VmiIteration.VMI13,
-                rho=1.6
+                lm_rho=1.6
             ),
             scale_basal_area_at_county_level(
                 nfi_iteration=VmiIteration.VMI13

@@ -30,7 +30,6 @@ control_structure = MetsiControl[ForestStand](
             generate_reference_trees(
                 n_trees=10,
                 method="weibull",
-                debug=False
             ),  # reference trees from strata, replaces existing reference trees
             filter_stands(
                 remove=(lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))

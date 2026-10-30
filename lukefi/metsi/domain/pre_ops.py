@@ -1,10 +1,10 @@
 from collections.abc import Callable
-from typing import Any, Optional
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from lukefi.metsi.core.preop import pre_op
+from lukefi.metsi.core.preop import PreprocessingOperation
 from lukefi.metsi.data.conversion import vmi2internal
 from lukefi.metsi.data.enums.internal import (
     EPSG_2393_ALIASES,
@@ -35,11 +35,10 @@ from lukefi.metsi.forestry.storey import (
     stand_has_only_seeding_tree_storey)
 
 
-@pre_op
-def filter_stands(stands: StandList,
-                  *,
-                  select: Optional[Callable[[ForestStand], bool]] = None,
-                  remove: Optional[Callable[[ForestStand], bool]] = None) -> StandList:
+def filter_stands_fn(stands: StandList,
+                     *,
+                     select: Optional[Callable[[ForestStand], bool]] = None,
+                     remove: Optional[Callable[[ForestStand], bool]] = None) -> StandList:
     """Filter list of forest stands.
 
     Args:
@@ -56,11 +55,10 @@ def filter_stands(stands: StandList,
     return stands
 
 
-@pre_op
-def filter_trees(stands: StandList,
-                 *,
-                 predicate: Callable[[ForestStand],
-                                     npt.NDArray[np.bool_]] | None = None) -> StandList:
+def filter_trees_fn(stands: StandList,
+                    *,
+                    predicate: Callable[[ForestStand],
+                                        npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter reference trees for each stand in list based on given predicate.
 
     Args:
@@ -76,11 +74,10 @@ def filter_trees(stands: StandList,
     return stands
 
 
-@pre_op
-def filter_strata(stands: StandList,
-                  *,
-                  predicate: Callable[[ForestStand],
-                                      npt.NDArray[np.bool_]] | None = None) -> StandList:
+def filter_strata_fn(stands: StandList,
+                     *,
+                     predicate: Callable[[ForestStand],
+                                         npt.NDArray[np.bool_]] | None = None) -> StandList:
     """Filter tree strata for each stand in list based on given predicate. The predicate should be a
 
     Args:
@@ -96,8 +93,7 @@ def filter_strata(stands: StandList,
     return stands
 
 
-@pre_op
-def compute_location_metadata(stands: StandList) -> StandList:
+def compute_location_metadata_fn(stands: StandList) -> StandList:
     """
     This operation sets in-place the location based metadata properties for each given ForestStand, where missing.
     These properties are: height above sea level, temperature sum, sea effect, lake effect
@@ -144,14 +140,29 @@ def compute_location_metadata(stands: StandList) -> StandList:
     return stands
 
 
-@pre_op
-def generate_reference_trees(stands: StandList, /, **operation_params) -> StandList:
+def generate_reference_trees_fn(stands: StandList,
+                                *,
+                                nfi_iteration: VmiIteration | None = None,
+                                add_retention_trees: bool = True,
+                                stratum_association_diameter_threshold: int = 3,
+                                age_model: bool = False,
+                                delete_strata: bool = False,
+                                n_trees: int | None = None,
+                                method: str = "weibull",
+                                scale_height_distribution_stems_by_ba: bool = True,
+                                ng_scale_factor: int = 1,
+                                lm_gos_div: int = 1,
+                                lm_n_trees_mode: str = "param",
+                                lm_mode: str = 'dcons',
+                                lm_fix_width: int = 2,
+                                lm_shdef: int = 5,
+                                lm_stems_nmax: int = 2000,
+                                lm_rho: float = 1.6,
+                                lm_stems_mode: str = 'lkm'
+                                ) -> StandList:
     """ Operation function that generates (N * stratum) reference trees for each stand """
 
-    # oletusarvo true vai false?
-    add_retention_trees = operation_params.get('add_retention_trees', True)
-
-    stratum_association_diameter_threshold = operation_params.get('stratum_association_diameter_threshold', 3)
+    assert n_trees is not None
 
     for j, stand in enumerate(stands, 1):
         print(f"Generating trees for stand {stand.identifier}    {j}/{len(stands)}")
@@ -196,7 +207,22 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
 
         for k, stratum in enumerate(strata.get_stratum(i) for i in range(len(strata))):
             try:
-                stratum_trees = reference_trees_from_tree_stratum(stand, stratum, **operation_params)
+                stratum_trees = reference_trees_from_tree_stratum(
+                    stand,
+                    stratum,
+                    n_trees=n_trees,
+                    method=method,
+                    scale_height_distribution_stems_by_ba=scale_height_distribution_stems_by_ba,
+                    ng_scale_factor=ng_scale_factor,
+                    nfi_iteration=nfi_iteration,
+                    lm_gos_div=lm_gos_div,
+                    lm_n_trees_mode=lm_n_trees_mode,
+                    lm_mode=lm_mode,
+                    lm_fix_width=lm_fix_width,
+                    lm_shdef=lm_shdef,
+                    lm_stems_nmax=lm_stems_nmax,
+                    lm_rho=lm_rho,
+                    lm_stems_mode=lm_stems_mode)
                 strata.number_of_generated_trees[k] = stratum.number_of_generated_trees
             except Exception as e:
                 print(
@@ -217,8 +243,9 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
 
         # lisätään irralliset säästöpuut
         if add_retention_trees and np.any(retention_trees_mask):
-            adjust_retention_trees(stand, new_trees, retention_trees_mask, operation_params['nfi_iteration'])
-        if operation_params.get('age_model', False):
+            assert nfi_iteration is not None
+            adjust_retention_trees(stand, new_trees, retention_trees_mask, nfi_iteration)
+        if age_model:
             for i in range(len(new_trees)):
                 if new_trees.breast_height_diameter[i] > 0:
                     breast_height_age, biological_age = ages(
@@ -257,14 +284,13 @@ def generate_reference_trees(stands: StandList, /, **operation_params) -> StandL
 
         stand.reference_trees.tree_number = np.arange(1, len(stand.reference_trees) + 1, dtype=np.int32)
 
-        if operation_params.get("delete_strata", False):
+        if delete_strata:
             stand.tree_strata = TreeStrata()
 
     return stands
 
 
-@pre_op
-def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIteration | None = None) -> StandList:
+def scale_basal_area_at_county_level_fn(stands: StandList, *, nfi_iteration: VmiIteration | None = None) -> StandList:
     """
     Scale basal area at the county/forestry centre level to match basal areas by species in NFI data. County is used
     for NFI iterations 12 and up, forestry centre for earlier.
@@ -366,8 +392,7 @@ def scale_basal_area_at_county_level(stands: StandList, *, nfi_iteration: VmiIte
     return stands
 
 
-@pre_op
-def update_strata_to_match_trees(stands: StandList) -> StandList:
+def update_strata_to_match_trees_fn(stands: StandList) -> StandList:
     for stand in stands:
         i_tree = -1
         stand_ba = 0
@@ -431,8 +456,7 @@ def update_strata_to_match_trees(stands: StandList) -> StandList:
     return stands
 
 
-@pre_op
-def scale_area_weight(stands: StandList):
+def scale_area_weight_fn(stands: StandList):
     """
     Scales area weight of a stand.
 
@@ -444,8 +468,7 @@ def scale_area_weight(stands: StandList):
     return stands
 
 
-@pre_op
-def area_ha_to_1000ha(stands: StandList):
+def area_ha_to_1000ha_fn(stands: StandList):
     # Converts area of a stand from ha to 1000 ha
     for stand in stands:
         stand.area_weight = stand.area_weight / 1000
@@ -453,8 +476,7 @@ def area_ha_to_1000ha(stands: StandList):
     return stands
 
 
-@pre_op
-def scale_trees_by_area_weight_factors(stands: StandList):
+def scale_trees_by_area_weight_factors_fn(stands: StandList):
     """
     Scale the number of stems of the (measured) trees according to the stand's
     proportion of the sample plot. Trees with diameter in [4.5,9.5) are scaled
@@ -480,8 +502,7 @@ def scale_trees_by_area_weight_factors(stands: StandList):
     return stands
 
 
-@pre_op
-def convert_coordinates(stands: StandList, *, target_system: CRS = CRS.EPSG_2393) -> StandList:
+def convert_coordinates_fn(stands: StandList, *, target_system: CRS = CRS.EPSG_2393) -> StandList:
     """
     Preprocessing operation for converting the current coordinate system to target system
 
@@ -500,8 +521,7 @@ def convert_coordinates(stands: StandList, *, target_system: CRS = CRS.EPSG_2393
     return stands
 
 
-@pre_op
-def supplement_storey_information(stands: StandList) -> StandList:
+def supplement_storey_information_fn(stands: StandList) -> StandList:
     """
     Preprocess storey information for reference trees.
 
@@ -637,3 +657,86 @@ def supplement_storey_information(stands: StandList) -> StandList:
                 trees.storey[trees.storey == storey] = new_storey
 
     return stands
+
+
+def filter_stands(select: Optional[Callable[[ForestStand], bool]] = None,
+                  remove: Optional[Callable[[ForestStand], bool]] = None) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(filter_stands_fn, select=select, remove=remove)
+
+
+def filter_trees(predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(filter_trees_fn, predicate=predicate)
+
+
+def filter_strata(predicate: Callable[[ForestStand], npt.NDArray[np.bool_]]) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(filter_strata_fn, predicate=predicate)
+
+
+def compute_location_metadata() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(compute_location_metadata_fn)
+
+
+def generate_reference_trees(nfi_iteration: VmiIteration | None = None,
+                             add_retention_trees: bool = True,
+                             stratum_association_diameter_threshold: float = 3,
+                             age_model: bool = False,
+                             delete_strata: bool = False,
+                             n_trees: int | None = None,
+                             method: str = "weibull",
+                             scale_height_distribution_stems_by_ba: bool = True,
+                             ng_scale_factor: float = 1,
+                             lm_gos_div: float = 1,
+                             lm_n_trees_mode: str = "param",
+                             lm_mode: str = 'dcons',
+                             lm_fix_width: int = 2,
+                             lm_shdef: int = 5,
+                             lm_stems_nmax: int = 2000,
+                             lm_rho: float = 1.6,
+                             lm_stems_mode: str = 'lkm'
+                             ) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(generate_reference_trees_fn,
+                                  nfi_iteration=nfi_iteration,
+                                  add_retention_trees=add_retention_trees,
+                                  stratum_association_diameter_threshold=stratum_association_diameter_threshold,
+                                  age_model=age_model,
+                                  delete_strata=delete_strata,
+                                  n_trees=n_trees,
+                                  method=method,
+                                  scale_height_distribution_stems_by_ba=scale_height_distribution_stems_by_ba,
+                                  ng_scale_factor=ng_scale_factor,
+                                  lm_gos_div=lm_gos_div,
+                                  lm_n_trees_mode=lm_n_trees_mode,
+                                  lm_mode=lm_mode,
+                                  lm_fix_width=lm_fix_width,
+                                  lm_shdef=lm_shdef,
+                                  lm_stems_nmax=lm_stems_nmax,
+                                  lm_rho=lm_rho,
+                                  lm_stems_mode=lm_stems_mode)
+
+
+def scale_basal_area_at_county_level(nfi_iteration: VmiIteration) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(scale_basal_area_at_county_level_fn, nfi_iteration=nfi_iteration)
+
+
+def update_strata_to_match_trees() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(update_strata_to_match_trees_fn)
+
+
+def scale_area_weight() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(scale_area_weight_fn)
+
+
+def area_ha_to_1000ha() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(area_ha_to_1000ha_fn)
+
+
+def scale_trees_by_area_weight_factors() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(scale_trees_by_area_weight_factors_fn)
+
+
+def convert_coordinates(target_system: CRS = CRS.EPSG_2393) -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(convert_coordinates_fn, target_system=target_system)
+
+
+def supplement_storey_information() -> PreprocessingOperation[ForestStand]:
+    return PreprocessingOperation(supplement_storey_information_fn)
