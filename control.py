@@ -10,7 +10,12 @@ from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
-from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight, supplement_storey_information
+from lukefi.metsi.domain.pre_ops import (
+    filter_stands,
+    filter_trees,
+    generate_reference_trees,
+    scale_area_weight,
+    supplement_storey_information)
 
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
