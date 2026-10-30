@@ -23,9 +23,9 @@ def simulate_alternatives[T: ComputationalUnit](control: Simulation[T],
         else:
             payload = unit
         print(f"Simulating unit {payload.unit.identifier} ({i} of {len(units)})...")
-        if control.transition.initialization is not None:
+        if control.initialization is not None:
             payload.unit.update_aggregates()
-            control.transition.initialization(payload.unit)
+            control.initialization(payload.unit)
         payload.unit.update_aggregates()
 
         if db is not None:

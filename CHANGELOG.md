@@ -4,14 +4,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [6.2.0] - 2026-10-23
+## [7.2.0] - 2026-10-23
 
 ### Added
 
 - peatland fertilization treatment wrapping the `Motti4PeatlandFertilization` function
 - enabled MottiTreatments robot test
 - included try-except TypeError in robot testing `_compre` function
-- included explisite validation of table column names into `_compra` 
+- included explisite validation of table column names into `_compra`
+
+## [7.1.0] - 2026-10-28
+
+### Added
+
+- Added printout for remaining Motti license days in `Motti4DLL.load()`
+
+## [7.0.0] - 2026-10-28
+
+### Changed
+
+- Decoupled initialization from transition
+
+## [6.2.1] - 2026-10-28
+
+### Fixed
+
+- Added checks to SelectionSet and SelectionTarget constructors
+- Added handling for potential duplicate profile_x values in relative modes
+- Fixed a bug where more units could be selected than were available
+- Fixed scale and step calculation in _init_search
+- Other minor performance and code quality improvements
+
+## [6.2.0] - 2026-10-28
+
+### Added
+
+- Added exception `CancelTreatment` for gracefully canceling treatments while executing
 
 ## [6.1.0] - 2026-10-22
 

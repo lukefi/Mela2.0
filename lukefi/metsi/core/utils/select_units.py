@@ -62,6 +62,19 @@ class SelectionSet[T, V: VectorData]:
                  profile_y: npt.NDArray[np.float64] | Sequence[int | float],
                  profile_xmode: ProfileXMode,
                  profile_xscale: ProfileXScale | None = None):
+
+        if target_amount < 0 or (
+            target_type in (
+                TargetType.RELATIVE,
+                TargetType.RELATIVE_REMAIN) and target_amount > 1):
+            raise MetsiException(f"Bad target_amount value: {target_amount}")
+        if len(profile_x) < 2:
+            raise MetsiException(f"Bad profile_x length: {len(profile_x)}")
+        if len(profile_x) != len(profile_y):
+            raise MetsiException(f"profile_x vs. profile_y length mismatch: {len(profile_x)} vs. {len(profile_y)}")
+        if np.any(np.diff(profile_x) <= 0.0):
+            raise MetsiException("profile_x must be strictly increasing")
+
         self.sfunction = sfunction
         self.order_var = order_var
         self.target_var = target_var
@@ -110,6 +123,9 @@ class SelectionTarget:
     amount: float
 
     def __init__(self, target_type: TargetType, var: str, amount: float):
+        if amount < 0 or (target_type in (TargetType.RELATIVE, TargetType.RELATIVE_REMAIN) and amount > 1):
+            raise MetsiException(f"Bad value for amount: {amount}")
+
         self.target_type = target_type
         self.var = var
         self.amount = amount
@@ -219,7 +235,6 @@ def select_units[T, V: VectorData](context: T,
     total_target_selected: float = 0.0
     tmp_total_target: float = 0.0
     cur_set_target_var = ""
-    tmp_cur_set_target: float = 0.0
 
     # selection sets, only iterate through sets needed for total target
     i_set = 0
@@ -265,7 +280,30 @@ def select_units[T, V: VectorData](context: T,
                 # absolute#
                 prof_x = sets[i_set].profile_x
 
-            prof_y = sets[i_set].profile_y
+            # As relative x-profiles are transformed into absolute scale, duplicate x values may appear.
+            # The repeated values should be pruned, and the corresponding y-profile modified so that y values originally
+            # corresponding to repeated x-values are averaged over the span of the repeat.
+
+            prof_x, orig_indices = np.unique(prof_x, return_index=True)
+            prof_y_orig = sets[i_set].profile_y
+
+            if len(prof_x) == 1:
+                # In the case where prof_x collapses to a single value, use prof_x=[x0, x0] and prof_y=[y0, y0] instead.
+                prof_x = np.full(2, prof_x[0])
+                prof_y = np.full(2, prof_y_orig[0])
+
+            else:
+                prof_y = np.empty(len(prof_x))
+                diffs = np.diff(orig_indices, append=len(prof_x) - 1)
+                i_prof_y = 0
+                i_prof_y_orig = 0
+                for diff in diffs:
+                    if diff > 0:
+                        prof_y[i_prof_y] = np.average(prof_y_orig[i_prof_y_orig:i_prof_y_orig + diff])
+                    else:
+                        prof_y[i_prof_y] = prof_y_orig[i_prof_y_orig]
+                    i_prof_y += 1
+                    i_prof_y_orig += diff
 
             tmp_total_target = total_target_selected
             tmp_cur_set_target = 0.0
@@ -280,7 +318,7 @@ def select_units[T, V: VectorData](context: T,
 
             # if only one order_var value and relative x, all points in prof_x are the same
             # in that case scale only constant part a (set slopes b to zero)
-            if np.any(np.isnan(b)):
+            if np.any(np.isinf(b)):
                 b = np.repeat(0, b.size)
 
             a: npt.NDArray[np.float64] = prof_y[1:] - b * prof_x[1:]
@@ -298,7 +336,7 @@ def select_units[T, V: VectorData](context: T,
             if select_from_all:
                 units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
             else:
-                units = np.maximum(0.0, y * (data[freq_var] - selected_units))
+                units = y * (data[freq_var] - selected_units)
 
             # special case: select all units from set
             if cur_set_target_var == freq_var:
@@ -307,7 +345,7 @@ def select_units[T, V: VectorData](context: T,
                 max_avail = np.sum(data[freq_var][cur_set_idx] * data[cur_set_target_var][cur_set_idx])
             if (max_avail <= cur_set_target) and (max_avail <= (total_target - total_target_selected)):
                 units = np.repeat(0.0, data.size)
-                units[cur_set_idx] = data[freq_var][cur_set_idx]
+                units[cur_set_idx] = data[freq_var][cur_set_idx] - selected_units[cur_set_idx]
 
             if target_var is None or target_var == freq_var:
                 target = np.sum(units)
@@ -315,12 +353,11 @@ def select_units[T, V: VectorData](context: T,
                 target = np.sum(units * data[target_var])
 
             if cur_set_target_var is None or cur_set_target_var == freq_var:
-                sub_target = np.sum(units)
+                tmp_cur_set_target = np.sum(units)
             else:
-                sub_target = np.sum(units * data[cur_set_target_var])
+                tmp_cur_set_target = np.sum(units * data[cur_set_target_var])
 
             tmp_total_target = tmp_total_target + target
-            tmp_cur_set_target = tmp_cur_set_target + sub_target
             tmp_units = selected_units + units
 
             # if selection set target is given, search for final profile with binary search
@@ -328,25 +365,32 @@ def select_units[T, V: VectorData](context: T,
 
             if not np.isinf(cur_set_target):
                 # initial values for binary search
-                scale, step, y0 = _init_search(mode,
-                                               y,
-                                               prof_y,
-                                               total_target,
-                                               tmp_total_target,
-                                               cur_set_target,
-                                               tmp_cur_set_target)
+                scale, y0 = _init_search(mode,
+                                         y,
+                                         prof_y,
+                                         total_target,
+                                         tmp_total_target,
+                                         cur_set_target,
+                                         tmp_cur_set_target)
+
+                step = abs(scale)
 
                 # binary search
                 # continue until close enough to target (total or selection set)
                 # or until all units in the selection set have been selected
-                while ((tmp_cur_set_target < (cur_set_target - eps_set) and
-                        tmp_total_target < (total_target - eps_total) and
-                        np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])) or
-                       ((cur_set_target + eps_set) < tmp_cur_set_target or
-                        (total_target + eps_total) < tmp_total_target)) and step > eps_step:
+
+                cur_set_target_not_fulfilled = tmp_cur_set_target < (cur_set_target - eps_set)
+                total_target_not_fulfilled = tmp_total_target < (total_target - eps_total)
+                cur_set_units_left = np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])
+                cur_set_target_exceeded = (cur_set_target + eps_set) < tmp_cur_set_target
+                total_target_exceeded = (total_target + eps_total) < tmp_total_target
+
+                select_more_units = cur_set_target_not_fulfilled and total_target_not_fulfilled and cur_set_units_left
+                select_less_units = cur_set_target_exceeded or total_target_exceeded
+
+                while (select_more_units or select_less_units) and step > eps_step:
 
                     tmp_total_target = total_target_selected
-                    tmp_cur_set_target = 0
 
                     # new share candidate
                     y = _scale_y(mode,
@@ -365,7 +409,7 @@ def select_units[T, V: VectorData](context: T,
                     if select_from_all:
                         units = np.minimum(y * data[freq_var], data[freq_var] - selected_units)
                     else:
-                        units = np.maximum(0.0, y * (data[freq_var] - selected_units))
+                        units = y * (data[freq_var] - selected_units)
 
                     if target_var is None or target_var == freq_var:
                         target = np.sum(units)
@@ -373,12 +417,11 @@ def select_units[T, V: VectorData](context: T,
                         target = np.sum(units * data[target_var])
 
                     if cur_set_target_var is None or cur_set_target_var == freq_var:
-                        sub_target = np.sum(units)
+                        tmp_cur_set_target = np.sum(units)
                     else:
-                        sub_target = np.sum(units * data[cur_set_target_var])
+                        tmp_cur_set_target = np.sum(units * data[cur_set_target_var])
 
                     tmp_total_target = tmp_total_target + target
-                    tmp_cur_set_target = tmp_cur_set_target + sub_target
                     tmp_units = selected_units + units
 
                     # scaling/constant for next round
@@ -387,6 +430,17 @@ def select_units[T, V: VectorData](context: T,
                         scale = scale - step
                     else:
                         scale = scale + step
+
+                    cur_set_target_not_fulfilled = tmp_cur_set_target < (cur_set_target - eps_set)
+                    total_target_not_fulfilled = tmp_total_target < (total_target - eps_total)
+                    cur_set_units_left = np.sum(data[freq_var][cur_set_idx]) > np.sum(tmp_units[cur_set_idx])
+                    cur_set_target_exceeded = (cur_set_target + eps_set) < tmp_cur_set_target
+                    total_target_exceeded = (total_target + eps_total) < tmp_total_target
+
+                    select_more_units = cur_set_target_not_fulfilled and \
+                        total_target_not_fulfilled and  \
+                        cur_set_units_left
+                    select_less_units = cur_set_target_exceeded or total_target_exceeded
 
                 # while searching
             # if not set has target
@@ -451,7 +505,7 @@ def _init_search(mode: str,
                  total_target: float,
                  tmp_total_target: float,
                  cur_set_target: float,
-                 tmp_cur_set_target: float) -> tuple[float, float, npt.NDArray[np.float64]]:
+                 tmp_cur_set_target: float) -> tuple[float, npt.NDArray[np.float64]]:
 
     # Limits for binary search
 
@@ -464,33 +518,26 @@ def _init_search(mode: str,
         y0 = odds_y0
 
         if tmp_total_target > total_target or tmp_cur_set_target > cur_set_target:
-            scale = 0.500001
-            step = 1.0
+            scale = 1.0
         else:
-            scale = 501.0
-            step = 1000.0
+            scale = 1000
 
     elif mode == "scale":
         scalemax = np.max(1 / y[y > 0])
         if np.any(y == 0):
             scalemax = np.maximum(scalemax, 100.0)
         scale = scalemax / 2
-        step = scalemax / 2
         y0 = y
 
     elif mode == "level":
-        a_max = np.max(1 - y)
         a_min = np.min(-1 * y)
-        scale = (a_max + a_min) / 2
-        step = min(1.0, np.maximum(a_max, -a_min))
-        if step < 0.001:
-            step = a_max
+        scale = 2 * a_min
         y0 = y
 
     else:
         raise MetsiException(f"Unknown mode {mode}")
 
-    return scale, step, y0
+    return scale, y0
 
 
 def _scale_y(mode: Mode,
@@ -515,7 +562,7 @@ def _scale_y(mode: Mode,
 
         # if only one order_var value and relative x, all points in prof_x are the same
         # in that case scale only constant part a (set slopes b to zero)
-        if np.any(np.isnan(b)):
+        if np.any(np.isinf(b)):
             b = np.repeat(0, b.size)
 
         a = prof_y[1:] - b * prof_x[1:]

@@ -8,3 +8,7 @@ class ConfigurationException(MetsiException):
 
 class ConditionFailed(MetsiException):
     """ Pre- or postcondition failed """
+
+
+class CancelTreatment(MetsiException):
+    """ Treatment canceled while executing """

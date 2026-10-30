@@ -15,6 +15,7 @@ def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
                                                                                       CollectableDataTypes | None]:
     target_time = updating_instructions.target_time
     transition = updating_instructions.transition
+    initialization = updating_instructions.initialization
     output_treatment_state = updating_instructions.output_treatment_state
     output_treatment_cd = updating_instructions.output_treatment_cd
     cd_types: CollectableDataTypes | None = None
@@ -28,6 +29,9 @@ def update_units[T: ComputationalUnit](updating_instructions: Updating[T],
         if unit.time > target_time:
             raise MetsiException(f"Unable to update unit {unit.identifier} to time {target_time}: "
                                  f"unit already at {unit.time}.")
+
+        if initialization:
+            initialization(unit)
 
         current = SimulationPayload(unit)
         keep_running = True

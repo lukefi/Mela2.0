@@ -50,7 +50,8 @@ control_structure = MetsiControl[ForestStand](
         transition=Transition(grow_motti_fn,
                               db_output_state=False,
                               db_output_cd=False,
-                              initialization=motti_init),
+                              ),
+        initialization=motti_init,
         end_condition=ForestCondition(lambda payload: payload.unit.time > 2050))
 )
 
