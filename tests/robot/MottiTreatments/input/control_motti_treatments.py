@@ -81,7 +81,9 @@ control_structure = MetsiControl[ForestStand](
                             treatment=do_nothing,
                             static_parameters={"n": 3},
                             dynamic_parameters={
-                                "m": lambda s: (s.site_type_category.value if s.site_type_category is not None else 0) + 100
+                                "m": lambda s: (
+                                        s.site_type_category.value if s.site_type_category is not None else 0
+                                    ) + 100
                             },
                             tags={"third_type"},
                         ),
