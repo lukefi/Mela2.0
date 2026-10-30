@@ -128,7 +128,23 @@ def _solve_tree_generation_strategy(stand: ForestStand, stratum: TreeStratum, me
     return TreeStrategy.SKIP
 
 
-def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, **params) -> Optional[ReferenceTrees]:
+def reference_trees_from_tree_stratum(stand: ForestStand,
+                                      stratum: TreeStratum,
+                                      *,
+                                      n_trees: int,
+                                      method: str = "weibull",
+                                      scale_height_distribution_stems_by_ba: bool = True,
+                                      ng_scale_factor: int = 1,
+                                      nfi_iteration: VmiIteration | None = None,
+                                      lm_gos_div: int = 1,
+                                      lm_n_trees_mode: str = "param",
+                                      lm_mode: str = 'dcons',
+                                      lm_fix_width: int = 2,
+                                      lm_shdef: int = 5,
+                                      lm_stems_nmax: int = 2000,
+                                      lm_rho: float = 1.6,
+                                      lm_stems_mode: str = 'lkm'
+                                      ) -> Optional[ReferenceTrees]:
     """
     Composes N number of reference trees based on values of the stratum.
 
@@ -144,23 +160,36 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     :return: list of reference trees derived from given stratum.
     """
     result: ReferenceTrees
-    strategy = _solve_tree_generation_strategy(stand, stratum, params.get('method', 'weibull'))
+    strategy = _solve_tree_generation_strategy(stand, stratum, method)
 
     if strategy == TreeStrategy.HEIGHT_DISTRIBUTION:
-        result = _trees_from_sapling_height_distribution(stratum, params["n_trees"])
-        if params.get("scale_height_distribution_stems_by_ba", True):
+        result = _trees_from_sapling_height_distribution(stratum, n_trees)
+        if scale_height_distribution_stems_by_ba:
             # assert stratum.basal_area is not None
             if result.breast_height_diameter.any() and stratum.basal_area is not None and stratum.basal_area > 0.0:
                 result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
                     _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
 
     elif strategy == TreeStrategy.WEIBULL_DISTRIBUTION:
-        result = _trees_from_weibull(stratum, params["n_trees"])
+        result = _trees_from_weibull(stratum, n_trees)
 
     elif strategy == TreeStrategy.LM_TREES:
         assert stand.degree_days is not None
         assert stand.basal_area is not None
-        result = tree_generation_lm(stand, stratum, **params)
+        assert nfi_iteration is not None
+
+        result = tree_generation_lm(stand,
+                                    stratum,
+                                    nfi_iteration,
+                                    n_trees,
+                                    lm_gos_div,
+                                    lm_n_trees_mode,
+                                    lm_mode,
+                                    lm_fix_width,
+                                    lm_shdef,
+                                    lm_stems_nmax,
+                                    lm_rho,
+                                    lm_stems_mode)
 
     elif strategy == TreeStrategy.SKIP:
         print(f"\nStratum {stratum.identifier} has no height or diameter usable for generating trees")
@@ -172,7 +201,7 @@ def reference_trees_from_tree_stratum(stand: ForestStand, stratum: TreeStratum, 
     enough_stems = result.stems_per_ha > 0.005
     result = result[enough_stems]
 
-    return _finalize_trees(result, stratum, params.get('ng_scale_factor', 1))
+    return _finalize_trees(result, stratum, ng_scale_factor)
 
 
 def _calculate_basal_area_from_trees(stems_per_ha, breast_height_diameter) -> float:

@@ -26,18 +26,13 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            generate_reference_trees,
-            supplement_storey_information
+            generate_reference_trees(
+                n_trees= 10,
+                method= "weibull",
+            ),
+            supplement_storey_information()
         ],
-        params={
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "method": "weibull",
-                    "debug": False
-                }
-            ]
-        }),
+    ),
     simulation=Simulation[ForestStand](
         instructions=[
             SimulationInstruction(

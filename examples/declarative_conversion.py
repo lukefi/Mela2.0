@@ -38,7 +38,6 @@ control_structure = MetsiControl[ForestStand](
     },
     preprocessing=Preprocessing(
         operations=[],
-        params={}
     ),
     export_prepro=mela
 )

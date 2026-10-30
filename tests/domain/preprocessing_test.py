@@ -31,7 +31,7 @@ class PreprocessingTest(unittest.TestCase):
         # No measured trees initially
         stand.reference_trees = ReferenceTrees()
 
-        result = preprocessing.generate_reference_trees([stand], n_trees=10)
+        result = preprocessing.generate_reference_trees_fn([stand], n_trees=10)
         result_stand = result[0]
         trees = result_stand.reference_trees
 
@@ -45,7 +45,7 @@ class PreprocessingTest(unittest.TestCase):
 
     def test_scale_area_weight(self):
         stand = ForestStand(area_weight=100.0, area_weight_factors=(0.0, 1.2))
-        result = preprocessing.scale_area_weight([stand])
+        result = preprocessing.scale_area_weight_fn([stand])
         self.assertEqual(result[0].area_weight, 120.0)
 
     def test_coordinate_conversion_operation(self):
@@ -62,7 +62,7 @@ class PreprocessingTest(unittest.TestCase):
             {"target_system": "EPSG:2393"},
         ]
         for asse in valid_assertions:
-            result = preprocessing.convert_coordinates(one_stand_list, **asse)
+            result = preprocessing.convert_coordinates_fn(one_stand_list, **asse)
             rstand = result[0]
             if rstand.geo_location:
                 self.assertEqual(rstand.geo_location[0], 6643400.000631507)
@@ -120,7 +120,7 @@ class PreprocessingTest(unittest.TestCase):
             ),
         ]
 
-        results = preprocessing.compute_location_metadata(valid_fixtures)
+        results = preprocessing.compute_location_metadata_fn(valid_fixtures)
 
         for result, asse in zip(results, assertions):
             geo = result.geo_location
@@ -147,5 +147,5 @@ class PreprocessingTest(unittest.TestCase):
         for invalid in invalid_fixtures:
             # Exception testing
             self.assertRaises(
-                MetsiException, preprocessing.compute_location_metadata, invalid
+                MetsiException, preprocessing.compute_location_metadata_fn, invalid
             )

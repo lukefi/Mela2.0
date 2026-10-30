@@ -1,6 +1,7 @@
 import numpy as np
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.core.sim_control import Preprocessing
+from lukefi.metsi.data.enums.internal import LandUseCategory, TreeCategory, TreeType
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import (
@@ -23,70 +24,54 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            filter_stands,
-            filter_trees,
-            scale_trees_by_area_weight_factors,
-            generate_reference_trees,
-            scale_basal_area_at_county_level,
-            update_strata_to_match_trees,
-            area_ha_to_1000ha,
+            filter_stands(
+                select=(
+                    lambda stand: stand.land_use_category in (
+                        LandUseCategory.FOREST,
+                        LandUseCategory.SCRUB_LAND,
+                        LandUseCategory.WASTE_LAND) and not stand.auxiliary_stand)),
+            filter_trees(
+                predicate=(
+                    lambda stand: np.isin(
+                        stand.reference_trees.tree_type,
+                        (TreeType.UNSET,
+                         TreeType.REMEASURED_TALLY_TREE,
+                         TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+                         TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+                         TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
+                         TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE)) & np.isin(
+                        stand.reference_trees.tree_category,
+                        (TreeCategory.UNSET,
+                         TreeCategory.SMALL_TREE,
+                         TreeCategory.WASTE_TREE,
+                         TreeCategory.PULP_WOOD_TREE,
+                         TreeCategory.SAW_LOG_TREE)))
+            ),
+            scale_trees_by_area_weight_factors(),
+            generate_reference_trees(
+                stratum_association_diameter_threshold=2.5,
+                ng_scale_factor=1.0,
+                method="lm",
+                lm_n_trees_mode="calc",  # param (use n_trees), calc (number of generated trees depends on g)
+                n_trees=15,  # (about) max number of generated trees.
+                lm_gos_div=0.5,  # number of generated trees ~ stratum_g/gos_div
+                lm_stems_mode="lkm0",  # lkm (restricted), lkm0 (unrestricted)
+                lm_stems_nmax=20000,
+                lm_mode="fcons",  # dcons, fcons, fixw
+                lm_fix_width=2,  # used with lm_mode fixw
+                lm_shdef=5,
+                age_model=True,  # käytetäänkö kuvauspuulle ikämallin ikää (true) vai ositteen ikää (false)
+                nfi_iteration=VmiIteration.VMI13,
+                lm_rho=1.6
+            ),
+            scale_basal_area_at_county_level(
+                nfi_iteration=VmiIteration.VMI13
+            ),
+            update_strata_to_match_trees(),
+            area_ha_to_1000ha(),
             # convert_coordinates
         ],
-        params={
-            filter_stands: [
-                {
-                    "select": (lambda stand: stand.land_use_category in (1, 2, 3) and not stand.auxiliary_stand)
-                }
-            ],
-            filter_trees: [
-                {
-                    "predicate": (
-                        lambda stand: np.isin(
-                            stand.reference_trees.tree_type,
-                            ("",
-                             "V",
-                             "U",
-                             "S",
-                             "T",
-                             "N")) & np.isin(
-                            stand.reference_trees.tree_category,
-                            ("",
-                             "0",
-                             "1",
-                             "3",
-                             "7")))
-                }
-            ],
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "stratum_association_diameter_threshold": 2.5,
-                    "ng_scale_factor": 1.0,
-                    "method": "lm",
-                    "lm_n_trees_mode": "calc",  # param (use n_trees), calc (number of generated trees depends on g)
-                    "lm_n_trees": 15,  # (about) max number of generated trees. if not set n_trees is used as defaul
-                    "lm_gos_div": 0.5,  # number of generated trees ~ stratum_g/gos_div
-                    "lm_stems_mode": "lkm0",  # lkm (restricted), lkm0 (unrestricted)
-                    "lm_stems_nmax": 20000,
-                    "lm_mode": "fcons",  # dcons, fcons, fixw
-                    "lm_fix_width": 2,  # used with lm_mode fixw
-                    "lm_shdef": 5,
-                    "age_model": True,  # käytetäänkö kuvauspuulle ikämallin ikää (true) vai ositteen ikää (false)
-                    "nfi_iteration": VmiIteration.VMI13,
-                    "rho": 1.6
-                }
-            ],
-            # convert_coordinates: [
-            #     {
-            #         "target_system": "YKJ"
-            #     }
-            # ],
-            scale_basal_area_at_county_level: [
-                {
-                    "nfi_iteration": VmiIteration.VMI13
-                }
-            ]
-        }),
+    ),
     export_prepro={
         'csv': {},
         'rst': {}})
