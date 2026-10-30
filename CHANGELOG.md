@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [7.1.1] - 2026-10-30
+
+### Fixed
+
+- Potential errors while reading the control file are no longer hidden from the output
+
 ## [7.1.0] - 2026-10-28
 
 ### Added
