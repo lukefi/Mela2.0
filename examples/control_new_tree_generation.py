@@ -1,6 +1,7 @@
 import numpy as np
 from lukefi.metsi.app.metsi_enum import RunMode, StateFormat
 from lukefi.metsi.core.sim_control import Preprocessing
+from lukefi.metsi.data.enums.internal import LandUseCategory, TreeCategory, TreeType
 from lukefi.metsi.data.enums.vmi import VmiIteration
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.pre_ops import (
@@ -23,23 +24,28 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            filter_stands(select=(lambda stand: stand.land_use_category in (1, 2, 3) and not stand.auxiliary_stand)),
+            filter_stands(
+                select=(
+                    lambda stand: stand.land_use_category in (
+                        LandUseCategory.FOREST,
+                        LandUseCategory.SCRUB_LAND,
+                        LandUseCategory.WASTE_LAND) and not stand.auxiliary_stand)),
             filter_trees(
                 predicate=(
                     lambda stand: np.isin(
                         stand.reference_trees.tree_type,
-                        ("",
-                         "V",
-                         "U",
-                         "S",
-                         "T",
-                         "N")) & np.isin(
+                        (TreeType.UNSET,
+                         TreeType.REMEASURED_TALLY_TREE,
+                         TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_GREATER_THAN_1_3_M,
+                         TreeType.NEW_TALLY_TREE_INCREMENT_HEIGHT_LESS_THAN_1_3_M,
+                         TreeType.NEW_TALLY_TREE_OTHER_THAN_INCREMENT,
+                         TreeType.OLD_TALLY_TREE_MEASURED_PREVIOUSLY_BY_MISTAKE)) & np.isin(
                         stand.reference_trees.tree_category,
-                        ("",
-                         "0",
-                         "1",
-                         "3",
-                         "7")))
+                        (TreeCategory.UNSET,
+                         TreeCategory.SMALL_TREE,
+                         TreeCategory.WASTE_TREE,
+                         TreeCategory.PULP_WOOD_TREE,
+                         TreeCategory.SAW_LOG_TREE)))
             ),
             scale_trees_by_area_weight_factors(),
             generate_reference_trees(
