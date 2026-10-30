@@ -163,7 +163,7 @@ class VMI13Builder(VMIBuilder):
         result.cutting_year = maintenance_details[1]
         result.method_of_last_cutting = maintenance_details[2]
         result.ds_main_tree_species_biological_age = util.get_or_default(
-            vmi_util.parse_float(row["vallitsevanjaksonika"]), 0.0)
+            vmi_util.parse_float(row["vallitsevanjaksonika"]))
 
         result.peatland_type = vmi2internal.convert_peatland_forest_type(row["suotyy"])
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(row["tkgtyy"])

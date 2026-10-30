@@ -277,11 +277,14 @@ class VMI11Builder(VMIBuilder):
             return None
 
     @staticmethod
-    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
-        """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
-        a = util.get_or_default(vmi_util.parse_float(ds_bh_age), 0.0)
+    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float | None:
+        """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi11. """
+        a = util.get_or_default(vmi_util.parse_float(ds_bh_age))
         b = util.get_or_default(vmi_util.parse_float(ds_age_increase), 0.0)
-        return a + b
+        try:
+            return a + b
+        except TypeError:
+            return None
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):
