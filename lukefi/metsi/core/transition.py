@@ -64,6 +64,7 @@ class Transition[T: ComputationalUnit]:
         if self.max_step is not None:
             time_step = min(time_step, self.max_step)
         new_state, collected_data = self.transition_fn(payload.unit, time_step, **self.parameters)
+        new_state.update_aggregates()
 
         if db is not None and (self.db_output_state or self.db_output_cd):
             output_node_to_db(db,

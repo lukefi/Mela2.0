@@ -58,7 +58,6 @@ def _simulate_unit[T: ComputationalUnit](payload: SimulationPayload[T],
                         control.instructions,
                         control.transition.max_step)
                     new_branch.unit, _ = control.transition(new_branch, db, time_step)
-                    new_branch.unit.update_aggregates()
                     _simulate_unit(new_branch, control, db, 1)
                 offset += instruction.events.width()
         if all_instructions_failed:
