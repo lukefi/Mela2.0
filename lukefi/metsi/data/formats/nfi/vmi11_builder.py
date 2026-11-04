@@ -180,8 +180,6 @@ class VMI11Builder(VMIBuilder):
 
         result.peatland_type = vmi2internal.convert_peatland_forest_type(row["suotyy"])
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(row["tkgtyy"])
-        result.under_storey = bool(util.parse_type(row["alikehl"], int))
-        result.over_storey = bool(util.parse_type(row["ylikehl"], int))
 
         if result.land_use_category and result.forestry_centre_id is not None and result.owner_category is not None:
             is_ahvenanmaa = result.forestry_centre_id == 0
