@@ -73,8 +73,6 @@ def stand_to_snapshot_row(s: ForestStand) -> list[str]:
         _safe_str(s.region),
         _safe_str(s.peatland_type),
         _safe_str(s.drained_peatland_type),
-        _safe_str(s.under_storey),
-        _safe_str(s.over_storey),
     ]
     return row
 
