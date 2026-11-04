@@ -40,9 +40,6 @@ def cutting_fn(stand: ForestStand,
 
     target: SelectionTarget = tree_selection["target"]
 
-    if stand.year is None:
-        raise MetsiException("Stand.year is None!")
-
     # Sets
     sets: list[SelectionSet[ForestStand, ReferenceTrees]] = tree_selection["sets"]
     if len(sets) == 0:
