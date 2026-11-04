@@ -545,10 +545,7 @@ class PctMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params: dict[str, Any] = {}
-
-        merged_params = default_params | (parameters or {})
-
+        
         # Example only: run once at relative year 10 unless caller overrides/adds more.
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(10, regeneration),
@@ -556,7 +553,7 @@ class PctMotti(Event[ForestStand]):
 
         super().__init__(
             treatment=pct,
-            static_parameters=merged_params,
+            static_parameters=parameters,
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -581,9 +578,7 @@ class EarlyCareMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params = {"imode": 0}
 
-        merged_params = default_params | (parameters or {})
 
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(5, regeneration),
@@ -591,7 +586,7 @@ class EarlyCareMotti(Event[ForestStand]):
 
         super().__init__(
             treatment=earlycare,
-            static_parameters=merged_params,
+            static_parameters=parameters or {},
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,

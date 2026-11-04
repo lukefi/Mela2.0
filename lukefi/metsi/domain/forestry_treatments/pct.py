@@ -19,16 +19,16 @@ from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 def pct_fn(stand: ForestStand,
            /,
-           remaining_n: list[int] | dict[MottiSpecies, int] | None = None) -> OpTuple[ForestStand]:
+           remaining_n: list[float] | dict[MottiSpecies, float] | None = None) -> OpTuple[ForestStand]:
     """
     Motti-only sapling treatment.
     
     Relative to pre-commercial thinnig. Also adds naturally regenerated saplings on the stand.
 
-    Preferred parameters:
-      remaining_n_by_species:
-          dict or list/tuple describing species-wise remaining stem counts
-          for species slots 1..9
+    Optional parameters:
+      remaining_n:
+          dict or list describing species-wise remaining stems per hectar for motti species
+          if not provided Motti resolves based on its guidelines.
 
     """
 
@@ -74,56 +74,46 @@ def pct_fn(stand: ForestStand,
         cd.append(rmt)
 
 
-    return stand, []
+    return stand, cd
 
 
-def _resolve_remaining_n(ms: MottiState, remaining_n: list[int] | dict[MottiSpecies, int] | None) -> list[int]:
-    """
-    Preferred flow:
-      1) ask Motti for guideline array
-      2) optionally override or scale it
-      3) pass the resulting species-wise array to Motti4PCT
-    """
-    guidelines = Motti4DLL.pct_guidelines_with_state(
+def _resolve_remaining_n(ms: MottiState,
+                         remaining_stems_by_species: list[float] | dict[MottiSpecies, float] | None
+                        ) -> list[float]:
+    """ Prefer parametrized remaining stem counts over Motti pct guidelines """
+    if remaining_stems_by_species is not None:
+        return _normalize_species_array(remaining_stems_by_species)
+    return Motti4DLL.pct_guidelines_with_state(
         ms.yy,
         ms.yp,
         ms.ntrees,
         ms.buffers,
     )
 
-    # New preferred parameter: explicit species-wise values
-    if remaining_n is not None:
-        return _normalize_species_array(remaining_n)
 
-    # Default: use Motti recommendation directly
-    return guidelines
-
-
-def _normalize_species_array(value: list[int] | dict[MottiSpecies, int]) -> list[int]:
+def _normalize_species_array(values: list[float] | dict[MottiSpecies, float]) -> list[float]:
     """
-    Normalize caller-provided species-wise remaining counts into a 10-slot list.
-    Slots 1..9 are species, slot 0 is unused.
+    Normalize caller-provided remaining stem count into a 10-slot list for motti.
+    Index 0..8 are motti species, slot index 9 is unused. Values are the remaining stems counts.
     """
-    if isinstance(value, dict):
-        arr = [0] * 10
-        for key, stems in value.items():
+    if isinstance(values, dict):
+        arr = [0.0] * 10
+        for key, stems in values.items():
             idx = int(key)
             if not 1 <= idx <= 9:
-                raise MetsiException(f"remaining_n_by_species index must be 1..9, got {idx}")
-            arr[idx] = max(int(stems), 0)
+                raise MetsiException(f"remaining species must be a value between 1 and 9, got {idx}")
+            idx_shift = idx - 1
+            arr[idx_shift] = max(float(stems), 0.0)
         return arr
 
-    vals = [int(x) for x in value]
-    if len(vals) == 9:
-        return [0] + [max(v, 0) for v in vals]
-    if len(vals) == 10:
-        out = [max(v, 0) for v in vals]
-        out[0] = 0
-        return out
+    vals = [float(x) for x in values]
+    diff = 10 - len(vals)
+    if len(vals) <= 10:
+        return [max(v, 0) for v in vals] + [0.0] * diff
 
     raise MetsiException(
-        "remaining_n_by_species must be dict or list/tuple of length 9 or 10"
+        "Motti does not relate with more than 9 species maximum"
     )
 
 
-pct = Treatment(pct_fn, "pct")
+pct = Treatment(pct_fn, "pct", collected_data={RemovedTrees})

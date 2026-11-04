@@ -44,11 +44,11 @@ def _compare(ref: str, res: str, select: str, colum_names: str, numeric_toleranc
                     if not ref_col - numeric_tolerance <= res_row[j] <= ref_col + numeric_tolerance:
                         raise AssertionError(f"Difference in row {i}, column {j} \"{ref_col_names[j]}\": "
                                                 f"{ref_col} != {res_row[j]}, tolerance {numeric_tolerance}")
-                except TypeError:
-                    print(f"Reference database row: {i}, ref column {ref_col_names[i]}")
-                    print(f"Test database row: {j}, ref column {res_col_names[j]}")
-                    print(f"Data: {ref_col} vs. {res_row[j]}")
-                    raise
+                except TypeError as e:
+                    raise TypeError(
+                        f"{e}\n"
+                        f"Database row {i} column named \"{ref_col_names[j]}\" failed with comparison: {ref_col} vs. {res_row[j]} \n"
+                    ) from e
             else:
                 if ref_col != res_row[j]:
                     ref_set = _as_set_if_set_string(ref_col)
