@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [8.0.0] - 2026-11-04
+
+### Changed
+
+- Preprocessing operations are now wrapped into `PreprocessingOperation` instances along with their parameters
+
 ## [7.1.1] - 2026-10-30
 
 ### Fixed

@@ -14,15 +14,9 @@ control_structure = MetsiControl[ForestStand](
         run_modes=[RunMode.PREPROCESS, RunMode.EXPORT_PREPRO]
     ),
     preprocessing=Preprocessing(
-        params={
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "method": "weibull"
-                }
-            ]
-        },
-        operations=[generate_reference_trees]
+        operations=[generate_reference_trees(
+                    n_trees=10,
+                    method="weibull")]
     ),
     export_prepro=default_csv
 )

@@ -10,7 +10,12 @@ from lukefi.metsi.domain.collected_data import NaturalProcessInfo
 from lukefi.metsi.domain.conditions import RelativeTimePoints
 from lukefi.metsi.domain.forestry_types import ForestCondition
 from lukefi.metsi.domain.natural_processes.grow_acta import grow_acta_fn
-from lukefi.metsi.domain.pre_ops import filter_stands, filter_trees, generate_reference_trees, scale_area_weight, supplement_storey_information
+from lukefi.metsi.domain.pre_ops import (
+    filter_stands,
+    filter_trees,
+    generate_reference_trees,
+    scale_area_weight,
+    supplement_storey_information)
 
 from examples.declarations.export_prepro import mela_decl
 from examples.declarations.sqlite import sqlite_decl
@@ -32,32 +37,19 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing(
         operations=[
-            scale_area_weight,
-            generate_reference_trees,
-            filter_stands,
-            filter_trees,
-            supplement_storey_information
-
-        ],
-        params={
-            generate_reference_trees: [
-                {
-                    "n_trees": 10,
-                    "method": "weibull",
-                    "debug": False
-                }
-            ],
-            filter_stands: [
-                {
-                    "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
-                }
-            ],
-            filter_trees: [
-                {
-                    "predicate": lambda stand: ~stand.reference_trees.sapling & (stand.reference_trees.stems_per_ha > 0)
-                }
-            ]
-        },
+            scale_area_weight(),
+            generate_reference_trees(
+                n_trees=10,
+                method="weibull",
+            ),
+            filter_stands(
+                remove=lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0)
+            ),
+            filter_trees(
+                predicate=lambda stand: ~stand.reference_trees.sapling & (stand.reference_trees.stems_per_ha > 0)
+            ),
+            supplement_storey_information()
+        ]
     ),
     export_prepro={
         "csv": {},

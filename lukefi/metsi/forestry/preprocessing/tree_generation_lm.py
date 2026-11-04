@@ -57,7 +57,19 @@ def determine_hmalli_value(species: TreeSpecies):
     return 3
 
 
-def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> ReferenceTrees:
+def tree_generation_lm(stand: ForestStand,
+                       stratum: TreeStratum,
+                       nfi_iteration: VmiIteration,
+                       lm_n_trees_max: int = 10,
+                       lm_gos_div: int = 1,
+                       lm_n_trees_mode: str = "param",
+                       lm_mode: str = 'dcons',
+                       lm_fix_width: int = 2,
+                       lm_shdef: int = 5,
+                       lm_stems_nmax: int = 2000,
+                       lm_rho: float = 1.6,
+                       lm_stems_mode: str = 'lkm'
+                       ) -> ReferenceTrees:
     global lm_tree_generation_loaded  # pylint: disable=global-statement
     global _dg_mean_kitumaa  # pylint: disable=global-statement
     global _dg_mean_kitumaa_loaded  # pylint: disable=global-statement
@@ -79,8 +91,6 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     if stand_municipality in (47, 148, 890):
         stand_county = 30
 
-    nfi_iteration: VmiIteration = params["nfi_iteration"]
-
     geo_index = stand.forestry_centre_id if nfi_iteration in (
         VmiIteration.VMI9, VmiIteration.VMI10, VmiIteration.VMI11) else stand_county
 
@@ -95,7 +105,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
 
     if not _dg_mean_kitumaa_loaded:
         _dg_mean_kitumaa = pd.read_csv(
-            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DGMean_kitumaa.csv',
+            f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/DGMean_kitumaa.csv',
             sep=' ',
             index_col="maakunta"
         )
@@ -123,7 +133,7 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
 
     if not _dh_kertoimet_loaded:
         _dh_kertoimet = pd.read_csv(
-            f'lukefi/metsi/data/nfi_data/{params["nfi_iteration"].upper()}/DHkertoimet.csv',
+            f'lukefi/metsi/data/nfi_data/{nfi_iteration.upper()}/DHkertoimet.csv',
             sep=' ',
             index_col=["maakunta", "maalk", "puulaji"])
         _dh_kertoimet_loaded = True
@@ -180,16 +190,12 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
                 source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(
                     len(source_trees))])}
 
-    gos_div = params.get('lm_gos_div', 1)
-
-    # pyydetty max kuvauspuiden lkm
-    ntrees_max = params.get('lm_n_trees', params.get('n_trees', 10))
-
     # ppa:han perustuva kuvauspuiden lkm
-    ntrees = 2 if stratum.basal_area is None else min(max(math.floor(stratum.basal_area / gos_div), 2), ntrees_max)
+    ntrees: int | float = 2 if stratum.basal_area is None else min(
+        max(math.floor(stratum.basal_area / lm_gos_div), 2), lm_n_trees_max)
 
     # jos kuvauspuiden lkm tyyppi on "param", käytetään annettua, ei ppasta laskettua määrää
-    ntrees = ntrees_max if params.get('lm_n_trees_mode', 'param') == 'param' else ntrees
+    ntrees = lm_n_trees_max if lm_n_trees_mode == 'param' else ntrees
 
     # plosia käytettäessä kuvauspuiden lkm voi räjähtää, siksi skaalataan plosin summalla
     if sum(species_proportions) > 0:
@@ -204,12 +210,12 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
     r_args_all = {
         'ositerivi': df,
         'lukupuut': df2,
-        'tapa': params.get('lm_mode', 'dcons'),
+        'tapa': lm_mode,
         'HDpath': hdmod_path,
-        'width': params.get('lm_fix_width', 2),
+        'width': lm_fix_width,
         'n': ntrees,
         'hmalli': determine_hmalli_value(stratum.species),
-        'shdef': params.get('lm_shdef', 5),
+        'shdef': lm_shdef,
         'shinit': 0.1,
         'q': stems_params.q,
         'r1': stems_params.r1,
@@ -217,15 +223,15 @@ def tree_generation_lm(stand: ForestStand, stratum: TreeStratum, **params) -> Re
         'd1': stems_params.d1,
         'd2': stems_params.d2,
         'plos': dfplos,
-        'nmax': params.get('lm_stems_nmax', 2000),
+        'nmax': lm_stems_nmax,
         'dhfactor': dhcoeffs_vec,
-        'rho': params.get('rho', 1.6)
+        'rho': lm_rho
     }
 
     r_args = {k: v for k, v in r_args_all.items() if v is not None}
     result_df = robjects.r['generoi.kuvauspuut'](**r_args)
 
-    index_stems = 12 if params.get('stems_mode', 'lkm') == 'lkm' else 11
+    index_stems = 12 if lm_stems_mode == 'lkm' else 11
     retval = ReferenceTrees(result_df.nrow)
 
     for i in range(result_df.nrow):
