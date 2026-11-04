@@ -79,7 +79,12 @@ STANDS_TYPES = {
     "drained_peatland_type": "INTEGER",
     "under_storey": "INTEGER",
     "over_storey": "INTEGER",
-
+    "stems_per_ha": "REAL",
+    "ds_stems_per_ha": "REAL",
+    "ds_basal_area": "REAL",
+    "ds_ba_weighted_mean_height": "REAL",
+    "ds_ba_weighted_mean_diameter": "REAL",
+    "ds_ba_weighted_mean_biological_age": "REAL"
 }
 
 TREES_TYPES = {
@@ -546,7 +551,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 INSERT INTO initial_stands
                 VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
             """,
             (
@@ -596,7 +601,13 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.peatland_type,
                 self.drained_peatland_type,
                 self.under_storey,
-                self.over_storey
+                self.over_storey,
+                self.stems_per_ha,
+                self.ds_stems_per_ha,
+                self.ds_basal_area,
+                self.ds_ba_weighted_mean_height,
+                self.ds_ba_weighted_mean_diameter,
+                self.ds_ba_weighted_mean_biological_age
             )
         )
 
@@ -899,6 +910,12 @@ class ForestStand(Finalizable, ComputationalUnit):
                     drained_peatland_type INTEGER,
                     under_storey INTEGER,
                     over_storey INTEGER,
+                    stems_per_ha REAL,
+                    ds_stems_per_ha REAL,
+                    ds_basal_area REAL,
+                    ds_ba_weighted_mean_height REAL,
+                    ds_ba_weighted_mean_diameter REAL,
+                    ds_ba_weighted_mean_biological_age REAL,
                     PRIMARY KEY(identifier)
                 );
             """
