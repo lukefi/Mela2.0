@@ -332,6 +332,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             static_parameters=static_params,
             dynamic_parameters=dynamic_params,
             preconditions=preconds,
+            tags={"first_thinning", "mineral_soil_thinning"},
             **kw,
         )
 
@@ -458,6 +459,7 @@ class Harvest20percent(Event[ForestStand]):
             preconditions=preconditions,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"harvest20percent"},
             **kw
         )
 
