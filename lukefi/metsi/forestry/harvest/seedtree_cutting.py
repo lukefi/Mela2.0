@@ -4,6 +4,7 @@ import numpy as np
 
 from lukefi.metsi.data.enums.internal import CuttingMethod, Storey, TreeManagementCategory
 from lukefi.metsi.data.model import ForestStand
+from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.domain.natural_processes.motti_util import (
     reconcile_reference_trees_from_motti)
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -93,4 +94,4 @@ def _mark_motti_yp_as_seed_trees(stand: ForestStand, tree_class) -> bool:
     return changed
 
 
-seedtree_cutting = Treatment(seedtree_cutting_fn, "seedtree_cutting")
+seedtree_cutting = Treatment(seedtree_cutting_fn, "seedtree_cutting", {"cutting"}, {RemovedTrees})
