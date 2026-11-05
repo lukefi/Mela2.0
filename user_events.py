@@ -20,7 +20,6 @@ from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
-from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
 from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization, peatland_fertilization
 from lukefi.metsi.domain.forestry_types import ForestCondition, ForestPostCondition
 from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
@@ -638,44 +637,6 @@ class FillinPlantingMotti(Event[ForestStand]):
         )
 
 
-class SeedlingDelayMotti(Event[ForestStand]):
-    """
-    Example event that uses Motti4SeedingAgeShift.
-
-    Thin wrapper around the Motti-backed seedling age adjustment treatment.
-    istep:
-      positive = increase sapling age in years
-      negative = decrease sapling age in years
-
-    Motti applies the change only to the last sapling layer and only to
-    sapling cohorts whose age is 0 or 1 years.
-    """
-
-    def __init__(
-        self,
-        parameters: Optional[dict[str, Any]] = None,
-        preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestPostCondition]] = None,
-        file_parameters: Optional[dict[str, str]] = None,
-    ) -> None:
-        default_params = {"delay": 1}
-
-        merged_params = default_params | (parameters or {})
-
-        default_preconds: list[ForestCondition] = [
-            TimeSinceTreatment(0, regeneration),
-        ]
-
-        super().__init__(
-            treatment=seedlingdelay,
-            static_parameters=merged_params,
-            preconditions=default_preconds + (preconditions or []),
-            postconditions=postconditions,
-            file_parameters=file_parameters,
-            tags={"motti_seedlingdelay", "seedlingdelay"},
-        )
-
-
 class MineralSoilsFertilizationMotti(Event[ForestStand]):
     """
     Example event that uses Motti4MineralSoilsFertilization.
@@ -766,6 +727,5 @@ __all__ = [
     "PctMotti",
     "EarlyCareMotti",
     "FillinPlantingMotti",
-    "SeedlingDelayMotti",
     "MineralSoilsFertilizationMotti",
 ]

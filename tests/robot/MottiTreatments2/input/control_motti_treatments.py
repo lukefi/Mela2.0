@@ -20,7 +20,6 @@ from lukefi.metsi.core.sim_control import Preprocessing, Simulation
 from user_events import (
     PctMotti,
     FillinPlantingMotti,
-    SeedlingDelayMotti,
     SeedtreeCutting,
     PeatlandFertilizationMotti
 )
@@ -85,7 +84,6 @@ control_structure = MetsiControl[ForestStand](
                                 }
                             }),
                         ])
-                        # SeedlingDelayMotti() # NOTE: There is something wrong with seeding dealy as it crashes
                     ])
                 ]
             )

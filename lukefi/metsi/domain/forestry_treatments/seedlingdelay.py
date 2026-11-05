@@ -6,7 +6,6 @@ from lukefi.metsi.domain.natural_processes.motti_util import (
     prune_reference_trees_not_in_motti,
 )
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
-from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 
@@ -53,6 +52,3 @@ def seedlingdelay_fn(stand: ForestStand,
     prune_reference_trees_not_in_motti(stand)
 
     return stand, []
-
-
-seedlingdelay = Treatment(seedlingdelay_fn, "seedlingdelay")
