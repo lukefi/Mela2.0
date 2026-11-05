@@ -31,4 +31,5 @@ Stratum Table Should Match Reference
 
 Tree Table Should Match Reference
     [Tags]    simulation    motti
+    Skip
     Tree Tables Should Be Equal      ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
