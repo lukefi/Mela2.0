@@ -5,8 +5,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees, TreeStrata
 from lukefi.metsi.data.enums.internal import TreeSpecies
 from lukefi.metsi.domain.utils.filter import filter_stands, filter_strata, filter_trees
-from lukefi.metsi.domain.pre_ops import filter_stands as filter_stands_
-from lukefi.metsi.domain.pre_ops import filter_trees as filter_trees_
+from lukefi.metsi.domain.pre_ops import filter_stands_fn, filter_trees_fn
 
 
 class FilterTest(unittest.TestCase):
@@ -133,13 +132,13 @@ class FilterTest(unittest.TestCase):
             }
         )
 
-        stands = filter_trees_(
+        stands = filter_trees_fn(
             [s1, s2],
             **{
                 "predicate": lambda stand: ~np.isin(stand.reference_trees.identifier, ["3", "4"])
             }
         )
-        stands = filter_stands_(
+        stands = filter_stands_fn(
             stands,
             **{
                 "select": lambda stand: stand.reference_trees.size > 0,

@@ -21,23 +21,16 @@ control_structure = MetsiControl[ForestStand](
     ),
     preprocessing=Preprocessing[ForestStand](
         operations=[
-            scale_area_weight,
-            filter_stands,
-            filter_trees,
+            scale_area_weight(),
+            filter_stands(
+                remove=(lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
+            ),
+            filter_trees(
+                predicate=(lambda stand: ~((stand.reference_trees.sapling != 0) |
+                                           (stand.reference_trees.stems_per_ha == 0))),
+            ),
         ],
-        params={
-            filter_stands: [
-                {
-                    "remove": (lambda stand: (stand.site_type_category is None) or (stand.site_type_category == 0))
-                }
-            ],
-            filter_trees: [
-                {
-                    "predicate": (lambda stand: ~((stand.reference_trees.sapling != 0) |
-                                                  (stand.reference_trees.stems_per_ha == 0))),
-                }
-            ],
-        }),
+    ),
     simulation=Simulation[ForestStand](
         instructions=[
             SimulationInstruction(
