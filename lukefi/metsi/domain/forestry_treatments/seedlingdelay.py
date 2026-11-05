@@ -1,3 +1,5 @@
+import warnings
+
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.natural_processes.motti_util import (
     sync_ut_to_reference_trees,
@@ -7,7 +9,6 @@ from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.treatment import Treatment
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
-
 
 def seedlingdelay_fn(stand: ForestStand,
                      /,
@@ -26,6 +27,12 @@ def seedlingdelay_fn(stand: ForestStand,
     Motti applies the change only to the last sapling layer and only to
     sapling cohorts whose age is 0 or 1 years.
     """
+    warnings.warn(
+        "seedlingdelay_fn treatment does not work as expected. " \
+        "It will will be fixed or removed in future.",
+        UserWarning,
+        stacklevel=2
+    )
 
     ms = stand.motti_state
     if ms is None or ms.buffers is None:
