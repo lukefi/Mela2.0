@@ -83,7 +83,10 @@ _SOIL_PREPARATION_TYPE_MAP: dict[MetsiEnum | None, MottiSoilPreparationType] = {
 
 _FERTILIZATION_TYPE_MAP: dict[MetsiEnum | None, MottiFertilizationType] = {
     FertilizationType.AMMONIUM_SULFITE: MottiFertilizationType.AMMONIUM_SULFITE,
-    FertilizationType.CARBAMIDE: MottiFertilizationType.CARBAMIDE
+    FertilizationType.CARBAMIDE: MottiFertilizationType.CARBAMIDE,
+    FertilizationType.PK: MottiFertilizationType.PK,
+    FertilizationType.NPK: MottiFertilizationType.NPK,
+    FertilizationType.ASH: MottiFertilizationType.ASH
 }
 
 

@@ -2,11 +2,6 @@ import sqlite3
 import re
 
 _SET_ITEM_RE = re.compile(r"'([^']*)'")
-SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
-SELECT_STANDS = "SELECT * FROM stands"
-SELECT_STRATA = "SELECT * FROM strata"
-SELECT_TREES = "SELECT * FROM trees"
-SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
 
 
 def _as_set_if_set_string(v):
@@ -17,7 +12,7 @@ def _as_set_if_set_string(v):
     return None
 
 
-def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
+def _compare(ref: str, res: str, select: str, colum_names: str, numeric_tolerance=0.0):
     ref_db = sqlite3.connect(ref)
     res_db = sqlite3.connect(res)
     ref_db.row_factory = sqlite3.Row
@@ -26,6 +21,9 @@ def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
     res_cur = res_db.cursor()
     ref_rows = ref_cur.execute(select)
     res_rows = res_cur.execute(select)
+    ref_cur = ref_db.cursor()
+    res_cur = res_db.cursor()
+
     for i, ref_row in enumerate(ref_rows):
         res_row = res_rows.fetchone()
         if res_row is None:
@@ -62,7 +60,9 @@ def node_tables_should_be_equal(ref: str, res: str):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    _compare(ref, res, SELECT_NODES)
+    NODE_COLUMNS = "PRAGMA table_info(nodes)"
+    SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
+    _compare(ref, res, SELECT_NODES, NODE_COLUMNS)
 
 
 def stand_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
@@ -73,7 +73,9 @@ def stand_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    _compare(ref, res, SELECT_STANDS, numeric_tolerance)
+    STAND_COLUMNS = "PRAGMA table_info(stands)"
+    SELECT_STANDS = "SELECT * FROM stands"
+    _compare(ref, res, SELECT_STANDS, STAND_COLUMNS, numeric_tolerance)
 
 
 def stratum_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
@@ -84,7 +86,9 @@ def stratum_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float)
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    _compare(ref, res, SELECT_STRATA, numeric_tolerance)
+    STRATA_COLUMNS = "PRAGMA table_info(strata)"
+    SELECT_STRATA = "SELECT * FROM strata"
+    _compare(ref, res, SELECT_STRATA, STRATA_COLUMNS, numeric_tolerance)
 
 
 def tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
@@ -95,7 +99,9 @@ def tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    _compare(ref, res, SELECT_TREES, numeric_tolerance)
+    TREES_COLUMNS = "PRAGMA table_info(trees)"
+    SELECT_TREES = "SELECT * FROM trees"
+    _compare(ref, res, SELECT_TREES, TREES_COLUMNS, numeric_tolerance)
 
 
 def removed_tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
@@ -106,4 +112,6 @@ def removed_tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: f
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    _compare(ref, res, SELECT_REMOVED_TREES, numeric_tolerance)
+    REMOVED_TREES_COLUMNS = "PRAGMA table_info(removed_trees)"
+    SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
+    _compare(ref, res, SELECT_REMOVED_TREES, REMOVED_TREES_COLUMNS, numeric_tolerance)
