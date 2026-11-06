@@ -116,7 +116,7 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
 
         _basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
         basal_area = _basal_area if _basal_area > 0.001 else 0.0
-        biological_age = float(np.nan_to_num(strata.biological_age[i], nan=0.0))
+        biological_age = float(np.round(np.nan_to_num(strata.biological_age[i], nan=0.0), decimals=0))
         stems_main = float(np.nan_to_num(strata.stems_per_ha[i], nan=0.0))
         mean_height = float(np.nan_to_num(strata.mean_height[i], nan=0.0))
         mean_diameter = float(np.nan_to_num(strata.mean_diameter[i], nan=0.0))
