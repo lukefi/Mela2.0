@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [8.0.1] - 2026-11-06
+
+### Fixed
+
+- Added a `nan` check in `select_units()` to fix a potential division by zero
+
 ## [8.0.0] - 2026-11-04
 
 ### Changed
