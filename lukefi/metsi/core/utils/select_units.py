@@ -318,7 +318,7 @@ def select_units[T, V: VectorData](context: T,
 
             # if only one order_var value and relative x, all points in prof_x are the same
             # in that case scale only constant part a (set slopes b to zero)
-            if np.any(np.isinf(b)):
+            if np.any(np.isinf(b)) or np.any(np.isnan(b)):
                 b = np.repeat(0, b.size)
 
             a: npt.NDArray[np.float64] = prof_y[1:] - b * prof_x[1:]
