@@ -301,7 +301,7 @@ def regeneration_fn(stand: ForestStand,
                 stems_per_ha=stems_per_ha,
                 delay=delay,
                 survival_percent=survival_percent_motti,
-                species_ratio=stems_per_ha/(stems_per_ha + stems_per_ha_2))
+                species_ratio=stems_per_ha / (stems_per_ha + stems_per_ha_2))
         else:
             _regeneration_via_motti(
                 stand,
