@@ -42,8 +42,6 @@ STAND_INTERNAL_COLUMNS: list[str] = [
     "region",
     "peatland_type",
     "drained_peatland_type",
-    "under_storey",
-    "over_storey",
 ]
 
 
