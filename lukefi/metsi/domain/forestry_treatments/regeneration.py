@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from typing import overload
+
 import numpy as np
 
 from lukefi.metsi.data.model import ForestStand
@@ -18,6 +21,8 @@ from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
+SPECIES_SUITABLE_FOR_MIXED_REGENERATION = {TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.SILVER_BIRCH}
+
 
 def _is_cleared_after_cutting(stand: ForestStand) -> bool:
     if (stand.cutting_year is None or
@@ -28,7 +33,7 @@ def _is_cleared_after_cutting(stand: ForestStand) -> bool:
     return False
 
 
-def _resolve_regeneration_type_from_origin(origin: Origin) -> RegenerationType:
+def _resolve_regeneration_type(origin: Origin) -> RegenerationType:
     """ In-place resolution from origin to Motti regeneration type coding """
     _natural_origins = (Origin.UNSET, Origin.NATURAL)
     _artificial_origins = (Origin.SEEDED, Origin.PLANTED)
@@ -69,29 +74,67 @@ def _resolve_seeding_tree_spe(rt: ReferenceTrees) -> MottiSpecies:
     return convert_species(result.item())
 
 
+@overload
 def _regeneration_via_motti(stand: ForestStand,
                             *,
-                            origin: Origin,
-                            species: TreeSpecies,
+                            method: MottiRegenerationMethod,
+                            survival_percent: float = 100.0,
+                            species: MottiSpecies,
                             stems_per_ha: float,
-                            delay: int,
-                            survival_percent: float = 100.0
-                            ) -> None:
+                            delay: int):
+    pass
+
+
+@overload
+def _regeneration_via_motti(stand: ForestStand,
+                            *,
+                            method: MottiRegenerationMethod,
+                            method_2: MottiRegenerationMethod,
+                            survival_percent: float = 100.0,
+                            species: MottiSpecies,
+                            species_2: MottiSpecies,
+                            stems_per_ha: float,
+                            species_ratio: float,
+                            delay: int):
+    pass
+
+
+def _regeneration_via_motti(stand: ForestStand,
+                            *,
+                            method: MottiRegenerationMethod,
+                            method_2: MottiRegenerationMethod | None = None,
+                            survival_percent: float = 100.0,
+                            species: MottiSpecies,
+                            species_2: MottiSpecies | None = None,
+                            stems_per_ha: float,
+                            species_ratio: float | None = None,
+                            delay: int) -> None:
     assert stand.motti_state
     ms = stand.motti_state
 
     seed_tree_species = MottiSpecies.UNKNOWN
-    if origin == Origin.NATURAL:
+    if method == MottiRegenerationMethod.NATURAL:
         seed_tree_species = _resolve_seeding_tree_spe(stand.reference_trees)
 
+    if method_2 is not None:
+        assert species_2 is not None
+        assert species_ratio is not None
+        method_f = float(method) * 10 + float(method_2)
+        species_f = float(species) * 10 + float(species_2)
+    else:
+        method_f = float(method)
+        species_f = float(species)
+        species_ratio = 0
+
     motti_regeneration_params = [
-        float(_resolve_method_from_origin(origin)),
+        method_f,
         survival_percent,
-        float(convert_species(species)),
+        species_f,
         stems_per_ha,
         float(convert_soil_preparation_type(stand.soil_preparation_type)),
         float(_is_cleared_after_cutting(stand)),
         float(seed_tree_species),
+        species_ratio
     ]
 
     ms.ntrees = Motti4DLL.regenerate_with_state(
@@ -107,91 +150,79 @@ def _regeneration_via_motti(stand: ForestStand,
     prune_reference_trees_not_in_motti(stand)  # Lopuksi vois tarkastella, että onko prunetuksella vaikutusta.
 
 
-def regeneration_fn(input_: ForestStand,
-                    /,
-                    origin: Origin = Origin.UNSET,
-                    species: TreeSpecies = TreeSpecies.UNSET,
-                    stems_per_ha: float | None = None,
-                    height: float | None = None,
-                    biological_age: float | None = None,
-                    breast_height_diameter: float | None = None,
-                    breast_height_age: float | None = None,
-                    ntrees: int = 10,
-                    delay: int = 0,
-                    survival_percent_motti: float = 100.0
-                    ) -> OpTuple[ForestStand]:
-    """
-    Regeneration treatment adds reference trees to a stand based on origin type
-    - Parameters:
-        origin:                         # e.g. 1 (natural), 2 (seeded) or 3 (planted)
-        species:                        # tree species code
-        stems_per_ha:                   # total stems/ha to distribute to created trees
-        height:                         # initial height (m)
-        biological_age:                 # biological age (years)
-        breast_height_diameter:         # diameter (dm)
-        breast_height_age:              # age at breat height (years)
-        ntrees:                         # number of reference trees to create
-        delay:                          # delay in years before regeneration is done
-    - If Motti defined as transition, delegates sapling regeneration to Motti4Regenerate with additional params:
-        survival_percent_motti:         # value from 0.0 to 100.0
-        soil_preparation_type_motti:    # value from 0 to 6
-        clearing_motti: bool            # Done or not done
+@dataclass(slots=True)
+class RegenerationDecl:
+    method: Origin
+    species: TreeSpecies
+    stems_per_ha: float
+    height: float
+    biological_age: float
+    ntrees: int = 10
+    breast_height_diameter: float | None = None
+    breast_height_age: float | None = None
+    delay: int = 0
 
-    """
-    stand = input_
 
+def regeneration_fn(stand: ForestStand,
+                    *,
+                    regeneration_decls: list[RegenerationDecl] | None = None,
+                    survival_percent_motti: float = 100.0) -> OpTuple[ForestStand]:
     # ----- obligatory params ----
 
-    if origin == Origin.UNSET:
-        raise MetsiException("Origin missing or not set")
-    if species == TreeSpecies.UNSET:
-        raise MetsiException("Species is missing or not set")
-    if stems_per_ha is None:
-        raise MetsiException("stems_per_ha is missing")
-    if height is None:
-        raise MetsiException("Height is missing")
-    if biological_age is None:
-        raise MetsiException("Biological age is missing")
+    assert regeneration_decls is not None
+    assert len(regeneration_decls) > 0
 
-    # ---- optional  params ----
-
-    if height <= 0:
-        raise MetsiException("Regeneration: Height can not be negative or zero")
-    if not ntrees or ntrees <= 0:
-        raise MetsiException("Parameter 'ntrees' must be positive")
-    if stems_per_ha <= 0:
-        raise MetsiException("Parameter 'stems_per_ha' must be > 0")
-
-    regen_type = _resolve_regeneration_type_from_origin(origin)
+    # TODO: multiple separate types?
+    regen_type = _resolve_regeneration_type(regeneration_decls[0].method)
 
     if stand.motti_state is not None:
-        _regeneration_via_motti(
-            stand,
-            origin=origin,
-            species=species,
-            stems_per_ha=stems_per_ha,
-            delay=delay,
-            survival_percent=survival_percent_motti)
+        if len(regeneration_decls) == 2:
+            # Mixed regeneration
+            _regeneration_via_motti(
+                stand,
+                method=_resolve_method_from_origin(regeneration_decls[0].method),
+                method_2=_resolve_method_from_origin(regeneration_decls[1].method),
+                species=convert_species(regeneration_decls[0].species),
+                species_2=convert_species(regeneration_decls[1].species),
+                stems_per_ha=regeneration_decls[0].stems_per_ha,
+                delay=regeneration_decls[0].delay,
+                survival_percent=survival_percent_motti,
+                species_ratio=(regeneration_decls[0].stems_per_ha / (regeneration_decls[0].stems_per_ha +
+                                                                     regeneration_decls[1].stems_per_ha)))
+
+        elif len(regeneration_decls) == 1:
+            _regeneration_via_motti(
+                stand,
+                method=_resolve_method_from_origin(regeneration_decls[0].method),
+                species=convert_species(regeneration_decls[0].species),
+                stems_per_ha=regeneration_decls[0].stems_per_ha,
+                delay=regeneration_decls[0].delay,
+                survival_percent=survival_percent_motti)
+
+        else:
+            raise MetsiException("Motti regeneration only supported for one or two species")
+
     else:
-        per_tree_stems = stems_per_ha / float(ntrees)
-        for _ in range(ntrees):
-            identifier, tree_number = new_reference_tree_identity(stand)
-            delayed_age = biological_age - delay
-            stand.reference_trees.create({
-                "identifier": identifier,
-                "tree_number": tree_number,
-                "species": species,
-                "origin": origin,
-                "stems_per_ha": per_tree_stems,
-                "height": height,
-                "biological_age": delayed_age if delayed_age > 0 else 0,
-                "breast_height_diameter": None if breast_height_diameter is None else float(breast_height_diameter),
-                "breast_height_age": None if breast_height_age is None else float(breast_height_age),
-                "management_category": TreeManagementCategory.NO_RESTRICTION
-            })
+        # Mixed regeneration
+        for regen in regeneration_decls:
+            for _ in range(regen.ntrees):
+                identifier, tree_number = new_reference_tree_identity(stand)
+                delayed_age = regen.biological_age - regen.delay
+                stand.reference_trees.create({
+                    "identifier": identifier,
+                    "tree_number": tree_number,
+                    "species": regen.species,
+                    "origin": regen.method,
+                    "stems_per_ha": regen.stems_per_ha / regen.ntrees,
+                    "height": regen.height,
+                    "biological_age": delayed_age if delayed_age > 0 else 0,
+                    "breast_height_diameter": regen.breast_height_diameter,
+                    "breast_height_age": regen.breast_height_age,
+                    "management_category": TreeManagementCategory.NO_RESTRICTION})
 
     if regen_type == RegenerationType.ARTIFICIAL:
-        stand.artificial_regeneration_year = stand.year + delay
+        # TODO: multiple separate delays?
+        stand.artificial_regeneration_year = stand.year + regeneration_decls[0].delay
 
     # Handle storeys ----------------------------------------------------------------------------------------------
 
