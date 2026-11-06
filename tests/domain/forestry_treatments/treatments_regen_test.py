@@ -15,7 +15,7 @@ class RegenerationTest(unittest.TestCase):
     def test_artificial_regeneration_adds_trees_and_sets_year(self):
         stand = self.make_stand()
         params = {
-            "origin": Origin.PLANTED,
+            "method": Origin.PLANTED,
             "species": TreeSpecies.PINE,
             "stems_per_ha": 1500.0,
             "height": 0.7,
@@ -34,14 +34,14 @@ class RegenerationTest(unittest.TestCase):
         new_idx = slice(-params["ntrees"], None)
         self.assertTrue(all(s == per_tree for s in updated.reference_trees.stems_per_ha[new_idx]))
         self.assertTrue(all(int(s) == params["species"] for s in updated.reference_trees.species[new_idx]))
-        self.assertTrue(all(int(o) == params["origin"] for o in updated.reference_trees.origin[new_idx]))
+        self.assertTrue(all(int(o) == params["method"] for o in updated.reference_trees.origin[new_idx]))
         self.assertTrue(all(h == params["height"] for h in updated.reference_trees.height[new_idx]))
         self.assertTrue(all(a == params["biological_age"] for a in updated.reference_trees.biological_age[new_idx]))
 
     def test_natural_regeneration_does_not_set_artificial_year(self):
         stand = self.make_stand()
         params = {
-            "origin": Origin.NATURAL,
+            "method": Origin.NATURAL,
             "species": TreeSpecies.SPRUCE,
             "stems_per_ha": 900.0,
             "height": 0.6,
@@ -58,7 +58,7 @@ class RegenerationTest(unittest.TestCase):
         # verify only the 3 newly created rows
         new_idx = slice(-params["ntrees"], None)
         self.assertTrue(all(int(s) == params["species"] for s in updated.reference_trees.species[new_idx]))
-        self.assertTrue(all(int(o) == params["origin"] for o in updated.reference_trees.origin[new_idx]))
+        self.assertTrue(all(int(o) == params["method"] for o in updated.reference_trees.origin[new_idx]))
         self.assertTrue(all(h == params["height"] for h in updated.reference_trees.height[new_idx]))
         self.assertTrue(all(a == params["biological_age"] for a in updated.reference_trees.biological_age[new_idx]))
 
@@ -66,7 +66,7 @@ class RegenerationTest(unittest.TestCase):
         stand = self.make_stand()
         # First regeneration adds 2 trees -> identifiers ...-1-tree, ...-2-tree
         regeneration_fn(stand,
-                        origin=Origin.PLANTED,
+                        method=Origin.PLANTED,
                         species=TreeSpecies.PINE,
                         stems_per_ha=200.0,
                         height=0.5,
@@ -74,7 +74,7 @@ class RegenerationTest(unittest.TestCase):
                         ntrees=2)
         # Second regeneration adds 3 more -> identifiers start at 3
         updated, _ = regeneration_fn(stand,
-                                     origin=Origin.PLANTED,
+                                     method=Origin.PLANTED,
                                      species=TreeSpecies.PINE,
                                      stems_per_ha=300.0,
                                      height=0.6,
@@ -89,7 +89,7 @@ class RegenerationTest(unittest.TestCase):
         stand = self.make_stand()
         start_size = stand.reference_trees.size
         updated, _ = regeneration_fn(stand,
-                                     origin=Origin.PLANTED,
+                                     method=Origin.PLANTED,
                                      species=TreeSpecies.PINE,
                                      stems_per_ha=1000.0,
                                      height=0.8,
@@ -107,7 +107,7 @@ class RegenerationTest(unittest.TestCase):
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                            origin=Origin.PLANTED,
+                            method=Origin.PLANTED,
                             species=TreeSpecies.PINE,
                             stems_per_ha=1000.0,
                             height=0.0,
@@ -116,7 +116,7 @@ class RegenerationTest(unittest.TestCase):
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                            origin=2,
+                            method=2,
                             species=1,
                             stems_per_ha=1000.0,
                             height=0.5,
@@ -125,7 +125,7 @@ class RegenerationTest(unittest.TestCase):
 
         with self.assertRaises(MetsiException):
             regeneration_fn(stand,
-                            origin=2,
+                            method=2,
                             species=1,
                             stems_per_ha=0.0,
                             height=0.5,
