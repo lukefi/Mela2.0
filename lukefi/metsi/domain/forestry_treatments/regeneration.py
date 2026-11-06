@@ -20,7 +20,7 @@ from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
 
-SPECIES_SUITABLE_FOR_MIXED_REGENERATION = (TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.SILVER_BIRCH)
+SPECIES_SUITABLE_FOR_MIXED_REGENERATION = {TreeSpecies.PINE, TreeSpecies.SPRUCE, TreeSpecies.SILVER_BIRCH}
 
 
 def _is_cleared_after_cutting(stand: ForestStand) -> bool:
@@ -180,7 +180,6 @@ def regeneration_fn(input_: ForestStand,
         clearing_motti: bool            # Done or not done
 
     """
-    pass
 
 
 @overload
@@ -233,7 +232,6 @@ def regeneration_fn(input_: ForestStand,
         clearing_motti: bool            # Done or not done
 
     """
-    pass
 
 
 def regeneration_fn(input_: ForestStand,
@@ -273,7 +271,7 @@ def regeneration_fn(input_: ForestStand,
         raise MetsiException("Biological age is missing")
 
     if method_2 != Origin.UNSET:
-        if method == Origin.NATURAL or method_2 == Origin.NATURAL:
+        if Origin.NATURAL in {method, method_2}:
             raise MetsiException("method and method_2 must be SEEDED or PLANTED for mixed regeneration")
         if (species not in SPECIES_SUITABLE_FOR_MIXED_REGENERATION or
                 species_2 not in SPECIES_SUITABLE_FOR_MIXED_REGENERATION):
