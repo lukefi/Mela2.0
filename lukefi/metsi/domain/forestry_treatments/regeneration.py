@@ -150,7 +150,7 @@ def _regeneration_via_motti(stand: ForestStand,
 
 
 @overload
-def regeneration_fn(input_: ForestStand,
+def regeneration_fn(stand: ForestStand,
                     *,
                     method: Origin = Origin.UNSET,
                     species: TreeSpecies = TreeSpecies.UNSET,
@@ -183,13 +183,14 @@ def regeneration_fn(input_: ForestStand,
 
 
 @overload
-def regeneration_fn(input_: ForestStand,
+def regeneration_fn(stand: ForestStand,
                     *,
                     method: Origin = Origin.UNSET,
                     method_2: Origin = Origin.UNSET,
                     species: TreeSpecies = TreeSpecies.UNSET,
                     species_2: TreeSpecies = TreeSpecies.UNSET,
                     stems_per_ha: float | None = None,
+                    stems_per_ha_2: float | None = None,
                     height: float | None = None,
                     height_2: float | None = None,
                     biological_age: float | None = None,
@@ -202,8 +203,7 @@ def regeneration_fn(input_: ForestStand,
                     ntrees_2: int = 0,
                     delay: int = 0,
                     delay_2: int = 0,
-                    survival_percent_motti: float = 100.0,
-                    species_ratio: float | None = None) -> OpTuple[ForestStand]:
+                    survival_percent_motti: float = 100.0) -> OpTuple[ForestStand]:
     """
     Mixed regeneration treatment adds reference trees to a stand based on method
     - Parameters:
@@ -213,7 +213,8 @@ def regeneration_fn(input_: ForestStand,
                                         # (planted)
         species:                        # first species
         species_2:                      # second species
-        stems_per_ha:                   # total stems/ha to distribute to created trees
+        stems_per_ha:                   # total stems/ha to distribute to created trees of the first species
+        stems_per_ha_2:                 # total stems/ha to distribute to created trees of the second species
         height:                         # initial height of the first species (m)
         height_2:                       # initial height of the second species (m)
         biological_age:                 # biological age of the first species (years)
@@ -225,7 +226,7 @@ def regeneration_fn(input_: ForestStand,
         ntrees:                         # number of reference trees of the first species to create
         ntrees_2:                       # number of reference trees of the second species to create
         delay:                          # delay in years before regeneration of the first species is done
-        delay:                          # delay in years before regeneration of the second species is done
+        delay_2:                          # delay in years before regeneration of the second species is done
     - If Motti defined as transition, delegates sapling regeneration to Motti4Regenerate with additional params:
         survival_percent_motti:         # value from 0.0 to 100.0
         soil_preparation_type_motti:    # value from 0 to 6
@@ -234,13 +235,14 @@ def regeneration_fn(input_: ForestStand,
     """
 
 
-def regeneration_fn(input_: ForestStand,
+def regeneration_fn(stand: ForestStand,
                     *,
                     method: Origin = Origin.UNSET,
                     method_2: Origin = Origin.UNSET,
                     species: TreeSpecies = TreeSpecies.UNSET,
                     species_2: TreeSpecies = TreeSpecies.UNSET,
                     stems_per_ha: float | None = None,
+                    stems_per_ha_2: float | None = None,
                     height: float | None = None,
                     height_2: float | None = None,
                     biological_age: float | None = None,
@@ -253,10 +255,7 @@ def regeneration_fn(input_: ForestStand,
                     ntrees_2: int = 0,
                     delay: int = 0,
                     delay_2: int = 0,
-                    survival_percent_motti: float = 100.0,
-                    species_ratio: float | None = None) -> OpTuple[ForestStand]:
-    stand = input_
-
+                    survival_percent_motti: float = 100.0) -> OpTuple[ForestStand]:
     # ----- obligatory params ----
 
     if method == Origin.UNSET:
@@ -276,8 +275,8 @@ def regeneration_fn(input_: ForestStand,
         if (species not in SPECIES_SUITABLE_FOR_MIXED_REGENERATION or
                 species_2 not in SPECIES_SUITABLE_FOR_MIXED_REGENERATION):
             raise MetsiException("species and species_2 must be pine, spruce or silver birch for mixed regeneration")
-        if species_ratio is None:
-            raise MetsiException("species_ratio missing for mixed regeneration")
+        if stems_per_ha_2 is None:
+            raise MetsiException("stems_per_ha_2 missing for mixed regeneration")
 
     # ---- optional  params ----
 
@@ -291,7 +290,7 @@ def regeneration_fn(input_: ForestStand,
     regen_type = _resolve_regeneration_type(method)
 
     if stand.motti_state is not None:
-        if method_2 != Origin.UNSET and species_2 != TreeSpecies.UNSET and species_ratio is not None:
+        if method_2 != Origin.UNSET and species_2 != TreeSpecies.UNSET and stems_per_ha_2 is not None:
             # Mixed regeneration
             _regeneration_via_motti(
                 stand,
@@ -302,7 +301,7 @@ def regeneration_fn(input_: ForestStand,
                 stems_per_ha=stems_per_ha,
                 delay=delay,
                 survival_percent=survival_percent_motti,
-                species_ratio=species_ratio)
+                species_ratio=stems_per_ha/(stems_per_ha + stems_per_ha_2))
         else:
             _regeneration_via_motti(
                 stand,
@@ -332,13 +331,13 @@ def regeneration_fn(input_: ForestStand,
     else:
         # Mixed regeneration
         assert species_2 != TreeSpecies.UNSET
-        assert species_ratio is not None
         assert ntrees_2 > 0
         assert height_2 is not None
         assert biological_age_2 is not None
+        assert stems_per_ha_2 is not None
 
-        per_tree_stems_1 = stems_per_ha * species_ratio / ntrees
-        per_tree_stems_2 = stems_per_ha * (1 - species_ratio) / ntrees_2
+        per_tree_stems_1 = stems_per_ha / ntrees
+        per_tree_stems_2 = stems_per_ha_2 / ntrees_2
 
         for _ in range(ntrees):
             identifier, tree_number = new_reference_tree_identity(stand)
