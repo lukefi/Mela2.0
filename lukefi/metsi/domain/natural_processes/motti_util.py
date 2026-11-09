@@ -5,7 +5,7 @@ import numpy.typing as npt
 
 from lukefi.metsi.data.enums.internal import Origin, Storey, TreeCategory, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
+from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum, Motti4Saplings
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -304,7 +304,7 @@ def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
     prune_reference_trees_not_in_motti(stand)
 
 
-def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> None:
+def _update_motti_aggregates(stand: ForestStand) -> None:
     """
     Rebuild Motti internal state after yp edits, run grow(step=0) and
     then synchronize ReferenceTrees from yp/ut.
@@ -316,25 +316,34 @@ def _refresh_reference_trees_from_motti_after_yp_change(stand: ForestStand) -> N
     reconcile_reference_trees_from_motti(stand)
 
 
-def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: npt.NDArray[np.float64]) -> bool:
+def _update_motti_yp_after_cutting(stand: ForestStand, removed_stems: npt.NDArray[np.float64]) -> bool:
+    """ Updates Motti tree vector (a.k.a yp) from given removed stems. Returns True if any updates were made.
+
+        The update is done reducing the amount of stems_per_ha in the yp vector by the amount of removed stems.
+    """
     ms = stand.motti_state
     trees = stand.reference_trees
     if ms is None or ms.yp is None or trees.size == 0:
         return False
 
     changed = False
-    for idx, delta in enumerate(removed_f):
+    for idx, delta in enumerate(removed_stems):
         if delta <= 0.0:
+            # No removed trees for this reference tree, skip
             continue
+
         if bool(trees.sapling[idx]):
+            # Sapling reference tree, skip.
             continue
 
         sid = int(trees.stratum[idx])
         if sid <= 0:
+            # No stratum, skip.
             continue
 
         tree_number = int(trees.tree_number[idx])
         if tree_number <= 0:
+            # No tree number, skip.
             continue
 
         for i in range(ms.ntrees):
@@ -353,21 +362,84 @@ def _reduce_motti_yp_by_removed_reference_trees(stand: ForestStand, removed_f: n
     return changed
 
 
-def apply_motti_yp_reduction_from_removed_reference_trees(stand: ForestStand,
-                                                          removed_f: np.ndarray,
-                                                          *,
-                                                          refresh: bool = True,
-                                                          ) -> bool:
+def _update_ut_after_cutting(ut: Motti4Saplings, saplings: ReferenceTrees) -> bool:
+    """ Updates Motti sapling vector (a.k.a ut) stems_per_ha values with given sapling data.
+        Returns True if any updates were made.
     """
-    Generic helper for treatments that reduce tree amounts.
-    This helper maps removed trees to the yp vector via the shared stratum/sid,
-    optionally runs a zero-step Motti refresh, and synchronizes ReferenceTrees
-    back from the refreshed Motti state.
-    """
-    changed = _reduce_motti_yp_by_removed_reference_trees(stand, removed_f)
-    if changed and refresh:
-        _refresh_reference_trees_from_motti_after_yp_change(stand)
+    changed = False
+    if saplings.size == 0:
+        return changed
+
+    for i in range(saplings.size):
+        spe_rt = saplings.species[i].item()
+        stratum_rt = float(saplings.stratum[i].item())
+        f_rt = saplings.stems_per_ha[i].item()
+        is_found = False
+        for j in range(10):
+            ut_layer = ut[0][j]    
+            for ut_spe_name, species in UT_SPECIES_FIELDS:
+                if species != spe_rt:
+                    # No species match, skip to next species.
+                    continue
+                ut_strata = getattr(ut_layer, ut_spe_name)
+                for cat_code, _ in UT_CATEGORIES:
+                    if (ut_strata.year <= 0.0 and ut_strata.age <= 0.0):
+                        # sapling strata inactive, skip.
+                        continue
+                    osid_ut = getattr(ut_strata, f"osid_{cat_code}")
+                    if osid_ut != stratum_rt:
+                        # reference tree stratum does not match Motti sapling stratum, skip.
+                        continue
+                    # Found matching Motti sapling stratum, update stems_per_ha
+                    setattr(ut_strata, f"f_{cat_code}", f_rt)
+                    changed = True
+                    is_found = True
+                    break
+                if is_found:
+                    break
+            if is_found:
+                break
     return changed
+
+
+def _update_motti_trees_after_cutting(stand: ForestStand,
+                                      removed_stems: npt.NDArray[np.float64]
+                                      ) -> bool:
+    """ Updates Motti trees and saplings after cutting.
+        Returns True if either yp or ut trees were updated.
+    """
+    assert stand.motti_state # for lintter
+    changed = False
+
+    changed |= _update_motti_yp_after_cutting(
+        stand, removed_stems
+    )
+    changed |= _update_ut_after_cutting(
+        ut=stand.motti_state.buffers.saplings,
+        saplings=stand.reference_trees[stand.reference_trees.sapling]
+    )
+    return changed
+
+
+def update_motti_state_after_cutting(stand: ForestStand,
+                                    removed_stems: npt.NDArray[np.float64],
+                                    ) -> bool:
+    """ Used after cutting treatments to update Motti state.
+
+        Note: This function is called after the cutting treatment has been applied to the stand \
+            and the reference trees have been updated accordingly.
+    
+        stand: contains up to date tree and sapling data.
+
+        removed_stems: array of removed stems per tree.
+
+        return: True if Motti state was updated, False if no updates were made.
+    """
+    is_changed = False
+    is_changed = _update_motti_trees_after_cutting(stand, removed_stems)
+    if is_changed:
+        _update_motti_aggregates(stand)
+    return is_changed
 
 
 def _collect_live_motti_keys(stand: ForestStand) -> set[tuple[str, int, int | None]]:

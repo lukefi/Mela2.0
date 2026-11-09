@@ -13,7 +13,7 @@ from lukefi.metsi.data.enums.internal import (
     TreeSpecies,
 )
 from lukefi.metsi.domain.natural_processes.motti_util import (
-    apply_motti_yp_reduction_from_removed_reference_trees,
+    update_motti_state_after_cutting,
 )
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees, sync_yp_to_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -220,7 +220,7 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
         dll = self._attach_state(stand)
 
         removed_f = np.array([20.0, 0.0], dtype=float)
-        changed = apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f, refresh=False)
+        changed = update_motti_state_after_cutting(stand, removed_f)
 
         self.assertTrue(changed)
         self.assertAlmostEqual(float(stand.motti_state.yp[0][0].f), 100.0)
@@ -268,7 +268,7 @@ class TestKnownGapInCurrentImplementation(unittest.TestCase):
                 buffers=SimpleNamespace(saplings=_empty_ut_buffers()),
             )
             removed_f = np.array([10.0, 0.0], dtype=float)
-            apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f, refresh=True)
+            update_motti_state_after_cutting(stand, removed_f)
 
         # Current code performs zero-step grow, but skips dll.update_after_import().
         self.assertEqual(spy_dll.update_after_import_calls, 0)

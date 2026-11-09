@@ -5,15 +5,13 @@ from lukefi.metsi.data.enums.internal import CuttingMethod
 from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.domain.natural_processes.motti_util import (
-    apply_motti_yp_reduction_from_removed_reference_trees,
-)
+from lukefi.metsi.domain.natural_processes.motti_util import update_motti_state_after_cutting
+from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
+from lukefi.metsi.forestry.storey import manage_existing_storeys
 from lukefi.metsi.core.collected_data import OpTuple, CollectedData
 from lukefi.metsi.core.utils.select_units import select_units, SelectionSet, SelectionTarget, Mode
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
-from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def cutting_fn(stand: ForestStand,
@@ -77,9 +75,9 @@ def cutting_fn(stand: ForestStand,
         rt.removed_trees = removed_view
         collected = [rt]
 
-    # If Motti is in use, update removed trees to yp vector
+    # If Motti is in use, update removed stem counts into tree and sapling vectors
     if stand.motti_state is not None:
-        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
+        update_motti_state_after_cutting(stand, removed_f)
 
     stand.cutting_year = stand.year
     stand.method_of_last_cutting = cutting_method
