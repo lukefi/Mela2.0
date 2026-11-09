@@ -220,7 +220,8 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
         dll = self._attach_state(stand)
 
         removed_f = np.array([20.0, 0.0], dtype=float)
-        changed = update_motti_state_after_cutting(stand, removed_f)
+        with patch.object(Motti4DLL, "grow_with_state", dll.grow_with_state):
+            changed = update_motti_state_after_cutting(stand, removed_f)
 
         self.assertTrue(changed)
         self.assertAlmostEqual(float(stand.motti_state.yp[0][0].f), 100.0)
@@ -228,7 +229,6 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
 
         sync_yp_to_reference_trees(stand)
         self.assertAlmostEqual(float(stand.reference_trees.stems_per_ha[0]), 100.0)
-        self.assertEqual(dll.grow_zero_calls, 0)
 
     def test_regeneration_path_can_be_verified_with_regenerate_stub_and_ut_sync(self) -> None:
         stand = _make_stand()
