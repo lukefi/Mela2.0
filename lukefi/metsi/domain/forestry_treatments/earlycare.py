@@ -74,4 +74,4 @@ def earlycare_fn(stand: ForestStand, /, imode: int = 0) -> OpTuple[ForestStand]:
 
     return stand, cd
 
-earlycare = Treatment(earlycare_fn, "earlycare")
+earlycare = Treatment(earlycare_fn, "earlycare", collected_data={RemovedTrees})
