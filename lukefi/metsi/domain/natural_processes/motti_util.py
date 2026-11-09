@@ -376,7 +376,7 @@ def _update_ut_after_cutting(ut: Motti4Saplings, saplings: ReferenceTrees) -> bo
         f_rt = saplings.stems_per_ha[i].item()
         is_found = False
         for j in range(10):
-            ut_layer = ut[0][j]    
+            ut_layer = ut[0][j]
             for ut_spe_name, species in UT_SPECIES_FIELDS:
                 if species != spe_rt:
                     # No species match, skip to next species.
