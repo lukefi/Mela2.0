@@ -13,11 +13,11 @@ from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 
 def remove_trees_fn(stand: ForestStand,
-                 *,
-                 tree_selection: dict[str, Any] | None = None,
-                 mode: Mode = Mode.ODDS_UNITS,
-                 select_from_all: bool = False,
-                 updated_attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
+                    *,
+                    tree_selection: dict[str, Any] | None = None,
+                    mode: Mode = Mode.ODDS_UNITS,
+                    select_from_all: bool = False,
+                    updated_attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
 
     assert tree_selection is not None
 
