@@ -67,3 +67,6 @@ class MottiSoilPreparationType(IntEnum):
 class MottiFertilizationType(IntEnum):
     AMMONIUM_SULFITE = 1
     CARBAMIDE = 2
+    PK = 3
+    NPK = 4
+    ASH = 5
