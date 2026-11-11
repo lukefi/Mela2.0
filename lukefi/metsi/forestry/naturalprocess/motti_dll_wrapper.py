@@ -464,15 +464,14 @@ class Motti4DLL:
         yp: Motti4Trees,
         numtrees: int,
         buffers: MottiStateBuffers,
-    ) -> list[int]:
+    ) -> list[float]:
         """
-        Call Motti4PCTGuidelines against persistent state buffers and return
-        a 10-slot list where indices 1..9 correspond to remaining stem count for each species.
+        Call Motti4PCTGuidelines against persistent state buffers to resolve guidelines for pre-commercial thinning
         """
         ffi, lib = cls.ffi, cls.lib
 
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        remaining_n_p = cast(list[int], ffi.new("int[10]", [0] * 10))
+        remaining_n_p = cast(list[float], ffi.new("float[10]", [0.0] * 10))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):
@@ -491,7 +490,7 @@ class Motti4DLL:
         if rv[0] != 0:
             raise RuntimeError(f"Motti4PCTGuidelines failed (rv={rv[0]})")
 
-        return [int(remaining_n_p[i]) for i in range(10)]
+        return [float(remaining_n_p[i]) for i in range(10)]
 
     @classmethod
     def earlycare_with_state(
@@ -660,6 +659,53 @@ class Motti4DLL:
             raise RuntimeError(f"Motti4SeedingAgeShift failed (rv={rv[0]})")
 
     @classmethod
+    def peatland_fertilization_with_state(
+        cls,
+        ms: MottiState,
+        *,
+        ftype: int,
+    ):
+        """
+        Call Motti4MPeatlandFertilization against persistent state buffers.
+
+        Parameters
+        ----------
+        ftype
+            Fertilization type code passed through to Motti.
+
+        Returns
+        -------
+        None. Motti updates the persistent buffers in-place.
+        """
+        ffi, lib = cls.ffi, cls.lib
+
+        # ntrees_p = cast(IntPtr, ffi.new("int *", numtrees))
+        ftype_p = cast(IntPtr, ffi.new("int *", ftype))
+        numtrees_p = cast(IntPtr, ffi.new("int *", ms.ntrees))
+        ierror_p = cast(IntPtr, ffi.new("int *"))
+        rv_p = cast(IntPtr, ffi.new("int *"))
+
+        with _maybe_chdir(cls.data_dir):
+            lib.Motti4PeatlandFertilization(
+                ftype_p,
+                ms.yy,
+                ms.yp,
+                ms.buffers.saplings,
+                ms.buffers.kor_state,
+                ms.buffers.vcr_state,
+                ms.buffers.apv_state,
+                numtrees_p,
+                ms.buffers.fert_array,
+                ms.buffers.numfer,
+                ierror_p,
+                rv_p,
+            )
+
+        if rv_p[0] > 0:
+            raise RuntimeError(f"Motti4PeatlandFertilization failed with return value \
+                               {rv_p[0]} and error value {ierror_p[0]}")
+
+    @classmethod
     def mineral_soils_fertilization_with_state(
         cls,
         yy: Motti4Site,
@@ -720,7 +766,7 @@ class Motti4DLL:
         numtrees: int,
         buffers: MottiStateBuffers,
         *,
-        remaining_n: list[int],
+        remaining_n: list[float],
     ) -> int:
         """
         Call Motti4PCT against persistent state buffers.
@@ -733,10 +779,8 @@ class Motti4DLL:
         """
         ffi, lib = cls.ffi, cls.lib
 
-        remaining_arr = cls._normalize_remaining_n_array(remaining_n)
-
         ntrees_p = cast(IntPtr, ffi.new("int *", int(numtrees)))
-        remaining_n_p = cast(list[int], ffi.new("int[10]", remaining_arr))
+        remaining_n_p = cast(list[float], ffi.new("float[10]", remaining_n))
         rv = cast(IntPtr, ffi.new("int *"))
 
         with _maybe_chdir(cls.data_dir):

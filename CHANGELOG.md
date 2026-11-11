@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [8.1.0] - 2026-11-11
+
+### Added
+
+- peatland fertilization treatment wrapping the `Motti4PeatlandFertilization` function
+- enabled MottiTreatments robot test
+    - splitted into `robot.MottiTreatments` and `robot.MottiTreatments2`
+- Collecting `RemovedTrees` in `pct_fn` and `earlycare_fn`
+- Changed pct related `remaining_N` from int -> float type.
+- Removed `seedlingdealy_fn` related event and treatment.
+    - Included a `UserWarning` about unexpected results.
+
 ## [8.0.1] - 2026-11-06
 
 ### Fixed
