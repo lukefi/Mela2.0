@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [8.2.2] - 2026-11-11
+
+### Fixed
+
+- Fixed stratum biological age conversion for Motti
+
 ## [8.2.1] - 2026-11-11
 
 ### Fixed
