@@ -100,7 +100,7 @@ def mark_trees_fn(input_: ForestStand,
 
         # Create new rows that carry only the marked stems and desired attributes
         new_rows = []
-        start_idx = int(stand.reference_trees.size)
+        start_idx = max(stand.reference_trees.tree_number).item() + 1
 
         for offset, idx in enumerate(split_idxs):
             global_idx = start_idx + offset
