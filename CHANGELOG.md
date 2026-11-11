@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [9.1.0] - 2026-11-11
+
+### Added
+
+- Added new aggregated stand attributes as possible database output columns:
+    -`stems_per_ha`
+    -`ds_stems_per_ha`
+    -`ds_basal_area`
+    -`ds_ba_weighted_mean_height`
+    -`ds_ba_weighted_mean_diameter`
+    -`ds_ba_weighted_mean_biological_age`
+
 ## [9.0.0] - 2026-11-11
 
 ### Changed
