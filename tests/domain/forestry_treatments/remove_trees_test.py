@@ -34,20 +34,22 @@ class RemoveTreesTest(unittest.TestCase):
         before = stand.reference_trees.stems_per_ha.copy()
         after, cdata = remove_trees_fn(
             stand,
-            tree_selection_target=SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 0.5 * total),
-            tree_selection_sets=[
-                SelectionSet[ForestStand, ReferenceTrees](
-                    lambda _, trees: np.repeat(True, trees.size),
-                    "height",
-                    "stems_per_ha",
-                    TargetType.ABSOLUTE,
-                    0.5 * total,
-                    [0.0, 1.0],
-                    [0.5, 0.5],
-                    ProfileXMode.RELATIVE
-                )
-            ],
-            tree_selection_mode=Mode.ODDS_UNITS,
+            tree_selection={
+                "target": SelectionTarget(TargetType.ABSOLUTE, "stems_per_ha", 0.5 * total),
+                "sets": [
+                    SelectionSet[ForestStand, ReferenceTrees](
+                        lambda _, trees: np.repeat(True, trees.size),
+                        "height",
+                        "stems_per_ha",
+                        TargetType.ABSOLUTE,
+                        0.5 * total,
+                        [0.0, 1.0],
+                        [0.5, 0.5],
+                        ProfileXMode.RELATIVE
+                    )
+                ]
+            },
+            mode=Mode.ODDS_UNITS,
             select_from_all=True,
             updated_attributes={
                 "owner_category": OwnerCategory.CONGREGATION

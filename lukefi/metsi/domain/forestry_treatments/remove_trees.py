@@ -14,15 +14,17 @@ from lukefi.metsi.forestry.storey import manage_existing_storeys
 
 def remove_trees_fn(stand: ForestStand,
                  *,
-                 tree_selection_sets: list[SelectionSet[ForestStand, ReferenceTrees]] | None = None,
-                 tree_selection_target: SelectionTarget | None = None,
-                 tree_selection_mode: Mode = Mode.ODDS_UNITS,
+                 tree_selection: dict[str, Any] | None = None,
+                 mode: Mode = Mode.ODDS_UNITS,
                  select_from_all: bool = False,
                  updated_attributes: dict[str, Any] | None = None) -> OpTuple[ForestStand]:
 
-    assert tree_selection_sets is not None
-    assert tree_selection_target is not None
-    assert len(tree_selection_sets) > 0
+    assert tree_selection is not None
+
+    target: SelectionTarget = tree_selection["target"]
+    sets: list[SelectionSet[ForestStand, ReferenceTrees]] = tree_selection["sets"]
+
+    assert len(sets) > 0
 
     if updated_attributes is None:
         updated_attributes = {}
@@ -31,11 +33,11 @@ def remove_trees_fn(stand: ForestStand,
 
     removed_stems = select_units(context=stand,
                                  data=trees,
-                                 target_decl=tree_selection_target,
-                                 sets=tree_selection_sets,
+                                 target_decl=target,
+                                 sets=sets,
                                  freq_var="stems_per_ha",
                                  select_from_all=select_from_all,
-                                 mode=tree_selection_mode)
+                                 mode=mode)
 
     # Apply removals
     if not trees.stems_per_ha.flags.writeable:
