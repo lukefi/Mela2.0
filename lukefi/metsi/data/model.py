@@ -77,8 +77,6 @@ STANDS_TYPES = {
     "region": "INTEGER",
     "peatland_type": "INTEGER",
     "drained_peatland_type": "INTEGER",
-    "under_storey": "INTEGER",
-    "over_storey": "INTEGER",
     "stems_per_ha": "REAL",
     "ds_stems_per_ha": "REAL",
     "ds_basal_area": "REAL",
@@ -326,14 +324,6 @@ class ForestStand(Finalizable, ComputationalUnit):
     """
     Drained peatland type.
     """
-    under_storey: bool = False
-    """
-    Whether the stand contains an under storey.
-    """
-    over_storey: bool = False
-    """
-    Whether the stand contains an over storey.
-    """
     sqlite_decl: Optional[dict[str, list[str]]] = None
     """
     Declarations for SQLite output database columns.
@@ -445,8 +435,6 @@ class ForestStand(Finalizable, ComputationalUnit):
 
         self.peatland_type = PeatlandForestType(int(row[36])) if row[36] != "None" else None
         self.drained_peatland_type = DrainedPeatlandForestType(int(row[37])) if row[37] != "None" else None
-        self.under_storey = row[38] == "True"
-        self.over_storey = row[39] == "True"
 
     @staticmethod
     def _sql_value(v):
@@ -551,7 +539,7 @@ class ForestStand(Finalizable, ComputationalUnit):
                 INSERT INTO initial_stands
                 VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
             """,
             (
@@ -600,8 +588,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                 self.region,
                 self.peatland_type,
                 self.drained_peatland_type,
-                self.under_storey,
-                self.over_storey,
                 self.stems_per_ha,
                 self.ds_stems_per_ha,
                 self.ds_basal_area,
@@ -855,8 +841,6 @@ class ForestStand(Finalizable, ComputationalUnit):
             region=stand_row["region"],
             peatland_type=conv(stand_row["peatland_type"], PeatlandForestType),
             drained_peatland_type=conv(stand_row["drained_peatland_type"], DrainedPeatlandForestType),
-            under_storey=bool(stand_row["under_storey"]),
-            over_storey=bool(stand_row["over_storey"])
         )
 
         return retval
@@ -908,8 +892,6 @@ class ForestStand(Finalizable, ComputationalUnit):
                     region INTEGER,
                     peatland_type INTEGER,
                     drained_peatland_type INTEGER,
-                    under_storey INTEGER,
-                    over_storey INTEGER,
                     stems_per_ha REAL,
                     ds_stems_per_ha REAL,
                     ds_basal_area REAL,
@@ -1112,6 +1094,4 @@ def stand_as_internal_row(stand: ForestStand):
         stand.region,
         stand.peatland_type,
         stand.drained_peatland_type,
-        stand.under_storey,
-        stand.over_storey,
     ]

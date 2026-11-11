@@ -158,8 +158,6 @@ class VMI12Builder(VMIBuilder):
 
         result.peatland_type = vmi2internal.convert_peatland_forest_type(row["suotyy"])
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(row["tkgtyy"])
-        result.under_storey = bool(util.parse_type(row["alikehl"], int))
-        result.over_storey = bool(util.parse_type(row["ylikehl"], int))
 
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
         result.ds_main_tree_species = vmi_util.determine_main_tree_species_dominant_storey(
