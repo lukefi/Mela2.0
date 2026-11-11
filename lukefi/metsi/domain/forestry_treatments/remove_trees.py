@@ -7,7 +7,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.core.collected_data import CollectedData, OpTuple
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.collected_data import RemovedTrees
-from lukefi.metsi.domain.natural_processes.motti_util import apply_motti_yp_reduction_from_removed_reference_trees
+from lukefi.metsi.domain.natural_processes.motti_util import update_motti_state_after_cutting
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import manage_existing_storeys
 
@@ -57,7 +57,7 @@ def remove_trees_fn(stand: ForestStand,
         collected.append(rt)
 
     if stand.motti_state is not None:
-        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_stems)
+        update_motti_state_after_cutting(stand, removed_stems)
 
     for attribute, new_value in updated_attributes.items():
         setattr(stand, attribute, new_value)
