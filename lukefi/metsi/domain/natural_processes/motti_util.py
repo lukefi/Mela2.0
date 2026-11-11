@@ -3,9 +3,10 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+from lukefi.metsi.data.conversion.internal2motti import convert_storey
 from lukefi.metsi.data.enums.internal import Origin, Storey, TreeCategory, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum
+from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -432,3 +433,29 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
+
+
+def update_and_split_motti_yp(ms: MottiState,
+                              new_tree_id: int,
+                              rt_tree_number: int,
+                              rt_stratum: int,
+                              new_f,
+                              diff_f,
+                              new_storey):
+    next_idx = ms.ntrees
+    for i in range(ms.ntrees):
+        t = ms.yp[0][i]
+        if int(t.id) == rt_tree_number and int(t.sid) == rt_stratum:
+            # split yp tree and "mark" with attributes
+            ms.yp[0][next_idx].id = float(new_tree_id)
+            ms.yp[0][next_idx].sid = t.sid
+            ms.yp[0][next_idx].spe = t.spe
+            ms.yp[0][next_idx].d13 = t.d13
+            ms.yp[0][next_idx].h = t.h
+            ms.yp[0][next_idx].age13 = t.age13
+            ms.yp[0][next_idx].snt = t.snt
+            ms.yp[0][next_idx].storie = float(convert_storey(new_storey))
+            ms.yp[0][next_idx].f = float(new_f)
+            # update existing yp tree
+            t.f = float(diff_f)
+    ms.ntrees += 1

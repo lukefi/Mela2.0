@@ -5,6 +5,7 @@ from lukefi.metsi.data.enums.internal import (
     FertilizationType,
     SiteType,
     SoilPreparationType,
+    Storey,
     TreeManagementCategory,
     TreeSpecies,
     Origin
@@ -173,6 +174,7 @@ class MarkRetentionTrees(Event[ForestStand]):
             "attributes": {
                 "tree_type": "SPARE",
                 "management_category": TreeManagementCategory.RETENTION_TREE,
+                "storey": Storey.RETENTION
             },
         }
 

@@ -10,6 +10,7 @@ from lukefi.metsi.core.utils.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
+from lukefi.metsi.domain.natural_processes.motti_util import update_and_split_motti_yp
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import manage_existing_storeys
 
@@ -61,6 +62,10 @@ def mark_trees_fn(input_: ForestStand,
     if not attributes:
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
+    if stand.motti_state is not None and "storey" not in attributes.keys():
+        raise MetsiException("Unable to split Motti trees in mark_trees treatment \
+                             Missing \"storey\" key from attributes-mapping." )
+
     # Selection amounts for each reference-tree row
     marked_f = select_units(
         context=stand,
@@ -103,11 +108,19 @@ def mark_trees_fn(input_: ForestStand,
         start_idx = max(stand.reference_trees.tree_number).item() + 1
 
         for offset, idx in enumerate(split_idxs):
-            global_idx = start_idx + offset
+            new_tree_number = start_idx + offset
 
             row = stand.reference_trees.read(int(idx))
-            row["identifier"] = f"{stand.identifier}-{global_idx + 1}-tree"
-            row["tree_number"] = global_idx
+            if stand.motti_state is not None:
+                update_and_split_motti_yp(stand.motti_state,
+                                          new_tree_number,
+                                          row["tree_number"],
+                                          row["stratum"],
+                                          marked_f[idx],
+                                          freq_vec[idx],
+                                          attributes.get("storey"))
+            row["identifier"] = f"{stand.identifier}-{new_tree_number + 1}-tree"
+            row["tree_number"] = new_tree_number
             row["stems_per_ha"] = marked_f[idx]
             # apply attributes on the *marked* part
             row.update(attributes)
