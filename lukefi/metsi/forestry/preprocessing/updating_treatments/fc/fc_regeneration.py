@@ -34,7 +34,7 @@ seeding = PredeterminedTreatment(
     name="fc_seeding",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.SEEDED,
+        "method": Origin.SEEDED,
         "height": 0,
         "biological_age": 0,
         "ntrees": 1,
@@ -50,7 +50,7 @@ seeding_pine = PredeterminedTreatment(
     name="fc_seedingPine",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.SEEDED,
+        "method": Origin.SEEDED,
         "height": 0,
         "biological_age": 0,
         "ntrees": 1,
@@ -78,7 +78,7 @@ seeding_silver_birch = PredeterminedTreatment(
     name="fc_seeding_silver_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.SEEDED,
+        "method": Origin.SEEDED,
         "height": 0,
         "biological_age": 0,
         "ntrees": 1,
@@ -92,7 +92,7 @@ seeding_downy_birch = PredeterminedTreatment(
     name="fc_seeding_downy_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.SEEDED,
+        "method": Origin.SEEDED,
         "height": 0,
         "biological_age": 0,
         "ntrees": 1,
@@ -116,7 +116,7 @@ planting = PredeterminedTreatment(
     name="fc_planting",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.PLANTED,
+        "method": Origin.PLANTED,
         "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
@@ -132,7 +132,7 @@ planting_pine = PredeterminedTreatment(
     name="fc_planting_pine",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.PLANTED,
+        "method": Origin.PLANTED,
         "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
@@ -146,7 +146,7 @@ planting_spruce = PredeterminedTreatment(
     name="fc_planting_spruce",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.PLANTED,
+        "method": Origin.PLANTED,
         "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
@@ -160,7 +160,7 @@ planting_silver_birch = PredeterminedTreatment(
     name="fc_planting_silver_birch",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.PLANTED,
+        "method": Origin.PLANTED,
         "height": 0.4,
         "biological_age": 0,
         "ntrees": 10,
@@ -174,7 +174,7 @@ planting_downy_birch = PredeterminedTreatment(
     name="fc_plantingDownyBirch",
     treatment_fn=regeneration_fn,
     static_parameters={
-        "origin": Origin.PLANTED,
+        "method": Origin.PLANTED,
         "height": 0.4,
         "biological_age": 0,
         "ntrees": 1,

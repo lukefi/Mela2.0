@@ -15,7 +15,7 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
-from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
+from lukefi.metsi.domain.forestry_treatments.regeneration import RegenerationDecl, regeneration
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
@@ -404,11 +404,11 @@ class PlantingPines(Event[ForestStand]):
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
         default_params: dict[str, Any] = {
-            "origin": Origin.PLANTED,
-            "species": TreeSpecies.PINE,
-            "stems_per_ha": 1500.0,
-            "height": 0.7,
-            "biological_age": 3.0
+            "regeneration_decls": [RegenerationDecl(method=Origin.PLANTED,
+                                                    species=TreeSpecies.PINE,
+                                                    stems_per_ha=1500.0,
+                                                    height=0.7,
+                                                    biological_age=3.0)]
         }
 
         merged = default_params | (parameters or {})
