@@ -8,8 +8,8 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.collected_data import RemovedTrees
 from lukefi.metsi.domain.natural_processes.motti_util import (
-    apply_motti_yp_reduction_from_removed_reference_trees,
-    reconcile_reference_trees_from_motti)
+    reconcile_reference_trees_from_motti,
+    update_motti_state_after_cutting)
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
 from lukefi.metsi.core.collected_data import CollectedData, OpTuple
@@ -82,7 +82,7 @@ def seedtree_cutting_fn(stand: ForestStand,
 
     # If Motti is in use, update removed trees to yp vector
     if stand.motti_state is not None:
-        apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f)
+        update_motti_state_after_cutting(stand, removed_f)
 
     stand.cutting_year = stand.year
     stand.method_of_last_cutting = cutting_method
