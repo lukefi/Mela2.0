@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [8.2.0] - 2026-11-11
+
+### Added
+
+- Updates the motti sapling vector in `cutting_fn` 
+
+### Changed
+
+- Preprocessing operations are now wrapped into `PreprocessingOperation` instances along with their parameters
+
 ## [8.0.0] - 2026-11-04
 
 ### Changed
