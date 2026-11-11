@@ -892,20 +892,12 @@ class ForestStand(Finalizable, ComputationalUnit):
                     region INTEGER,
                     peatland_type INTEGER,
                     drained_peatland_type INTEGER,
-<<<<<<< HEAD
-                    under_storey INTEGER,
-                    over_storey INTEGER,
                     stems_per_ha REAL,
                     ds_stems_per_ha REAL,
                     ds_basal_area REAL,
                     ds_ba_weighted_mean_height REAL,
                     ds_ba_weighted_mean_diameter REAL,
                     ds_ba_weighted_mean_biological_age REAL,
-||||||| parent of 727cc0cd (remove attributes under_storey and over_storey)
-                    under_storey INTEGER,
-                    over_storey INTEGER,
-=======
->>>>>>> 727cc0cd (remove attributes under_storey and over_storey)
                     PRIMARY KEY(identifier)
                 );
             """
