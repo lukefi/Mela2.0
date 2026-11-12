@@ -459,3 +459,17 @@ def update_and_split_motti_yp(ms: MottiState,
             # update existing yp tree
             t.f = float(diff_f)
     ms.ntrees += 1
+
+def update_ut_stem_count(ms: MottiState, rt_row: dict[str, Any], stems_per_ha: float):
+    """Search Motti Sapling vector (ut) for a corresponding sapling reference tree \
+        and update ut sapling stem count with `stems_per_ha`"""
+    ut = ms.buffers.saplings[0]
+    for i in range(10):
+        ut_spe_layer = ut[i]
+        for key, spe in enumerate(UT_SPECIES_FIELDS):
+            if spe == rt_row["species"]:
+                ut_stratum = getattr(ut_spe_layer, str(key))
+                for cat, _ in enumerate(UT_CATEGORIES):
+                    osid = getattr(ut_stratum, f"osid_{cat}")
+                    if int(osid) == rt_row["stratum"]:
+                        setattr(ut_stratum, f"f_{cat}", stems_per_ha)

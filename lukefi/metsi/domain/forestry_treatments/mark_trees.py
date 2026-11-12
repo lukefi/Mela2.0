@@ -10,7 +10,7 @@ from lukefi.metsi.core.utils.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.domain.natural_processes.motti_util import update_and_split_motti_yp
+from lukefi.metsi.domain.natural_processes.motti_util import update_and_split_motti_yp, update_ut_stem_count
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import manage_existing_storeys
 
@@ -112,13 +112,20 @@ def mark_trees_fn(input_: ForestStand,
 
             row = stand.reference_trees.read(int(idx))
             if stand.motti_state is not None:
-                update_and_split_motti_yp(stand.motti_state,
-                                          new_tree_number,
-                                          row["tree_number"],
-                                          row["stratum"],
-                                          marked_f[idx],
-                                          freq_vec[idx],
-                                          attributes.get("storey"))
+                if bool(row["sapling"]) is True:
+                    if marked_f[idx] > freq_vec[idx]:
+                        # Over 50% stems marked - update motti sapling tree stems
+                        update_ut_stem_count(stand.motti_state,
+                                            row,
+                                            f_diff = freq_vec[idx])
+                else:
+                    update_and_split_motti_yp(stand.motti_state,
+                                            new_tree_number,
+                                            row["tree_number"],
+                                            row["stratum"],
+                                            marked_f[idx],
+                                            freq_vec[idx],
+                                            attributes.get("storey"))
             row["identifier"] = f"{stand.identifier}-{new_tree_number + 1}-tree"
             row["tree_number"] = new_tree_number
             row["stems_per_ha"] = marked_f[idx]
