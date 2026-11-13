@@ -435,17 +435,26 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
         rt.delete(np.array(delete_idx, dtype=int))
 
 
-def update_and_split_motti_yp(ms: MottiState,
-                              new_tree_id: int,
-                              rt_tree_number: int,
-                              rt_stratum: int,
-                              new_f,
-                              diff_f,
-                              new_storey):
+def split_and_update_motti_yp_tree(ms: MottiState,
+                                   new_tree_id: int,
+                                   tree_number: int,
+                                   stratum: int,
+                                   f_new: float,
+                                   f_upd: float,
+                                   new_storey: Storey | None = None):
+    """
+    Creates a copy with a new storey of a existing yp tree and updates existing tree stem count.
+
+    An existing yp tree is searched based on `tree_number` and `stratum` values.
+    After existing tree is found a new tree is created from the existing tree.
+    The new tree is given differing values for id, story and stem count.  
+
+    Finally the stem count of the existing tree is updated.
+    """
     next_idx = ms.ntrees
     for i in range(ms.ntrees):
         t = ms.yp[0][i]
-        if int(t.id) == rt_tree_number and int(t.sid) == rt_stratum:
+        if int(t.id) == tree_number and int(t.sid) == stratum:
             # split yp tree and "mark" with attributes
             ms.yp[0][next_idx].id = float(new_tree_id)
             ms.yp[0][next_idx].sid = t.sid
@@ -454,22 +463,8 @@ def update_and_split_motti_yp(ms: MottiState,
             ms.yp[0][next_idx].h = t.h
             ms.yp[0][next_idx].age13 = t.age13
             ms.yp[0][next_idx].snt = t.snt
-            ms.yp[0][next_idx].storie = float(convert_storey(new_storey))
-            ms.yp[0][next_idx].f = float(new_f)
+            ms.yp[0][next_idx].storie = t.storie if new_storey is None else float(convert_storey(new_storey))
+            ms.yp[0][next_idx].f = float(f_new)
             # update existing yp tree
-            t.f = float(diff_f)
+            t.f = float(f_upd)
     ms.ntrees += 1
-
-def update_ut_stem_count(ms: MottiState, rt_row: dict[str, Any], stems_per_ha: float):
-    """Search Motti Sapling vector (ut) for a corresponding sapling reference tree \
-        and update ut sapling stem count with `stems_per_ha`"""
-    ut = ms.buffers.saplings[0]
-    for i in range(10):
-        ut_spe_layer = ut[i]
-        for key, spe in enumerate(UT_SPECIES_FIELDS):
-            if spe == rt_row["species"]:
-                ut_stratum = getattr(ut_spe_layer, str(key))
-                for cat, _ in enumerate(UT_CATEGORIES):
-                    osid = getattr(ut_stratum, f"osid_{cat}")
-                    if int(osid) == rt_row["stratum"]:
-                        setattr(ut_stratum, f"f_{cat}", stems_per_ha)

@@ -10,7 +10,7 @@ from lukefi.metsi.core.utils.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.domain.natural_processes.motti_util import update_and_split_motti_yp, update_ut_stem_count
+from lukefi.metsi.domain.natural_processes.motti_util import split_and_update_motti_yp_tree
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import manage_existing_storeys
 
@@ -62,10 +62,6 @@ def mark_trees_fn(input_: ForestStand,
     if not attributes:
         raise MetsiException("Missing 'attributes' (dict of ReferenceTrees fields to set).")
 
-    if stand.motti_state is not None and "storey" not in attributes.keys():
-        raise MetsiException("Unable to split Motti trees in mark_trees treatment \
-                             Missing \"storey\" key from attributes-mapping." )
-
     # Selection amounts for each reference-tree row
     marked_f = select_units(
         context=stand,
@@ -81,10 +77,10 @@ def mark_trees_fn(input_: ForestStand,
     if not hasattr(stand.reference_trees, "stems_per_ha"):
         raise MetsiException("ReferenceTrees is missing 'stems_per_ha' attribute.")
 
-    freq_vec: np.ndarray = stand.reference_trees.stems_per_ha
+    f0 = stand.reference_trees.stems_per_ha
 
     # Masks
-    all_stems_mask = marked_f == freq_vec
+    all_stems_mask = marked_f == f0
     to_split_mask = (marked_f > 0) & (~all_stems_mask)
 
     # 1) Rows where ALL stems are marked: set attributes in-place
@@ -95,44 +91,50 @@ def mark_trees_fn(input_: ForestStand,
     # 2) Rows where PARTIAL stems are marked: split
     split_idxs = np.nonzero(to_split_mask)[0]
     if split_idxs.size > 0:
-        # Reduce original rows by the marked amount
-        if not freq_vec.flags.writeable:
-            # make a copy if finalized
-            stand.reference_trees.stems_per_ha = freq_vec.copy()
-            freq_vec = stand.reference_trees.stems_per_ha
 
-        freq_vec[split_idxs] = freq_vec[split_idxs] - marked_f[split_idxs]
+        f_diff = f0 - marked_f
 
         # Create new rows that carry only the marked stems and desired attributes
         new_rows = []
-        start_idx = max(stand.reference_trees.tree_number).item() + 1
+        start_idx = int(max(stand.reference_trees.tree_number)) + 1
 
         for offset, idx in enumerate(split_idxs):
             new_tree_number = start_idx + offset
-
             row = stand.reference_trees.read(int(idx))
-            if stand.motti_state is not None:
-                if bool(row["sapling"]) is True:
-                    if marked_f[idx] > freq_vec[idx]:
-                        # Over 50% stems marked - update motti sapling tree stems
-                        update_ut_stem_count(stand.motti_state,
-                                            row,
-                                            f_diff = freq_vec[idx])
-                else:
-                    update_and_split_motti_yp(stand.motti_state,
-                                            new_tree_number,
-                                            row["tree_number"],
-                                            row["stratum"],
-                                            marked_f[idx],
-                                            freq_vec[idx],
-                                            attributes.get("storey"))
-            row["identifier"] = f"{stand.identifier}-{new_tree_number + 1}-tree"
-            row["tree_number"] = new_tree_number
-            row["stems_per_ha"] = marked_f[idx]
-            # apply attributes on the *marked* part
-            row.update(attributes)
-            new_rows.append(row)
 
+            if stand.motti_state is not None and not row["sapling"]:
+                # Updating marked trees into Motti
+                split_and_update_motti_yp_tree(stand.motti_state,
+                                               new_tree_number,
+                                               int(row["tree_number"]),
+                                               int(row["stratum"]),
+                                               float(marked_f[idx]),
+                                               float(f_diff[idx]),
+                                               attributes.get("storey"))
+            # Resolve if sapling also splits
+            is_splitted = True
+            if stand.motti_state and row["sapling"]:
+                # Saplings in motti context never split
+                is_splitted = False
+                if marked_f[idx] > f_diff[idx]:
+                    # update only attributes for original sapling if marked stem count exceeds 50% of original
+                    stand.reference_trees.update(attributes, int(idx))
+
+            if is_splitted:
+                # Making a new reference tree
+                row["identifier"] = f"{stand.identifier}-{new_tree_number}-tree"
+                row["tree_number"] = new_tree_number
+                row["stems_per_ha"] = marked_f[idx]
+                # apply attributes on the *marked* part
+                row.update(attributes)
+                new_rows.append(row)
+                # Update original reference tree stems
+                if not f0.flags.writeable:
+                    f0 = f0.copy()
+                    f0.flags.writeable = True
+                f0[idx] = f_diff[idx]
+
+        stand.reference_trees.stems_per_ha = f0
         stand.reference_trees.create(new_rows)
 
     trees = stand.reference_trees
