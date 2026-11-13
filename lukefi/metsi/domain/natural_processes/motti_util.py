@@ -539,4 +539,5 @@ def split_and_update_motti_yp_tree(ms: MottiState,
             ms.yp[0][next_idx].f = float(f_new)
             # update existing yp tree
             t.f = float(f_upd)
+            break
     ms.ntrees += 1
