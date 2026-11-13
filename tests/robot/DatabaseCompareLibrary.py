@@ -3,6 +3,13 @@ import re
 
 _SET_ITEM_RE = re.compile(r"'([^']*)'")
 
+SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
+SELECT_STANDS = "SELECT * FROM stands"
+SELECT_STRATA = "SELECT * FROM strata"
+SELECT_TREES = "SELECT * FROM trees"
+SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
+
+
 
 def _as_set_if_set_string(v):
     if isinstance(v, str) and v.startswith("{") and v.endswith("}"):

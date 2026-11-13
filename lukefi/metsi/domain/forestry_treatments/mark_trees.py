@@ -20,6 +20,13 @@ def _mark_fully_selected_trees(stand: ForestStand,
                                attributes: dict[str, Any]) -> None:
     for idx in selected_indices:
         stand.reference_trees.update(attributes, index=int(idx))
+    for name, value in attributes.items():
+        attribute = getattr(stand.reference_trees, name)
+        if not attribute.flags.writeable:
+            attribute = np.copy(attribute)
+            attribute.flags.writeable = True
+            attribute[selected_indices] = value
+            setattr(stand.reference_trees, name, attribute)
 
 
 def _update_motti_for_partial_mark(stand: ForestStand,
