@@ -88,8 +88,15 @@ def seedtree_cutting_fn(stand: ForestStand,
     stand.method_of_last_cutting = cutting_method
 
     # Set all remaining trees to OVER storey and designate as seeding trees
-    trees.storey = np.full(len(trees), Storey.OVER)
-    trees.management_category = np.full(len(trees), TreeManagementCategory.SEEDING_TREE)
+    non_retention_mask = trees.storey != Storey.RETENTION
+    if not trees.storey.flags.writeable:
+        trees.storey = np.copy(trees.storey)
+        trees.storey.flags.writeable = True
+    if not trees.management_category.flags.writeable:
+        trees.management_category = np.copy(trees.management_category)
+        trees.management_category.flags.writeable = True
+    trees.storey[non_retention_mask] = Storey.OVER
+    trees.management_category[non_retention_mask] = TreeManagementCategory.SEEDING_TREE
 
     if stand.motti_state is not None:
         _after_seedtree_cutting_in_motti(
