@@ -10,10 +10,13 @@ from lukefi.metsi.data.enums.internal import (
     LandUseCategory,
     SiteType,
     SoilPeatlandCategory,
+    Storey,
     TreeSpecies,
 )
+from lukefi.metsi.data.enums.motti import MottiStorey
 from lukefi.metsi.domain.natural_processes.motti_util import (
     apply_motti_yp_reduction_from_removed_reference_trees,
+    split_and_update_motti_yp_tree,
 )
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees, sync_yp_to_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -274,6 +277,52 @@ class TestKnownGapInCurrentImplementation(unittest.TestCase):
         self.assertEqual(spy_dll.update_after_import_calls, 0)
         self.assertEqual(spy_dll.grow_zero_calls, 1)
 
+class TestMottiStateUsageInTreatments(unittest.TestCase):
+
+    @staticmethod
+    def _make_motti_state() -> MottiState:
+        tree = SimpleNamespace(
+            id=7.0, sid=101.0, spe=float(int(TreeSpecies.PINE)), d13=22.0,
+            h=18.0, age13=25.0, snt=1.0, storie=float(int(MottiStorey.DOMINANT)),
+            f=120.0,
+        )
+        empty_tree = SimpleNamespace()
+        return MottiState(
+            yy=SimpleNamespace(year=2025.0, step=0.0),
+            yp=[[tree, empty_tree]],
+            ntrees=1,
+            buffers=SimpleNamespace(saplings=_empty_ut_buffers()),
+        )
+
+    def test_split_and_update_motti_yp_tree(self) -> None:
+        motti_state = self._make_motti_state()
+
+        split_and_update_motti_yp_tree(
+            motti_state, new_tree_id=42, tree_number=7, stratum=101, f_new=30.0, f_upd=90.0
+        )
+
+        self.assertEqual(motti_state.ntrees, 2)
+        self.assertAlmostEqual(motti_state.yp[0][0].f, 90.0)
+        new_tree = motti_state.yp[0][1]
+        self.assertAlmostEqual(new_tree.id, 42.0)
+        self.assertAlmostEqual(new_tree.sid, 101.0)
+        self.assertAlmostEqual(new_tree.spe, float(int(TreeSpecies.PINE)))
+        self.assertAlmostEqual(new_tree.d13, 22.0)
+        self.assertAlmostEqual(new_tree.h, 18.0)
+        self.assertAlmostEqual(new_tree.age13, 25.0)
+        self.assertAlmostEqual(new_tree.snt, 1.0)
+        self.assertAlmostEqual(new_tree.storie, float(int(MottiStorey.DOMINANT)))
+        self.assertAlmostEqual(new_tree.f, 30.0)
+
+    def test_split_and_update_motti_yp_tree_uses_requested_storey(self) -> None:
+        motti_state = self._make_motti_state()
+
+        split_and_update_motti_yp_tree(
+            motti_state, new_tree_id=42, tree_number=7, stratum=101, f_new=30.0, f_upd=90.0,
+            new_storey=Storey.UNDER,
+        )
+
+        self.assertAlmostEqual(motti_state.yp[0][1].storie, float(int(MottiStorey.UNDER)))
 
 if __name__ == "__main__":
     unittest.main()
