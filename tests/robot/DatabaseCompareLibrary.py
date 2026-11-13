@@ -2,11 +2,6 @@ import sqlite3
 import re
 
 _SET_ITEM_RE = re.compile(r"'([^']*)'")
-SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
-SELECT_STANDS = "SELECT * FROM stands"
-SELECT_STRATA = "SELECT * FROM strata"
-SELECT_TREES = "SELECT * FROM trees"
-SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
 
 
 def _as_set_if_set_string(v):
@@ -26,6 +21,7 @@ def _compare(ref: str, res: str, select: str, numeric_tolerance=0.0):
     res_cur = res_db.cursor()
     ref_rows = ref_cur.execute(select)
     res_rows = res_cur.execute(select)
+
     for i, ref_row in enumerate(ref_rows):
         res_row = res_rows.fetchone()
         if res_row is None:
@@ -62,6 +58,7 @@ def node_tables_should_be_equal(ref: str, res: str):
         ref (str): path to the reference database
         res (str): path to the result database
     """
+    SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
     _compare(ref, res, SELECT_NODES)
 
 
@@ -73,6 +70,7 @@ def stand_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
+    SELECT_STANDS = "SELECT * FROM stands"
     _compare(ref, res, SELECT_STANDS, numeric_tolerance)
 
 
@@ -84,6 +82,7 @@ def stratum_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float)
         ref (str): path to the reference database
         res (str): path to the result database
     """
+    SELECT_STRATA = "SELECT * FROM strata"
     _compare(ref, res, SELECT_STRATA, numeric_tolerance)
 
 
@@ -95,6 +94,7 @@ def tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
+    SELECT_TREES = "SELECT * FROM trees"
     _compare(ref, res, SELECT_TREES, numeric_tolerance)
 
 
@@ -106,4 +106,5 @@ def removed_tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: f
         ref (str): path to the reference database
         res (str): path to the result database
     """
+    SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
     _compare(ref, res, SELECT_REMOVED_TREES, numeric_tolerance)

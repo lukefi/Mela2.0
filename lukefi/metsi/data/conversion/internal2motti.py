@@ -48,11 +48,10 @@ _SITE_TYPE_MAP: dict[MetsiEnum, MottiSiteType] = {
     SiteType.SUB_DRY_SITE: MottiSiteType.SUB_DRY_SITE,
     SiteType.DRY_SITE: MottiSiteType.DRY_SITE,
     SiteType.BARREN_SITE: MottiSiteType.BARREN_SITE,
-    # TODO: after MottiSC udgrade mapping should be 7->7, and (8,9,10) -> 8
-    SiteType.ROCKY_OR_SANDY_AREA: MottiSiteType.BARREN_SITE,
-    SiteType.OPEN_MOUNTAINS: MottiSiteType.BARREN_SITE,
-    SiteType.TUNTURIKOIVIKKO: MottiSiteType.BARREN_SITE,
-    SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA: MottiSiteType.BARREN_SITE
+    SiteType.ROCKY_OR_SANDY_AREA: MottiSiteType.ROCKY_OR_SANDY_AREA,
+    SiteType.OPEN_MOUNTAINS: MottiSiteType.OPEN_MOUNTAINS,
+    SiteType.TUNTURIKOIVIKKO: MottiSiteType.OPEN_MOUNTAINS,
+    SiteType.LAKIMETSA_TAI_TUNTURIHAVUMETSA: MottiSiteType.OPEN_MOUNTAINS
 }
 
 
@@ -83,7 +82,10 @@ _SOIL_PREPARATION_TYPE_MAP: dict[MetsiEnum | None, MottiSoilPreparationType] = {
 
 _FERTILIZATION_TYPE_MAP: dict[MetsiEnum | None, MottiFertilizationType] = {
     FertilizationType.AMMONIUM_SULFITE: MottiFertilizationType.AMMONIUM_SULFITE,
-    FertilizationType.CARBAMIDE: MottiFertilizationType.CARBAMIDE
+    FertilizationType.CARBAMIDE: MottiFertilizationType.CARBAMIDE,
+    FertilizationType.PK: MottiFertilizationType.PK,
+    FertilizationType.NPK: MottiFertilizationType.NPK,
+    FertilizationType.ASH: MottiFertilizationType.ASH
 }
 
 

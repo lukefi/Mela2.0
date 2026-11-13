@@ -205,7 +205,7 @@ void Motti4PCTGuidelines(Motti4Site* yy,
                          Motti4VcrArray* vcr,
                          Motti4KorArray* apv,
                          int* numtrees,
-                         int* remaingN,
+                         float* remaingN,
                          int* rv);
 
 void Motti4PCT(Motti4Site* yy,
@@ -215,7 +215,7 @@ void Motti4PCT(Motti4Site* yy,
                Motti4VcrArray* vcr,
                Motti4KorArray* apv,
                int* numtrees,
-               int* remaingN,
+               float* remaingN,
                int* rv);
 
 void Motti4EarlyCare(Motti4Site* yy,
@@ -269,5 +269,18 @@ void Motti4MineralSoilsFertilization(int* ftype,
                                      Motti4FerArray* fer,
                                      int* numfer,
                                      int* rv);
+
+void Motti4PeatlandFertilization(int* ftype,
+                                 Motti4Site* yy,
+                                 Motti4Trees* yp,
+                                 Motti4Saplings* ut,
+                                 Motti4KorArray* kor,
+                                 Motti4VcrArray* vcr,
+                                 Motti4KorArray* apv,
+                                 int* numtrees,
+                                 Motti4FerArray* fer,
+                                 int* numfer,
+                                 int* ierror,
+                                 int* rv);
 
 int GetLicenseDays(void);

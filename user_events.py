@@ -16,13 +16,12 @@ from lukefi.metsi.data.model import ForestStand
 from lukefi.metsi.domain.conditions import TimeSinceTreatment
 from lukefi.metsi.domain.domain_tables import min_stems_table
 from lukefi.metsi.domain.forestry_treatments.soil_surface_preparation import soil_surface_preparation
-from lukefi.metsi.domain.forestry_treatments.regeneration import regeneration
+from lukefi.metsi.domain.forestry_treatments.regeneration import RegenerationDecl, regeneration
 from lukefi.metsi.domain.forestry_treatments.mark_trees import mark_trees
 from lukefi.metsi.domain.forestry_treatments.pct import pct
 from lukefi.metsi.domain.forestry_treatments.earlycare import earlycare
 from lukefi.metsi.domain.forestry_treatments.fillinplanting import fillinplanting
-from lukefi.metsi.domain.forestry_treatments.seedlingdelay import seedlingdelay
-from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization
+from lukefi.metsi.domain.forestry_treatments.fertilization import mineral_soils_fertilization, peatland_fertilization
 from lukefi.metsi.domain.forestry_types import ForestCondition, ForestPostCondition
 from lukefi.metsi.forestry.harvest.seedtree_cutting import seedtree_cutting
 from lukefi.metsi.forestry.harvest.cutting import cutting
@@ -334,6 +333,7 @@ class FirstThinningMineralSoils(Event[ForestStand]):
             static_parameters=static_params,
             dynamic_parameters=dynamic_params,
             preconditions=preconds,
+            tags={"first_thinning", "mineral_soil_thinning"},
             **kw,
         )
 
@@ -406,11 +406,11 @@ class PlantingPines(Event[ForestStand]):
                  file_parameters: Optional[dict[str, str]] = None) -> None:
 
         default_params: dict[str, Any] = {
-            "origin": Origin.PLANTED,
-            "species": TreeSpecies.PINE,
-            "stems_per_ha": 1500.0,
-            "height": 0.7,
-            "biological_age": 3.0
+            "regeneration_decls": [RegenerationDecl(method=Origin.PLANTED,
+                                                    species=TreeSpecies.PINE,
+                                                    stems_per_ha=1500.0,
+                                                    height=0.7,
+                                                    biological_age=3.0)]
         }
 
         merged = default_params | (parameters or {})
@@ -460,6 +460,7 @@ class Harvest20percent(Event[ForestStand]):
             preconditions=preconditions,
             postconditions=postconditions,
             file_parameters=file_parameters,
+            tags={"harvest20percent"},
             **kw
         )
 
@@ -533,9 +534,9 @@ class SeedtreeCutting(Event[ForestStand]):
         )
 
 
-class SaplingTreatmentMotti(Event[ForestStand]):
+class PctMotti(Event[ForestStand]):
     """
-    Example event that uses Motti4PCT.
+    Example event that uses Motti4PCT - Pre-commercial thinning.
 
     This is a thin wrapper around the Motti-backed treatment.
     """
@@ -547,10 +548,7 @@ class SaplingTreatmentMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params: dict[str, Any] = {}
-
-        merged_params = default_params | (parameters or {})
-
+        
         # Example only: run once at relative year 10 unless caller overrides/adds more.
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(10, regeneration),
@@ -558,7 +556,7 @@ class SaplingTreatmentMotti(Event[ForestStand]):
 
         super().__init__(
             treatment=pct,
-            static_parameters=merged_params,
+            static_parameters=parameters,
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -583,9 +581,7 @@ class EarlyCareMotti(Event[ForestStand]):
         postconditions: Optional[list[ForestPostCondition]] = None,
         file_parameters: Optional[dict[str, str]] = None,
     ) -> None:
-        default_params = {"imode": 0}
 
-        merged_params = default_params | (parameters or {})
 
         default_preconds: list[ForestCondition] = [
             TimeSinceTreatment(5, regeneration),
@@ -593,7 +589,7 @@ class EarlyCareMotti(Event[ForestStand]):
 
         super().__init__(
             treatment=earlycare,
-            static_parameters=merged_params,
+            static_parameters=parameters or {},
             preconditions=default_preconds + (preconditions or []),
             postconditions=postconditions,
             file_parameters=file_parameters,
@@ -643,44 +639,6 @@ class FillinPlantingMotti(Event[ForestStand]):
         )
 
 
-class SeedlingDelayMotti(Event[ForestStand]):
-    """
-    Example event that uses Motti4SeedingAgeShift.
-
-    Thin wrapper around the Motti-backed seedling age adjustment treatment.
-    istep:
-      positive = increase sapling age in years
-      negative = decrease sapling age in years
-
-    Motti applies the change only to the last sapling layer and only to
-    sapling cohorts whose age is 0 or 1 years.
-    """
-
-    def __init__(
-        self,
-        parameters: Optional[dict[str, Any]] = None,
-        preconditions: Optional[list[ForestCondition]] = None,
-        postconditions: Optional[list[ForestPostCondition]] = None,
-        file_parameters: Optional[dict[str, str]] = None,
-    ) -> None:
-        default_params = {"istep": 1}
-
-        merged_params = default_params | (parameters or {})
-
-        default_preconds: list[ForestCondition] = [
-            TimeSinceTreatment(0, regeneration),
-        ]
-
-        super().__init__(
-            treatment=seedlingdelay,
-            static_parameters=merged_params,
-            preconditions=default_preconds + (preconditions or []),
-            postconditions=postconditions,
-            file_parameters=file_parameters,
-            tags={"motti_seedlingdelay", "seedlingdelay"},
-        )
-
-
 class MineralSoilsFertilizationMotti(Event[ForestStand]):
     """
     Example event that uses Motti4MineralSoilsFertilization.
@@ -693,6 +651,8 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
 
     Aliases amountN and boolPhosporus are also accepted for easier mapping
     from the Motti documentation.
+
+    Can be used with or without Motti as transition.
     """
 
     def __init__(
@@ -724,6 +684,40 @@ class MineralSoilsFertilizationMotti(Event[ForestStand]):
         )
 
 
+class PeatlandFertilizationMotti(Event[ForestStand]):
+    """ Apply Motti peatland fertilization to a forest stand.
+
+        Only configurable parameter is the fertilization_type with values 3 (PK), 4 (NPK) and 5 (Ash).
+    """
+
+    def __init__(
+        self,
+        parameters: Optional[dict[str, Any]] = None,
+        preconditions: Optional[list[ForestCondition]] = None,
+        postconditions: Optional[list[ForestPostCondition]] = None,
+        file_parameters: Optional[dict[str, str]] = None,
+    ) -> None:
+        default_params = {
+            "fertilization_type": FertilizationType.PK,
+        }
+
+        merged_params = default_params | (parameters or {})
+
+        # default_preconds: list[ForestCondition] = [
+        #     TimeSinceTreatment(10, cutting),
+        # ]
+        default_preconds: list[ForestCondition] = []
+
+        super().__init__(
+            treatment=peatland_fertilization,
+            static_parameters=merged_params,
+            preconditions=default_preconds + (preconditions or []),
+            postconditions=postconditions,
+            file_parameters=file_parameters,
+            tags={"motti_fertilization", "fertilization", "peatland"},
+        )
+
+
 __all__ = [
     "Mounding",
     "Tracks",
@@ -732,9 +726,8 @@ __all__ = [
     "MarkRetentionTrees",
     "Harvest20percent",
     "SeedtreeCutting",
-    "SaplingTreatmentMotti",
+    "PctMotti",
     "EarlyCareMotti",
     "FillinPlantingMotti",
-    "SeedlingDelayMotti",
     "MineralSoilsFertilizationMotti",
 ]

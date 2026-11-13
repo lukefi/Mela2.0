@@ -15,8 +15,8 @@ from lukefi.metsi.data.enums.internal import (
 )
 from lukefi.metsi.data.enums.motti import MottiStorey
 from lukefi.metsi.domain.natural_processes.motti_util import (
-    apply_motti_yp_reduction_from_removed_reference_trees,
     split_and_update_motti_yp_tree,
+    update_motti_state_after_cutting,
 )
 from lukefi.metsi.domain.natural_processes.motti_util import sync_ut_to_reference_trees, sync_yp_to_reference_trees
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -223,7 +223,8 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
         dll = self._attach_state(stand)
 
         removed_f = np.array([20.0, 0.0], dtype=float)
-        changed = apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f, refresh=False)
+        with patch.object(Motti4DLL, "grow_with_state", dll.grow_with_state):
+            changed = update_motti_state_after_cutting(stand, removed_f)
 
         self.assertTrue(changed)
         self.assertAlmostEqual(float(stand.motti_state.yp[0][0].f), 100.0)
@@ -231,7 +232,6 @@ class TestMottiSyncNewBehaviour(unittest.TestCase):
 
         sync_yp_to_reference_trees(stand)
         self.assertAlmostEqual(float(stand.reference_trees.stems_per_ha[0]), 100.0)
-        self.assertEqual(dll.grow_zero_calls, 0)
 
     def test_regeneration_path_can_be_verified_with_regenerate_stub_and_ut_sync(self) -> None:
         stand = _make_stand()
@@ -271,7 +271,7 @@ class TestKnownGapInCurrentImplementation(unittest.TestCase):
                 buffers=SimpleNamespace(saplings=_empty_ut_buffers()),
             )
             removed_f = np.array([10.0, 0.0], dtype=float)
-            apply_motti_yp_reduction_from_removed_reference_trees(stand, removed_f, refresh=True)
+            update_motti_state_after_cutting(stand, removed_f)
 
         # Current code performs zero-step grow, but skips dll.update_after_import().
         self.assertEqual(spy_dll.update_after_import_calls, 0)

@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [10.1.0] - 2026-11-13
+
+### Added
+
+- Added `remove_trees` treatment
+
+## [10.0.0] - 2026-11-11
+
+### Removed
+
+- Removed obsolete stand attributes `under_storey` and `over_storey`
+
+## [9.1.0] - 2026-11-11
+
+### Added
+
+- Added new aggregated stand attributes as possible database output columns:
+    -`stems_per_ha`
+    -`ds_stems_per_ha`
+    -`ds_basal_area`
+    -`ds_ba_weighted_mean_height`
+    -`ds_ba_weighted_mean_diameter`
+    -`ds_ba_weighted_mean_biological_age`
+
+## [9.0.0] - 2026-11-11
+
+### Changed
+
+- The `regeneration` treatment now accepts a list of regeneration declarations, allowing for multiple/mixed regeneration types.
+
+## [8.2.2] - 2026-11-11
+
+### Fixed
+
+- Fixed stratum biological age conversion for Motti
+
+## [8.2.1] - 2026-11-11
+
+### Fixed
+
+- Fixed aggregate calculations after transition
+
+## [8.2.0] - 2026-11-11
+
+### Added
+
+- Updates the motti sapling vector in `cutting_fn`
+
+## [8.1.0] - 2026-11-11
+
+### Added
+
+- peatland fertilization treatment wrapping the `Motti4PeatlandFertilization` function
+- enabled MottiTreatments robot test
+    - splitted into `robot.MottiTreatments` and `robot.MottiTreatments2`
+- Collecting `RemovedTrees` in `pct_fn` and `earlycare_fn`
+- Changed pct related `remaining_N` from int -> float type.
+- Removed `seedlingdealy_fn` related event and treatment.
+    - Included a `UserWarning` about unexpected results.
+
 ## [8.0.1] - 2026-11-06
 
 ### Fixed

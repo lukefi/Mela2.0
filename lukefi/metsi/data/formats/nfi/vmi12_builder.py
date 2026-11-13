@@ -158,8 +158,6 @@ class VMI12Builder(VMIBuilder):
 
         result.peatland_type = vmi2internal.convert_peatland_forest_type(row["suotyy"])
         result.drained_peatland_type = vmi2internal.convert_drained_peatland_forest_type(row["tkgtyy"])
-        result.under_storey = bool(util.parse_type(row["alikehl"], int))
-        result.over_storey = bool(util.parse_type(row["ylikehl"], int))
 
         result.development_class = vmi2internal.convert_development_class(row["kehitysluokka"])
         result.ds_main_tree_species = vmi_util.determine_main_tree_species_dominant_storey(
@@ -228,11 +226,14 @@ class VMI12Builder(VMIBuilder):
             return None
 
     @staticmethod
-    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float:
+    def _determine_dominant_storey_age(ds_bh_age: str, ds_age_increase: str) -> float | None:
         """ Dominant storey age is composed of dominant storey breast height age and age increase for vmi12. """
-        a = util.get_or_default(vmi_util.parse_float(ds_bh_age), 0.0)
+        a = util.get_or_default(vmi_util.parse_float(ds_bh_age))
         b = util.get_or_default(vmi_util.parse_float(ds_age_increase), 0.0)
-        return a + b
+        try:
+            return a + b
+        except TypeError:
+            return None
 
     @staticmethod
     def _convert_stratum_entry(strata: TreeStrata, row: dict[str, str], i: int):

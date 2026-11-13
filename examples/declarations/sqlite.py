@@ -38,8 +38,12 @@ sqlite_decl = {
         "region",
         "peatland_type",
         "drained_peatland_type",
-        "under_storey",
-        "over_storey"
+        "stems_per_ha",
+        "ds_stems_per_ha",
+        "ds_basal_area",
+        "ds_ba_weighted_mean_height",
+        "ds_ba_weighted_mean_diameter",
+        "ds_ba_weighted_mean_biological_age"
     ],
 
 
@@ -66,8 +70,18 @@ sqlite_decl = {
     ],
 
     "strata": [
-        "species", "mean_diameter", "mean_height", "breast_height_age", "biological_age", "stems_per_ha",
-        "basal_area", "origin", "stratum_number", "storey", "sapling_stems_per_ha", "number_of_generated_trees"
+        "species",
+        "mean_diameter",
+        "mean_height",
+        "breast_height_age",
+        "biological_age",
+        "stems_per_ha",
+        "basal_area",
+        "origin",
+        "stratum_number",
+        "storey",
+        "sapling_stems_per_ha",
+        "number_of_generated_trees"
     ],
 }
 
