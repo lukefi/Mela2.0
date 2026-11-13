@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [10.1.1] - 2026-11-13
+
+### Fixed
+
+- Fixed `seedtree_cutting` collected data declaration and storey handling
+
 ## [10.1.0] - 2026-11-13
 
 ### Added
