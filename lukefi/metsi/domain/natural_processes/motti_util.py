@@ -260,7 +260,9 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                                                    basal_area=getattr(s, f"g_{cat_code}", 0.0),
                                                    volume=getattr(s, f"v_{cat_code}", 0.0),
                                                    storey=existing_storey or Storey.UNSET.value,
-                                                   management_category=existing_management_category or TreeManagementCategory.NO_RESTRICTION.value
+                                                   management_category=(
+                                                       existing_management_category
+                                                       or TreeManagementCategory.NO_RESTRICTION.value)
                                                    )
 
                 if idx is None:
