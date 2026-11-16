@@ -65,7 +65,6 @@ def node_tables_should_be_equal(ref: str, res: str):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    SELECT_NODES = "SELECT * FROM nodes ORDER BY unit"
     _compare(ref, res, SELECT_NODES)
 
 
@@ -77,7 +76,6 @@ def stand_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    SELECT_STANDS = "SELECT * FROM stands"
     _compare(ref, res, SELECT_STANDS, numeric_tolerance)
 
 
@@ -89,7 +87,6 @@ def stratum_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float)
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    SELECT_STRATA = "SELECT * FROM strata"
     _compare(ref, res, SELECT_STRATA, numeric_tolerance)
 
 
@@ -101,7 +98,6 @@ def tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: float):
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    SELECT_TREES = "SELECT * FROM trees"
     _compare(ref, res, SELECT_TREES, numeric_tolerance)
 
 
@@ -113,5 +109,4 @@ def removed_tree_tables_should_be_equal(ref: str, res: str, numeric_tolerance: f
         ref (str): path to the reference database
         res (str): path to the result database
     """
-    SELECT_REMOVED_TREES = "SELECT * FROM removed_trees"
     _compare(ref, res, SELECT_REMOVED_TREES, numeric_tolerance)
