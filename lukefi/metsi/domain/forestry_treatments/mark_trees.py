@@ -18,15 +18,19 @@ from lukefi.metsi.forestry.storey import manage_existing_storeys
 def _mark_fully_selected_trees(stand: ForestStand,
                                selected_indices: np.ndarray,
                                attributes: dict[str, Any]) -> None:
-    for idx in selected_indices:
-        stand.reference_trees.update(attributes, index=int(idx))
-    for name, value in attributes.items():
-        attribute = getattr(stand.reference_trees, name)
-        if not attribute.flags.writeable:
-            attribute = np.copy(attribute)
-            attribute.flags.writeable = True
-            attribute[selected_indices] = value
-            setattr(stand.reference_trees, name, attribute)
+    """ Update marking-attributes for fully selected trees """
+    if selected_indices.size > 0:
+        for name, value in attributes.items():
+            update_indices = selected_indices
+            if name == "storey":
+                # Storeys are only for fully selected saplings
+                update_indices = selected_indices[stand.reference_trees.sapling]
+            attribute = getattr(stand.reference_trees, name)
+            if not attribute.flags.writeable:
+                attribute = np.copy(attribute)
+                attribute.flags.writeable = True
+                attribute[update_indices] = value
+                setattr(stand.reference_trees, name, attribute)
 
 
 def _update_motti_for_partial_mark(stand: ForestStand,
