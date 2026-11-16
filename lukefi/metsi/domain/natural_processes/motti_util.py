@@ -176,6 +176,7 @@ def _build_reference_tree_update(*,
                                  basal_area: float,
                                  volume: float,
                                  storey: int,
+                                 management_category: int
                                  ) -> dict[str, Any]:
     return {
         "identifier": identifier,
@@ -190,7 +191,7 @@ def _build_reference_tree_update(*,
         "breast_height_age": age13,
         "sapling": True,
         "tree_category": category_code,
-        "management_category": 1,
+        "management_category": management_category,
         "storey": storey,
         "basal_area": basal_area,
         "volume": volume,
@@ -233,6 +234,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
 
                 idx = _find_sapling_reference_tree_index(rt, osid)
                 existing_storey = None
+                existing_management_category = None
                 if idx is None:
                     # Create a new tree
                     (identifier,
@@ -242,6 +244,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     identifier = rt.identifier[idx].item()
                     tree_number = rt.tree_number[idx].item()
                     existing_storey = rt.storey[idx].item()
+                    existing_management_category = int(rt.management_category[idx])
 
                 row = _build_reference_tree_update(identifier=identifier,
                                                    tree_number=tree_number,
@@ -256,7 +259,8 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                                                    age13=getattr(s, f"age13_{cat_code}", 0.0),
                                                    basal_area=getattr(s, f"g_{cat_code}", 0.0),
                                                    volume=getattr(s, f"v_{cat_code}", 0.0),
-                                                   storey=existing_storey or Storey.UNSET.value
+                                                   storey=existing_storey or Storey.UNSET.value,
+                                                   management_category=existing_management_category or TreeManagementCategory.NO_RESTRICTION.value
                                                    )
 
                 if idx is None:
