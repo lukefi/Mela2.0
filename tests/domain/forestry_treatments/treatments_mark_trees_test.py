@@ -111,6 +111,7 @@ class MarkTreesTest(unittest.TestCase):
             "attributes": {
                 "tree_type": TreeType.OLD_CHECKED_TALLY_TREE,
                 "management_category": TreeManagementCategory.RETENTION_TREE,
+                "storey": Storey.RETENTION
             },
         }
 
@@ -131,22 +132,28 @@ class MarkTreesTest(unittest.TestCase):
 
         tree_types = list(updated.reference_trees.tree_type)
         mgmt_cats = list(updated.reference_trees.management_category)
+        stories = list(updated.reference_trees.storey)
 
         # Row 0: no stems marked -> attributes unchanged
         self.assertEqual(TreeType.UNSET, tree_types[0])
         self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[0])
+        self.assertEqual(Storey.DOMINANT, stories[0])
 
         # Row 1: all stems marked -> attributes updated in-place
         self.assertEqual(TreeType.OLD_CHECKED_TALLY_TREE, tree_types[1])
         self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[1])
+        # NOTE: storey should stay unchaged
+        self.assertEqual(Storey.DOMINANT, stories[1])
 
         # Row 2: partial stems remain unmarked after split
         self.assertEqual(TreeType.UNSET, tree_types[2])
         self.assertEqual(TreeManagementCategory.NO_RESTRICTION, mgmt_cats[2])
+        self.assertEqual(Storey.DOMINANT, stories[2])
 
         # Row 3: new row for the marked stems -> attributes set
         self.assertEqual(TreeType.OLD_CHECKED_TALLY_TREE, tree_types[3])
         self.assertEqual(TreeManagementCategory.RETENTION_TREE, mgmt_cats[3])
+        self.assertEqual(Storey.RETENTION, stories[3])
 
 
 if __name__ == "__main__":
