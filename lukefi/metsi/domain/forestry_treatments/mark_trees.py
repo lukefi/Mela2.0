@@ -23,14 +23,16 @@ def _mark_fully_selected_trees(stand: ForestStand,
         for name, value in attributes.items():
             update_indices = selected_indices
             if name == "storey":
-                # Storeys are only for fully selected saplings
-                update_indices = selected_indices[stand.reference_trees.sapling]
+                # Storeys are updated only for fully selected saplings
+                update_indices = selected_indices[
+                    stand.reference_trees.sapling[selected_indices]
+                ]
             attribute = getattr(stand.reference_trees, name)
             if not attribute.flags.writeable:
                 attribute = np.copy(attribute)
                 attribute.flags.writeable = True
-                attribute[update_indices] = value
-                setattr(stand.reference_trees, name, attribute)
+            attribute[update_indices] = value
+            setattr(stand.reference_trees, name, attribute)
 
 
 def _update_motti_for_partial_mark(stand: ForestStand,
