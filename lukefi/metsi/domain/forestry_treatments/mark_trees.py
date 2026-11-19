@@ -10,7 +10,7 @@ from lukefi.metsi.core.utils.select_units import (
 from lukefi.metsi.core.collected_data import OpTuple
 from lukefi.metsi.core.exceptions import MetsiException
 from lukefi.metsi.core.treatment import Treatment
-from lukefi.metsi.domain.natural_processes.motti_util import split_and_update_motti_yp_tree
+from lukefi.metsi.domain.natural_processes.motti_util import split_and_update_motti_yp_tree, update_motti_aggregates
 from lukefi.metsi.forestry.aggregates_internal import calc_tree_basal_areas
 from lukefi.metsi.forestry.storey import manage_existing_storeys
 
@@ -183,6 +183,8 @@ def mark_trees_fn(input_: ForestStand,
 
     # TODO: Should user-marked storeys get special treatment?
     manage_existing_storeys(trees)
+
+    update_motti_aggregates(stand, sync_back=False)
 
     return stand, []
 

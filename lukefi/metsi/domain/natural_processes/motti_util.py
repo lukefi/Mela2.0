@@ -311,16 +311,18 @@ def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
     prune_reference_trees_not_in_motti(stand)
 
 
-def _update_motti_aggregates(stand: ForestStand) -> None:
+def update_motti_aggregates(stand: ForestStand, sync_back: bool = True) -> None:
     """
-    Rebuild Motti internal state after yp edits, run grow(step=0) and
-    then synchronize ReferenceTrees from yp/ut.
+    Rebuilds Motti internal state after yp edits by running:
+    1) Motti4Growth(step=0), which update the aggregates in Motti
+    2) optionally synchronize ReferenceTrees from (yp, ut) -> ReferenceTrees.
     """
     ms = stand.motti_state
     if ms is None or ms.yp is None or ms.buffers is None:
         return
     Motti4DLL.grow_with_state(ms, step=0)
-    reconcile_reference_trees_from_motti(stand)
+    if sync_back:
+        reconcile_reference_trees_from_motti(stand)
 
 
 def _update_motti_yp_after_cutting(stand: ForestStand, removed_stems: npt.NDArray[np.float64]) -> bool:
@@ -445,7 +447,7 @@ def update_motti_state_after_cutting(stand: ForestStand,
     is_changed = False
     is_changed = _update_motti_trees_after_cutting(stand, removed_stems)
     if is_changed:
-        _update_motti_aggregates(stand)
+        update_motti_aggregates(stand)
     return is_changed
 
 
