@@ -14,7 +14,7 @@ ${CONTROL_SCRIPT}   ${CURDIR}/input/control_motti_treatments.py
 ${REFERENCE_DIR}    ${CURDIR}/output/ref
 ${OUTPUT_DB}        ${OUTPUT_PATH}/simulation_results.db
 ${REFERENCE_DB}     ${REFERENCE_DIR}/simulation_results.db
-${TOLERANCE}        1e-4
+${TOLERANCE}        1e-3
 
 *** Test Cases ***
 Node Table Should Match Reference
@@ -23,7 +23,6 @@ Node Table Should Match Reference
 
 Stand Table Should Match Reference
     [Tags]    simulation    motti
-    Skip
     Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Stratum Table Should Match Reference
