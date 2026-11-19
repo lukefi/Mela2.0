@@ -3,9 +3,10 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+from lukefi.metsi.data.conversion.internal2motti import convert_storey
 from lukefi.metsi.data.enums.internal import Origin, Storey, TreeCategory, TreeManagementCategory, TreeSpecies
 from lukefi.metsi.data.model import ForestStand
-from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum, Motti4Saplings
+from lukefi.metsi.data.motti.motti_types import Motti4SaplingStratum, Motti4Saplings, MottiState
 from lukefi.metsi.data.vector_model import ReferenceTrees
 from lukefi.metsi.domain.natural_processes.util import new_reference_tree_identity
 from lukefi.metsi.forestry.naturalprocess.motti_dll_wrapper import Motti4DLL
@@ -175,6 +176,7 @@ def _build_reference_tree_update(*,
                                  basal_area: float,
                                  volume: float,
                                  storey: int,
+                                 management_category: int
                                  ) -> dict[str, Any]:
     return {
         "identifier": identifier,
@@ -189,7 +191,7 @@ def _build_reference_tree_update(*,
         "breast_height_age": age13,
         "sapling": True,
         "tree_category": category_code,
-        "management_category": 1,
+        "management_category": management_category,
         "storey": storey,
         "basal_area": basal_area,
         "volume": volume,
@@ -232,6 +234,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
 
                 idx = _find_sapling_reference_tree_index(rt, osid)
                 existing_storey = None
+                existing_management_category = None
                 if idx is None:
                     # Create a new tree
                     (identifier,
@@ -241,6 +244,7 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                     identifier = rt.identifier[idx].item()
                     tree_number = rt.tree_number[idx].item()
                     existing_storey = rt.storey[idx].item()
+                    existing_management_category = int(rt.management_category[idx])
 
                 row = _build_reference_tree_update(identifier=identifier,
                                                    tree_number=tree_number,
@@ -255,7 +259,10 @@ def sync_ut_to_reference_trees(stand: ForestStand) -> None:
                                                    age13=getattr(s, f"age13_{cat_code}", 0.0),
                                                    basal_area=getattr(s, f"g_{cat_code}", 0.0),
                                                    volume=getattr(s, f"v_{cat_code}", 0.0),
-                                                   storey=existing_storey or Storey.UNSET.value
+                                                   storey=existing_storey or Storey.UNSET.value,
+                                                   management_category=(
+                                                       existing_management_category
+                                                       or TreeManagementCategory.NO_RESTRICTION.value)
                                                    )
 
                 if idx is None:
@@ -304,16 +311,18 @@ def reconcile_reference_trees_from_motti(stand: ForestStand) -> None:
     prune_reference_trees_not_in_motti(stand)
 
 
-def _update_motti_aggregates(stand: ForestStand) -> None:
+def update_motti_aggregates(stand: ForestStand, sync_back: bool = True) -> None:
     """
-    Rebuild Motti internal state after yp edits, run grow(step=0) and
-    then synchronize ReferenceTrees from yp/ut.
+    Rebuilds Motti internal state after yp edits by running:
+    1) Motti4Growth(step=0), which update the aggregates in Motti
+    2) optionally synchronize ReferenceTrees from (yp, ut) -> ReferenceTrees.
     """
     ms = stand.motti_state
     if ms is None or ms.yp is None or ms.buffers is None:
         return
     Motti4DLL.grow_with_state(ms, step=0)
-    reconcile_reference_trees_from_motti(stand)
+    if sync_back:
+        reconcile_reference_trees_from_motti(stand)
 
 
 def _update_motti_yp_after_cutting(stand: ForestStand, removed_stems: npt.NDArray[np.float64]) -> bool:
@@ -438,7 +447,7 @@ def update_motti_state_after_cutting(stand: ForestStand,
     is_changed = False
     is_changed = _update_motti_trees_after_cutting(stand, removed_stems)
     if is_changed:
-        _update_motti_aggregates(stand)
+        update_motti_aggregates(stand)
     return is_changed
 
 
@@ -504,3 +513,39 @@ def prune_reference_trees_not_in_motti(stand: ForestStand) -> None:
 
     if delete_idx:
         rt.delete(np.array(delete_idx, dtype=int))
+
+
+def split_and_update_motti_yp_tree(ms: MottiState,
+                                   new_tree_id: int,
+                                   tree_number: int,
+                                   stratum: int,
+                                   f_new: float,
+                                   f_upd: float,
+                                   new_storey: Storey | None = None):
+    """
+    Creates a copy with a new storey of a existing yp tree and updates existing tree stem count.
+
+    An existing yp tree is searched based on `tree_number` and `stratum` values.
+    After existing tree is found a new tree is created from the existing tree.
+    The new tree is given differing values for id, story and stem count.  
+
+    Finally the stem count of the existing tree is updated.
+    """
+    next_idx = ms.ntrees
+    for i in range(ms.ntrees):
+        t = ms.yp[0][i]
+        if int(t.id) == tree_number and int(t.sid) == stratum:
+            # split yp tree and "mark" with attributes
+            ms.yp[0][next_idx].id = float(new_tree_id)
+            ms.yp[0][next_idx].sid = t.sid
+            ms.yp[0][next_idx].spe = t.spe
+            ms.yp[0][next_idx].d13 = t.d13
+            ms.yp[0][next_idx].h = t.h
+            ms.yp[0][next_idx].age13 = t.age13
+            ms.yp[0][next_idx].snt = t.snt
+            ms.yp[0][next_idx].storie = t.storie if new_storey is None else float(convert_storey(new_storey))
+            ms.yp[0][next_idx].f = float(f_new)
+            # update existing yp tree
+            t.f = float(f_upd)
+            break
+    ms.ntrees += 1
