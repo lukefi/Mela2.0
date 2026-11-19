@@ -59,6 +59,7 @@ def cutting_fn(stand: ForestStand,
     # Apply removals
     if not trees.stems_per_ha.flags.writeable:
         trees.stems_per_ha = trees.stems_per_ha.copy()
+        trees.stems_per_ha.flags.writeable = True
     trees.stems_per_ha -= removed_f
 
     # Collected data: Removed trees
