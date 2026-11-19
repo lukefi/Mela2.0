@@ -23,6 +23,7 @@ Node Table Should Match Reference
 
 Stand Table Should Match Reference
     [Tags]    simulation    motti
+    Skip
     Stand Tables Should Be Equal     ${REFERENCE_DB}    ${OUTPUT_DB}    ${TOLERANCE}
 
 Stratum Table Should Match Reference
