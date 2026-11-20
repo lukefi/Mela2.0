@@ -60,7 +60,8 @@ def determine_hmalli_value(species: TreeSpecies):
 def tree_generation_lm(stand: ForestStand,
                        stratum: TreeStratum,
                        nfi_iteration: VmiIteration,
-                       lm_n_trees_max: int = 10,
+                       n_trees: int = 10,
+                       lm_n_trees: int | None = None,
                        lm_gos_div: int = 1,
                        lm_n_trees_mode: str = "param",
                        lm_mode: str = 'dcons',
@@ -190,16 +191,18 @@ def tree_generation_lm(stand: ForestStand,
                 source_trees.stems_per_ha[i] or robjects.NA_Real for i in range(
                     len(source_trees))])}
 
+    ntrees_max = lm_n_trees if lm_n_trees is not None else n_trees
+
     # ppa:han perustuva kuvauspuiden lkm
-    ntrees: int | float = 2 if stratum.basal_area is None else min(
-        max(math.floor(stratum.basal_area / lm_gos_div), 2), lm_n_trees_max)
+    ntrees = 2 if stratum.basal_area is None else min(
+        max(math.floor(stratum.basal_area / lm_gos_div), 2), ntrees_max)
 
     # jos kuvauspuiden lkm tyyppi on "param", käytetään annettua, ei ppasta laskettua määrää
-    ntrees = lm_n_trees_max if lm_n_trees_mode == 'param' else ntrees
+    ntrees = ntrees_max if lm_n_trees_mode == 'param' else ntrees
 
     # plosia käytettäessä kuvauspuiden lkm voi räjähtää, siksi skaalataan plosin summalla
     if sum(species_proportions) > 0:
-        ntrees = ntrees / sum(species_proportions)
+        ntrees = int(ntrees / sum(species_proportions))
 
     hdmod_path = HDMOD_FILE_PATH_MAP[nfi_iteration]
 
