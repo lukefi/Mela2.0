@@ -21,6 +21,7 @@ class ConditionTest(unittest.TestCase):
 
         c_and = c1 & c2
         c_or = c1 | c2
+        not_c = ~c1
 
         self.assertTrue(c_and(SimulationPayload(ToyModel("", 4, 2))))
         self.assertFalse(c_and(SimulationPayload(ToyModel("", 4, 1))))
@@ -31,6 +32,10 @@ class ConditionTest(unittest.TestCase):
         self.assertTrue(c_or(SimulationPayload(ToyModel("", 3, 1))))
         self.assertTrue(c_or(SimulationPayload(ToyModel("", 6, 5))))
         self.assertFalse(c_or(SimulationPayload(ToyModel("", 6, 1))))
+
+        self.assertTrue(not_c(SimulationPayload(ToyModel("", 4, 1))))
+        self.assertFalse(not_c(SimulationPayload(ToyModel("", 4, 2))))
+        self.assertFalse(not_c(SimulationPayload(ToyModel("", 4, 3))))
 
     def test_condition_checking(self):
         def _step(x: ToyModel) -> OpTuple[ToyModel]:
