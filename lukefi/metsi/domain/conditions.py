@@ -53,7 +53,7 @@ def _time_since_treatment_at_most[T: ComputationalUnit](
         treatment: Treatment[T],
         maximum_time_interval: int) -> bool:
     last_run = _get_treatment_last_run(payload.operation_history, treatment)
-    return last_run is None or maximum_time_interval >= (payload.unit.time - last_run)
+    return last_run is not None and maximum_time_interval >= (payload.unit.time - last_run)
 
 
 def _get_treatment_last_run[T: ComputationalUnit](operation_history: OperationHistory,
@@ -74,7 +74,7 @@ def _time_since_tag_at_most[T: ComputationalUnit](
         tag: str,
         maximum_time_interval: int) -> bool:
     last_run = _get_tag_last_run(payload.operation_history, tag)
-    return last_run is None or maximum_time_interval >= (payload.unit.time - last_run)
+    return last_run is not None and maximum_time_interval >= (payload.unit.time - last_run)
 
 
 def _get_tag_last_run(operation_history: OperationHistory, tag: str) -> Optional[int]:
