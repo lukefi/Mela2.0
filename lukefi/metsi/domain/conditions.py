@@ -31,7 +31,8 @@ class TimeSinceTag[T: ComputationalUnit](Condition[T]):
 
 class MaxTimeSinceTreatment[T: ComputationalUnit](Condition[T]):
     def __init__(self, minimum_time: int, treatment: Treatment[T]) -> None:
-        super().__init__(lambda x: _time_since_treatment_at_most(x, treatment, minimum_time), "max_time_since_treatment")
+        super().__init__(
+            lambda x: _time_since_treatment_at_most(x, treatment, minimum_time), "max_time_since_treatment")
 
 
 class MaxTimeSinceTag[T: ComputationalUnit](Condition[T]):
