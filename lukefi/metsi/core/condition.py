@@ -56,6 +56,9 @@ class Condition[T: ComputationalUnit]:
         return Condition(lambda x: self.predicate(x) or other.predicate(x),
                          time_points=self.time_points | other.time_points)
 
+    def __invert__(self) -> "Condition[T]":
+        return Condition(lambda x: not self.predicate(x), time_points=self.time_points)
+
 
 class PostCondition[T:ComputationalUnit]:
     __slots__ = ("predicate", "name")
