@@ -167,7 +167,8 @@ def reference_trees_from_tree_stratum(stand: ForestStand,
         result = _trees_from_sapling_height_distribution(stratum, n_trees)
         if scale_height_distribution_stems_by_ba:
             # assert stratum.basal_area is not None
-            if result.breast_height_diameter.any() and stratum.basal_area is not None and stratum.basal_area > 0.0:
+            nonzero_ba_count = np.count_nonzero(result.breast_height_diameter > 0)
+            if nonzero_ba_count / len(result) >= 0.9 and stratum.basal_area is not None and stratum.basal_area > 0.0:
                 result.stems_per_ha = result.stems_per_ha * stratum.basal_area / \
                     _calculate_basal_area_from_trees(result.stems_per_ha, result.breast_height_diameter)
 
