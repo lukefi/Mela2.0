@@ -11,7 +11,7 @@ class CollectedData(ABC):
 
     @classmethod
     @abstractmethod
-    def init_db_table(cls, db: sqlite3.Connection):
+    def init_db_table(cls, db: sqlite3.Connection) -> None:
         """ Create the SQLite table and schema for this collected data type.
 
         Args:
@@ -20,7 +20,7 @@ class CollectedData(ABC):
 
 
     @abstractmethod
-    def output_to_db(self, db: sqlite3.Connection, node_str: str, identifier: str):
+    def output_to_db(self, db: sqlite3.Connection, node_str: str, identifier: str) -> None:
         """ Insert the collected data into its SQLite table.
         
             Args:
