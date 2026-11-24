@@ -16,15 +16,15 @@ class SimulationPayload[T: ComputationalUnit]:
 
     Attributes
     ----------
-    unit : T
+    unit: T
         Computational unit representing the current domain state at this
         simulation node.
 
-    operation_history : OperationHistory
+    operation_history: OperationHistory
         Record of treatments performed on the unit along its current
         simulation path. The history is used to determine whether subsequent treatment can be performed.
 
-    node_id : list[int]
+    node_id: list[int]
         Identifier of the simulation node associated with the current state.
         Used to track the state within the simulation structure and to
         identify it in outputs such as database records.

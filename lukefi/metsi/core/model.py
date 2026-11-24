@@ -69,7 +69,7 @@ class ComputationalUnit(ABC):
         identifier and return a reconstructed instance of the computational unit.
 
         Args:
-            identifier: Unique identifier of the computational unit.
+            identifier (str): Unique identifier of the computational unit.
             db: SQLite database connection used to read the initial state.
 
         Returns:
@@ -83,7 +83,7 @@ class ComputationalUnit(ABC):
          
         Args:
             db: SQLite database connection.
-            sqlite_decl: Dictionary mapping of unit attributes as name-(SQLite)type values.
+            sqlite_decl (dict[str, str]): Dictionary mapping of unit attributes as name-(SQLite)type values.
         """
 
 
@@ -129,6 +129,11 @@ class VectorData():
         return retval
 
     def vectorize(self, attr_dict: dict[str, list[Any]]):
+        """ Create a SoA vector based on given attribute mapping.
+        
+        Args:
+            attr_dict (dict[str, list[Any]]): Dictionary mapping representing named vectors
+        """
         self.set_size(attr_dict)
         for attribute_name, data_type in self.dtypes.items():
             setattr(
@@ -147,14 +152,17 @@ class VectorData():
         return self
 
     def is_contiguous(self, name: str):
+        """ Check if vector is contiguous in memory """
         arr: npt.NDArray = getattr(self, name)
         return bool(arr.flags['CONTIGUOUS']) and bool(arr.flags['C_CONTIGUOUS'])
 
     def set_size(self, attr_dict: dict[str, list[Any]]):
+        """ Sets the size of the vector by calculating length of the given attribute mapping. """
         size = len(attr_dict.get('identifier', []))
         setattr(self, 'size', size)
 
     def defaultify(self, values: list, dtype: DTypeDeclaration) -> list:
+        """ Associates a default value for given list of values """
         return [self.to_default(v, dtype) for v in values]
 
     def to_default(self, value: Optional[Any], field_type: DTypeDeclaration) -> Any:
