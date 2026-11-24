@@ -17,28 +17,17 @@ type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 class ComputationalUnit(ABC):
     """
     Abstract interface for domain-spesific simulation state.
-
-    Attributes
-    ----------
-
-    identifier: str
-        Constant and unique identifier of the unit.
-    
-    time: int
-        The current time point of the unit.
-    
-    start_time: int
-        The time point of unit starting state.
-
-    predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
-        List of treatments associated with a already scheduled time point.
     """
     __slots__ = ("identifier", "time", "start_time", "predetermined_treatments")
 
     identifier: str
+    """ Constant and unique identifier of the unit. """
     time: int
+    """ The current time point of the unit. """
     start_time: int
+    """ The time point of unit starting state. """
     predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
+    """ List of treatments associated with a already scheduled time point. """
 
     @abstractmethod
     def output_initial_state_to_db(self, db: sqlite3.Connection):
