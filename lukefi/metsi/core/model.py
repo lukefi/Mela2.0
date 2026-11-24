@@ -15,6 +15,24 @@ type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 
 class ComputationalUnit(ABC):
+    """
+    Abstract interface for domain-spesific simulation state.
+
+    Attributes
+    ----------
+
+    identifier: str
+        Constant and unique identifier of the unit.
+    
+    time: int
+        The current time point of the unit.
+    
+    start_time: int
+        The time point of unit starting state.
+
+    predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
+        List of treatments associated with a already scheduled time point.
+    """
     __slots__ = ("identifier", "time", "start_time", "predetermined_treatments")
 
     identifier: str
@@ -24,29 +42,60 @@ class ComputationalUnit(ABC):
 
     @abstractmethod
     def output_initial_state_to_db(self, db: sqlite3.Connection):
-        pass
+        """ Write starting state of the unit into SQLite table.
+        
+        Args:
+            db: SQLite database connection.
+        """
 
     @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
-        pass
+        """ Write unit state attributes into SQLite table.
+
+        Args:
+            db: SQLite database connection.
+        """
 
     @abstractmethod
     def update_aggregates(self):
-        pass
+        """
+        Update aggregate values derived from the current state of the unit.
+
+        Implementations should recalculate and store the aggregate values required
+        by the simulation from the unit's current domain state.
+        """
 
     @property
     def relative_time(self):
+        """ Relative time difference between current and starting time point of the unit. """
         return self.time - self.start_time
 
     @classmethod
     @abstractmethod
     def reconstruct_initial_state[T: "ComputationalUnit"](cls: Type[T], identifier: str, db: sqlite3.Connection) -> T:
-        pass
+        """
+        Reconstruct a computational unit from its initial state stored in the database.
+
+        Implementations must read the domain-specific state associated with the given
+        identifier and return a reconstructed instance of the computational unit.
+
+        Args:
+            identifier: Unique identifier of the computational unit.
+            db: SQLite database connection used to read the initial state.
+
+        Returns:
+            Reconstructed computational unit instance.
+        """
 
     @classmethod
     @abstractmethod
     def create_database_tables(cls, db: sqlite3.Connection, sqlite_decl: dict[str, str] | None = None):
-        pass
+        """ Create the database tables associated with the computational units output. 
+         
+        Args:
+            db: SQLite database connection.
+            sqlite_decl: Dictionary mapping of unit attributes as name-(SQLite)type values.
+        """
 
 
 class Finalizable(ABC):
