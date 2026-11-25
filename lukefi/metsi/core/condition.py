@@ -11,7 +11,7 @@ type PostPredicate[T] = Callable[[T, Sequence[CollectedData]], bool]
 
 class Condition[T: ComputationalUnit]:
     """
-    Base class for condition which determine whether an event is applicable to a computational unit.
+    Generic class which determine if condition of simulation payload apply to defined predicate.
     """
     __slots__ = ("predicate", "name", "time_points", "relative_time_points")
 
@@ -69,8 +69,8 @@ class Condition[T: ComputationalUnit]:
 
 class PostCondition[T:ComputationalUnit]:
     """
-    Base class for postcondition used to evaluate the applicability
-    of computational unit result state and collected data.
+    Base class for predicate used to evaluate the applicability
+    of both simulation payload and collected data.
     """
     __slots__ = ("predicate", "name")
 
@@ -97,11 +97,11 @@ class PostCondition[T:ComputationalUnit]:
     def __str__(self) -> str:
         return self.name
 
-    def __call__(self, unit: SimulationPayload[T], cd: Sequence[CollectedData]) -> bool:
-        return self.predicate(unit, cd)
+    def __call__(self, payload: SimulationPayload[T], cd: Sequence[CollectedData]) -> bool:
+        return self.predicate(payload, cd)
 
     def __and__(self, other: "PostCondition[T]") -> "PostCondition[T]":
-        return PostCondition(lambda unit, cd: self.predicate(unit, cd) and other.predicate(unit, cd))
+        return PostCondition(lambda payload, cd: self.predicate(payload, cd) and other.predicate(payload, cd))
 
     def __or__(self, other: "PostCondition[T]") -> "PostCondition[T]":
-        return PostCondition(lambda unit, cd: self.predicate(unit, cd) or other.predicate(unit, cd))
+        return PostCondition(lambda payload, cd: self.predicate(payload, cd) or other.predicate(payload, cd))
