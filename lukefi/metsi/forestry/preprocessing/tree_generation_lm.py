@@ -198,11 +198,11 @@ def tree_generation_lm(stand: ForestStand,
         max(math.floor(stratum.basal_area / lm_gos_div), 2), ntrees_max)
 
     # jos kuvauspuiden lkm tyyppi on "param", käytetään annettua, ei ppasta laskettua määrää
-    ntrees = ntrees_max if lm_n_trees_mode == 'param' else ntrees
+    fntrees: float  = ntrees_max if lm_n_trees_mode == 'param' else ntrees
 
     # plosia käytettäessä kuvauspuiden lkm voi räjähtää, siksi skaalataan plosin summalla
     if sum(species_proportions) > 0:
-        ntrees = int(ntrees / sum(species_proportions))
+        fntrees = ntrees / sum(species_proportions)
 
     hdmod_path = HDMOD_FILE_PATH_MAP[nfi_iteration]
 
@@ -216,7 +216,7 @@ def tree_generation_lm(stand: ForestStand,
         'tapa': lm_mode,
         'HDpath': hdmod_path,
         'width': lm_fix_width,
-        'n': ntrees,
+        'n': fntrees,
         'hmalli': determine_hmalli_value(stratum.species),
         'shdef': lm_shdef,
         'shinit': 0.1,
