@@ -8,6 +8,7 @@ from lukefi.metsi.core.simulation_payload import SimulationPayload
 
 
 class NodeType(IntEnum):
+    """ Types of nodes used for categorization """
     INITIAL = 0
     TREATMENT = 1
     TRANSITION = 2
@@ -25,6 +26,12 @@ def create_database_tables(
         db: sqlite3.Connection,
         unit_type: type[ComputationalUnit],
         sqlite_decl: Optional[dict] = None):
+    """ Creates node and computational unit related tables into SQLite database.
+    
+    :param db: Database connection.
+    :param unit_type: Type of computational unit for creating output data tables.
+    :param sqlite_decl: (Optional) Schema for computational unit output tables.
+    """
     cur = db.cursor()
 
     # nodes
@@ -61,8 +68,16 @@ def output_node_to_db(db: sqlite3.Connection,
     Writes current simulation state and collected data to database.
 
     :param db: Connection to an initialized database
-    :param current: The current simulation payload (e.g. state and treatment history)
-    :param collected_data: List of data collected by the treatment performed in the current node
+    :param node_id: Identifier/position of the current node in branch.
+    :param operation: Name of the operation performed for current node.
+    :param params: Mapping of parameters that the operation used.
+    :param unit: Computational unit beholding the domain-state of the current node. 
+    :param collected_data: List of data collected by the treatment performed in the current node.
+    :param tags: (Optional) Set of alias names for operation.
+    :param output_state: Boolean flag for outputting the current state.
+    :param output_cd: Boolean flag for outputting the data operation collected.
+    :param transition_count: Number of transition calls.
+    :param node_type: Categorical type value for current node.
     """
     if tags is None:
         tags = set()
@@ -94,6 +109,7 @@ def update_leaf_node[T: ComputationalUnit](
         db: sqlite3.Connection,
         leaf_node: SimulationPayload[T],
         transition_count: int):
+    """ Updates given node type to treatment or transition leaf at the end of simulation """
     cur = db.cursor()
     node_id = "-".join(map(str, leaf_node.node_id))
     cur.execute(

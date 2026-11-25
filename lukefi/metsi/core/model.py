@@ -15,38 +15,76 @@ type DTypeDeclaration = tuple[npt.DTypeLike, Any]
 
 
 class ComputationalUnit(ABC):
+    """
+    Abstract interface for domain-spesific simulation state.
+    """
     __slots__ = ("identifier", "time", "start_time", "predetermined_treatments")
 
     identifier: str
+    """ Constant and unique identifier of the unit. """
     time: int
+    """ The current time point of the unit. """
     start_time: int
+    """ The time point of unit starting state. """
     predetermined_treatments: list[tuple[int, "PredeterminedTreatment"]] | None
+    """ List of treatments associated with a already scheduled time point. """
 
     @abstractmethod
     def output_initial_state_to_db(self, db: sqlite3.Connection):
-        pass
+        """ Write starting state of the unit into SQLite table.
+        
+        Args:
+            db: SQLite database connection.
+        """
 
     @abstractmethod
     def output_to_db(self, db: sqlite3.Connection, node: str):
-        pass
+        """ Write unit state attributes into SQLite table.
+
+        Args:
+            db: SQLite database connection.
+        """
 
     @abstractmethod
     def update_aggregates(self):
-        pass
+        """
+        Update aggregate values derived from the current state of the unit.
+
+        Implementations should recalculate and store the aggregate values required
+        by the simulation from the unit's current domain state.
+        """
 
     @property
     def relative_time(self):
+        """ Relative time difference between current and starting time point of the unit. """
         return self.time - self.start_time
 
     @classmethod
     @abstractmethod
     def reconstruct_initial_state[T: "ComputationalUnit"](cls: Type[T], identifier: str, db: sqlite3.Connection) -> T:
-        pass
+        """
+        Reconstruct a computational unit from its initial state stored in the database.
+
+        Implementations must read the domain-specific state associated with the given
+        identifier and return a reconstructed instance of the computational unit.
+
+        Args:
+            identifier (str): Unique identifier of the computational unit.
+            db: SQLite database connection used to read the initial state.
+
+        Returns:
+            Reconstructed computational unit instance.
+        """
 
     @classmethod
     @abstractmethod
     def create_database_tables(cls, db: sqlite3.Connection, sqlite_decl: dict[str, str] | None = None):
-        pass
+        """ Create the database tables associated with the computational units output. 
+         
+        Args:
+            db: SQLite database connection.
+            sqlite_decl (dict[str, str]): Dictionary mapping of unit attributes as name-(SQLite)type values.
+        """
 
 
 class Finalizable(ABC):
@@ -91,6 +129,11 @@ class VectorData():
         return retval
 
     def vectorize(self, attr_dict: dict[str, list[Any]]):
+        """ Create a SoA vector based on given attribute mapping.
+        
+        Args:
+            attr_dict (dict[str, list[Any]]): Dictionary mapping representing named vectors
+        """
         self.set_size(attr_dict)
         for attribute_name, data_type in self.dtypes.items():
             setattr(
@@ -109,14 +152,17 @@ class VectorData():
         return self
 
     def is_contiguous(self, name: str):
+        """ Check if vector is contiguous in memory """
         arr: npt.NDArray = getattr(self, name)
         return bool(arr.flags['CONTIGUOUS']) and bool(arr.flags['C_CONTIGUOUS'])
 
     def set_size(self, attr_dict: dict[str, list[Any]]):
+        """ Sets the size of the vector by calculating length of the given attribute mapping. """
         size = len(attr_dict.get('identifier', []))
         setattr(self, 'size', size)
 
     def defaultify(self, values: list, dtype: DTypeDeclaration) -> list:
+        """ Associates a default value for given list of values """
         return [self.to_default(v, dtype) for v in values]
 
     def to_default(self, value: Optional[Any], field_type: DTypeDeclaration) -> Any:

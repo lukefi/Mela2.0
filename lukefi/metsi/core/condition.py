@@ -10,12 +10,22 @@ type Predicate[T] = Callable[[T], bool]
 type PostPredicate[T] = Callable[[T, Sequence[CollectedData]], bool]
 
 class Condition[T: ComputationalUnit]:
+    """
+    Generic class which determine if condition of simulation payload apply to defined predicate.
+    """
     __slots__ = ("predicate", "name", "time_points", "relative_time_points")
 
     predicate: Predicate[SimulationPayload[T]]
+    """ Predicate which operates with given simulation payload.
+    
+    Return: boolean value
+    """
     name: str
+    """ (Optional) Name of the condition  """
     time_points: set[int]
+    """ (Optional) Set of time points used by the predicate  """
     relative_time_points: set[int]
+    """ (Optional) Set of relative time points used by the predicate  """
 
     def __init__(self,
                  predicate: Predicate[SimulationPayload[T]],
@@ -61,10 +71,19 @@ class Condition[T: ComputationalUnit]:
 
 
 class PostCondition[T:ComputationalUnit]:
+    """
+    Base class for predicate used to evaluate the applicability
+    of both simulation payload and collected data.
+    """
     __slots__ = ("predicate", "name")
 
     predicate: PostPredicate[SimulationPayload[T]]
+    """ Post predicate evalutes variables from both simulation payload and collected data.
+    
+    Return: boolean value
+    """
     name: str
+    """ (Optional) Name of the condition """
 
     def __init__(self,
                  predicate: PostPredicate[SimulationPayload[T]],
@@ -81,11 +100,11 @@ class PostCondition[T:ComputationalUnit]:
     def __str__(self) -> str:
         return self.name
 
-    def __call__(self, unit: SimulationPayload[T], cd: Sequence[CollectedData]) -> bool:
-        return self.predicate(unit, cd)
+    def __call__(self, payload: SimulationPayload[T], cd: Sequence[CollectedData]) -> bool:
+        return self.predicate(payload, cd)
 
     def __and__(self, other: "PostCondition[T]") -> "PostCondition[T]":
-        return PostCondition(lambda unit, cd: self.predicate(unit, cd) and other.predicate(unit, cd))
+        return PostCondition(lambda payload, cd: self.predicate(payload, cd) and other.predicate(payload, cd))
 
     def __or__(self, other: "PostCondition[T]") -> "PostCondition[T]":
-        return PostCondition(lambda unit, cd: self.predicate(unit, cd) or other.predicate(unit, cd))
+        return PostCondition(lambda payload, cd: self.predicate(payload, cd) or other.predicate(payload, cd))

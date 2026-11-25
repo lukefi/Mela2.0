@@ -8,15 +8,17 @@ type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
 
 class SimulationPayload[T: ComputationalUnit]:
     """
-    Data structure for keeping simulation state and progress data. Passed on as the data package of chained
-    operation calls.
+    Execution context associated with a node within the simulation.
     """
 
     __slots__ = ("unit", "operation_history", "node_id")
 
     unit: T
+    """ Computational unit representing the current state at this simulation node. """
     operation_history: OperationHistory
+    """ Record of treatments performed on the unit along its current simulation path. """
     node_id: list[int]
+    """ List of identifiers representing node order number in path. """
 
     def __init__(self,
                  computational_unit: T,

@@ -9,8 +9,11 @@ type PreprocessingFn[T: ComputationalUnit] = Callable[[Sequence[T]], Sequence[T]
 
 @dataclass(init=False, slots=True)
 class PreprocessingOperation[T: ComputationalUnit]:
+    """ Generic base class for operation associated with preprocessing stage of simulation control."""
     operation: PreprocessingFn[T]
+    """ Actual preprocessing operation which is applied for each computational unit """
     params: dict[str, Any]
+    """ Mapping of parameters for the preprocessing operation """
 
     def __init__(self, operation: PreprocessingFn[T], **params):
         self.operation = operation
