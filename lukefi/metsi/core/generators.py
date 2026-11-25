@@ -128,12 +128,12 @@ class Optional(EventGenerator[T]):
     In such cases a `do_nothing` treatment is performed instead.
     """
 
-    def __init__(self, child: EventGeneratorBase):
+    def __init__(self, child: EventGeneratorBase, skip_branch_db_output: bool = False):
         super().__init__(
             [
                 First([
                     child,
-                    Event(Treatment(do_nothing, "skip", {"skip"}))
+                    Event(Treatment(do_nothing, "skip", {"skip"}), db_output=skip_branch_db_output)
                 ])
             ]
         )
