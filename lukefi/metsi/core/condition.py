@@ -10,12 +10,22 @@ type Predicate[T] = Callable[[T], bool]
 type PostPredicate[T] = Callable[[T, Sequence[CollectedData]], bool]
 
 class Condition[T: ComputationalUnit]:
+    """
+    Base class for condition which determine whether an event is applicable to a computational unit.
+    """
     __slots__ = ("predicate", "name", "time_points", "relative_time_points")
 
     predicate: Predicate[SimulationPayload[T]]
+    """ Predicate which operates with given simulation payload.
+    
+    Return: boolean value
+    """
     name: str
+    """ (Optional) Name of the condition  """
     time_points: set[int]
+    """ (Optional) Set of time points used by the predicate  """
     relative_time_points: set[int]
+    """ (Optional) Set of relative time points used by the predicate  """
 
     def __init__(self,
                  predicate: Predicate[SimulationPayload[T]],
@@ -58,10 +68,19 @@ class Condition[T: ComputationalUnit]:
 
 
 class PostCondition[T:ComputationalUnit]:
+    """
+    Base class for postcondition used to evaluate the applicability
+    of computational unit result state and collected data.
+    """
     __slots__ = ("predicate", "name")
 
     predicate: PostPredicate[SimulationPayload[T]]
+    """ Post predicate evalutes variables from both simulation payload and collected data.
+    
+    Return: boolean value
+    """
     name: str
+    """ (Optional) Name of the condition """
 
     def __init__(self,
                  predicate: PostPredicate[SimulationPayload[T]],
