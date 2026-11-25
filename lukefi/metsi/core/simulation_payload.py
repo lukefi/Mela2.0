@@ -8,11 +8,7 @@ type OperationHistory = list[tuple[int, str, dict[str, dict], set[str]]]
 
 class SimulationPayload[T: ComputationalUnit]:
     """
-    Execution context associated with a node in the simulation.
-
-    A payload accompanies a computational unit as it progresses through the
-    simulation. It combines the current domain state with metadata
-    required to track, evaluate and validate state within the simulation.
+    Execution context associated with a node within the simulation.
     """
 
     __slots__ = ("unit", "operation_history", "node_id")
@@ -22,7 +18,7 @@ class SimulationPayload[T: ComputationalUnit]:
     operation_history: OperationHistory
     """ Record of treatments performed on the unit along its current simulation path. """
     node_id: list[int]
-    """ List of identifiers representing node order number in schedule """
+    """ List of identifiers representing node order number in path. """
 
     def __init__(self,
                  computational_unit: T,
