@@ -87,9 +87,9 @@ control_structure = MetsiControl[ForestStand](
                                   preconditions=[
                                   # Conditions can be combined with | and & operators.
                                   # Here do_a_thing will be performed if the year is 2025 or any time that the last
-                                  # cutting method was 1.
+                                  # cutting method was not THINNING.
                                   ForestCondition(lambda x: x.unit.time == 2025) |
-                                  ForestCondition(
+                                  ~ForestCondition(
                                       lambda x: x.unit.method_of_last_cutting == CuttingMethod.THINNING)
                                   ]),
                             Event(Treatment(do_another_thing),
