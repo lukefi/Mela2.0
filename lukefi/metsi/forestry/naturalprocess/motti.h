@@ -135,7 +135,7 @@ typedef struct
     float f_dead, ba_dead, v_dead, _273, _274, _275, _276, _277, jh, jd;
     Motti4Spev10 xhdom;
     float _290, ddomg0, dgdom0, ba0, h100_0, cr100_0, v0, dg0, _298, dgM, _300;
-    float _yy2[301];
+    float _yy2[300];
 } Motti4Site;
 
 void Motti4SiteInit(Motti4Site* yy, float* Y, float* X, float* Z, int* rv);
