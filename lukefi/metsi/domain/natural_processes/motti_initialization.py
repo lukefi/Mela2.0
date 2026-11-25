@@ -49,7 +49,6 @@ def _storey_to_motti(
     return MottiStorey.DOMINANT
 
 
-
 def _strip_tree_strata(stand: ForestStand):
     """
     Clear tree information from strata
@@ -112,7 +111,7 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
     for i in range(min(strata.size, 10)):
         species = TreeSpecies(strata.species[i].item())
         if species <= TreeSpecies.TREELESS:
-            continue # Skips strata if no trees.
+            continue  # Skips strata if no trees.
 
         _basal_area = float(np.nan_to_num(strata.basal_area[i], nan=0.0))
         basal_area = _basal_area if _basal_area > 0.001 else 0.0
@@ -124,8 +123,8 @@ def _build_motti_strata_py(stand: ForestStand, strata: TreeStrata | None = None)
         stratum_sid = float(strata.stratum_number[i].item())
         spe = float(internal2motti.convert_species(species))
         storey = _storey_to_motti(stand,
-                                   strata.storey[i].item(),
-                                   i)
+                                  strata.storey[i].item(),
+                                  i)
         out.append({
             "spe": spe,
             "age": biological_age,
@@ -209,25 +208,25 @@ def _compress_strata_for_motti(stand: ForestStand, max_strata: int = 10) -> Tree
     merge_trees = stand.reference_trees[merge_mask]
     divider = np.sum(merge_trees.basal_area * merge_trees.stems_per_ha)
     out.mean_diameter[base_idx] = (
-                (np.sum(
-                    merge_trees.stems_per_ha *
-                    merge_trees.basal_area *
-                    merge_trees.breast_height_diameter)) / divider) if divider > 0.0 else None
+        (np.sum(
+            merge_trees.stems_per_ha *
+            merge_trees.basal_area *
+            merge_trees.breast_height_diameter)) / divider) if divider > 0.0 else None
     out.mean_height[base_idx] = (
-                (np.sum(
-                    merge_trees.stems_per_ha *
-                    merge_trees.basal_area *
-                    merge_trees.height)) / divider) if divider > 0.0 else None
+        (np.sum(
+            merge_trees.stems_per_ha *
+            merge_trees.basal_area *
+            merge_trees.height)) / divider) if divider > 0.0 else None
     out.biological_age[base_idx] = (
-                (np.sum(
-                    merge_trees.stems_per_ha *
-                    merge_trees.basal_area *
-                    merge_trees.biological_age)) / divider) if divider > 0.0 else None
+        (np.sum(
+            merge_trees.stems_per_ha *
+            merge_trees.basal_area *
+            merge_trees.biological_age)) / divider) if divider > 0.0 else None
     out.breast_height_age[base_idx] = (
-                (np.sum(
-                    merge_trees.stems_per_ha *
-                    merge_trees.basal_area *
-                    merge_trees.breast_height_age)) / divider) if divider > 0.0 else None
+        (np.sum(
+            merge_trees.stems_per_ha *
+            merge_trees.basal_area *
+            merge_trees.breast_height_age)) / divider) if divider > 0.0 else None
     out.sapling_stems_per_ha[base_idx] = float(np.nansum(out.sapling_stems_per_ha[merge_idx]))
 
     # force species to same
@@ -279,9 +278,9 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         sid=stand.stand_id or 0,
         fthin=stand.method_of_last_cutting in (CuttingMethod.THINNING, CuttingMethod.FIRST_THINNING),
         xt_thin=((stand.year - stand.cutting_year)
-                    if stand.cutting_year is not None and
-                       stand.method_of_last_cutting not in (CuttingMethod.CLEARCUTTING, CuttingMethod.NO_CUTTING)
-                    else -9999),
+                 if stand.cutting_year is not None and
+                 stand.method_of_last_cutting not in (CuttingMethod.CLEARCUTTING, CuttingMethod.NO_CUTTING)
+                 else -9999),
         xt_fert=((stand.year - stand.fertilization_year)
                  if stand.fertilization_year is not None
                  else -9999),
@@ -319,8 +318,8 @@ def _init_motti_state(stand: ForestStand) -> MottiState:
         raise ValueError("ReferenceTrees contains stratum_number=-1, which is invalid for Motti initialization.")
     storey_vec = [
         _storey_to_motti(stand,
-                          rt.storey[i].item(),
-                          _get_stratum_with_matching_number(stand.tree_strata,
+                         rt.storey[i].item(),
+                         _get_stratum_with_matching_number(stand.tree_strata,
                                                            rt.stratum[i].item()))
         for i in range(n)
     ]
@@ -398,6 +397,7 @@ def _prune_reference_trees(stand: ForestStand) -> None:
 
 def _initialize_motti(stand: ForestStand) -> None:
     """ Initialize MottiState for forest stand if missing. Does nothing if already initialized. """
+    stand.reference_trees.sapling[:] = False
     stand.motti_state = _init_motti_state(stand)
     _prune_reference_trees(stand)
     motti_util.sync_ut_to_reference_trees(stand)
