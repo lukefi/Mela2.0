@@ -13,28 +13,16 @@ class SimulationPayload[T: ComputationalUnit]:
     A payload accompanies a computational unit as it progresses through the
     simulation. It combines the current domain state with metadata
     required to track, evaluate and validate state within the simulation.
-
-    Attributes
-    ----------
-    unit: T
-        Computational unit representing the current domain state at this
-        simulation node.
-
-    operation_history: OperationHistory
-        Record of treatments performed on the unit along its current
-        simulation path. The history is used to determine whether subsequent treatment can be performed.
-
-    node_id: list[int]
-        Identifier of the simulation node associated with the current state.
-        Used to track the state within the simulation structure and to
-        identify it in outputs such as database records.
-        """
+    """
 
     __slots__ = ("unit", "operation_history", "node_id")
 
     unit: T
+    """ Computational unit representing the current state at this simulation node. """
     operation_history: OperationHistory
+    """ Record of treatments performed on the unit along its current simulation path. """
     node_id: list[int]
+    """ List of identifiers representing node order number in schedule """
 
     def __init__(self,
                  computational_unit: T,
