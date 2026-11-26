@@ -41,7 +41,7 @@ def calc_tree_volumes(trees: ReferenceTrees,
     """
     retval = np.full(shape=len(trees), fill_value=0.0, dtype=np.float64)
 
-    tall_trees = trees.height > 1.3
+    tall_trees = (trees.height > 1.3) & (trees.breast_height_diameter > 0.1)
 
     h = trees.height[tall_trees]
     dbh = trees.breast_height_diameter[tall_trees]
